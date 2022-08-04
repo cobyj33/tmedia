@@ -10,10 +10,11 @@
 #include <string>
 
 void print_image(cv::Mat* image);
+void get_image(cv::Mat* target, char* characters, int* outputWidth, int* outputHeight);
 void get_pixels(cv::Mat* image, cv::Vec3b* pixels, int width, int height);
 char get_char_from_values(cv::Vec3b values);
 char get_char_from_area(cv::Vec3b* pixels, int x, int y, int width, int height, int pixelWidth, int pixelHeight );
-void getWindowSize(int* width, int* height);
+void get_window_size(int* width, int* height);
 void get_output_size(cv::Mat* target, int* width, int* height);
 
 int imageProgram(int argc, char** argv);
@@ -31,7 +32,14 @@ int main(int argc, char** argv)
 }
 
 int videoProgram(int argc, char** argv) {
-  cv::VideoCapture capture("/home/cobyj33/One Piece Dub Episode 1.mp4");
+
+  cv::VideoCapture capture;
+  
+  if (argc == 2) {
+    capture.open(argv[1]);
+  } else {
+    capture.open("/home/cobyj33/Mandelbrot.mp4");
+  }
 
   if (!capture.isOpened()) {
     std::cout << "Could not open video";
@@ -39,10 +47,14 @@ int videoProgram(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
+  int currentFrame;
+  int totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
+
 
   while (true) {
     cv::Mat frame;
     capture >> frame;
+    currentFrame = capture.get(cv::CAP_PROP_POS_FRAMES);
 
     if (frame.empty()) {
       break;
@@ -54,7 +66,7 @@ int videoProgram(int argc, char** argv) {
     // clear();
     // std::cout << "\\033[%d;%dH00";
     // std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 60));
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 24));
+    // std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 60));
     // cv::waitKey(1000 / 24);
   }
 
@@ -62,9 +74,19 @@ int videoProgram(int argc, char** argv) {
   return EXIT_SUCCESS;
 }
 
+
+
 int imageProgram(int argc, char** argv) {
  // Read the image file
-  cv::Mat image = cv::imread("face.png");
+  cv::Mat image;
+
+  
+  if (argc == 2) {
+    image = cv::imread(argv[1]);
+  } else {
+    image = cv::imread("player.png");
+  }
+
   if (image.empty()) // Check for failure
   {
    std::cout << "Could not open or find the image" << std::endl;
@@ -72,8 +94,25 @@ int imageProgram(int argc, char** argv) {
    return -1;
   }
 
+  print_image(&image);
+
+  char any[1];
+  scanw("%1s", any);
 
   return 0;
+}
+
+void get_image(cv::Mat* target, char* characters, int* oWidth, int* oHeight) {
+  cv::Mat image = *target;
+  cv::Vec3b pixels[image.rows * image.cols];
+  move(0, 0);
+  get_pixels(target, pixels, image.cols, image.rows);
+  get_window_size(&windowWidth, &windowHeight);
+
+  int outputWidth;
+  int outputHeight;
+  get_output_size(target, &outputWidth, &outputHeight);
+  
 }
 
 
@@ -82,11 +121,23 @@ void print_image(cv::Mat* target) {
   cv::Vec3b pixels[image.rows * image.cols];
   move(0, 0);
   get_pixels(target, pixels, image.cols, image.rows);
-  getWindowSize(&windowWidth, &windowHeight);
+  get_window_size(&windowWidth, &windowHeight);
 
   int outputWidth;
   int outputHeight;
   get_output_size(target, &outputWidth, &outputHeight);
+
+  int horizontalCenterPaddingLength = (windowWidth - outputWidth) / 2;
+  int verticalCenterPaddingLength = (windowHeight - outputHeight) / 2;
+
+  std::string horizontalPadding(horizontalCenterPaddingLength, ' ');
+  std::string lineAcross(verticalCenterPaddingLength, ' ');
+
+  for (int i = 0; i < verticalCenterPaddingLength; i++) {
+    addstr(lineAcross.c_str());
+    addch('\n');
+  }
+
 
   //image is bigger than output terminal
   if (image.cols <= outputWidth && image.rows <= outputHeight) {
@@ -96,6 +147,7 @@ void print_image(cv::Mat* target) {
           for (int col = 0; col < outputWidth; col++) {
             line[col] = get_char_from_values(pixels[row * image.cols + col]);
           }
+          addstr(horizontalPadding.c_str());
           addstr(line);
           addch('\n');
           // std::cout << "width " << outputWidth << std::endl;
@@ -108,32 +160,41 @@ void print_image(cv::Mat* target) {
     double scanHeight = image.rows / outputHeight;
 
     double currentRowPixel = 0;
-    double currentColPixel = 0; 
+    double currentColPixel = 0;
 
+    int lastCheckedRow = 0;
+    int lastCheckedCol = 0;
 
     for (int row = 0; row < outputHeight; row++) {
       char line[outputWidth];
       currentColPixel = 0;
       for (int col = 0; col < outputWidth; col++) {
 
-        int checkWidth = currentColPixel != 0 ? (int)(currentColPixel - scanWidth * (col - 1)) : (int)scanWidth;
-        int checkHeight = currentRowPixel != 0 ? (int)(currentRowPixel - scanHeight * (row - 1)) : (int)scanHeight;
+        int checkWidth = currentColPixel != 0 ? (int)(currentColPixel - lastCheckedCol) : (int)scanWidth;
+        int checkHeight = currentRowPixel != 0 ? (int)(currentRowPixel - lastCheckedRow) : (int)scanHeight;
 
         line[col] = get_char_from_area(pixels, (int)currentColPixel, (int)currentRowPixel, checkWidth, checkHeight, image.cols, image.rows);
 
+        lastCheckedCol = (int)currentColPixel;
         currentColPixel += scanWidth;
         if (currentColPixel + scanWidth > image.cols) {
           break;
         }
       }
+      addstr(horizontalPadding.c_str());
       addstr(line);
       addch('\n');
+      lastCheckedRow = (int)currentRowPixel;
       currentRowPixel += scanHeight;
       if (currentRowPixel + scanHeight > image.rows) {
         break;
       }
     }
+  }
 
+  for (int i = 0; i < verticalCenterPaddingLength; i++) {
+    addstr(lineAcross.c_str());
+    addch('\n');
   }
 
 }
@@ -168,16 +229,15 @@ int average(int argc, int* argv) {
 // const char value_characters[value_characters_length] = "█▉▊▋▌▍▎▏";
 
 const int value_characters_length = 11;
-const char value_characters[value_characters_length] = "@\%#*+=-:. ";
+const char value_characters[value_characters_length] = "@\%#*+=-:._";
 
 char get_char_from_values(cv::Vec3b values) {
   int value = get_grayscale(values[0], values[1], values[2]);
 
-  return value_characters[ value * (value_characters_length - 1) / 255 ];
+  return value_characters[ value * (value_characters_length - 2) / 255 ];
 }
 
 char get_char_from_area(cv::Vec3b* pixels, int x, int y, int width, int height, int pixelWidth, int pixelHeight ) {
-
   if (width == 0 && height == 0) {
     throw std::invalid_argument("CANNOT GET CHAR FROM AREA WITH NO WIDTH");
   } else if (width == 0) {
@@ -203,14 +263,14 @@ char get_char_from_area(cv::Vec3b* pixels, int x, int y, int width, int height, 
   // std::cout << "Value Count: " << valueCount << std::endl;
 
   if (valueCount > 0) {
-    return value_characters[ value * (value_characters_length - 1) / (255 * valueCount) ];
+    return value_characters[ value * (value_characters_length - 2) / (255 * valueCount) ];
   } else {
     return value_characters[0];
   }
 
 }
 
-void getWindowSize(int* width, int* height) {
+void get_window_size(int* width, int* height) {
   struct winsize w;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
   *width = w.ws_col;
