@@ -12,6 +12,7 @@
 
     void print_image(cv::Mat* image);
     void print_ascii_image(ascii_image image);
+    void print_pixels(cv::Vec3b* pixels, int width, int height);
     ascii_image get_image(cv::Mat* target, int outputWidth, int outputHeight);
     void get_pixels(cv::Mat* image, cv::Vec3b* pixels, int width, int height);
     char get_char_from_values(cv::Vec3b values);

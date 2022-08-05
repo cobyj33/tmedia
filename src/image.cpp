@@ -1,18 +1,22 @@
 #include <modes.h>
 #include <ascii.h>
 #include <ncurses.h>
+#include <iostream>
 
-int imageProgram(int argc, char** argv) {
+
+int imageProgram(const char* fileName) {
   cv::Mat image;
 
-  image = cv::imread("/home/cobyj33/Pictures/frame.jpg");
+  image = cv::imread(fileName);
 
   if (image.empty())
   {
-   std::cout << "Could not open or find the image" << std::endl;
+   std::cout << "Could not open or find the image: " << fileName << std::endl;
    std::cin.get();
    return -1;
   }
+
+  initscr();
 
   print_image(&image);
   refresh();

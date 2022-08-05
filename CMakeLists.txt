@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 project( ascii_video )
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 find_package( OpenCV REQUIRED )
 find_package(Curses REQUIRED)
 find_package(SDL2 REQUIRED)

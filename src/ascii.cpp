@@ -3,6 +3,11 @@
 #include <unistd.h>
 #include <ncurses.h>
 
+/* ascii_image get_image_from_pixels(cv::Vec3b* pixels, int imageWidth, int imageHeight, int outputWidth, int outputHeight) { */
+    
+/* } */
+
+
 ascii_image get_image(cv::Mat* target, int outputWidth, int outputHeight) {
   int windowWidth, windowHeight;
   cv::Mat image = *target;
@@ -59,6 +64,10 @@ ascii_image get_image(cv::Mat* target, int outputWidth, int outputHeight) {
   }
 
   return textImage;
+}
+
+void print_pixels(int *pixels, int width, int height) {
+
 }
 
 void print_ascii_image(ascii_image textImage) {
