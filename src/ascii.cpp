@@ -61,6 +61,25 @@ ascii_image get_image(cv::Mat* target, int outputWidth, int outputHeight) {
   return textImage;
 }
 
+void print_ascii_image(ascii_image textImage) {
+  int windowWidth, windowHeight;
+  move(0, 0);
+  get_window_size(&windowWidth, &windowHeight);
+
+  std::string horizontalPadding((windowWidth - textImage.width) / 2, ' ');
+  std::string lineAcross(windowWidth, ' ');
+  for (int i = 0; i < (windowHeight - textImage.height) / 2; i++) {
+    addstr(lineAcross.c_str());
+    addch('\n');
+  }
+
+  for (int row = 0; row < textImage.height; row++) {
+    addstr(horizontalPadding.c_str());
+    addstr(textImage.lines[row].c_str());
+    addch('\n');
+  }
+}
+
 
 void print_image(cv::Mat* target) {
   int windowWidth, windowHeight;
@@ -81,11 +100,6 @@ void print_image(cv::Mat* target) {
   for (int row = 0; row < textImage.height; row++) {
     addstr(horizontalPadding.c_str());
     addstr(textImage.lines[row].c_str());
-    addch('\n');
-  }
-
-  for (int i = 0; i < (windowHeight - outputHeight) / 2; i++) {
-    addstr(lineAcross.c_str());
     addch('\n');
   }
 }
@@ -157,14 +171,6 @@ void get_output_size(cv::Mat* target, int* width, int* height) {
     *width = image.cols;
     *height = image.rows;
   } else {
-    // double imageAspectRatio = image.cols / image.rows;
-
-    // int imageArea = image.cols * image.rows;
-    // int targetArea = windowWidth * windowHeight;
-
-    // *width = (int)sqrt(targetArea * imageAspectRatio);
-    // *height = (int)sqrt(targetArea / imageAspectRatio);
-
     double shrinkFactor = std::min((double)windowWidth / image.cols, (double)windowHeight / image.rows);
     *width = (int)(image.cols * shrinkFactor);
     *height = (int)(image.rows * shrinkFactor);

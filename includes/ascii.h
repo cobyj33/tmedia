@@ -2,19 +2,16 @@
     #define MAIN_ASCII_FUNCTIONS_HEADER
         #include <opencv2/opencv.hpp>
         #include <string>
+        #include <ascii_data.h>
 
-    const std::string value_characters = "@\%#*+=-:._";
 
     // const std::string value_characters = "@MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry\%1v7l+it[]{}?j|()=~!-/<>\"^_';,:`.";
     // const std::string value_characters = "█▉▊▋▌▍▎▏";
 
-    struct ascii_image {
-        std::vector<std::string> lines;
-        int width;
-        int height;
-    };
+    // const std::string value_characters = "░▒▓";
 
     void print_image(cv::Mat* image);
+    void print_ascii_image(ascii_image image);
     ascii_image get_image(cv::Mat* target, int outputWidth, int outputHeight);
     void get_pixels(cv::Mat* image, cv::Vec3b* pixels, int width, int height);
     char get_char_from_values(cv::Vec3b values);
