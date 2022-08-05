@@ -3,6 +3,9 @@ project( ascii_video )
 find_package( OpenCV REQUIRED )
 find_package(Curses REQUIRED)
 
-include_directories( ${OpenCV_INCLUDE_DIRS} ${CURSES_INCLUDE_DIR} )
-add_executable( ascii_video main.cpp )
+
+include_directories( ${OpenCV_INCLUDE_DIRS} ${CURSES_INCLUDE_DIR} ./includes )
+
+aux_source_directory(./src SRC)
+add_executable(ascii_video  ${SRC})
 target_link_libraries( ascii_video ${OpenCV_LIBS} ${CURSES_LIBRARIES} )
