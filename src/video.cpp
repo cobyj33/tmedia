@@ -101,7 +101,7 @@ int videoProgram(const char* fileName) {
     cv::Mat originalFrame;
     cv::Mat frame;
     capture >> originalFrame;
-    
+
     get_output_size(originalFrame.cols, originalFrame.rows, &(frameSize.width), &(frameSize.height));
     if (originalFrame.rows > frameSize.height && originalFrame.cols > frameSize.width) {
         cv::resize(originalFrame, frame, frameSize, 0, 0, cv::INTER_AREA);
@@ -154,7 +154,7 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
 
 int loadAudio(const char* file, bool* endFlag, bool* loaded) {
    
-    AVFormatContext* pFormatContext = NULL;
+    AVFormatContext* pFormatContext = nullptr;
     
     int result = avformat_open_input(&pFormatContext, file, nullptr, nullptr);
     if (result != 0) {
@@ -204,6 +204,7 @@ int loadAudio(const char* file, bool* endFlag, bool* loaded) {
             stream->codecpar->sample_rate,
             0, 
             nullptr)};
+
 
 
     AVAudioFifo* fifo = av_audio_fifo_alloc(AV_SAMPLE_FMT_FLT, stream->codecpar->channels, 1);    
