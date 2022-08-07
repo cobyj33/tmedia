@@ -6,10 +6,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 find_package( OpenCV REQUIRED )
 find_package(Curses REQUIRED)
-find_package(SDL2 REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
+    libavdevice
+    libavfilter
+    libavformat
+    libavcodec
+    libswresample
+    libswscale
+    libavutil
+)
 
-include_directories( ${OpenCV_INCLUDE_DIRS} ${CURSES_INCLUDE_DIR} ${SDL2_INCLUDE_DIRS} ./includes )
+include_directories( ${OpenCV_INCLUDE_DIRS} ${CURSES_INCLUDE_DIR} ./includes )
 
 aux_source_directory(./src SRC)
 add_executable(ascii_video  ${SRC})
-target_link_libraries( ascii_video ${OpenCV_LIBS} ${CURSES_LIBRARIES} ${SDL2_LIBRARIES} )
+target_link_libraries( ascii_video ${OpenCV_LIBS} ${CURSES_LIBRARIES} PkgConfig::LIBAV)
