@@ -10,15 +10,13 @@
 
     // const std::string value_characters = "░▒▓";
 
-    void print_image(cv::Mat* image);
-    void print_ascii_image(ascii_image image);
-    void print_pixels(cv::Vec3b* pixels, int width, int height);
-    ascii_image get_image(cv::Mat* target, int outputWidth, int outputHeight);
-    void get_pixels(cv::Mat* image, cv::Vec3b* pixels, int width, int height);
-    char get_char_from_values(cv::Vec3b values);
-    char get_char_from_area(cv::Vec3b* pixels, int x, int y, int width, int height, int pixelWidth, int pixelHeight );
+    void print_ascii_image(ascii_image* image);
+    ascii_image get_image(Color* pixels, int srcWidth, int srcHeight, int outputWidth, int outputHeight);
+    void get_pixels(cv::Mat* image, Color* pixels, int width, int height);
+    char get_char_from_values(Color values);
+    char get_char_from_area(Color* pixels, int x, int y, int width, int height, int pixelWidth, int pixelHeight );
     void get_window_size(int* width, int* height);
-    void get_output_size(cv::Mat* target, int* width, int* height);
+    void get_output_size(int srcWidth, int srcHeight, int* width, int* height);
     int get_grayscale(int r, int g, int b);
 
 #endif

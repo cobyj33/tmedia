@@ -8,9 +8,12 @@
 #define SDL_AUDIO_BUFFER_SIZE 1024
 #define MAX_AUDIO_FRAME_SIZE 192000
 
-#include <thread>
 #include <chrono>
+#include <thread>
+#include <future>
 #include <iostream>
+#include <vector>
+#include <utility>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -22,31 +25,53 @@ extern "C" {
 #include <libavutil/audio_fifo.h>
 }
 
-const int secondToNanosecond = 1000000000;
+const int maxFrameWidth = 640;
+const int maxFrameHeight = 480;
 
 int loadAudio(const char* file, bool* endFlag, bool* loaded); 
 
-void frameGenerator(cv::VideoCapture* videoCapture, pixel_data* buffer, int bufferLength) {
+void frameGenerator(cv::VideoCapture* videoCapture, std::vector<pixel_data>& buffer, int bufferLength, double* percentage) {
     cv::VideoCapture capture = *videoCapture;
+    double scaleFactor = 1;
+    int originalWidth = capture.get(cv::CAP_PROP_FRAME_WIDTH);
+    int originalHeight = capture.get(cv::CAP_PROP_FRAME_HEIGHT);
 
+    if (originalWidth > maxFrameWidth || originalHeight > maxFrameWidth) {
+        scaleFactor = std::min((double)maxFrameWidth / originalWidth, (double)maxFrameHeight / originalHeight);
+    }
+
+    int videoWidth = (int)(scaleFactor * originalWidth);
+    int videoHeight = (int)(scaleFactor * originalHeight);
+    cv::Size videoSize(videoWidth, videoHeight);
+    
     for (int i = 0; i < bufferLength; i++) {
-        cv::Mat image;
-        capture >> image;
-        cv::Vec3b pixels[image.rows * image.cols];
-        get_pixels(&image, pixels, image.cols, image.rows);
-        
+        cv::Mat readImage;
+        cv::Mat resizedImage;
+        capture >> readImage;
+        if (readImage.rows != videoWidth || readImage.rows != videoHeight) {
+            cv::resize(readImage, resizedImage, videoSize, 0, 0, cv::INTER_AREA);
+        } else {
+            resizedImage = readImage;
+        }
+
+        Color pixels[resizedImage.rows * resizedImage.cols];
+        *percentage = (double)i / bufferLength;
+        get_pixels(&resizedImage, pixels, resizedImage.cols, resizedImage.rows);
         pixel_data data;
         data.pixels = pixels;
-        data.width = image.cols;
-        data.height = image.rows;
+        data.width = resizedImage.cols;
+        data.height = resizedImage.rows;
         buffer[i] = data;
     }
 
 }
 
 int videoProgram(const char* fileName) {
+
+
   cv::VideoCapture capture;
     capture.open(fileName);
+
   
   if (!capture.isOpened()) {
       std::cout << "Could not open file: " << fileName << std::endl;
@@ -56,34 +81,48 @@ int videoProgram(const char* fileName) {
   initscr();
 
   int totalFrames = capture.get(cv::CAP_PROP_FRAME_COUNT);
-  pixel_data buffer[totalFrames];
-  int targetFPS = capture.get(cv::CAP_PROP_FPS);
-  targetFPS = 24;
+  double targetFPS = capture.get(cv::CAP_PROP_FPS);
 
+  bool audioLoaded = false;
   bool endFlag = false;
-  bool loaded = false;
-  std::thread soundThread(loadAudio, fileName, &endFlag, &loaded);
-  while (!loaded) {
+  std::thread soundThread(loadAudio, fileName, &endFlag, &audioLoaded);
+  while (!audioLoaded) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
   int currentFrame = 0;
-  auto start_time = std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now());
-  auto preferredTime = std::chrono::nanoseconds(0);
-  auto actualTime = std::chrono::nanoseconds(0);
-  const auto preferredTimePerFrame = std::chrono::nanoseconds((int)(secondToNanosecond / targetFPS));
-  while (true) {
-    auto diff = actualTime - preferredTime;
+  std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
+  std::chrono::nanoseconds preferredTime = std::chrono::nanoseconds(0);
+  std::chrono::nanoseconds actualTime = std::chrono::nanoseconds(0);
+  const std::chrono::nanoseconds preferredTimePerFrame = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds((int)(1000 / targetFPS)));
+
+    cv::Size frameSize(maxFrameWidth, maxFrameHeight);
+  while (currentFrame < totalFrames) {
+    cv::Mat originalFrame;
     cv::Mat frame;
-    capture >> frame;
-    if (frame.empty()) {
-      break;
-    }
-    print_image(&frame);
+    capture >> originalFrame;
     
-    std::this_thread::sleep_for(preferredTimePerFrame - diff);
-    preferredTime = std::chrono::nanoseconds(  preferredTime.count() + preferredTimePerFrame.count() );
-    actualTime = std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()) - start_time;
+    get_output_size(originalFrame.cols, originalFrame.rows, &(frameSize.width), &(frameSize.height));
+    if (originalFrame.rows > frameSize.height && originalFrame.cols > frameSize.width) {
+        cv::resize(originalFrame, frame, frameSize, 0, 0, cv::INTER_AREA);
+    } else {
+        frame = originalFrame;
+    }
+    
+    Color pixels[frame.rows * frame.cols];
+    get_pixels(&frame, pixels, frame.cols, frame.rows);
+    int outputWidth, outputHeight;
+    get_output_size(frame.cols, frame.rows, &outputWidth, &outputHeight);
+    ascii_image asciiImage = get_image(pixels, frame.cols, frame.rows, outputWidth, outputHeight);
+    print_ascii_image(&asciiImage);
+    refresh();
+    
+
+    preferredTime = preferredTime + preferredTimePerFrame;
+    actualTime = std::chrono::steady_clock::now() - start_time;
+    auto diff = actualTime - preferredTime;
+    auto delay = preferredTimePerFrame - diff;
+    std::this_thread::sleep_for(delay);
     refresh();
     currentFrame++;
   }

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string.h>
 
+#include <chrono>
+
 bool isValidPath(const char* path) {
     FILE* file;
 
@@ -17,7 +19,7 @@ const char* help_text = "     ASCII_VIDEO         \n"
       "  -h => help                   \n"
       "  -i <file> => show image file                   \n"
       "  -v <file> => play video file                   \n"
-      "                     \n";
+      "  -info <file> => print file info                   \n";
 
 int main(int argc, char** argv)
 {
@@ -32,7 +34,9 @@ int main(int argc, char** argv)
         std::cout << "Must include relative path to view image" << std::endl;        
       } else if (strcmp(argv[1], "-v") == 0) {
         std::cout << "Must include relative path to view video" << std::endl;        
-      } else if (strcmp(argv[1], "-h") == 0) {
+      } else if (strcmp(argv[1], "-info")) {
+        std::cout << "Must include relative path to view file info" << std::endl;    
+    } else if (strcmp(argv[1], "-h") == 0) {
           std::cout << help_text << std::endl;
       } else {
           std::cout << help_text << std::endl;
@@ -53,7 +57,13 @@ int main(int argc, char** argv)
           } else {
               std::cout << "Invalid Path " << argv[2] << std::endl;
           }
-      } else {
+      } else if (strcmp(argv[1], "-info") == 0) {
+        if (isValidPath(argv[2])) {
+                fileInfoProgram(argv[2]); 
+        } else {
+            std::cout << "Invalid Path " << argv[2] << std::endl;
+        }
+      }   else {
         std::cout << help_text << std::endl;
       }
 

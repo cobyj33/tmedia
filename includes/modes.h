@@ -6,4 +6,6 @@
 
     int imageProgram(const char* fileName);
     int videoProgram(const char* fileName);
+    int fileInfoProgram(const char* fileName);
+
 #endif

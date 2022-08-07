@@ -5,14 +5,19 @@
 
 const std::string value_characters = "@\%#*+=-:._";
 
-struct ascii_image {
+typedef struct Color {
+    int r;
+    int g;
+    int b;
+} Color;
+typedef struct ascii_image {
     std::vector<std::string> lines;
     int width;
     int height;
-};
+} ascii_image;
 
-struct pixel_data {
-    cv::Vec3b* pixels;
+typedef struct pixel_data {
+    Color* pixels;
     int width;
     int height;
-};
+} pixel_data;

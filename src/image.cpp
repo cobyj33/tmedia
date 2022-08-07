@@ -18,7 +18,12 @@ int imageProgram(const char* fileName) {
 
   initscr();
 
-  print_image(&image);
+  Color pixels[image.rows * image.cols];
+  get_pixels(&image, pixels, image.cols, image.rows);
+  int outputWidth, outputHeight;
+  get_output_size(image.cols, image.rows, &outputWidth, &outputHeight);
+  ascii_image asciiImage = get_image(pixels, image.cols, image.rows, outputWidth, outputHeight);
+  print_ascii_image(&asciiImage);
   refresh();
   char input[1000];
   std::cin >> input;
