@@ -1,10 +1,20 @@
 #include <ascii.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
+#include <cstdint>
+#include <cmath>
+#include <stdexcept>
+
+
+
+#if defined(__linux__)
+  #include <sys/ioctl.h>
+  #include <unistd.h>
+#elif defined(_WIN32) || defined(_WIN64)
+  #include <windows.h>
+#endif
+
 #include <ncurses.h>
 
-
-ascii_image get_image(Color* pixels, int srcWidth, int srcHeight, int outputWidth, int outputHeight) {
+ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWidth, int outputHeight) {
   int windowWidth, windowHeight;
   get_window_size(&windowWidth, &windowHeight);
   ascii_image textImage;
@@ -14,12 +24,15 @@ ascii_image get_image(Color* pixels, int srcWidth, int srcHeight, int outputWidt
   if (srcWidth <= outputWidth && srcHeight <= outputHeight) {
 
       for (int row = 0; row < outputHeight; row++) {
-        char line[outputWidth + 1];
+        // char line[outputWidth + 1];
           for (int col = 0; col < outputWidth; col++) {
-            line[col] = get_char_from_values(pixels[row * srcWidth + col]);
+            int pixel = row * srcWidth + col;
+            textImage.lines[row][col] = get_char_from_value(pixels[pixel]);
           }
-          line[outputWidth] = '\0';
-          textImage.lines.push_back(line);
+          textImage.lines[row][outputWidth] = '\0';
+
+          // line[outputWidth] = '\0';
+          // textImage.lines.push_back(line);
       }
       
   } else {
@@ -32,7 +45,7 @@ ascii_image get_image(Color* pixels, int srcWidth, int srcHeight, int outputWidt
     int lastCheckedCol = 0;
 
     for (int row = 0; row < outputHeight; row++) {
-      char line[outputWidth + 1];
+      // char line[outputWidth + 1];
       currentColPixel = 0;
       int checkWidth, checkHeight;
       checkHeight = currentRowPixel != 0 ? (int)round(currentRowPixel - scanHeight * (row - 1)) : (int)scanHeight;
@@ -40,13 +53,13 @@ ascii_image get_image(Color* pixels, int srcWidth, int srcHeight, int outputWidt
 
         checkWidth = currentColPixel != 0 ? (int)round(currentColPixel - scanWidth * (col - 1)) : (int)scanWidth;
 
-        line[col] = get_char_from_area(pixels, (int)currentColPixel, (int)currentRowPixel, checkWidth, checkHeight, srcWidth, srcHeight);
+        textImage.lines[row][col] = get_char_from_area(pixels, (int)currentColPixel, (int)currentRowPixel, checkWidth, checkHeight, srcWidth, srcHeight);
         lastCheckedCol = (int)(currentColPixel + checkWidth);
         currentColPixel += scanWidth;
       }
-
-      line[outputWidth] = '\0';
-      textImage.lines.push_back(line);
+      textImage.lines[row][outputWidth] = '\0';
+      // line[outputWidth] = '\0';
+      // textImage.lines.push_back(line);
       lastCheckedRow = (int)(currentRowPixel + checkHeight);
       currentRowPixel += scanHeight;
     }
@@ -70,27 +83,16 @@ void print_ascii_image(ascii_image* textImage) {
 
   for (int row = 0; row < textImage->height; row++) {
     addstr(horizontalPadding.c_str());
-    addstr(textImage->lines[row].c_str());
+    addstr(textImage->lines[row]);
     addch('\n');
   }
 }
 
-void get_pixels(cv::Mat* image, Color* pixels, int width, int height) {
-  for (int row = 0; row < height; row++) {
-    for (int col = 0; col < width; col++) {
-      cv::Vec3b pixel = image->at<cv::Vec3b>(row, col);
-      pixels[row * width + col] = { pixel[2], pixel[1], pixel[0] };
-    }
-  }
-}
-
-char get_char_from_values(Color values) {
-  int value = get_grayscale(values.r, values.g, values.b);
-
+char get_char_from_value(uint8_t value) {
   return value_characters[ value * (value_characters.length() - 1) / 255 ];
 }
 
-char get_char_from_area(Color* pixels, int x, int y, int width, int height, int pixelWidth, int pixelHeight ) {
+char get_char_from_area(uint8_t* pixels, int x, int y, int width, int height, int pixelWidth, int pixelHeight ) {
   if (width == 0 && height == 0) {
     throw std::invalid_argument("CANNOT GET CHAR FROM AREA WITH NO WIDTH");
   } else if (width == 0) {
@@ -106,7 +108,7 @@ char get_char_from_area(Color* pixels, int x, int y, int width, int height, int 
     for (int col = 0; col < width; col++) {
       int pixelIndex = (row + y) * pixelWidth + (x + col);
       if (pixelIndex < pixelWidth * pixelHeight && pixelIndex >= 0) {
-        value += get_grayscale(pixels[pixelIndex].r, pixels[pixelIndex].g, pixels[pixelIndex].b);
+        value += pixels[pixelIndex];
         valueCount++;
       }
     }
@@ -120,26 +122,27 @@ char get_char_from_area(Color* pixels, int x, int y, int width, int height, int 
 
 }
 
+
 void get_window_size(int* width, int* height) {
-  struct winsize w;
-  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-  *width = w.ws_col;
-  *height = w.ws_row;
+  #if defined(_WIN32) || defined(_WIN64)
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    *width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    *height = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+  #elif defined(__linux__)
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    *width = w.ws_col;
+    *height = w.ws_row;
+  #endif
 }
 
-int get_grayscale(int r, int g, int b) {
-  return (int)(0.299 * r + 0.587 * g + 0.114 * b);
-}
-
-void get_output_size(int srcWidth, int srcHeight, int* width, int* height) {
-  int windowWidth, windowHeight;
-  get_window_size(&windowWidth, &windowHeight);
-
-  if (srcWidth <= windowWidth && srcHeight <= windowHeight) {
+void get_output_size(int srcWidth, int srcHeight, int maxWidth, int maxHeight, int* width, int* height) {
+  if (srcWidth <= maxWidth && srcHeight <= maxHeight) {
     *width = srcWidth;
     *height = srcHeight;
   } else {
-    double shrinkFactor = std::min((double)windowWidth / srcWidth, (double)windowHeight / srcHeight);
+    double shrinkFactor = std::min((double)maxWidth / srcWidth, (double)maxHeight / srcHeight);
     *width = (int)(srcWidth * shrinkFactor);
     *height = (int)(srcHeight * shrinkFactor);
   }

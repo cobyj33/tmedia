@@ -11,7 +11,6 @@ extern "C" {
     #include <libavutil/audio_fifo.h>
 }
 
-#include <opencv2/opencv.hpp>
 
 int fileInfoProgram(const char* fileName) {
     AVFormatContext* formatContext(nullptr);
@@ -24,14 +23,14 @@ int fileInfoProgram(const char* fileName) {
         return EXIT_FAILURE;
     }
 
-    av_dump_format(formatContext, 0, fileName, 0);
-
-    cv::VideoCapture capture(fileName);
-    if (capture.isOpened()) {
-        std::cout << capture.get(cv::CAP_PROP_FPS) << std::endl;
+    result = avformat_find_stream_info(formatContext, nullptr);
+    if (result < 0) {
+        std::cout << "Could not get stream info for " << fileName << std::endl;
+        return EXIT_FAILURE;
     }
 
-    capture.release();
+    av_dump_format(formatContext, 0, fileName, 0);
+
     avformat_close_input(&formatContext);
 
     return EXIT_SUCCESS;

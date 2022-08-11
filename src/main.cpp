@@ -1,5 +1,4 @@
 #include <modes.h>
-#include <ncurses.h>
 #include <stdio.h>
 #include <iostream>
 #include <string.h>
