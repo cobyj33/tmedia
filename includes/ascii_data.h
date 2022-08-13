@@ -14,7 +14,7 @@ const std::string value_characters = "@\%#*+=-:._";
 /* } Color; */
 
 typedef struct ascii_image {
-    char lines[MAX_FRAME_HEIGHT][MAX_FRAME_WIDTH];
+    char lines[MAX_FRAME_HEIGHT + 1][MAX_FRAME_WIDTH + 1];
     int width;
     int height;
 } ascii_image;

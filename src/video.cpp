@@ -12,7 +12,8 @@
 #define SDL_AUDIO_BUFFER_SIZE 1024
 #define MAX_AUDIO_FRAME_SIZE 192000
 
-#define VIDEO_FIFO_MAX_SIZE 200000
+#define GIGABYTE_TO_BYTES 1000000000
+#define VIDEO_FIFO_MAX_SIZE GIGABYTE_TO_BYTES / FRAME_DATA_SIZE
 
 #include <chrono>
 #include <thread>
@@ -33,38 +34,6 @@ extern "C" {
 #include <libavutil/fifo.h>
 #include <libavutil/audio_fifo.h>
 }
-
-
-// typedef struct VideoFIFO {
-//     VideoFrame* first;
-//     VideoFrame* last;
-//     VideoFrame* current;
-//     int index;
-//     int count;
-//     double time;
-//     int timeBase;
-// } VideoFIFO;
-
-// typedef struct VideoFrame {
-//     uint8_t dataBuffer[FRAME_DATA_SIZE * 5 / 4];
-//     int pts;
-//     VideoFrame* next;
-// } VideoFrame;
-
-// VideoFrame* get_video_frame(AVFrame* avframe) {
-//     VideoFrame* VideoFrame;
-// }
-
-// bool add_video_frame(VideoFifo* fifo, VideoFrame frame) {
-//     if (fifo->first == NULL) {
-//         fifo->first = &frame;
-//         fifo->last = &frame;
-//     } else {
-//         fifo->last->next = &frame;
-//         fifo->last = fifo->last->next;
-//     }
-//     fifo->count += 1;
-// }
 
 int get_packet_stats(const char* fileName, int* videoPackets, int* audioPackets);
 
@@ -220,7 +189,7 @@ class VideoState {
                 return EXIT_FAILURE;
             }
 
-            this->videoFifo = av_fifo_alloc2(1000, frameWidth * frameHeight, AV_FIFO_FLAG_AUTO_GROW);
+            this->videoFifo = av_fifo_alloc2(5000, frameWidth * frameHeight, AV_FIFO_FLAG_AUTO_GROW);
 
             if (this->videoFifo == NULL) {
                 std::cout << "Could not initialize Video FIFO" << std::endl;
@@ -305,9 +274,18 @@ class VideoState {
                 get_window_size(&windowWidth, &windowHeight);
                 int outputWidth, outputHeight;
                 get_output_size(state->frameWidth, state->frameHeight, windowWidth, windowHeight, &outputWidth, &outputHeight);
-                ascii_image asciiImage = get_image(dataBuffer, state->frameWidth, state->frameHeight, outputWidth, outputHeight);
                 erase();
-                print_ascii_image(&asciiImage);
+                    ascii_image asciiImage = get_image(dataBuffer, state->frameWidth, state->frameHeight, outputWidth, outputHeight);
+                    // exit(EXIT_SUCCESS); 
+                    // printw("Frame Width: %d Frame Height: %d Window Width: %d Window Height: %d Output Width: %d Output Height: %d \n", state->frameWidth, state->frameHeight, windowWidth, windowHeight, outputWidth, outputHeight);
+                    // printw("ASCII Width: %d ASCII Height: %d\n", asciiImage.width, asciiImage.height);
+                    print_ascii_image(&asciiImage);
+                    // for (int i = 0; i < asciiImage.height && i < windowHeight; i++) {
+                    //     for (int j = 0; j < asciiImage.width && j < windowWidth; j++) {
+                    //         addch(asciiImage.lines[i][j]);
+                    //     }
+                    //     addch('\n');
+                    // }
                 refresh();
 
                 double nextFrameTimeSinceStartInSeconds;
@@ -383,7 +361,10 @@ class VideoState {
 
         static void backgroundLoadingThread(VideoState* state) {
             while (!state->allPacketsRead) {
-                state->fetch_next(1000);
+                if (av_fifo_can_write(state->videoFifo) > 100 && av_audio_fifo_space(state->audioFifo) > 100) {
+                    state->fetch_next(100);
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
         }
 
@@ -458,10 +439,9 @@ class VideoState {
                         resizedVideoFrame->format = AV_PIX_FMT_GRAY8;
                         resizedVideoFrame->width = this->frameWidth;
                         resizedVideoFrame->height = this->frameHeight;
-                        av_frame_get_buffer(resizedVideoFrame, 0);
+                        av_frame_get_buffer(resizedVideoFrame, 1); //watch this alignment
 
                         sws_scale(videoResizer, (uint8_t const * const *)originalVideoFrame->data, originalVideoFrame->linesize, 0, this->videoCodecContext->height, resizedVideoFrame->data, resizedVideoFrame->linesize);
-
                         videoLock.lock();
                         if (av_fifo_can_write(this->videoFifo) < 10) {
                             av_fifo_grow2(this->videoFifo, 10);
@@ -515,8 +495,8 @@ class VideoState {
                                 std::cout << "Unable to sample frame" << std::endl;
                             }
 
-                            av_frame_unref(audioFrame);
                             av_audio_fifo_write(this->audioFifo, (void**)resampledFrame->data, resampledFrame->nb_samples);
+                            av_frame_unref(audioFrame);
                             av_frame_free(&resampledFrame);
                             result = avcodec_receive_frame(this->audioCodecContext, audioFrame);
                         }
@@ -553,7 +533,7 @@ class VideoState {
 
             erase();
             printw("Generating Frames and Audio: %d of %d: %d%%", state->currentPacket, state->totalPackets, percentDisplay);
-            printw(progressBar);
+            printw("%s", progressBar);
             refresh();
             state->fetch_next(200);
         }
@@ -564,10 +544,6 @@ class VideoState {
 int videoProgram(const char* fileName) {
     initscr();
     VideoState* videoState = new VideoState(fileName);
-    // videoState->fullyLoad(videoState);
-    // videoState->fullyLoad(videoState);c
-    // std::thread loader(VideoState::fullyLoad, videoState);
-    // loader.join();
     videoState->fetch_next(100);
     videoState->begin();
 

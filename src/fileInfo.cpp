@@ -14,8 +14,6 @@ extern "C" {
 
 int fileInfoProgram(const char* fileName) {
     AVFormatContext* formatContext(nullptr);
-
-    
     int result = avformat_open_input(&formatContext, fileName, nullptr, nullptr);
     if (result < 0) {
         std::cout << "Could not open file " << fileName << std::endl;

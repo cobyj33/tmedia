@@ -15,27 +15,25 @@
 #include <ncurses.h>
 
 ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWidth, int outputHeight) {
-  int windowWidth, windowHeight;
-  get_window_size(&windowWidth, &windowHeight);
+  // int windowWidth, windowHeight;
+  // get_window_size(&windowWidth, &windowHeight);
   ascii_image textImage;
+  // printw("Stats: SrcWidth: %d SrcHeight: %d outputWidth: %d outputHeight: %d \n", srcWidth, srcHeight, outputWidth, outputHeight);
   textImage.width = outputWidth;
   textImage.height = outputHeight;
   
   if (srcWidth <= outputWidth && srcHeight <= outputHeight) {
-
+    addstr("First Algorithm\n");
       for (int row = 0; row < outputHeight; row++) {
-        // char line[outputWidth + 1];
           for (int col = 0; col < outputWidth; col++) {
             int pixel = row * srcWidth + col;
             textImage.lines[row][col] = get_char_from_value(pixels[pixel]);
           }
           textImage.lines[row][outputWidth] = '\0';
-
-          // line[outputWidth] = '\0';
-          // textImage.lines.push_back(line);
       }
       
   } else {
+    addstr("Second Algorithm\n");
     double scanWidth = (double)srcWidth / outputWidth;
     double scanHeight = (double)srcHeight / outputHeight;
     double currentRowPixel = 0;
@@ -73,18 +71,14 @@ void print_ascii_image(ascii_image* textImage) {
   int windowWidth, windowHeight;
   move(0, 0);
   get_window_size(&windowWidth, &windowHeight);
-
   std::string horizontalPadding((windowWidth - textImage->width) / 2, ' ');
   std::string lineAcross(windowWidth, ' ');
   for (int i = 0; i < (windowHeight - textImage->height) / 2; i++) {
-    addstr(lineAcross.c_str());
-    addch('\n');
+    printw("%s\n", lineAcross.c_str());
   }
 
   for (int row = 0; row < textImage->height; row++) {
-    addstr(horizontalPadding.c_str());
-    addstr(textImage->lines[row]);
-    addch('\n');
+    printw("%s%s\n", horizontalPadding.c_str(), textImage->lines[row]);
   }
 }
 
@@ -107,7 +101,7 @@ char get_char_from_area(uint8_t* pixels, int x, int y, int width, int height, in
   for (int row = 0; row < height; row++) {
     for (int col = 0; col < width; col++) {
       int pixelIndex = (row + y) * pixelWidth + (x + col);
-      if (pixelIndex < pixelWidth * pixelHeight && pixelIndex >= 0) {
+      if (pixelIndex < pixelWidth * pixelHeight && pixelIndex >= 0 &&  (x + col) < pixelWidth && (row + y) < pixelHeight  ) {
         value += pixels[pixelIndex];
         valueCount++;
       }
