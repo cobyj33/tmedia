@@ -1,6 +1,6 @@
 #include <cstdint>
 #include <cstdlib>
-#include <modes.h>
+#include <image.h>
 #include <ascii.h>
 #include <ncurses.h>
 #include <iostream>
@@ -20,18 +20,46 @@ extern "C" {
 }
 
 int imageProgram(const char* fileName) {
+    int windowWidth, windowHeight;
+    get_window_size(&windowWidth, &windowHeight);
+    bool success;
+    pixel_data pixelData = get_pixel_data_from_image(fileName, windowWidth, windowHeight, &success);
+    if (!success) {
+        std::cout << "Could not get image data from " << fileName;
+        return EXIT_FAILURE;
+    }
+
+    ascii_image asciiImage = get_image(pixelData.pixels, pixelData.width, pixelData.height, pixelData.width, pixelData.height);
+    free(pixelData.pixels);
+
+    initscr();
+    print_ascii_image(&asciiImage);
+    refresh();
+    char input[1000];
+    getch();
+
+    exit(EXIT_SUCCESS);
+
+    return EXIT_SUCCESS;
+}
+
+pixel_data get_pixel_data_from_image(const char* fileName, int desiredWidth, int desiredHeight, bool* success) {
     AVFormatContext* formatContext(nullptr);
+    pixel_data data;
+    *success = true;
 
     int result = avformat_open_input(&formatContext, fileName, nullptr, nullptr);
     if (result < 0) {
         std::cout << "Could not open file " << fileName << std::endl;
-        return EXIT_FAILURE;
+        *success = false;
+        return data;
     }
 
     result = avformat_find_stream_info(formatContext, nullptr);
     if (result < 0) {
         std::cout << "Could not find stream info on " << fileName << std::endl;
-        return EXIT_FAILURE;
+        *success = false;
+        return data;
     }
 
     const AVCodec* imageDecoder(nullptr);
@@ -40,7 +68,8 @@ int imageProgram(const char* fileName) {
     imageStreamIndex = av_find_best_stream(formatContext, AVMEDIA_TYPE_VIDEO, -1, -1, &imageDecoder, 0);
     if (imageStreamIndex < 0) {
         std::cout << "Could not find image stream" << std::endl;
-        return EXIT_FAILURE;
+        *success = false;
+        return data;
     }
 
     AVStream* imageStream = formatContext->streams[imageStreamIndex];
@@ -49,19 +78,19 @@ int imageProgram(const char* fileName) {
     result = avcodec_parameters_to_context(imageCodecContext, imageStream->codecpar);
     if (result < 0) {
         std::cout << "Could not set image codec context parameters" << std::endl;
-        return EXIT_FAILURE;
+        *success = false;
+        return data;
     }
 
     result = avcodec_open2(imageCodecContext, imageDecoder, nullptr);
     if (result < 0) {
         std::cout << "Could not open codec context" << std::endl;
-        return EXIT_FAILURE;
+        *success = false;
+        return data;
     }
 
-    int windowWidth, windowHeight;
-    get_window_size(&windowWidth, &windowHeight);
     int IMAGE_WIDTH, IMAGE_HEIGHT;
-    get_output_size(imageCodecContext->width, imageCodecContext->height, windowWidth, windowHeight, &IMAGE_WIDTH, &IMAGE_HEIGHT);
+    get_output_size(imageCodecContext->width, imageCodecContext->height, desiredWidth, desiredHeight, &IMAGE_WIDTH, &IMAGE_HEIGHT);
 
     SwsContext* imageConverter = sws_getContext(
                 imageCodecContext->width,
@@ -88,27 +117,30 @@ int imageProgram(const char* fileName) {
                 continue;
             } else {
                 std::cout << "Packet Reading Error... " << result << std::endl;
-                return EXIT_FAILURE;
+                *success = false;
+                return data;
             }
         }
 
         result = avcodec_receive_frame(imageCodecContext, frame);
         if (result < 0 && result != AVERROR(EAGAIN)) {
             std::cout << "Frame Reading Error..." << result << std::endl;
-            return EXIT_FAILURE;
+            *success = false;
+            return data;
         } else {
             av_frame_unref(finalFrame);
             finalFrame->width = IMAGE_WIDTH;
             finalFrame->height = IMAGE_HEIGHT;
             finalFrame->format = AV_PIX_FMT_GRAY8;
-            av_frame_get_buffer(finalFrame, 0);
+            av_frame_get_buffer(finalFrame, 1);
             if (result == AVERROR(EAGAIN)) {
                 continue;
             }
 
             if (result < 0) {
                 std::cout << "Frame Reading Error... " << result << std::endl;
-                return EXIT_FAILURE;
+                *success = false;
+                return data;
             }
 
             sws_scale(imageConverter, (uint8_t const * const *)frame->data, frame->linesize, 0, imageCodecContext->height, finalFrame->data, finalFrame->linesize);
@@ -119,20 +151,20 @@ int imageProgram(const char* fileName) {
         av_packet_unref(packet);
     }
 
-  av_frame_free(&frame);
-  av_packet_free(&packet);
-  sws_freeContext(imageConverter);
+    data.width = finalFrame->width;
+    data.height = finalFrame->height;
+    data.pixels = (uint8_t*)malloc(finalFrame->width * finalFrame->height * sizeof(uint8_t));
+    
+    for (int i = 0; i < finalFrame->width * finalFrame->height; i++) {
+        data.pixels[i] = finalFrame->data[0][i];
+    }
 
-    initscr();
+    av_frame_free(&frame);
+    av_packet_free(&packet);
+    av_frame_free(&finalFrame);
+    sws_freeContext(imageConverter);
+    avcodec_free_context(&imageCodecContext);
+    avformat_close_input(&formatContext);
 
-  ascii_image asciiImage = get_image(finalFrame->data[0], IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
-  print_ascii_image(&asciiImage);
-  refresh();
-  char input[1000];
-  getch();
-
-  avcodec_free_context(&imageCodecContext);
-  avformat_close_input(&formatContext);
-
-  return 0;
+    return data;
 }

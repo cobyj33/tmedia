@@ -1,14 +1,8 @@
-#include <modes.h>
+#include <info.h>
 #include <iostream>
 
 extern "C" {
-    #include <libavcodec/avcodec.h>
     #include <libavformat/avformat.h>
-    #include <libavutil/avutil.h>
-    #include <libswscale/swscale.h>
-    #include <libswresample/swresample.h>
-    #include <libavutil/fifo.h>
-    #include <libavutil/audio_fifo.h>
 }
 
 

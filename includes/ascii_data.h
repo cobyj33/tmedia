@@ -1,5 +1,4 @@
 #pragma once
-#include <sys/types.h>
 #include <vector>
 #include <string>
 #include <ascii_constants.h>
@@ -20,7 +19,7 @@ typedef struct ascii_image {
 } ascii_image;
 
 typedef struct pixel_data {
-    u_int8_t* pixels;
+    uint8_t* pixels;
     int width;
     int height;
 } pixel_data;

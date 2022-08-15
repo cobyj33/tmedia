@@ -17,5 +17,6 @@
     char get_char_from_area(uint8_t* pixels, int x, int y, int width, int height, int pixelWidth, int pixelHeight );
     void get_window_size(int* width, int* height);
     void get_output_size(int srcWidth, int srcHeight, int maxWidth, int maxHeight, int* width, int* height);
+    void overlap_ascii_images(ascii_image* first, ascii_image* second);
 
 #endif

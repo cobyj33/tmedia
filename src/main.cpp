@@ -1,4 +1,8 @@
-#include <modes.h>
+#include <image.h>
+#include <video.h>
+#include <info.h>
+
+
 #include <stdio.h>
 #include <iostream>
 #include <string.h>
@@ -18,29 +22,29 @@ const char* help_text = "     ASCII_VIDEO         \n"
       "  -h => help                   \n"
       "  -i <file> => show image file                   \n"
       "  -v <file> => play video file                   \n"
+      "       --VIDEO CONTROLS--                   \n"
+      "         RIGHT-ARROW -> Forward 5 seconds                   \n"
+      "         UP-ARROW -> Volume Up 5%                   \n"
+      "         DOWN-ARROW -> Volume Down 5%                   \n"
+      "         SPACEBAR -> Pause / Play                   \n"
+      "       ------------------                   \n"
+      "  -ui <file> => play image URL                   \n"
+      "  -uv <file> => play video URL                   \n"
       "  -info <file> => print file info                   \n";
+
 
 int main(int argc, char** argv)
 {
 
+
+
   if (argc == 1) {
-    
-      std::cout << help_text << std::endl;
-
+    // testIconProgram();
+    // return EXIT_SUCCESS;
+    std::cout << help_text << std::endl;
   } else if (argc == 2) {
-        std::cout << argv[1]; 
-      if (strcmp(argv[1], "-i") == 0) {
-        std::cout << "Must include relative path to view image" << std::endl;        
-      } else if (strcmp(argv[1], "-v") == 0) {
-        std::cout << "Must include relative path to view video" << std::endl;        
-      } else if (strcmp(argv[1], "-info")) {
-        std::cout << "Must include relative path to view file info" << std::endl;    
-    } else if (strcmp(argv[1], "-h") == 0) {
-          std::cout << help_text << std::endl;
-      } else {
-          std::cout << help_text << std::endl;
-      }
-
+    std::cout << argv[1] << std::endl;
+    std::cout << help_text << std::endl;
 
   } else if (argc == 3) {
 
@@ -62,7 +66,11 @@ int main(int argc, char** argv)
         } else {
             std::cout << "Invalid Path " << argv[2] << std::endl;
         }
-      }   else {
+      } else if (strcmp(argv[1], "-ui") == 0) { //TODO: add url validation
+        imageProgram(argv[2]);
+      } else if (strcmp(argv[1], "-uv") == 0) {
+        videoProgram(argv[2]);
+      } else {
         std::cout << help_text << std::endl;
       }
 

@@ -23,7 +23,7 @@ ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWi
   textImage.height = outputHeight;
   
   if (srcWidth <= outputWidth && srcHeight <= outputHeight) {
-    addstr("First Algorithm\n");
+    // addstr("First Algorithm\n");
       for (int row = 0; row < outputHeight; row++) {
           for (int col = 0; col < outputWidth; col++) {
             int pixel = row * srcWidth + col;
@@ -33,7 +33,7 @@ ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWi
       }
       
   } else {
-    addstr("Second Algorithm\n");
+    // addstr("Second Algorithm\n");
     double scanWidth = (double)srcWidth / outputWidth;
     double scanHeight = (double)srcHeight / outputHeight;
     double currentRowPixel = 0;
@@ -140,4 +140,20 @@ void get_output_size(int srcWidth, int srcHeight, int maxWidth, int maxHeight, i
     *width = (int)(srcWidth * shrinkFactor);
     *height = (int)(srcHeight * shrinkFactor);
   }
+}
+
+void overlap_ascii_images(ascii_image* first, ascii_image* second) {
+
+  int topLeftX = (first->width - second->width) / 2;
+  int topLeftY = (first->height - second->height) / 2;
+
+  for (int row = 0; row < second->height; row++) {
+    for (int col = 0; col < second->width; col++) {
+      if (topLeftY + row < first->height && topLeftX + col < first->width) {
+        first->lines[topLeftY + row][topLeftX + col] = second->lines[row][col];
+      }
+    }
+  }
+  
+
 }
