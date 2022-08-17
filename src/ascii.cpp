@@ -157,3 +157,17 @@ void overlap_ascii_images(ascii_image* first, ascii_image* second) {
   
 
 }
+
+pixel_data* pixel_data_alloc(int width, int height) {
+  pixel_data* pixelData = (pixel_data*)malloc(sizeof(pixel_data));
+  pixelData->pixels = (uint8_t*)malloc(width * height * sizeof(uint8_t));
+  pixelData->width = width;
+  pixelData->height = height;
+  
+  return pixelData;
+}
+
+void pixel_data_free(pixel_data* pixelData) {
+  free(pixelData->pixels);
+  free(pixelData);
+}

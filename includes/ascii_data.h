@@ -23,3 +23,6 @@ typedef struct pixel_data {
     int width;
     int height;
 } pixel_data;
+
+pixel_data* pixel_data_alloc(int width, int height);
+void pixel_data_free(pixel_data* pixel_data);
