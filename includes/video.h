@@ -5,11 +5,13 @@
 #define VIDEO_FIFO_MAX_SIZE GIGABYTE_TO_BYTES / FRAME_DATA_SIZE
 #define SECONDS_TO_NANOSECONDS 1000000000
 #define SYNC_THRESHOLD_MILLISECONDS 10
+#define FRAME_RESERVE_SIZE 20000
 
 #include <ascii_data.h>
 
 extern "C" {
     #include <libavcodec/avcodec.h>
+#include <libavutil/avutil.h>
 }
 
 typedef enum VideoIcon {
@@ -41,40 +43,28 @@ typedef struct VideoFrame {
     VideoFrame* last;
 } VideoFrame;
 
-typedef struct VideoFrameList {
-    VideoFrame* first;
-    VideoFrame* last;
-    VideoFrame* current;
-    int currentPosition;
-    int length;
-} VideoFrameList;
-
-void frame_list_push_back(VideoFrameList* list, VideoFrame* frame);
-void frame_list_push_front(VideoFrameList* list, VideoFrame* frame);
-void frame_list_move(int index);
-void frame_list_pop_front(VideoFrameList* list);
-void frame_list_pop_back(VideoFrameList* list);
-
-
-
-VideoFrame* video_frame_alloc(AVFrame* avFrame);
-void video_frame_free(VideoFrame* videoFrame);
+/* typedef struct VideoFrameList { */
+/*     VideoFrame* first; */
+/*     VideoFrame* last; */
+/*     VideoFrame* current; */
+/*     int currentPosition; */
+/*     int length; */
+/* } VideoFrameList; */
 
 typedef struct AudioFrame {
     uint8_t *data[8];
+    AVChannelLayout ch_layout;
+    AVSampleFormat sample_fmt;
     int64_t pts;
     int nb_samples;
 } AudioFrame;
 
+VideoFrame* video_frame_alloc(AVFrame* avFrame);
+void video_frame_free(VideoFrame* videoFrame);
 
+AudioFrame* audio_frame_alloc(AVFrame* avFrame);
+void audio_frame_free(AudioFrame* audioFrame);
 
-// typedef struct VideoTuringDeque {
-//     uint8_t* frames;
-// } VideoTuringDeque;
-
-// typedef struct AudioTuringDeque {
-
-// } AudioTuringDeque;
 
 int testIconProgram();
 bool init_icons();

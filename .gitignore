@@ -1,5 +1,4 @@
-/opencv
-/opencv_contrib
 /.vscode
-our boy.png
 /build
+.cache/
+todo.txt
