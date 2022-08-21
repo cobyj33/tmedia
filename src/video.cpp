@@ -666,9 +666,6 @@ class VideoState {
             
             double lastTime = currentVideoFrame->pts * videoTimeBase;
             while (true) {
-                erase();
-                printw("Jumping to time %f", targetTime);
-                refresh();
                 currentVideoFrame = this->videoFrames->get();
                 if (currentVideoFrame->pts * videoTimeBase == targetTime) {
                     break;
