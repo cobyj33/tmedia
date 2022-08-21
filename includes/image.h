@@ -4,6 +4,6 @@
 #include <ascii_data.h>
 
 int imageProgram(const char* fileName);
-pixel_data get_pixel_data_from_image(const char* fileName, int desiredWidth, int desiredHeight, bool* success);
+pixel_data* get_pixel_data_from_image(const char* fileName);
 
 #endif
