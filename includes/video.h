@@ -16,29 +16,23 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-typedef enum VideoIcon {
-    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LOW_VOLUME_ICON, MEDIUM_VOLUME_ICON, HIGH_VOLUME_ICON, MAXIMIZED_ICON, MINIMIZED_ICON
-} VideoIcon;
+
 
 int videoProgram(const char* fileName);
 int get_packet_stats(const char* fileName, int* videoPackets, int* audioPackets);
 
 typedef struct Playback {
-    int64_t currentPTS;
     int currentPacket;
     bool allPacketsRead = false;
     bool playing = false;
     int64_t skippedPTS;
+    double speed;
+    double time;
 } Playback;
 
 Playback* playback_alloc();
 void playback_free(Playback* playback);
 
-typedef struct VideoSymbol {
-    int framesToDelete;
-    int framesShown;
-    pixel_data* pixelData;
-} VideoSymbol;
 
 typedef struct VideoFrame {
     pixel_data* pixelData;
@@ -47,14 +41,6 @@ typedef struct VideoFrame {
     VideoFrame* next;
     VideoFrame* last;
 } VideoFrame;
-
-/* typedef struct VideoFrameList { */
-/*     VideoFrame* first; */
-/*     VideoFrame* last; */
-/*     VideoFrame* current; */
-/*     int currentPosition; */
-/*     int length; */
-/* } VideoFrameList; */
 
 typedef struct AudioFrame {
     uint8_t *data[8];
@@ -71,11 +57,5 @@ AudioFrame* audio_frame_alloc(AVFrame* avFrame);
 void audio_frame_free(AudioFrame* audioFrame);
 
 
-int testIconProgram();
-bool init_icons();
-bool free_icons();
-pixel_data* get_video_icon(VideoIcon iconEnum);
-VideoSymbol get_video_symbol(VideoIcon iconEnum);
-VideoSymbol get_symbol_from_volume(double normalizedVolume);
 
 #endif

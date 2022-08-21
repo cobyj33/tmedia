@@ -1,7 +1,8 @@
-#include <video.h>
+#include <icons.h>
 #include <image.h>
 #include <ascii.h>
 #include <ascii_constants.h>
+#include <ascii_data.h>
 #include <ncurses.h>
 
 
@@ -23,28 +24,8 @@ extern "C" {
 
 std::map<int, pixel_data*> iconFromEnum;
 pixel_data* emptyPixelData = (pixel_data*)malloc(sizeof(pixel_data));
-
 bool initialized = false;
-const int SPRITE_WIDTH = 16;
-const int SPRITE_HEIGHT = 16;
-const int SPRITE_ROWS = 3;
-const int SPRITE_COLUMNS = 5;
 
-int numOfIcons = 12;
-VideoIcon iconOrder[12] = { 
-    STOP_ICON,
-    PLAY_ICON,
-    FORWARD_ICON,
-    BACKWARD_ICON,
-    PAUSE_ICON,
-    NO_VOLUME_ICON,
-    LOW_VOLUME_ICON,
-    MEDIUM_VOLUME_ICON,
-    HIGH_VOLUME_ICON,
-    MUTE_ICON,
-    MAXIMIZED_ICON,
-    MINIMIZED_ICON
-};
 
 int testIconProgram() {
     init_icons();
@@ -65,44 +46,55 @@ int testIconProgram() {
         }
     }
 
-
     return EXIT_SUCCESS;
+}
+
+bool read_sprite_sheet(pixel_data** buffer, int bufferSize, const char* sheetPath, int rows, int cols, int spriteWidth, int spriteHeight) {
+    pixel_data* iconData = get_pixel_data_from_image(sheetPath);
+
+    if (iconData == nullptr) {
+        std::cout << "Could not Initialize " << sheetPath << std::endl;
+        return false;
+    }
+
+    for (int i = 0; i < std::min(bufferSize, rows * cols); i++) {
+        pixel_data* icon = pixel_data_alloc(spriteWidth, spriteHeight);
+        int currentSpriteY = i / cols * spriteHeight;
+        int currentSpriteX = i % cols * spriteWidth;
+        for (int row = 0; row < spriteHeight; row++) {
+            for (int col = 0; col < spriteWidth; col++) {
+                icon->pixels[row * spriteWidth + col] = iconData->pixels[(currentSpriteY + row) * (spriteWidth * cols) + (currentSpriteX + col)];
+            }
+        }
+        buffer[i] = icon;
+    }
+
+    pixel_data_free(iconData);
+    return true;
 }
 
 bool init_icons() {
     if (!initialized) {
-        bool success;
-        pixel_data iconData = get_pixel_data_from_image("assets/video Icons.jpg", MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, &success);
-        std::cout << "icon data retrieved" << std::endl;
+
+        pixel_data* buffer[numOfIcons];
+        bool success = read_sprite_sheet(buffer, numOfIcons, "assets/video Icons.jpg", ICONS_SPRITE_ROWS, ICONS_SPRITE_COLUMNS, ICONS_SPRITE_WIDTH, ICONS_SPRITE_HEIGHT);
 
         if (!success) {
-            std::cout << "Could not Initialize video icons" << std::endl;
+            std::cout << "Could not initialize icons" << std::endl;
+            for (int i = 0; i < numOfIcons; i++) {
+                if (buffer[i] != nullptr) {
+                    pixel_data_free(buffer[i]);
+                }
+            }
             return false;
         }
 
         for (int i = 0; i < numOfIcons; i++) {
-            pixel_data* icon = pixel_data_alloc(SPRITE_WIDTH, SPRITE_HEIGHT);
-            int currentSpriteY = i / SPRITE_COLUMNS * SPRITE_HEIGHT;
-            int currentSpriteX = i % SPRITE_COLUMNS * SPRITE_WIDTH;
-            std::cout << "Y: " << currentSpriteY << "X: " << currentSpriteX << std::endl;
-            for (int row = 0; row < SPRITE_HEIGHT; row++) {
-                for (int col = 0; col < SPRITE_WIDTH; col++) {
-                    icon->pixels[row * SPRITE_WIDTH + col] = iconData.pixels[(currentSpriteY + row) * (SPRITE_WIDTH * SPRITE_COLUMNS) + (currentSpriteX + col)];
-                }
-            }
-            std::cout << "icon " << i << " retrieved" << std::endl;
-
-            iconFromEnum.emplace(std::make_pair(iconOrder[i], icon));
+            iconFromEnum.emplace(std::make_pair(iconOrder[i], buffer[i]));
         }
-
-        free(iconData.pixels);
-
-        std::cout << "Icon Data Freed" << std::endl;
-
         initialized = true;
     }
 
-    
     std::cout << "All Icons Initialized" << std::endl;
     return initialized;
 }
@@ -141,7 +133,6 @@ VideoSymbol get_video_symbol(VideoIcon iconEnum) {
     return symbol;
 }
 
-VideoIcon volumeIcons[4] = { NO_VOLUME_ICON, LOW_VOLUME_ICON, MEDIUM_VOLUME_ICON, HIGH_VOLUME_ICON };
 VideoSymbol get_symbol_from_volume(double normalizedVolume) {
     normalizedVolume = std::min(1.0, std::max(0.0, normalizedVolume));
     return get_video_symbol(volumeIcons[(int)(3.99 * normalizedVolume)]);
