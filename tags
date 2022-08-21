@@ -4,7 +4,7 @@
 !_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
 !_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
 !_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
-!_TAG_PROC_CWD	/home/cobyj33/Programming/C++/ascii_video/	//
+!_TAG_PROC_CWD	/home/cobyj33/Programming/C++/ascii_video/master/	//
 !_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
 !_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
@@ -23,7 +23,10 @@ ARCHITECTURE_ID	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#
 ARCHITECTURE_ID	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#  define ARCHITECTURE_ID /;"	d	file:
 ARCHITECTURE_ID	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#  define ARCHITECTURE_ID$/;"	d	file:
 ASCII_CONSTANTS	includes/ascii_constants.h	/^#define ASCII_CONSTANTS$/;"	d
-ASCII_PROGRAM_MODES	includes/modes.h	/^    #define ASCII_PROGRAM_MODES$/;"	d
+ASCII_FILE_INFO	includes/info.h	/^#define ASCII_FILE_INFO$/;"	d
+ASCII_IMAGE_PROGRAM	includes/image.h	/^#define ASCII_IMAGE_PROGRAM$/;"	d
+ASCII_VIDEO_PROGRAM	includes/video.h	/^#define ASCII_VIDEO_PROGRAM$/;"	d
+BACKWARD_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 C89ATOMIC_32BIT	includes/miniaudio.h	/^#define C89ATOMIC_32BIT$/;"	M
 C89ATOMIC_64BIT	includes/miniaudio.h	/^#define C89ATOMIC_64BIT$/;"	M
 C89ATOMIC_ARM	includes/miniaudio.h	/^#define C89ATOMIC_ARM$/;"	M
@@ -43,7 +46,7 @@ C89ATOMIC_X64	includes/miniaudio.h	/^#define C89ATOMIC_X64$/;"	M
 C89ATOMIC_X86	includes/miniaudio.h	/^#define C89ATOMIC_X86$/;"	M
 CMAKE_AR	build/CMakeFiles/3.22.1/CMakeCCompiler.cmake	/^set(CMAKE_AR "\/usr\/bin\/ar")$/;"	v
 CMAKE_AR	build/CMakeFiles/3.22.1/CMakeCXXCompiler.cmake	/^set(CMAKE_AR "\/usr\/bin\/ar")$/;"	v
-CMAKE_BUILD_TYPE	CMakeLists.txt	/^set(CMAKE_BUILD_TYPE Release)$/;"	v
+CMAKE_BUILD_TYPE	CMakeLists.txt	/^set(CMAKE_BUILD_TYPE Debug)$/;"	v
 CMAKE_C11_COMPILE_FEATURES	build/CMakeFiles/3.22.1/CMakeCCompiler.cmake	/^set(CMAKE_C11_COMPILE_FEATURES "c_std_11;c_static_assert")$/;"	v
 CMAKE_C17_COMPILE_FEATURES	build/CMakeFiles/3.22.1/CMakeCCompiler.cmake	/^set(CMAKE_C17_COMPILE_FEATURES "c_std_17")$/;"	v
 CMAKE_C23_COMPILE_FEATURES	build/CMakeFiles/3.22.1/CMakeCCompiler.cmake	/^set(CMAKE_C23_COMPILE_FEATURES "c_std_23")$/;"	v
@@ -138,15 +141,16 @@ CMAKE_DEPENDS_GENERATOR	build/CMakeFiles/Makefile.cmake	/^set(CMAKE_DEPENDS_GENE
 CMAKE_DEPENDS_IN_PROJECT_ONLY	build/CMakeFiles/ascii_video.dir/DependInfo.cmake	/^set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)$/;"	v
 CMAKE_DEPENDS_LANGUAGES	build/CMakeFiles/ascii_video.dir/DependInfo.cmake	/^set(CMAKE_DEPENDS_LANGUAGES$/;"	v
 CMAKE_DEPEND_INFO_FILES	build/CMakeFiles/Makefile.cmake	/^set(CMAKE_DEPEND_INFO_FILES$/;"	v
+CMAKE_EXPORT_COMPILE_COMMANDS	CMakeLists.txt	/^set(CMAKE_EXPORT_COMPILE_COMMANDS 1)$/;"	v
 CMAKE_FORCE_UNIX_PATHS	build/CMakeFiles/CMakeDirectoryInformation.cmake	/^set(CMAKE_FORCE_UNIX_PATHS 1)$/;"	v
 CMAKE_Fortran_TARGET_MODULE_DIR	build/CMakeFiles/ascii_video.dir/DependInfo.cmake	/^set(CMAKE_Fortran_TARGET_MODULE_DIR "")$/;"	v
-CMAKE_HOST_SYSTEM	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_HOST_SYSTEM "Linux-5.15.0-43-generic")$/;"	v
+CMAKE_HOST_SYSTEM	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_HOST_SYSTEM "Linux-5.15.0-46-generic")$/;"	v
 CMAKE_HOST_SYSTEM_NAME	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_HOST_SYSTEM_NAME "Linux")$/;"	v
 CMAKE_HOST_SYSTEM_PROCESSOR	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_HOST_SYSTEM_PROCESSOR "x86_64")$/;"	v
-CMAKE_HOST_SYSTEM_VERSION	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_HOST_SYSTEM_VERSION "5.15.0-43-generic")$/;"	v
+CMAKE_HOST_SYSTEM_VERSION	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_HOST_SYSTEM_VERSION "5.15.0-46-generic")$/;"	v
 CMAKE_INSTALL_COMPONENT	build/cmake_install.cmake	/^    set(CMAKE_INSTALL_COMPONENT "${COMPONENT}")$/;"	v
 CMAKE_INSTALL_COMPONENT	build/cmake_install.cmake	/^    set(CMAKE_INSTALL_COMPONENT)$/;"	v
-CMAKE_INSTALL_CONFIG_NAME	build/cmake_install.cmake	/^    set(CMAKE_INSTALL_CONFIG_NAME "Release")$/;"	v
+CMAKE_INSTALL_CONFIG_NAME	build/cmake_install.cmake	/^    set(CMAKE_INSTALL_CONFIG_NAME "Debug")$/;"	v
 CMAKE_INSTALL_MANIFEST	build/cmake_install.cmake	/^  set(CMAKE_INSTALL_MANIFEST "install_manifest.txt")$/;"	v
 CMAKE_INSTALL_MANIFEST	build/cmake_install.cmake	/^  set(CMAKE_INSTALL_MANIFEST "install_manifest_${CMAKE_INSTALL_COMPONENT}.txt")$/;"	v
 CMAKE_INSTALL_PREFIX	build/cmake_install.cmake	/^  set(CMAKE_INSTALL_PREFIX "\/usr\/local")$/;"	v
@@ -170,11 +174,11 @@ CMAKE_RELATIVE_PATH_TOP_SOURCE	build/CMakeFiles/CMakeDirectoryInformation.cmake	
 CMAKE_SIZEOF_VOID_P	build/CMakeFiles/3.22.1/CMakeCCompiler.cmake	/^  set(CMAKE_SIZEOF_VOID_P "${CMAKE_C_SIZEOF_DATA_PTR}")$/;"	v
 CMAKE_SIZEOF_VOID_P	build/CMakeFiles/3.22.1/CMakeCXXCompiler.cmake	/^  set(CMAKE_SIZEOF_VOID_P "${CMAKE_CXX_SIZEOF_DATA_PTR}")$/;"	v
 CMAKE_SOURCE_DIR	build/Makefile	/^CMAKE_SOURCE_DIR = \/home\/cobyj33\/Programming\/C++\/ascii_video$/;"	m
-CMAKE_SYSTEM	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_SYSTEM "Linux-5.15.0-43-generic")$/;"	v
+CMAKE_SYSTEM	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_SYSTEM "Linux-5.15.0-46-generic")$/;"	v
 CMAKE_SYSTEM_LOADED	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_SYSTEM_LOADED 1)$/;"	v
 CMAKE_SYSTEM_NAME	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_SYSTEM_NAME "Linux")$/;"	v
 CMAKE_SYSTEM_PROCESSOR	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_SYSTEM_PROCESSOR "x86_64")$/;"	v
-CMAKE_SYSTEM_VERSION	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_SYSTEM_VERSION "5.15.0-43-generic")$/;"	v
+CMAKE_SYSTEM_VERSION	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_SYSTEM_VERSION "5.15.0-46-generic")$/;"	v
 CMAKE_TARGET_LINKED_INFO_FILES	build/CMakeFiles/ascii_video.dir/DependInfo.cmake	/^set(CMAKE_TARGET_LINKED_INFO_FILES$/;"	v
 COMPILER_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^# define COMPILER_ID /;"	d	file:
 COMPILER_ID	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^# define COMPILER_ID /;"	d	file:
@@ -226,10 +230,13 @@ DEC	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#define DEC(/;"	d	f
 DEC	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#define DEC(/;"	d	file:
 DWORD_PTR	includes/miniaudio.h	/^typedef size_t DWORD_PTR;$/;"	t
 EQUALS	build/Makefile	/^EQUALS = =$/;"	m
+FORWARD_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 FRAME_DATA_SIZE	includes/ascii_constants.h	/^#define FRAME_DATA_SIZE /;"	d
 Format	includes/miniaudio.h	/^    WAVEFORMATEX Format;$/;"	E
+GIGABYTE_TO_BYTES	includes/video.h	/^#define GIGABYTE_TO_BYTES /;"	d
 HEX	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#define HEX(/;"	d	file:
 HEX	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#define HEX(/;"	d	file:
+HIGH_VOLUME_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 HRESULT	includes/miniaudio.h	/^        HRESULT (STDMETHODCALLTYPE * Activate)         (ma_IMMDevice* pThis, const IID* const ii/;"	E	struct:ma_IMMDeviceCollection
 HRESULT	includes/miniaudio.h	/^        HRESULT (STDMETHODCALLTYPE * EnumAudioEndpoints)                    (ma_IMMDeviceEnumera/;"	E	struct:ma_IUnknown
 HRESULT	includes/miniaudio.h	/^        HRESULT (STDMETHODCALLTYPE * GetActivateResult)(ma_IActivateAudioInterfaceAsyncOperation/;"	E
@@ -361,8 +368,9 @@ HRESULT	includes/miniaudio.h	/^    HRESULT (STDMETHODCALLTYPE * Stop)           
 HRESULT	includes/miniaudio.h	/^    HRESULT (STDMETHODCALLTYPE * Unlock)            (ma_IDirectSoundBuffer* pThis, void* pAudioP/;"	E	struct:ma_IDirectSound
 HRESULT	includes/miniaudio.h	/^    HRESULT (STDMETHODCALLTYPE * Unlock)            (ma_IDirectSoundCaptureBuffer* pThis, void* /;"	E	struct:ma_IDirectSoundCapture
 ID_VOID_MAIN	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^# define ID_VOID_MAIN$/;"	d	file:
+LOW_VOLUME_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 MAIN_ASCII_FUNCTIONS_HEADER	includes/ascii.h	/^    #define MAIN_ASCII_FUNCTIONS_HEADER$/;"	d
-MAX_AUDIO_FRAME_SIZE	src/video.cpp	/^#define MAX_AUDIO_FRAME_SIZE /;"	d	file:
+MAXIMIZED_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 MAX_FRAME_HEIGHT	includes/ascii_constants.h	/^#define MAX_FRAME_HEIGHT /;"	d
 MAX_FRAME_WIDTH	includes/ascii_constants.h	/^#define MAX_FRAME_WIDTH /;"	d
 MA_32BIT	includes/miniaudio.h	/^#define MA_32BIT$/;"	M
@@ -866,11 +874,16 @@ MA_XSTRINGIFY	includes/miniaudio.h	/^#define MA_XSTRINGIFY(x)    MA_STRINGIFY(x)
 MA_ZERO_MEMORY	includes/miniaudio.h	/^#define MA_ZERO_MEMORY(p, sz) ZeroMemory((p), (sz))$/;"	M
 MA_ZERO_MEMORY	includes/miniaudio.h	/^#define MA_ZERO_MEMORY(p, sz) memset((p), 0, (sz))$/;"	M
 MA_ZERO_OBJECT	includes/miniaudio.h	/^#define MA_ZERO_OBJECT(p) MA_ZERO_MEMORY((p), sizeof(*(p)))$/;"	M
+MEDIUM_VOLUME_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 MINIAUDIO_IMPLEMENTATION	includes/miniaudio.h	/^#define MINIAUDIO_IMPLEMENTATION$/;"	M
 MINIAUDIO_IMPLEMENTATION	src/video.cpp	/^#define MINIAUDIO_IMPLEMENTATION$/;"	d	file:
+MINIMIZED_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
+MUTE_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 ManufacturerGuid	includes/miniaudio.h	/^    GUID ManufacturerGuid;$/;"	E	struct:ma_IDirectSoundNotify
+NO_VOLUME_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 NULL	includes/miniaudio.h	/^#define NULL 0$/;"	M
 NameGuid	includes/miniaudio.h	/^    GUID NameGuid;$/;"	E	struct:ma_IDirectSoundNotify
+PAUSE_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 PLATFORM_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define PLATFORM_ID /;"	d	file:
 PLATFORM_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define PLATFORM_ID$/;"	d	file:
 PLATFORM_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^# define PLATFORM_ID /;"	d	file:
@@ -879,11 +892,14 @@ PLATFORM_ID	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#  de
 PLATFORM_ID	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#  define PLATFORM_ID$/;"	d	file:
 PLATFORM_ID	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^# define PLATFORM_ID /;"	d	file:
 PLATFORM_ID	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^# define PLATFORM_ID$/;"	d	file:
+PLAY_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 PROPERTYKEY	includes/miniaudio.h	/^} PROPERTYKEY;$/;"	t
 PROPERTYKEY_DEFINED	includes/miniaudio.h	/^#define PROPERTYKEY_DEFINED$/;"	M
+Playback	includes/video.h	/^typedef struct Playback {$/;"	s
+Playback	includes/video.h	/^} Playback;$/;"	t	typeref:struct:Playback
 ProductGuid	includes/miniaudio.h	/^    GUID ProductGuid;$/;"	E	struct:ma_IDirectSoundNotify
 RM	build/Makefile	/^RM = \/usr\/bin\/cmake -E rm -f$/;"	m
-SDL_AUDIO_BUFFER_SIZE	src/video.cpp	/^#define SDL_AUDIO_BUFFER_SIZE /;"	d	file:
+SECONDS_TO_NANOSECONDS	includes/video.h	/^#define SECONDS_TO_NANOSECONDS /;"	d
 SHELL	build/Makefile	/^SHELL = \/bin\/sh$/;"	m
 SIMULATE_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define SIMULATE_ID /;"	d	file:
 SIMULATE_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^# define SIMULATE_ID /;"	d	file:
@@ -919,6 +935,11 @@ SPEAKER_TOP_CENTER	includes/miniaudio.h	/^#define SPEAKER_TOP_CENTER            
 SPEAKER_TOP_FRONT_CENTER	includes/miniaudio.h	/^#define SPEAKER_TOP_FRONT_CENTER      0x2000$/;"	M
 SPEAKER_TOP_FRONT_LEFT	includes/miniaudio.h	/^#define SPEAKER_TOP_FRONT_LEFT        0x1000$/;"	M
 SPEAKER_TOP_FRONT_RIGHT	includes/miniaudio.h	/^#define SPEAKER_TOP_FRONT_RIGHT       0x4000$/;"	M
+SPRITE_COLUMNS	src/drawing.cpp	/^const int SPRITE_COLUMNS = 5;$/;"	v	typeref:typename:const int
+SPRITE_HEIGHT	src/drawing.cpp	/^const int SPRITE_HEIGHT = 16;$/;"	v	typeref:typename:const int
+SPRITE_ROWS	src/drawing.cpp	/^const int SPRITE_ROWS = 3;$/;"	v	typeref:typename:const int
+SPRITE_WIDTH	src/drawing.cpp	/^const int SPRITE_WIDTH = 16;$/;"	v	typeref:typename:const int
+STOP_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 STRINGIFY	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#define STRINGIFY(/;"	d	file:
 STRINGIFY	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#define STRINGIFY(/;"	d	file:
 STRINGIFY_HELPER	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#define STRINGIFY_HELPER(/;"	d	file:
@@ -961,10 +982,16 @@ ULONG	includes/miniaudio.h	/^    ULONG   (STDMETHODCALLTYPE * Release)       (ma
 ULONG	includes/miniaudio.h	/^    ULONG   (STDMETHODCALLTYPE * Release)       (ma_IPropertyStore* pThis);$/;"	E	struct:ma_IActivateAudioInterfaceAsyncOperation
 ULONG	includes/miniaudio.h	/^    ULONG   (STDMETHODCALLTYPE * Release)       (ma_IUnknown* pThis);$/;"	E
 ULONG	includes/miniaudio.h	/^    ULONG   (STDMETHODCALLTYPE * Release)       (ma_completion_handler_uwp* pThis);$/;"	E
-VIDEO_FIFO_MAX_SIZE	src/video.cpp	/^#define VIDEO_FIFO_MAX_SIZE /;"	d	file:
+VIDEO_FIFO_MAX_SIZE	includes/video.h	/^#define VIDEO_FIFO_MAX_SIZE /;"	d
+VideoFrame	includes/video.h	/^typedef struct VideoFrame {$/;"	s
+VideoFrame	includes/video.h	/^} VideoFrame;$/;"	t	typeref:struct:VideoFrame
+VideoIcon	includes/video.h	/^typedef enum VideoIcon {$/;"	g
+VideoIcon	includes/video.h	/^} VideoIcon;$/;"	t	typeref:enum:VideoIcon
 VideoState	src/video.cpp	/^        VideoState() { }$/;"	f	class:VideoState	file:
 VideoState	src/video.cpp	/^        VideoState(const char* fileName) {$/;"	f	class:VideoState	file:
 VideoState	src/video.cpp	/^class VideoState {$/;"	c	file:
+VideoSymbol	includes/video.h	/^typedef struct VideoSymbol {$/;"	s
+VideoSymbol	includes/video.h	/^} VideoSymbol;$/;"	t	typeref:struct:VideoSymbol
 WAVEFORMATEXTENSIBLE	includes/miniaudio.h	/^} WAVEFORMATEXTENSIBLE;$/;"	t
 WAVE_FORMAT_44M08	includes/miniaudio.h	/^#define WAVE_FORMAT_44M08 0x00000100$/;"	M
 WAVE_FORMAT_44M16	includes/miniaudio.h	/^#define WAVE_FORMAT_44M16 0x00000400$/;"	M
@@ -1014,7 +1041,7 @@ absoluteCursor	includes/miniaudio.h	/^    ma_uint64 absoluteCursor;$/;"	E	struct
 advance	includes/miniaudio.h	/^    double advance;$/;"	E	struct:ma_encoder
 algorithm	includes/miniaudio.h	/^    ma_resample_algorithm algorithm;    \/* When set to ma_resample_algorithm_custom, pBackendVT/;"	E	struct:ma_resampler_config
 all	build/Makefile	/^all: cmake_check_build_system$/;"	t
-allPacketsRead	src/video.cpp	/^        bool allPacketsRead = false;$/;"	m	class:VideoState	typeref:typename:bool	file:
+allPacketsRead	includes/video.h	/^    bool allPacketsRead = false;$/;"	m	struct:Playback	typeref:typename:bool
 allocationCallbacks	includes/miniaudio.h	/^    ma_allocation_callbacks allocationCallbacks;    \/* Need to store these persistently because/;"	E
 allocationCallbacks	includes/miniaudio.h	/^    ma_allocation_callbacks allocationCallbacks;    \/* Only used for the wchar_t version of ope/;"	E	struct:ma_paged_audio_buffer_page
 allocationCallbacks	includes/miniaudio.h	/^    ma_allocation_callbacks allocationCallbacks;$/;"	E
@@ -1037,7 +1064,7 @@ ascii_video	build/Makefile	/^ascii_video: cmake_check_build_system$/;"	t
 ascii_video/fast	build/Makefile	/^ascii_video\/fast:$/;"	t
 atEnd	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_bool32) atEnd;$/;"	E	struct:ma_sound
 attenuationModel	includes/miniaudio.h	/^    ma_attenuation_model attenuationModel;$/;"	E
-audioCodecContext	src/video.cpp	/^        AVCodecContext* audioCodecContext;$/;"	m	class:VideoState	typeref:typename:AVCodecContext *	file:
+audioCodecContext	src/video.cpp	/^        AVCodecContext* audioCodecContext = nullptr;$/;"	m	class:VideoState	typeref:typename:AVCodecContext *	file:
 audioDataCallback	src/video.cpp	/^        static void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_/;"	f	class:VideoState	typeref:typename:void	file:
 audioDecoder	src/video.cpp	/^        const AVCodec* audioDecoder = nullptr;$/;"	m	class:VideoState	typeref:typename:const AVCodec *	file:
 audioDevice	src/video.cpp	/^        ma_device* audioDevice;$/;"	m	class:VideoState	typeref:typename:ma_device *	file:
@@ -1046,7 +1073,6 @@ audioMutex	src/video.cpp	/^        std::mutex audioMutex;$/;"	m	class:VideoState
 audioPlaybackThread	src/video.cpp	/^        static int audioPlaybackThread(VideoState* state) {$/;"	f	class:VideoState	typeref:typename:int	file:
 audioResampler	src/video.cpp	/^        SwrContext* audioResampler;$/;"	m	class:VideoState	typeref:typename:SwrContext *	file:
 audioStream	src/video.cpp	/^        AVStream* audioStream;$/;"	m	class:VideoState	typeref:typename:AVStream *	file:
-availableFrames	src/video.cpp	/^        int availableFrames;$/;"	m	class:VideoState	typeref:typename:int	file:
 b0	includes/miniaudio.h	/^    double b0;$/;"	E
 b0	includes/miniaudio.h	/^    ma_biquad_coefficient b0;$/;"	E
 b1	includes/miniaudio.h	/^    double b1;$/;"	E
@@ -1550,8 +1576,8 @@ counter	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) counter;$/;"	E	struct
 counter	includes/miniaudio.h	/^    ma_int64 counter;$/;"	t
 counter	includes/miniaudio.h	/^    ma_uint32 counter;$/;"	E	struct:ma_job
 counter	includes/miniaudio.h	/^    ma_uint32 counter;$/;"	E	struct:ma_resampler_config
-currentFrame	src/video.cpp	/^        int currentFrame;$/;"	m	class:VideoState	typeref:typename:int	file:
-currentPacket	src/video.cpp	/^        int currentPacket;$/;"	m	class:VideoState	typeref:typename:int	file:
+currentPTS	includes/video.h	/^    int64_t currentPTS;$/;"	m	struct:Playback	typeref:typename:int64_t
+currentPacket	includes/video.h	/^    int currentPacket;$/;"	m	struct:Playback	typeref:typename:int
 currentPageIndex	includes/miniaudio.h	/^    ma_uint32 currentPageIndex;                 \/* Toggles between 0 and 1. Index 0 is the firs/;"	E	struct:ma_resource_manager_data_stream
 cursor	includes/miniaudio.h	/^    ma_uint32 cursor;               \/* Feedback is written to this cursor. Always equal or in f/;"	E
 cursor	includes/miniaudio.h	/^    ma_uint64 cursor;$/;"	E	struct:ma_device
@@ -1646,6 +1672,7 @@ e	includes/miniaudio.h	/^    ma_event e;$/;"	E	struct:ma_resampler_config
 eCategory	includes/miniaudio.h	/^    MA_AUDIO_STREAM_CATEGORY eCategory;$/;"	E
 edit_cache	build/Makefile	/^edit_cache:$/;"	t
 edit_cache/fast	build/Makefile	/^edit_cache\/fast: edit_cache$/;"	t
+emptyPixelData	src/drawing.cpp	/^pixel_data* emptyPixelData = (pixel_data*)malloc(sizeof(pixel_data));$/;"	v	typeref:typename:pixel_data *
 encodedReadOffset	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) encodedReadOffset;  \/* Most significant bit is the loop flag. Lower/;"	E	struct:ma_resampler_config
 encodedWriteOffset	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) encodedWriteOffset; \/* Most significant bit is the loop flag. Lower/;"	E	struct:ma_resampler_config
 encodingFormat	includes/miniaudio.h	/^    ma_encoding_format encodingFormat;$/;"	E
@@ -1665,6 +1692,7 @@ fetch_next	src/video.cpp	/^        int fetch_next(int requestedPacketCount) {$/;
 fetchingMutex	src/video.cpp	/^        std::mutex fetchingMutex;$/;"	m	class:VideoState	typeref:typename:std::mutex	file:
 fileInfoProgram	src/fileInfo.cpp	/^int fileInfoProgram(const char* fileName) {$/;"	f	typeref:typename:int
 fileName	src/video.cpp	/^        const char* fileName;$/;"	m	class:VideoState	typeref:typename:const char *	file:
+flagMutex	src/video.cpp	/^        std::mutex flagMutex;$/;"	m	class:VideoState	typeref:typename:std::mutex	file:
 flags	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) flags;                          \/* Some state flags for tracking th/;"	E	struct:ma_node_output_bus
 flags	includes/miniaudio.h	/^    ma_uint32 flags;                            \/* A combination of MA_SOUND_FLAG_* flags. *\/$/;"	E
 flags	includes/miniaudio.h	/^    ma_uint32 flags;                            \/* The flags that were passed used to initializ/;"	E	struct:ma_resource_manager_data_stream
@@ -1692,7 +1720,10 @@ frameCount	src/video.cpp	/^        int frameCount;$/;"	m	class:VideoState	typere
 frameHeight	src/video.cpp	/^        int frameHeight;$/;"	m	class:VideoState	typeref:typename:int	file:
 frameRate	src/video.cpp	/^        double frameRate;$/;"	m	class:VideoState	typeref:typename:double	file:
 frameWidth	src/video.cpp	/^        int frameWidth;$/;"	m	class:VideoState	typeref:typename:int	file:
-free	src/video.cpp	/^        void free() {$/;"	f	class:VideoState	typeref:typename:void	file:
+framesShown	includes/video.h	/^    int framesShown;$/;"	m	struct:VideoSymbol	typeref:typename:int
+framesToDelete	includes/video.h	/^    int framesToDelete;$/;"	m	struct:VideoSymbol	typeref:typename:int
+free_icons	src/drawing.cpp	/^bool free_icons() {$/;"	f	typeref:typename:bool
+free_video_state	src/video.cpp	/^        void free_video_state() {$/;"	f	class:VideoState	typeref:typename:void	file:
 frequency	includes/miniaudio.h	/^    double frequency;$/;"	E
 frequency	includes/miniaudio.h	/^    double frequency;$/;"	E	struct:ma_encoder
 fullyLoad	src/video.cpp	/^    static void fullyLoad(VideoState* state) {$/;"	f	class:VideoState	typeref:typename:void	file:
@@ -1706,6 +1737,10 @@ get_char_from_value	src/ascii.cpp	/^char get_char_from_value(uint8_t value) {$/;
 get_image	src/ascii.cpp	/^ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWidth, int outputH/;"	f	typeref:typename:ascii_image
 get_output_size	src/ascii.cpp	/^void get_output_size(int srcWidth, int srcHeight, int maxWidth, int maxHeight, int* width, int* /;"	f	typeref:typename:void
 get_packet_stats	src/video.cpp	/^int get_packet_stats(const char* fileName, int* videoPackets, int* audioPackets) {$/;"	f	typeref:typename:int
+get_pixel_data_from_image	src/image.cpp	/^pixel_data get_pixel_data_from_image(const char* fileName, int desiredWidth, int desiredHeight, /;"	f	typeref:typename:pixel_data
+get_symbol_from_volume	src/drawing.cpp	/^VideoSymbol get_symbol_from_volume(double normalizedVolume) {$/;"	f	typeref:typename:VideoSymbol
+get_video_icon	src/drawing.cpp	/^pixel_data* get_video_icon(VideoIcon iconEnum) {$/;"	f	typeref:typename:pixel_data *
+get_video_symbol	src/drawing.cpp	/^VideoSymbol get_video_symbol(VideoIcon iconEnum) {$/;"	f	typeref:typename:VideoSymbol
 get_window_size	src/ascii.cpp	/^void get_window_size(int* width, int* height) {$/;"	f	typeref:typename:void
 groupsOffset	includes/miniaudio.h	/^    size_t groupsOffset;$/;"	E
 guid3DAlgorithm	includes/miniaudio.h	/^    GUID guid3DAlgorithm;$/;"	E	struct:ma_completion_handler_uwp
@@ -1739,6 +1774,8 @@ hwo	includes/miniaudio.h	/^typedef MMRESULT (WINAPI * MA_PFN_waveOutClose)(HWAVE
 hwo	includes/miniaudio.h	/^typedef MMRESULT (WINAPI * MA_PFN_waveOutReset)(HWAVEOUT hwo);$/;"	t	struct:ma_IDirectSoundNotify
 i	includes/miniaudio.h	/^    c89atomic_uint32 i;$/;"	t
 i	includes/miniaudio.h	/^    c89atomic_uint64 i;$/;"	t
+iconFromEnum	src/drawing.cpp	/^std::map<int, pixel_data*> iconFromEnum;$/;"	v	typeref:typename:std::map<int,pixel_data * >
+iconOrder	src/drawing.cpp	/^VideoIcon iconOrder[12] = { $/;"	v	typeref:typename:VideoIcon[12]
 id	includes/miniaudio.h	/^    ma_device_id id;$/;"	E
 id	includes/miniaudio.h	/^    ma_device_id id;$/;"	E	struct:ma_completion_handler_uwp
 imageProgram	src/image.cpp	/^int imageProgram(const char* fileName) {$/;"	f	typeref:typename:int
@@ -1773,16 +1810,19 @@ info_version_internal	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.c
 info_version_internal	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^char const* info_version_internal = "INFO" ":" "compiler_version_internal[" COMPILER_VERSION_INT/;"	v	typeref:typename:char const *
 init	includes/miniaudio.h	/^    ma_resource_manager_pipeline_stage_notification init;    \/* Initialization of the decoder. /;"	E
 init	src/video.cpp	/^        int init(const char* fileName) {$/;"	f	class:VideoState	typeref:typename:int	file:
+init_icons	src/drawing.cpp	/^bool init_icons() {$/;"	f	typeref:typename:bool
 initialAttachmentInputBusIndex	includes/miniaudio.h	/^    ma_uint32 initialAttachmentInputBusIndex;   \/* The index of the input bus of pInitialAttach/;"	E
 initialSeekPointInPCMFrames	includes/miniaudio.h	/^    ma_uint64 initialSeekPointInPCMFrames;      \/* Initializes the sound such that it's seeked /;"	E
 initialSeekPointInPCMFrames	includes/miniaudio.h	/^    ma_uint64 initialSeekPointInPCMFrames;$/;"	E
 initialState	includes/miniaudio.h	/^    ma_node_state initialState;         \/* Defaults to ma_node_state_started. *\/$/;"	E
+initialized	src/drawing.cpp	/^bool initialized = false;$/;"	v	typeref:typename:bool
 inputBusCount	includes/miniaudio.h	/^    ma_uint32 inputBusCount;            \/* Only used if the vtable specifies an input bus count/;"	E
 inputBusCount	includes/miniaudio.h	/^    ma_uint32 inputBusCount;$/;"	E	struct:ma_node_base
 inputBusCount	includes/miniaudio.h	/^    ma_uint8 inputBusCount;$/;"	E
 inputCacheCap	includes/miniaudio.h	/^    ma_uint64 inputCacheCap;        \/* The capacity of the input cache. *\/$/;"	E	struct:ma_decoder
 inputCacheConsumed	includes/miniaudio.h	/^    ma_uint64 inputCacheConsumed;   \/* The number of frames that have been consumed in the cach/;"	E	struct:ma_decoder
 inputCacheRemaining	includes/miniaudio.h	/^    ma_uint64 inputCacheRemaining;  \/* The number of valid frames remaining in the cahce. *\/$/;"	E	struct:ma_decoder
+inputListeningThread	src/video.cpp	/^        static void inputListeningThread(VideoState* state) {$/;"	f	class:VideoState	typeref:typename:void	file:
 inputNodeInputBusIndex	includes/miniaudio.h	/^    MA_ATOMIC(1, ma_uint8) inputNodeInputBusIndex;          \/* The index of the input bus on th/;"	E	struct:ma_node_output_bus
 isAttached	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_bool32) isAttached;                     \/* This is used to prevent iteratio/;"	E	struct:ma_node_output_bus
 isDataOwnedByResourceManager	includes/miniaudio.h	/^    ma_bool32 isDataOwnedByResourceManager;         \/* Set to true when the underlying data buf/;"	E	struct:ma_resource_manager_data_buffer_node
@@ -1810,12 +1850,13 @@ jobQueueFlags	includes/miniaudio.h	/^    ma_uint32 jobQueueFlags;$/;"	E	struct:m
 jobThreadCount	includes/miniaudio.h	/^    ma_uint32 jobThreadCount;       \/* Set to 0 if you want to self-manage your job threads. De/;"	E
 jobThreads	includes/miniaudio.h	/^    ma_thread jobThreads[MA_RESOURCE_MANAGER_MAX_JOB_THREAD_COUNT]; \/* The threads for executin/;"	E	struct:ma_resource_manager
 jobsOffset	includes/miniaudio.h	/^    size_t jobsOffset;$/;"	E
+jumpToTime	src/video.cpp	/^        void jumpToTime(int pts) {$/;"	f	class:VideoState	typeref:typename:void	file:
+lastImage	src/video.cpp	/^        ascii_image lastImage;$/;"	m	class:VideoState	typeref:typename:ascii_image	file:
 lcg	includes/miniaudio.h	/^    ma_lcg lcg;$/;"	E	struct:ma_encoder
 lengthInFrames	includes/miniaudio.h	/^    ma_uint64 lengthInFrames;   \/* The total length of the fade. *\/$/;"	E
 linear	includes/miniaudio.h	/^    } linear;$/;"	E	struct:ma_resampler_config
-lines	includes/ascii_data.h	/^    char lines[MAX_FRAME_HEIGHT][MAX_FRAME_WIDTH];$/;"	m	struct:ascii_image	typeref:typename:char[][]
+lines	includes/ascii_data.h	/^    char lines[MAX_FRAME_HEIGHT + 1][MAX_FRAME_WIDTH + 1];$/;"	m	struct:ascii_image	typeref:typename:char[][]
 listenerCount	includes/miniaudio.h	/^    ma_uint32 listenerCount;                    \/* Must be between 1 and MA_ENGINE_MAX_LISTENER/;"	E	struct:ma_sound_inlined
-loadingStatus	src/video.cpp	/^        double loadingStatus;$/;"	m	class:VideoState	typeref:typename:double	file:
 localTime	includes/miniaudio.h	/^    MA_ATOMIC(8, ma_uint64) localTime;      \/* The node's local clock. This is just a running s/;"	E	struct:ma_node_base
 lock	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_spinlock) lock;                         \/* Unfortunate lock, but significan/;"	E	struct:ma_node_output_bus
 lock	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_spinlock) lock;         \/* Unfortunate lock, but significantly simplifies t/;"	E	struct:ma_node_input_bus
@@ -3866,6 +3907,7 @@ nodeConfig	includes/miniaudio.h	/^    ma_node_config nodeConfig;$/;"	E
 notch	includes/miniaudio.h	/^    ma_notch2 notch;$/;"	E
 notch	includes/miniaudio.h	/^    ma_notch_config notch;$/;"	E
 notificationCallback	includes/miniaudio.h	/^    ma_device_notification_proc notificationCallback;$/;"	E	struct:ma_device_config
+numOfIcons	src/drawing.cpp	/^int numOfIcons = 12;$/;"	v	typeref:typename:int
 oldDopplerPitch	includes/miniaudio.h	/^    float oldDopplerPitch;                              \/* For determining whether or not the r/;"	E
 oldPitch	includes/miniaudio.h	/^    float oldPitch;                                     \/* For determining whether or not the r/;"	E
 onData	includes/miniaudio.h	/^    ma_device_data_proc onData;                 \/* Set once at initialization time and should n/;"	E	struct:ma_device
@@ -3894,6 +3936,7 @@ outputBusIndex	includes/miniaudio.h	/^    ma_uint8 outputBusIndex;              
 outputChannels	includes/miniaudio.h	/^    ma_uint32 outputChannels;$/;"	E	struct:ma_decoder
 outputFormat	includes/miniaudio.h	/^    ma_format outputFormat;$/;"	E	struct:ma_decoder
 outputSampleRate	includes/miniaudio.h	/^    ma_uint32 outputSampleRate;$/;"	E	struct:ma_decoder
+overlap_ascii_images	src/ascii.cpp	/^void overlap_ascii_images(ascii_image* first, ascii_image* second) {$/;"	f	typeref:typename:void
 ownsBuffer	includes/miniaudio.h	/^    ma_bool8 ownsBuffer;                        \/* Used to know whether or not miniaudio is res/;"	E	struct:ma_resampler_config
 ownsData	includes/miniaudio.h	/^    ma_bool32 ownsData;             \/* Used to control whether or not miniaudio owns the data b/;"	E	struct:ma_device
 ownsDataSource	includes/miniaudio.h	/^    ma_bool8 ownsDataSource;$/;"	E	struct:ma_sound
@@ -4024,6 +4067,7 @@ pageFrameCount	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) pageFrameCount
 pan	includes/miniaudio.h	/^    float pan;  \/* -1..1 where 0 is no pan, -1 is left side, +1 is right side. Defaults to 0. */;"	E
 pan	includes/miniaudio.h	/^    float pan;$/;"	E
 panner	includes/miniaudio.h	/^    ma_panner panner;$/;"	E
+pause	src/video.cpp	/^        void pause() {$/;"	f	class:VideoState	typeref:typename:void	file:
 peak	includes/miniaudio.h	/^    ma_peak2 peak;$/;"	E
 peak	includes/miniaudio.h	/^    ma_peak_config peak;$/;"	E
 performanceProfile	includes/miniaudio.h	/^    ma_performance_profile performanceProfile;$/;"	E	struct:ma_completion_handler_uwp
@@ -4044,12 +4088,15 @@ pid	includes/miniaudio.h	/^    DWORD pid;$/;"	E
 pinnedListenerIndex	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) pinnedListenerIndex;        \/* The index of the listener this node /;"	E
 pinnedListenerIndex	includes/miniaudio.h	/^    ma_uint8 pinnedListenerIndex;       \/* The index of the listener this node should always us/;"	E
 pitch	includes/miniaudio.h	/^    MA_ATOMIC(4, float) pitch;$/;"	E
+pixelData	includes/video.h	/^    pixel_data* pixelData;$/;"	m	struct:VideoFrame	typeref:typename:pixel_data *
+pixelData	includes/video.h	/^    pixel_data* pixelData;$/;"	m	struct:VideoSymbol	typeref:typename:pixel_data *
 pixel_data	includes/ascii_data.h	/^typedef struct pixel_data {$/;"	s
 pixel_data	includes/ascii_data.h	/^} pixel_data;$/;"	t	typeref:struct:pixel_data
-pixels	includes/ascii_data.h	/^    u_int8_t* pixels;$/;"	m	struct:pixel_data	typeref:typename:u_int8_t *
+pixels	includes/ascii_data.h	/^    uint8_t* pixels;$/;"	m	struct:pixel_data	typeref:typename:uint8_t *
 playback	includes/miniaudio.h	/^    } playback;$/;"	E	struct:ma_device
 playback	includes/miniaudio.h	/^    } playback;$/;"	E	struct:ma_device_config
-playing	src/video.cpp	/^        bool playing = false;$/;"	m	class:VideoState	typeref:typename:bool	file:
+playback	src/video.cpp	/^        Playback* playback;$/;"	m	class:VideoState	typeref:typename:Playback *	file:
+playing	includes/video.h	/^    bool playing = false;$/;"	m	struct:Playback	typeref:typename:bool
 position	includes/miniaudio.h	/^    ma_vec3f position;  \/* The absolute position of the listener. *\/$/;"	E
 position	includes/miniaudio.h	/^    ma_vec3f position;$/;"	E
 positioning	includes/miniaudio.h	/^    ma_positioning positioning;$/;"	E
@@ -4062,7 +4109,8 @@ preferredFormat	includes/miniaudio.h	/^    ma_format preferredFormat;$/;"	E
 preinstall	build/Makefile	/^preinstall: all$/;"	t
 preinstall/fast	build/Makefile	/^preinstall\/fast:$/;"	t
 print_ascii_image	src/ascii.cpp	/^void print_ascii_image(ascii_image* textImage) {$/;"	f	typeref:typename:void
-pts	src/video.cpp	/^        std::deque<int> pts;$/;"	m	class:VideoState	typeref:typename:std::deque<int>	file:
+pts	includes/video.h	/^    int64_t pts;$/;"	m	struct:VideoFrame	typeref:typename:int64_t
+pts	src/video.cpp	/^        std::deque<int64_t> pts;$/;"	m	class:VideoState	typeref:typename:std::deque<int64_t>	file:
 pulse	includes/miniaudio.h	/^    } pulse;$/;"	E	struct:ma_context_config
 pulse	includes/miniaudio.h	/^    } pulse;$/;"	E	struct:ma_device_config
 pv	includes/miniaudio.h	/^typedef void    (WINAPI * MA_PFN_CoTaskMemFree)(LPVOID pv);$/;"	t
@@ -4090,6 +4138,8 @@ resampling	includes/miniaudio.h	/^    ma_resampler_config resampling;$/;"	E
 resampling	includes/miniaudio.h	/^    ma_resampler_config resampling;$/;"	E	struct:ma_device_config
 resampling	includes/miniaudio.h	/^    ma_resampler_config resampling;$/;"	E	struct:ma_resampler_config
 resampling	includes/miniaudio.h	/^    } resampling;$/;"	E	struct:ma_device
+reset	src/video.cpp	/^        void reset() {$/;"	f	class:VideoState	typeref:typename:void	file:
+restart	src/video.cpp	/^        void restart() {$/;"	f	class:VideoState	typeref:typename:void	file:
 result	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_result) result;                 \/* Result from asynchronous loading. When l/;"	E	struct:ma_resource_manager_data_buffer_node
 result	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_result) result;             \/* Result from asynchronous loading. When loadi/;"	E	struct:ma_resource_manager_data_stream
 rolloff	includes/miniaudio.h	/^    float rolloff;$/;"	E
@@ -4121,6 +4171,7 @@ sizeInBytes	includes/miniaudio.h	/^    ma_uint64 sizeInBytes;$/;"	E	struct:ma_pa
 sizeInBytes	includes/miniaudio.h	/^    size_t sizeInBytes;$/;"	E
 sizeInFrames	includes/miniaudio.h	/^    ma_uint64 sizeInFrames;$/;"	E	struct:ma_device
 sizeInFrames	includes/miniaudio.h	/^    ma_uint64 sizeInFrames;$/;"	E	struct:ma_paged_audio_buffer_page
+skippedPTS	includes/video.h	/^    int64_t skippedPTS;$/;"	m	struct:Playback	typeref:typename:int64_t
 slotsOffset	includes/miniaudio.h	/^    size_t slotsOffset;$/;"	E
 smoothTimeInFrames	includes/miniaudio.h	/^    ma_uint32 smoothTimeInFrames;$/;"	E
 sound	includes/miniaudio.h	/^    ma_sound sound;$/;"	E	struct:ma_sound_inlined
@@ -4132,6 +4183,12 @@ src/ascii.cpp.s	build/Makefile	/^src\/ascii.cpp.s:$/;"	t
 src/ascii.i	build/Makefile	/^src\/ascii.i: src\/ascii.cpp.i$/;"	t
 src/ascii.o	build/Makefile	/^src\/ascii.o: src\/ascii.cpp.o$/;"	t
 src/ascii.s	build/Makefile	/^src\/ascii.s: src\/ascii.cpp.s$/;"	t
+src/drawing.cpp.i	build/Makefile	/^src\/drawing.cpp.i:$/;"	t
+src/drawing.cpp.o	build/Makefile	/^src\/drawing.cpp.o:$/;"	t
+src/drawing.cpp.s	build/Makefile	/^src\/drawing.cpp.s:$/;"	t
+src/drawing.i	build/Makefile	/^src\/drawing.i: src\/drawing.cpp.i$/;"	t
+src/drawing.o	build/Makefile	/^src\/drawing.o: src\/drawing.cpp.o$/;"	t
+src/drawing.s	build/Makefile	/^src\/drawing.s: src\/drawing.cpp.s$/;"	t
 src/fileInfo.cpp.i	build/Makefile	/^src\/fileInfo.cpp.i:$/;"	t
 src/fileInfo.cpp.o	build/Makefile	/^src\/fileInfo.cpp.o:$/;"	t
 src/fileInfo.cpp.s	build/Makefile	/^src\/fileInfo.cpp.s:$/;"	t
@@ -4169,17 +4226,19 @@ stopEvent	includes/miniaudio.h	/^    ma_event stopEvent;$/;"	E	struct:ma_device
 subbufferCount	includes/miniaudio.h	/^    ma_uint32 subbufferCount;$/;"	E	struct:ma_resampler_config
 subbufferSizeInBytes	includes/miniaudio.h	/^    ma_uint32 subbufferSizeInBytes;$/;"	E	struct:ma_resampler_config
 subbufferStrideInBytes	includes/miniaudio.h	/^    ma_uint32 subbufferStrideInBytes;$/;"	E	struct:ma_resampler_config
+symbolMutex	src/video.cpp	/^        std::mutex symbolMutex;$/;"	m	class:VideoState	typeref:typename:std::mutex	file:
+symbols	src/video.cpp	/^        std::vector<VideoSymbol> symbols;$/;"	m	class:VideoState	typeref:typename:std::vector<VideoSymbol>	file:
 szCSDVersion	includes/miniaudio.h	/^    WCHAR szCSDVersion[128];$/;"	E
 szPname	includes/miniaudio.h	/^    CHAR szPname[MAXPNAMELEN];$/;"	E	struct:ma_IDirectSoundNotify
 t	includes/miniaudio.h	/^    ma_uint32 t;$/;"	E
 tail	includes/miniaudio.h	/^    MA_ATOMIC(8, ma_uint64) tail;   \/* The last item in the list. Required for appending to the/;"	E	struct:ma_job
 terminated	includes/miniaudio.h	/^    ma_bool32 terminated;$/;"	E	struct:ma_IDirectSoundNotify
+testIconProgram	src/drawing.cpp	/^int testIconProgram() {$/;"	f	typeref:typename:int
 thread	includes/miniaudio.h	/^    ma_thread thread;$/;"	E	struct:ma_device
 thread	includes/miniaudio.h	/^    ma_thread thread;$/;"	E	struct:ma_job
 threadPriority	includes/miniaudio.h	/^    ma_thread_priority threadPriority;$/;"	E	struct:ma_context_config
 threadStackSize	includes/miniaudio.h	/^    size_t threadStackSize;$/;"	E	struct:ma_context_config
 time	includes/miniaudio.h	/^    double time;$/;"	E	struct:ma_encoder
-time	src/video.cpp	/^        double time;$/;"	m	class:VideoState	typeref:typename:double	file:
 timeBase	src/video.cpp	/^        double timeBase;$/;"	m	class:VideoState	typeref:typename:double	file:
 toc	includes/miniaudio.h	/^    } toc;  \/* 8 bytes. We encode the job code into the slot allocation data to save space. *\/$/;"	E	struct:ma_job
 totalLengthInPCMFrames	includes/miniaudio.h	/^    ma_uint64 totalLengthInPCMFrames;           \/* This is calculated when first loaded by the /;"	E	struct:ma_resource_manager_data_stream
@@ -4199,7 +4258,7 @@ value	includes/miniaudio.h	/^    ma_uint32 value;$/;"	E
 value_characters	includes/ascii_data.h	/^const std::string value_characters = "@\\%#*+=-:._";$/;"	v	typeref:typename:const std::string
 velocity	includes/miniaudio.h	/^    ma_vec3f velocity;  \/* For doppler effect. *\/$/;"	E
 velocity	includes/miniaudio.h	/^    ma_vec3f velocity;$/;"	E
-videoCodecContext	src/video.cpp	/^        AVCodecContext* videoCodecContext;$/;"	m	class:VideoState	typeref:typename:AVCodecContext *	file:
+videoCodecContext	src/video.cpp	/^        AVCodecContext* videoCodecContext = nullptr;$/;"	m	class:VideoState	typeref:typename:AVCodecContext *	file:
 videoDecoder	src/video.cpp	/^        const AVCodec* videoDecoder = nullptr;$/;"	m	class:VideoState	typeref:typename:const AVCodec *	file:
 videoFifo	src/video.cpp	/^        AVFifo* videoFifo;$/;"	m	class:VideoState	typeref:typename:AVFifo *	file:
 videoMutex	src/video.cpp	/^        std::mutex videoMutex;$/;"	m	class:VideoState	typeref:typename:std::mutex	file:
@@ -4224,6 +4283,7 @@ volatile	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^# define volat
 volume	includes/miniaudio.h	/^    MA_ATOMIC(4, float) volume;                             \/* Linear. *\/$/;"	E	struct:ma_node_output_bus
 volumeBeg	includes/miniaudio.h	/^    float volumeBeg;            \/* If volumeBeg and volumeEnd is equal to 1, no fading happens /;"	E
 volumeEnd	includes/miniaudio.h	/^    float volumeEnd;$/;"	E
+volumeIcons	src/drawing.cpp	/^VideoIcon volumeIcons[4] = { NO_VOLUME_ICON, LOW_VOLUME_ICON, MEDIUM_VOLUME_ICON, HIGH_VOLUME_IC/;"	v	typeref:typename:VideoIcon[4]
 vtable	includes/miniaudio.h	/^    const ma_data_source_vtable* vtable;$/;"	E	struct:ma_device
 vtable	includes/miniaudio.h	/^    const ma_node_vtable* vtable;       \/* Should never be null. Initialization of the node wil/;"	E
 vtable	includes/miniaudio.h	/^    const ma_node_vtable* vtable;$/;"	E	struct:ma_node_base
