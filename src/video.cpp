@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <libavutil/rational.h>
 #include <video.h>
 #include <ascii.h>
 #include <ascii_data.h>
@@ -34,6 +35,10 @@ extern "C" {
 }
 
 
+enum VideoStateDisplayMode {
+    DEBUG, FULL
+};
+
 
 class VideoState {
     public: 
@@ -63,6 +68,7 @@ class VideoState {
         std::mutex fetchingMutex;
         std::mutex flagMutex;
         std::mutex symbolMutex;
+        std::mutex masterTimeMutex;
 
         //initialized in Init
         int frameCount;
@@ -82,9 +88,14 @@ class VideoState {
         bool inUse = false;
 
         Playback* playback;
+        const static int nb_displayModes = 2;
+        const static VideoStateDisplayMode displayModes[nb_displayModes];
+        int displayModeIndex = 0;
 
         ascii_image lastImage;
         std::vector<VideoSymbol> symbols;
+        std::chrono::steady_clock::time_point timeOfLastTimeChange;
+        const static std::chrono::milliseconds timeChangeWait;
 
         const char* fileName;
 
@@ -103,7 +114,8 @@ class VideoState {
         int init(const char* fileName) {
             int result;
 
-            this->playback = (Playback*)malloc(sizeof(Playback));
+            this->playback = playback_alloc();
+            this->timeOfLastTimeChange = std::chrono::steady_clock::now();
 
             result = avformat_open_input(&(this->formatContext), fileName, nullptr, nullptr);
             if (result < 0) {
@@ -266,28 +278,22 @@ class VideoState {
         private:
 
         static void videoPlaybackThread(VideoState* state) {
-            // ascii_image testASCII;
-            // testASCII.width = 10;
-            // testASCII.height = 10;
-            // for (int row = 0; row < 10; row++) {
-            //     for (int col = 0; col < 10; col++) {
-            //         testASCII.lines[row][col] = '%';
-            //     }
-            // }
-
 
             int result;
             int frameCount = 0;
             std::unique_lock<std::mutex> videoLock{state->videoMutex, std::defer_lock};
             std::unique_lock<std::mutex> symbolLock{state->symbolMutex, std::defer_lock};
+            std::unique_lock<std::mutex> masterTimeLock{state->masterTimeMutex, std::defer_lock};
 
             std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
             std::chrono::nanoseconds time_paused = std::chrono::nanoseconds(0);
-
             VideoFrame* readingFrame = (VideoFrame*)malloc(sizeof(VideoFrame));
 
+        
+            int64_t counter = 0;
             while (state->inUse && (!state->playback->allPacketsRead || (state->playback->allPacketsRead && state->videoFrames->get_length() > 0 ) )) {
                 
+                counter++;
                 if (state->playback->playing == false) {
                     std::chrono::steady_clock::time_point pauseTime = std::chrono::steady_clock::now();
                     while (state->playback->playing == false) {
@@ -308,46 +314,46 @@ class VideoState {
 
                         print_ascii_image(&state->lastImage);
                         refresh();
-
                     }
                     time_paused = time_paused + (std::chrono::steady_clock::now() - pauseTime);
                 }
 
 
                 videoLock.lock();
-                if (state->videoFrames->get_length() >= 10) {
+                if (state->videoFrames->get_index() + 10 <= state->videoFrames->get_length()) {
                     readingFrame = state->videoFrames->get();
                     if (state->videoFrames->get_index() < state->videoFrames->get_length() - 1) {
                         state->videoFrames->set_index(state->videoFrames->get_index() + 1);
                     }
                 } else {
-                    while (!state->playback->allPacketsRead && state->videoFrames->get_length() < 10) {
+                    while (!state->playback->allPacketsRead && state->videoFrames->get_index() + 10 >= state->videoFrames->get_length()) {
                         if (videoLock.owns_lock()) {
                             videoLock.unlock();
                         }
-
                         state->fetch_next(10);
                     }
-
                     continue;
                 }
 
                 int windowWidth, windowHeight;
                 get_window_size(&windowWidth, &windowHeight);
-                printw("Window Size: %d x %d", windowWidth, windowHeight);
-                refresh();
                 int outputWidth, outputHeight;
                 get_output_size(readingFrame->pixelData->width, readingFrame->pixelData->height, windowWidth, windowHeight, &outputWidth, &outputHeight);
                 erase();
                     ascii_image asciiImage = get_image(readingFrame->pixelData->pixels, readingFrame->pixelData->width, readingFrame->pixelData->height, outputWidth, outputHeight);
-                    // exit(EXIT_SUCCESS); 
-                    asciiImage.height = std::max(1, asciiImage.height - 12);
-                    printw("Frame Width: %d Frame Height: %d Window Width: %d Window Height: %d Output Width: %d Output Height: %d \n", state->frameWidth, state->frameHeight, windowWidth, windowHeight, outputWidth, outputHeight);
-                    printw("ASCII Width: %d ASCII Height: %d\n", asciiImage.width, asciiImage.height);
-                    printw("Packets: %d of %d\n", state->playback->currentPacket, state->playback->allPacketsRead);
-                    printw("Playing: %s \n", state->playback->playing ? "true" : "false");
-                    printw("PTS: %ld\n Repeat-Pict: %d \n", readingFrame->pts, readingFrame->repeat_pict);
-                    printw("Pixel Data: Width: %d Height %d\n", readingFrame->pixelData->width, readingFrame->pixelData->height);
+                    if (state->get_display_mode() == DEBUG) {
+                        asciiImage.height = std::max(1, asciiImage.height - 12);
+                        printw("Counter: %ld\n", counter);
+                        printw("Window Size: %d x %d", windowWidth, windowHeight);
+                        printw("Frame Width: %d Frame Height: %d Window Width: %d Window Height: %d Output Width: %d Output Height: %d \n", state->frameWidth, state->frameHeight, windowWidth, windowHeight, outputWidth, outputHeight);
+                        printw("ASCII Width: %d ASCII Height: %d\n", asciiImage.width, asciiImage.height);
+                        printw("Packets: %d of %d\n", state->playback->currentPacket, state->totalPackets);
+                        printw("Playing: %s \n", state->playback->playing ? "true" : "false");
+                        printw("PTS: %ld\n Repeat-Pict: %d \n Skipped PTS: %ld\n", readingFrame->pts, readingFrame->repeat_pict, state->playback->skippedPTS);
+                        printw("Pixel Data: Width: %d Height %d\n", readingFrame->pixelData->width, readingFrame->pixelData->height);
+                        printw("Video List Length: %d, Audio List Length: %d\n", state->videoFrames->get_length(), state->audioFrames->get_length() );
+                        printw("Video List Index: %d, Audio List Index: %d\n", state->videoFrames->get_index(), state->audioFrames->get_index());
+                    }
                     
                     symbolLock.lock();
                     for (int i = 0; i < state->symbols.size(); i++) {
@@ -361,21 +367,29 @@ class VideoState {
                         }
                     }
                     symbolLock.unlock();
+
+                    if (state->get_display_mode() == DEBUG) {
+                        for (int i = 0; i < asciiImage.height && i < windowHeight; i++) {
+                            for (int j = 0; j < asciiImage.width && j < windowWidth; j++) {
+                                addch(asciiImage.lines[i][j]);
+                            }
+                            addch('\n');
+                        }
+                    } else if (state->get_display_mode() == FULL) {
+                        print_ascii_image(&asciiImage);
+                    }
+
                     // overlap_ascii_images(&asciiImage, &testASCII);
 
-                    // print_ascii_image(&asciiImage);
-                    for (int i = 0; i < asciiImage.height && i < windowHeight; i++) {
-                        for (int j = 0; j < asciiImage.width && j < windowWidth; j++) {
-                            addch(asciiImage.lines[i][j]);
-                        }
-                        addch('\n');
-                    }
                 refresh();
 
                 double nextFrameTimeSinceStartInSeconds;
                 nextFrameTimeSinceStartInSeconds = readingFrame->pts * state->videoTimeBase;
                 state->playback->currentPTS = readingFrame->pts;
+
+                masterTimeLock.lock();
                 state->masterTime = readingFrame->pts * state->videoTimeBase;
+                masterTimeLock.unlock();
 
                 state->lastImage = asciiImage;
                 std::chrono::nanoseconds timeElapsed = std::chrono::steady_clock::now() - start_time - time_paused + std::chrono::nanoseconds((int64_t)(state->playback->skippedPTS * state->videoTimeBase * SECONDS_TO_NANOSECONDS));
@@ -384,34 +398,62 @@ class VideoState {
                 /* std::chrono::nanoseconds audioUnsyncAmount = timeOfNextFrame - std::chrono::nanoseconds((int64_t)(state->audioTime * SECONDS_TO_NANOSECONDS)); */
                 /* printw("Audio Time: %f, Video Time: %f, Audio Unsync Amount (Seconds) %f \n", state->audioTime, state->playback->currentPTS * state->videoTimeBase, (double)audioUnsyncAmount.count() / SECONDS_TO_NANOSECONDS); */
                 /* waitDuration = waitDuration + audioUnsyncAmount; */
-                printw("master time: %f, timeOfNextFrame: %f, waitDuration: %f", state->masterTime, (double)timeOfNextFrame.count() / SECONDS_TO_NANOSECONDS, (double)waitDuration.count() / SECONDS_TO_NANOSECONDS);
-                refresh();
+                if (state->get_display_mode() == DEBUG) {
+                    printw("time Elapsed: %f, master time: %f, timeOfNextFrame: %f, waitDuration: %f\n", (double)timeElapsed.count() / SECONDS_TO_NANOSECONDS, state->masterTime, (double)timeOfNextFrame.count() / SECONDS_TO_NANOSECONDS, (double)waitDuration.count() / SECONDS_TO_NANOSECONDS);
+                    refresh();
+                }
 
-                // std::this_thread::sleep_for(waitDuration + audioUnsyncAmount);
                 videoLock.unlock();
+                if (waitDuration <= std::chrono::nanoseconds(0)) {
+                    continue;
+                }
+
                 std::this_thread::sleep_for(waitDuration);
+                /* std::chrono::time_point<std::chrono::steady_clock> continueTime = std::chrono::steady_clock::now() + waitDuration; */
+                /* std::chrono::time_point<std::chrono::steady_clock> lastWaitTime = std::chrono::steady_clock::now(); */
+                /* while (std::chrono::steady_clock::now() < continueTime) { */
+                /*     masterTimeLock.lock(); */
+                /*     state->masterTime += (double)( (double)std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - lastWaitTime).count() / SECONDS_TO_NANOSECONDS ); */
+                /*     masterTimeLock.unlock(); */
+                /*     lastWaitTime = std::chrono::steady_clock::now(); */
+                /*     std::this_thread::sleep_for(std::chrono::milliseconds(1)); */
+                /* } */
+
             }
             free(readingFrame);
         }
 
         static void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
             VideoState* state = static_cast<VideoState*>(pDevice->pUserData);
-            /* erase(); */
             /* printw("Target Target PTS: %f", state->masterTime / state->audioTimeBase); */
             /* refresh(); */
-            int64_t targetAudioPTS = (int64_t)(state->masterTime / state->audioTimeBase);
-            const int ptsThreshold = (double)SYNC_THRESHOLD_MILLISECONDS / 1000 / state->audioTimeBase;  
+            std::lock_guard<std::mutex> audioLock(state->audioMutex);
+            std::unique_lock<std::mutex> masterTimeLock(state->masterTimeMutex, std::defer_lock);
 
-            std::unique_lock<std::mutex> audioLock(state->audioMutex);
+            masterTimeLock.lock();
+            int64_t targetAudioPTS = (int64_t)(state->masterTime / state->audioTimeBase);
+            masterTimeLock.unlock();
+
             if (state->inUse && state->playback->playing) {
+                int samplesToSkip = 0;
                 int64_t lastPTS = state->audioFrames->get()->pts;
-                bool result = false;
-                while (!(state->audioFrames->get()->pts >= targetAudioPTS - ptsThreshold && state->audioFrames->get()->pts <= targetAudioPTS + ptsThreshold)) {
+                bool result = true;
+
+                while (true) {
                     int64_t currentIndexPTS = state->audioFrames->get()->pts;
                     if (currentIndexPTS > targetAudioPTS) {
                         result = state->audioFrames->set_index(state->audioFrames->get_index() - 1);
+                        if (state->audioFrames->get()->pts < targetAudioPTS) {
+                            break;
+                        }
                     } else if (currentIndexPTS < targetAudioPTS) {
                         result = state->audioFrames->set_index(state->audioFrames->get_index() + 1);
+                        if (state->audioFrames->get()->pts > targetAudioPTS) {
+                            state->audioFrames->set_index(state->audioFrames->get_index() - 1);
+                            break;
+                        }
+                    } else if (currentIndexPTS == targetAudioPTS) {
+                        break;
                     }
 
                     if (state->audioFrames->get_index() == 0 || state->audioFrames->get_index() == state->audioFrames->get_length() - 1) {
@@ -421,42 +463,32 @@ class VideoState {
                     } else if (!result) {
                         break;
                     }
+                    lastPTS = currentIndexPTS;
                 } 
 
-
+                masterTimeLock.lock();
+                double timeBeforeReading = state->masterTime;
+                samplesToSkip = std::round((state->masterTime - state->audioFrames->get()->pts * state->audioTimeBase) * pDevice->sampleRate); 
+                masterTimeLock.unlock();
 
                 AVFrame* current = state->audioFrames->get();
-
-                /* printw("Audio: [ TargetPTS: %ld, PTS: %ld ], ", targetAudioPTS, current->pts); */
-                /* refresh(); */
                 av_audio_fifo_reset(state->tempAudio);
                 int samplesWritten = 0;
-
-                while (samplesWritten < frameCount * 3 / 2 && av_audio_fifo_space(state->tempAudio) > current->nb_samples) {
+  
+                while (samplesWritten < frameCount * 3 / 2 + samplesToSkip && av_audio_fifo_space(state->tempAudio) > current->nb_samples) {
                     samplesWritten += av_audio_fifo_write(state->tempAudio, (void**)current->data, current->nb_samples);
                     if (state->audioFrames->get_index() < state->audioFrames->get_length() + 1) {
                         state->audioFrames->set_index(state->audioFrames->get_index() + 1);
+                        current = state->audioFrames->get();
                     } else {
                         break;
                     }
                 }
-                
-                /* printw("Samples Written: %d", samplesWritten); */
-                /* refresh(); */
 
-                av_audio_fifo_read(state->tempAudio, &pOutput, std::min((int)frameCount, samplesWritten));
-
-
-                /* av_audio_fifo_peek_at(, void **data, int nb_samples, int offset); */
-                /* av_audio_fifo_read(state->audioFifo, &pOutput, std::min((int)frameCount, av_audio_fifo_size(state->audioFifo))); */
-                /* state->audioTime += 1.0 / pDevice->sampleRate * frameCount; */
-                /* while (av_fifo_can_read(state->audioFrameFifo) < frameCount && !state->playback->allPacketsRead) { */
-                /*     if (audioLock.owns_lock()) { */
-                /*         audioLock.unlock(); */
-                /*     } */
-
-                /*     state->fetch_next(10); */
-                /* } */
+                masterTimeLock.lock();
+                samplesToSkip += std::round((state->masterTime - timeBeforeReading) * pDevice->sampleRate); 
+                masterTimeLock.unlock();
+                av_audio_fifo_peek_at(state->tempAudio, &pOutput, std::min((int)frameCount, samplesWritten), samplesToSkip );
             }
 
             (void)pInput;
@@ -469,6 +501,7 @@ class VideoState {
             config.sampleRate        = state->audioStream->codecpar->sample_rate;           // Set to 0 to use the device's native sample rate.
             config.dataCallback      = VideoState::audioDataCallback;   // This function will be called when miniaudio needs more data.
             config.pUserData         = state;   // Can be accessed from the device object (device.pUserData).
+
 
             ma_result miniAudioLog;
             ma_device audioDevice;
@@ -518,14 +551,13 @@ class VideoState {
                 if (state->videoFrames->get_length() < FRAME_RESERVE_SIZE && state->audioFrames->get_length() < FRAME_RESERVE_SIZE) {
                     state->fetch_next(100);
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
         }
 
         static void inputListeningThread(VideoState* state) {
             std::unique_lock<std::mutex> symbolLock(state->symbolMutex, std::defer_lock);
             while (state->inUse) {
-                VideoFrame* readingFrame;
 
                 int ch = getch();
 
@@ -538,18 +570,18 @@ class VideoState {
                         state->symbols.push_back(get_video_symbol(PLAY_ICON));
                         state->restart();
                     }
+                } else if (ch == (int)('d') || ch == (int)('D')) {
+                    state->displayModeIndex = (state->displayModeIndex + 1) % state->nb_displayModes;  
                 } else if (ch == KEY_LEFT) {
-                    /* if (av_fifo_can_read(state->videoFifo) > 1) { */
-                    /*     av_fifo_peek(state->videoFifo, readingFrame, 1, 0); */
-                    /*     state->symbols.push_back(get_video_symbol(BACKWARD_ICON)); */
-                    /*     state->jumpToTime((int)(readingFrame->pts - ( 5 / state->videoTimeBase )  )); */
-                    /* } */
+                    if ( (std::chrono::steady_clock::now() - state->timeOfLastTimeChange) > VideoState::timeChangeWait ) {
+                        state->symbols.push_back(get_video_symbol(BACKWARD_ICON));
+                        state->jumpToTime(state->masterTime - 5);
+                    } 
                 } else if (ch == KEY_RIGHT) {
-                    /* if (av_fifo_can_read(state->videoFifo) > 1) { */
-                    /*     av_fifo_peek(state->videoFifo, readingFrame, 1, 0); */
-                    /*     state->symbols.push_back(get_video_symbol(BACKWARD_ICON)); */
-                    /*     state->jumpToTime((int)(readingFrame->pts + ( 5 / state->videoTimeBase )  )); */
-                    /* } */
+                    if ( (std::chrono::steady_clock::now() - state->timeOfLastTimeChange) > VideoState::timeChangeWait ) {
+                        state->symbols.push_back(get_video_symbol(FORWARD_ICON));
+                        state->jumpToTime(state->masterTime + 5);
+                    }
                 } else if (ch == KEY_UP) {
                     if (state->audioDevice != nullptr) {
                         state->audioDevice->masterVolumeFactor = std::min(1.0, state->audioDevice->masterVolumeFactor + 0.05);
@@ -568,6 +600,9 @@ class VideoState {
 
         public:
 
+        VideoStateDisplayMode get_display_mode() {
+            return VideoState::displayModes[displayModeIndex];
+        }
 
         void free_video_state() {
             avcodec_free_context(&(this->videoCodecContext));
@@ -604,7 +639,7 @@ class VideoState {
             avformat_free_context(this->formatContext);
             ma_device_uninit(this->audioDevice);
             
-            free(this->playback);
+            playback_free(this->playback);
 
             this->valid = false;
         }
@@ -621,33 +656,49 @@ class VideoState {
             }
         }
 
-        void jumpToTime(int64_t pts) {
+        void jumpToTime(double targetTime) {
             std::lock_guard<std::mutex> videoLock(this->videoMutex);
             std::lock_guard<std::mutex> audioLock(this->audioMutex);
-            VideoFrame* readingFrame;
+            std::lock_guard<std::mutex> masterTimeLock(this->masterTimeMutex);
+            VideoFrame* currentVideoFrame = this->videoFrames->get();
 
-            /* if (pts > this->playback->currentPTS) { */
-            /*     erase(); */
-            /*     printw("Current PTS: %ld, Next PTS: %ld", this->playback->currentPTS, pts); */
-            /*     refresh(); */
+            double originalTime = this->masterTime;
+            
+            double lastTime = currentVideoFrame->pts * videoTimeBase;
+            while (true) {
+                erase();
+                printw("Jumping to time %f", targetTime);
+                refresh();
+                currentVideoFrame = this->videoFrames->get();
+                if (currentVideoFrame->pts * videoTimeBase == targetTime) {
+                    break;
+                }
+                else if (currentVideoFrame->pts * videoTimeBase > targetTime) {
+                    if (this->videoFrames->get_index() == 0) {
+                        break;
+                    }
+                    
+                    this->videoFrames->set_index(this->videoFrames->get_index() - 1);
+                    if (this->videoFrames->get()->pts * videoTimeBase < targetTime) {
+                        break;
+                    }
+                }
+                else if (currentVideoFrame->pts * videoTimeBase < targetTime) {
+                    if (this->videoFrames->get_index() == this->videoFrames->get_length() - 1) {
+                        break;
+                    }
 
-            /*     int framesToJump = 0; */
-            /*     while (av_fifo_can_read(this->videoFifo) > 0) { */
-            /*         av_fifo_read(this->videoFifo, readingFrame, 1); */
-            /*         if (readingFrame->pts >= pts) { */
-            /*             break; */
-            /*         } */
-            /*         video_frame_free(readingFrame); */
-            /*     } */
+                    this->videoFrames->set_index(this->videoFrames->get_index() + 1);
+                    if (this->videoFrames->get()->pts * videoTimeBase > targetTime) {
+                        this->videoFrames->set_index(this->videoFrames->get_index() - 1);
+                        break;
+                    }
+                }
+            }
 
-            /*     double secondsJumped = (pts - this->playback->currentPTS) * this->videoTimeBase; */
-            /*     /1* this->audioTime += secondsJumped; *1/ */
-            /*     /1* av_audio_fifo_drain(this->audioFifo, (int)(secondsJumped * this->audioStream->codecpar->sample_rate)); *1/ */
-            /*     this->playback->skippedPTS += pts - this->playback->currentPTS; */
-
-            /*     this->playback->currentPTS = readingFrame != nullptr ? readingFrame->pts : pts; */
-            /*     video_frame_free(readingFrame); */
-            /* } */
+            double timeMoved = (this->videoFrames->get()->pts * this->videoTimeBase) - originalTime;
+            this->playback->skippedPTS += (int64_t)(timeMoved / videoTimeBase);
+            timeOfLastTimeChange = std::chrono::steady_clock::now();
         }
 
         int fetch_next(int requestedPacketCount) {
@@ -714,16 +765,14 @@ class VideoState {
                         av_frame_get_buffer(resizedVideoFrame, 1); //watch this alignment
 
                         sws_scale(videoResizer, (uint8_t const * const *)originalVideoFrame->data, originalVideoFrame->linesize, 0, this->videoCodecContext->height, resizedVideoFrame->data, resizedVideoFrame->linesize);
-                        videoLock.lock();
-                        /* if (av_fifo_can_write(this->videoFifo) < 10) { */
-                        /*     av_fifo_grow2(this->videoFifo, 10); */
-                        /* } */
 
-                        if (this->videoFrames->get_length() < FRAME_RESERVE_SIZE) {
+                        videoLock.lock();
+                            /* if (av_fifo_can_write(this->videoFifo) < 10) { */
+                            /*     av_fifo_grow2(this->videoFifo, 10); */
+                            /* } */
                             videoPacketCount++;
                             VideoFrame* videoFrame = video_frame_alloc(resizedVideoFrame);
                             this->videoFrames->push_back(videoFrame);
-                        } 
                         videoLock.unlock();
 
                         av_frame_free(&resizedVideoFrame);
@@ -762,6 +811,7 @@ class VideoState {
                             resampledFrame->ch_layout = audioFrame->ch_layout;
                             resampledFrame->format = AV_SAMPLE_FMT_FLT;
                             resampledFrame->pts = audioFrame->pts;
+                            resampledFrame->duration = audioFrame->duration;
 
                             result = swr_convert_frame(audioResampler, resampledFrame, audioFrame);
                             if (result < 0) {
@@ -814,6 +864,9 @@ class VideoState {
         }
     }
 };
+
+const VideoStateDisplayMode VideoState::displayModes[2] = { FULL, DEBUG };
+const std::chrono::milliseconds VideoState::timeChangeWait = std::chrono::milliseconds(TIME_CHANGE_WAIT_MILLISECONDS);
 
 int videoProgram(const char* fileName) {
     init_icons();
@@ -906,6 +959,20 @@ VideoFrame* video_frame_alloc(AVFrame* avFrame) {
 void video_frame_free(VideoFrame* videoFrame) {
     pixel_data_free(videoFrame->pixelData);
     free(videoFrame);
+}
+
+Playback* playback_alloc() {
+    Playback* playback = (Playback*)malloc(sizeof(Playback));
+    playback->currentPTS = 0;
+    playback->currentPacket = 0;
+    playback->allPacketsRead = false;
+    playback->playing = false;
+    playback->skippedPTS = 0;
+    return playback; 
+}
+
+void playback_free(Playback* playback) {
+    free(playback);
 }
 
 /* AudioFrame* audio_frame_alloc(AVFrame* frame) { */

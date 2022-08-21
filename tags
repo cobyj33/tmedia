@@ -32,6 +32,7 @@ $(VERBOSE)MAKESILENT	build/Makefile	/^$(VERBOSE)MAKESILENT = -s$/;"	m
 5	build/compile_commands.json	/^{$/;"	o
 5	build/video.plist	/^   <key>5<\/key>$/;"	k	key:diagnostics.ExecutedLines
 6	build/video.plist	/^   <key>6<\/key>$/;"	k	key:diagnostics.ExecutedLines
+7	build/video.plist	/^   <key>7<\/key>$/;"	k	key:diagnostics.ExecutedLines
 ARCHITECTURE_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#   define ARCHITECTURE_ID /;"	d	file:
 ARCHITECTURE_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define ARCHITECTURE_ID /;"	d	file:
 ARCHITECTURE_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define ARCHITECTURE_ID$/;"	d	file:
@@ -244,6 +245,7 @@ CXX_STD	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#  define
 C_VERSION	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define C_VERSION /;"	d	file:
 C_VERSION	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define C_VERSION$/;"	d	file:
 C_VERSION	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^# define C_VERSION /;"	d	file:
+DEBUG	src/video.cpp	/^    DEBUG, FULL$/;"	e	enum:VideoStateDisplayMode	file:
 DEC	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#define DEC(/;"	d	file:
 DEC	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#define DEC(/;"	d	file:
 DWORD_PTR	includes/miniaudio.h	/^typedef size_t DWORD_PTR;$/;"	t
@@ -255,6 +257,7 @@ ExecutedLines	build/video.plist	/^  <key>ExecutedLines<\/key>$/;"	k	key:diagnost
 FORWARD_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 FRAME_DATA_SIZE	includes/ascii_constants.h	/^#define FRAME_DATA_SIZE /;"	d
 FRAME_RESERVE_SIZE	includes/video.h	/^#define FRAME_RESERVE_SIZE /;"	d
+FULL	src/video.cpp	/^    DEBUG, FULL$/;"	e	enum:VideoStateDisplayMode	file:
 Format	includes/miniaudio.h	/^    WAVEFORMATEX Format;$/;"	E
 GIGABYTE_TO_BYTES	includes/video.h	/^#define GIGABYTE_TO_BYTES /;"	d
 HEX	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#define HEX(/;"	d	file:
@@ -924,6 +927,7 @@ Playback	includes/video.h	/^typedef struct Playback {$/;"	s
 Playback	includes/video.h	/^} Playback;$/;"	t	typeref:struct:Playback
 ProductGuid	includes/miniaudio.h	/^    GUID ProductGuid;$/;"	E	struct:ma_IDirectSoundNotify
 RM	build/Makefile	/^RM = \/usr\/bin\/cmake -E rm -f$/;"	m
+SECONDS_TO_MILLISECONDS	includes/video.h	/^#define SECONDS_TO_MILLISECONDS /;"	d
 SECONDS_TO_NANOSECONDS	includes/video.h	/^#define SECONDS_TO_NANOSECONDS /;"	d
 SHELL	build/Makefile	/^SHELL = \/bin\/sh$/;"	m
 SIMULATE_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define SIMULATE_ID /;"	d	file:
@@ -972,6 +976,7 @@ STRINGIFY_HELPER	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^
 SYNC_THRESHOLD_MILLISECONDS	includes/video.h	/^#define SYNC_THRESHOLD_MILLISECONDS /;"	d
 Samples	includes/miniaudio.h	/^    } Samples;$/;"	E
 SubFormat	includes/miniaudio.h	/^    GUID SubFormat;$/;"	E
+TIME_CHANGE_WAIT_MILLISECONDS	includes/video.h	/^#define TIME_CHANGE_WAIT_MILLISECONDS /;"	d
 ULONG	includes/miniaudio.h	/^        ULONG   (STDMETHODCALLTYPE * AddRef)        (ma_IActivateAudioInterfaceAsyncOperation* p/;"	E
 ULONG	includes/miniaudio.h	/^        ULONG   (STDMETHODCALLTYPE * AddRef)        (ma_IMMDevice* pThis);$/;"	E	struct:ma_IMMDeviceCollection
 ULONG	includes/miniaudio.h	/^        ULONG   (STDMETHODCALLTYPE * AddRef)        (ma_IMMDeviceCollection* pThis);$/;"	E
@@ -1016,6 +1021,7 @@ VideoIcon	includes/video.h	/^} VideoIcon;$/;"	t	typeref:enum:VideoIcon
 VideoState	src/video.cpp	/^        VideoState() { }$/;"	f	class:VideoState	file:
 VideoState	src/video.cpp	/^        VideoState(const char* fileName) {$/;"	f	class:VideoState	file:
 VideoState	src/video.cpp	/^class VideoState {$/;"	c	file:
+VideoStateDisplayMode	src/video.cpp	/^enum VideoStateDisplayMode {$/;"	g	file:
 VideoSymbol	includes/video.h	/^typedef struct VideoSymbol {$/;"	s
 VideoSymbol	includes/video.h	/^} VideoSymbol;$/;"	t	typeref:struct:VideoSymbol
 WAVEFORMATEXTENSIBLE	includes/miniaudio.h	/^} WAVEFORMATEXTENSIBLE;$/;"	t
@@ -1622,66 +1628,43 @@ col	build/video.plist	/^           <key>col<\/key><integer>21<\/integer>$/;"	k	k
 col	build/video.plist	/^           <key>col<\/key><integer>21<\/integer>$/;"	k	key:diagnostics.path.edges.start
 col	build/video.plist	/^           <key>col<\/key><integer>22<\/integer>$/;"	k	key:diagnostics.path.edges.end
 col	build/video.plist	/^           <key>col<\/key><integer>22<\/integer>$/;"	k	key:diagnostics.path.edges.start
-col	build/video.plist	/^           <key>col<\/key><integer>23<\/integer>$/;"	k	key:diagnostics.path.edges.end
-col	build/video.plist	/^           <key>col<\/key><integer>23<\/integer>$/;"	k	key:diagnostics.path.edges.start
 col	build/video.plist	/^           <key>col<\/key><integer>24<\/integer>$/;"	k	key:diagnostics.path.edges.end
 col	build/video.plist	/^           <key>col<\/key><integer>24<\/integer>$/;"	k	key:diagnostics.path.edges.start
 col	build/video.plist	/^           <key>col<\/key><integer>25<\/integer>$/;"	k	key:diagnostics.path.edges.end
 col	build/video.plist	/^           <key>col<\/key><integer>25<\/integer>$/;"	k	key:diagnostics.path.edges.start
-col	build/video.plist	/^           <key>col<\/key><integer>26<\/integer>$/;"	k	key:diagnostics.path.edges.end
-col	build/video.plist	/^           <key>col<\/key><integer>26<\/integer>$/;"	k	key:diagnostics.path.edges.start
-col	build/video.plist	/^           <key>col<\/key><integer>27<\/integer>$/;"	k	key:diagnostics.path.edges.end
-col	build/video.plist	/^           <key>col<\/key><integer>27<\/integer>$/;"	k	key:diagnostics.path.edges.start
-col	build/video.plist	/^           <key>col<\/key><integer>28<\/integer>$/;"	k	key:diagnostics.path.edges.end
-col	build/video.plist	/^           <key>col<\/key><integer>28<\/integer>$/;"	k	key:diagnostics.path.edges.start
 col	build/video.plist	/^           <key>col<\/key><integer>29<\/integer>$/;"	k	key:diagnostics.path.edges.end
-col	build/video.plist	/^           <key>col<\/key><integer>29<\/integer>$/;"	k	key:diagnostics.path.edges.start
-col	build/video.plist	/^           <key>col<\/key><integer>31<\/integer>$/;"	k	key:diagnostics.path.edges.end
-col	build/video.plist	/^           <key>col<\/key><integer>31<\/integer>$/;"	k	key:diagnostics.path.edges.start
 col	build/video.plist	/^           <key>col<\/key><integer>32<\/integer>$/;"	k	key:diagnostics.path.edges.end
 col	build/video.plist	/^           <key>col<\/key><integer>32<\/integer>$/;"	k	key:diagnostics.path.edges.start
-col	build/video.plist	/^           <key>col<\/key><integer>34<\/integer>$/;"	k	key:diagnostics.path.edges.end
-col	build/video.plist	/^           <key>col<\/key><integer>34<\/integer>$/;"	k	key:diagnostics.path.edges.start
 col	build/video.plist	/^           <key>col<\/key><integer>37<\/integer>$/;"	k	key:diagnostics.path.edges.end
 col	build/video.plist	/^           <key>col<\/key><integer>37<\/integer>$/;"	k	key:diagnostics.path.edges.start
-col	build/video.plist	/^           <key>col<\/key><integer>41<\/integer>$/;"	k	key:diagnostics.path.edges.end
-col	build/video.plist	/^           <key>col<\/key><integer>41<\/integer>$/;"	k	key:diagnostics.path.edges.start
 col	build/video.plist	/^         <key>col<\/key><integer>109<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>161<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>18<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>20<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>21<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>22<\/integer>$/;"	k	key:diagnostics.path.ranges
-col	build/video.plist	/^         <key>col<\/key><integer>25<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>27<\/integer>$/;"	k	key:diagnostics.path.ranges
-col	build/video.plist	/^         <key>col<\/key><integer>28<\/integer>$/;"	k	key:diagnostics.path.ranges
-col	build/video.plist	/^         <key>col<\/key><integer>29<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>31<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>34<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>37<\/integer>$/;"	k	key:diagnostics.path.ranges
-col	build/video.plist	/^         <key>col<\/key><integer>41<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>50<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>53<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>56<\/integer>$/;"	k	key:diagnostics.path.ranges
-col	build/video.plist	/^         <key>col<\/key><integer>60<\/integer>$/;"	k	key:diagnostics.path.ranges
-col	build/video.plist	/^         <key>col<\/key><integer>65<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>68<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^         <key>col<\/key><integer>78<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>92<\/integer>$/;"	k	key:diagnostics.path.ranges
 col	build/video.plist	/^      <key>col<\/key><integer>13<\/integer>$/;"	k	key:diagnostics.path.location
 col	build/video.plist	/^      <key>col<\/key><integer>17<\/integer>$/;"	k	key:diagnostics.path.location
 col	build/video.plist	/^      <key>col<\/key><integer>20<\/integer>$/;"	k	key:diagnostics.path.location
 col	build/video.plist	/^      <key>col<\/key><integer>21<\/integer>$/;"	k	key:diagnostics.path.location
 col	build/video.plist	/^      <key>col<\/key><integer>25<\/integer>$/;"	k	key:diagnostics.path.location
-col	build/video.plist	/^      <key>col<\/key><integer>28<\/integer>$/;"	k	key:diagnostics.path.location
-col	build/video.plist	/^      <key>col<\/key><integer>29<\/integer>$/;"	k	key:diagnostics.path.location
 col	build/video.plist	/^      <key>col<\/key><integer>37<\/integer>$/;"	k	key:diagnostics.path.location
-col	build/video.plist	/^      <key>col<\/key><integer>41<\/integer>$/;"	k	key:diagnostics.path.location
 col	build/video.plist	/^      <key>col<\/key><integer>53<\/integer>$/;"	k	key:diagnostics.path.location
 col	build/video.plist	/^      <key>col<\/key><integer>9<\/integer>$/;"	k	key:diagnostics.path.location
 col	build/video.plist	/^   <key>col<\/key><integer>13<\/integer>$/;"	k	key:diagnostics.location
 col	build/video.plist	/^   <key>col<\/key><integer>17<\/integer>$/;"	k	key:diagnostics.location
+col	build/video.plist	/^   <key>col<\/key><integer>20<\/integer>$/;"	k	key:diagnostics.location
 col	build/video.plist	/^   <key>col<\/key><integer>25<\/integer>$/;"	k	key:diagnostics.location
-col	build/video.plist	/^   <key>col<\/key><integer>29<\/integer>$/;"	k	key:diagnostics.location
 col	build/video.plist	/^   <key>col<\/key><integer>9<\/integer>$/;"	k	key:diagnostics.location
 command	build/compile_commands.json	/^  "command": "\/usr\/bin\/c++  -I\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/.\/incl/;"	s	object:0
 command	build/compile_commands.json	/^  "command": "\/usr\/bin\/c++  -I\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/.\/incl/;"	s	object:1
@@ -1763,6 +1746,7 @@ description	build/ascii.plist	/^   <key>description<\/key><string>Value stored t
 description	build/ascii.plist	/^   <key>description<\/key><string>Value stored to &apos;lastCheckedRow&apos; is never read<\/str/;"	k	key:diagnostics
 description	build/video.plist	/^   <key>description<\/key><string>Potential leak of memory pointed to by &apos;readingFrame&apos/;"	k	key:diagnostics
 description	build/video.plist	/^   <key>description<\/key><string>Value stored to &apos;isInputChannelPositionInOutput&apos; is /;"	k	key:diagnostics
+description	build/video.plist	/^   <key>description<\/key><string>Value stored to &apos;lastTime&apos; during its initialization/;"	k	key:diagnostics
 description	build/video.plist	/^   <key>description<\/key><string>Value stored to &apos;result&apos; is never read<\/string>$/;"	k	key:diagnostics
 deviceName	includes/miniaudio.h	/^    char deviceName[256];$/;"	E	struct:ma_completion_handler_uwp
 deviceType	includes/miniaudio.h	/^    ma_device_type deviceType;$/;"	E	struct:ma_IDirectSoundNotify
@@ -1778,6 +1762,9 @@ directory	build/compile_commands.json	/^  "directory": "\/home\/cobyj33\/Program
 directory	build/compile_commands.json	/^  "directory": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/build",$/;"	s	object:3
 directory	build/compile_commands.json	/^  "directory": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/build",$/;"	s	object:4
 directory	build/compile_commands.json	/^  "directory": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/build",$/;"	s	object:5
+displayModeIndex	src/video.cpp	/^        int displayModeIndex = 0;$/;"	m	class:VideoState	typeref:typename:int	file:
+displayModes	src/video.cpp	/^        const static VideoStateDisplayMode displayModes[nb_displayModes];$/;"	m	class:VideoState	typeref:typename:const VideoStateDisplayMode[]	file:
+displayModes	src/video.cpp	/^const VideoStateDisplayMode VideoState::displayModes[2] = { FULL, DEBUG };$/;"	m	class:VideoState	typeref:typename:const VideoStateDisplayMode[2]
 ditherMode	includes/miniaudio.h	/^    ma_dither_mode ditherMode;$/;"	E
 ditherMode	includes/miniaudio.h	/^    ma_dither_mode ditherMode;$/;"	E	struct:ma_resampler_config
 done	includes/miniaudio.h	/^    ma_resource_manager_pipeline_stage_notification done;    \/* Decoding fully completed. *\/$/;"	E
@@ -1932,6 +1919,7 @@ gainer	includes/miniaudio.h	/^    ma_gainer gainer;   \/* For smooth gain transi
 get	includes/doublelinkedlist.hpp	/^        T get() {$/;"	f	class:DoubleLinkedList	typeref:typename:T
 get_char_from_area	src/ascii.cpp	/^char get_char_from_area(uint8_t* pixels, int x, int y, int width, int height, int pixelWidth, in/;"	f	typeref:typename:char
 get_char_from_value	src/ascii.cpp	/^char get_char_from_value(uint8_t value) {$/;"	f	typeref:typename:char
+get_display_mode	src/video.cpp	/^        VideoStateDisplayMode get_display_mode() {$/;"	f	class:VideoState	typeref:typename:VideoStateDisplayMode	file:
 get_first	includes/doublelinkedlist.hpp	/^        T get_first() {$/;"	f	class:DoubleLinkedList	typeref:typename:T
 get_image	src/ascii.cpp	/^ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWidth, int outputH/;"	f	typeref:typename:ascii_image
 get_index	includes/doublelinkedlist.hpp	/^        int get_index() {$/;"	f	class:DoubleLinkedList	typeref:typename:int
@@ -2048,6 +2036,7 @@ isSpatializationDisabled	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_bool32) isSp
 isSpatializationDisabled	includes/miniaudio.h	/^    ma_bool8 isSpatializationDisabled;  \/* Spatialization can be explicitly disabled with MA_SO/;"	E
 isValidPath	src/main.cpp	/^bool isValidPath(const char* path) {$/;"	f	typeref:typename:bool
 issue_context	build/ascii.plist	/^  <key>issue_context<\/key><string>get_image<\/string>$/;"	k	key:diagnostics
+issue_context	build/video.plist	/^  <key>issue_context<\/key><string>jumpToTime<\/string>$/;"	k	key:diagnostics
 issue_context	build/video.plist	/^  <key>issue_context<\/key><string>ma_channel_map_get_conversion_path<\/string>$/;"	k	key:diagnostics
 issue_context	build/video.plist	/^  <key>issue_context<\/key><string>ma_decoder_read_pcm_frames<\/string>$/;"	k	key:diagnostics
 issue_context	build/video.plist	/^  <key>issue_context<\/key><string>ma_job_process__resource_manager__load_data_buffer<\/string>$/;"	k	key:diagnostics
@@ -2058,6 +2047,7 @@ issue_context_kind	build/video.plist	/^  <key>issue_context_kind<\/key><string>C
 issue_context_kind	build/video.plist	/^  <key>issue_context_kind<\/key><string>function<\/string>$/;"	k	key:diagnostics
 issue_hash_content_of_line_in_context	build/ascii.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>6898520c42723b7e837a86211e2eaa7c<\/s/;"	k	key:diagnostics
 issue_hash_content_of_line_in_context	build/ascii.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>77c4cc97c31498b57a76a256e734a6e6<\/s/;"	k	key:diagnostics
+issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>05652acdd038147c57653de43e542eea<\/s/;"	k	key:diagnostics
 issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>424185647ecf7753b198e3f4c0f2483b<\/s/;"	k	key:diagnostics
 issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>50870bab2878254f215afbe8c8bedc19<\/s/;"	k	key:diagnostics
 issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>53e2c4754e7ec788171f1c5b2104165d<\/s/;"	k	key:diagnostics
@@ -2065,11 +2055,12 @@ issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_con
 issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>f761a85180cadfd23b6519abf7619afb<\/s/;"	k	key:diagnostics
 issue_hash_function_offset	build/ascii.plist	/^  <key>issue_hash_function_offset<\/key><string>38<\/string>$/;"	k	key:diagnostics
 issue_hash_function_offset	build/ascii.plist	/^  <key>issue_hash_function_offset<\/key><string>44<\/string>$/;"	k	key:diagnostics
+issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>10<\/string>$/;"	k	key:diagnostics
 issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>116<\/string>$/;"	k	key:diagnostics
-issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>19<\/string>$/;"	k	key:diagnostics
 issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>27<\/string>$/;"	k	key:diagnostics
 issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>30<\/string>$/;"	k	key:diagnostics
 issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>57<\/string>$/;"	k	key:diagnostics
+issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>8<\/string>$/;"	k	key:diagnostics
 istream	.vscode/settings.json	/^        "istream": "cpp",$/;"	s	object:files.associations
 iterator	.vscode/settings.json	/^        "iterator": "cpp",$/;"	s	object:files.associations
 jack	includes/miniaudio.h	/^    } jack;$/;"	E	struct:ma_context_config
@@ -2081,11 +2072,10 @@ jobQueueFlags	includes/miniaudio.h	/^    ma_uint32 jobQueueFlags;$/;"	E	struct:m
 jobThreadCount	includes/miniaudio.h	/^    ma_uint32 jobThreadCount;       \/* Set to 0 if you want to self-manage your job threads. De/;"	E
 jobThreads	includes/miniaudio.h	/^    ma_thread jobThreads[MA_RESOURCE_MANAGER_MAX_JOB_THREAD_COUNT]; \/* The threads for executin/;"	E	struct:ma_resource_manager
 jobsOffset	includes/miniaudio.h	/^    size_t jobsOffset;$/;"	E
-jumpToTime	src/video.cpp	/^        void jumpToTime(int64_t pts) {$/;"	f	class:VideoState	typeref:typename:void	file:
+jumpToTime	src/video.cpp	/^        void jumpToTime(double targetTime) {$/;"	f	class:VideoState	typeref:typename:void	file:
 kind	build/ascii.plist	/^     <key>kind<\/key><string>event<\/string>$/;"	k	key:diagnostics.path
 kind	build/video.plist	/^     <key>kind<\/key><string>control<\/string>$/;"	k	key:diagnostics.path
 kind	build/video.plist	/^     <key>kind<\/key><string>event<\/string>$/;"	k	key:diagnostics.path
-kind	build/video.plist	/^     <key>kind<\/key><string>pop-up<\/string>$/;"	k	key:diagnostics.path
 last	includes/doublelinkedlist.hpp	/^        Node<T>* last;$/;"	m	class:DoubleLinkedList	typeref:typename:Node<T> *
 last	includes/video.h	/^    VideoFrame* last;$/;"	m	struct:VideoFrame	typeref:typename:VideoFrame *
 lastImage	src/video.cpp	/^        ascii_image lastImage;$/;"	m	class:VideoState	typeref:typename:ascii_image	file:
@@ -2106,49 +2096,37 @@ line	build/video.plist	/^           <key>line<\/key><integer>289<\/integer>$/;"	
 line	build/video.plist	/^           <key>line<\/key><integer>289<\/integer>$/;"	k	key:diagnostics.path.edges.start
 line	build/video.plist	/^           <key>line<\/key><integer>291<\/integer>$/;"	k	key:diagnostics.path.edges.end
 line	build/video.plist	/^           <key>line<\/key><integer>291<\/integer>$/;"	k	key:diagnostics.path.edges.start
-line	build/video.plist	/^           <key>line<\/key><integer>292<\/integer>$/;"	k	key:diagnostics.path.edges.end
-line	build/video.plist	/^           <key>line<\/key><integer>292<\/integer>$/;"	k	key:diagnostics.path.edges.start
-line	build/video.plist	/^           <key>line<\/key><integer>293<\/integer>$/;"	k	key:diagnostics.path.edges.end
-line	build/video.plist	/^           <key>line<\/key><integer>293<\/integer>$/;"	k	key:diagnostics.path.edges.start
-line	build/video.plist	/^           <key>line<\/key><integer>294<\/integer>$/;"	k	key:diagnostics.path.edges.end
-line	build/video.plist	/^           <key>line<\/key><integer>294<\/integer>$/;"	k	key:diagnostics.path.edges.start
-line	build/video.plist	/^           <key>line<\/key><integer>295<\/integer>$/;"	k	key:diagnostics.path.edges.end
-line	build/video.plist	/^           <key>line<\/key><integer>295<\/integer>$/;"	k	key:diagnostics.path.edges.start
-line	build/video.plist	/^           <key>line<\/key><integer>296<\/integer>$/;"	k	key:diagnostics.path.edges.end
-line	build/video.plist	/^           <key>line<\/key><integer>299<\/integer>$/;"	k	key:diagnostics.path.edges.end
-line	build/video.plist	/^           <key>line<\/key><integer>299<\/integer>$/;"	k	key:diagnostics.path.edges.start
-line	build/video.plist	/^           <key>line<\/key><integer>301<\/integer>$/;"	k	key:diagnostics.path.edges.end
-line	build/video.plist	/^           <key>line<\/key><integer>301<\/integer>$/;"	k	key:diagnostics.path.edges.start
-line	build/video.plist	/^           <key>line<\/key><integer>307<\/integer>$/;"	k	key:diagnostics.path.edges.end
-line	build/video.plist	/^           <key>line<\/key><integer>307<\/integer>$/;"	k	key:diagnostics.path.edges.start
-line	build/video.plist	/^           <key>line<\/key><integer>310<\/integer>$/;"	k	key:diagnostics.path.edges.end
-line	build/video.plist	/^           <key>line<\/key><integer>310<\/integer>$/;"	k	key:diagnostics.path.edges.start
-line	build/video.plist	/^           <key>line<\/key><integer>312<\/integer>$/;"	k	key:diagnostics.path.edges.end
-line	build/video.plist	/^           <key>line<\/key><integer>312<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^           <key>line<\/key><integer>316<\/integer>$/;"	k	key:diagnostics.path.edges.end
+line	build/video.plist	/^           <key>line<\/key><integer>316<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^           <key>line<\/key><integer>317<\/integer>$/;"	k	key:diagnostics.path.edges.end
+line	build/video.plist	/^           <key>line<\/key><integer>317<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^           <key>line<\/key><integer>318<\/integer>$/;"	k	key:diagnostics.path.edges.end
+line	build/video.plist	/^           <key>line<\/key><integer>318<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^           <key>line<\/key><integer>319<\/integer>$/;"	k	key:diagnostics.path.edges.end
+line	build/video.plist	/^           <key>line<\/key><integer>319<\/integer>$/;"	k	key:diagnostics.path.edges.start
 line	build/video.plist	/^         <key>line<\/key><integer>287<\/integer>$/;"	k	key:diagnostics.path.ranges
 line	build/video.plist	/^         <key>line<\/key><integer>289<\/integer>$/;"	k	key:diagnostics.path.ranges
 line	build/video.plist	/^         <key>line<\/key><integer>291<\/integer>$/;"	k	key:diagnostics.path.ranges
-line	build/video.plist	/^         <key>line<\/key><integer>293<\/integer>$/;"	k	key:diagnostics.path.ranges
-line	build/video.plist	/^         <key>line<\/key><integer>295<\/integer>$/;"	k	key:diagnostics.path.ranges
-line	build/video.plist	/^         <key>line<\/key><integer>301<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/video.plist	/^         <key>line<\/key><integer>317<\/integer>$/;"	k	key:diagnostics.path.ranges
 line	build/video.plist	/^         <key>line<\/key><integer>50450<\/integer>$/;"	k	key:diagnostics.path.ranges
 line	build/video.plist	/^         <key>line<\/key><integer>62351<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/video.plist	/^         <key>line<\/key><integer>650<\/integer>$/;"	k	key:diagnostics.path.ranges
 line	build/video.plist	/^         <key>line<\/key><integer>65268<\/integer>$/;"	k	key:diagnostics.path.ranges
 line	build/video.plist	/^         <key>line<\/key><integer>67681<\/integer>$/;"	k	key:diagnostics.path.ranges
 line	build/video.plist	/^      <key>line<\/key><integer>287<\/integer>$/;"	k	key:diagnostics.path.location
 line	build/video.plist	/^      <key>line<\/key><integer>289<\/integer>$/;"	k	key:diagnostics.path.location
 line	build/video.plist	/^      <key>line<\/key><integer>291<\/integer>$/;"	k	key:diagnostics.path.location
-line	build/video.plist	/^      <key>line<\/key><integer>293<\/integer>$/;"	k	key:diagnostics.path.location
-line	build/video.plist	/^      <key>line<\/key><integer>295<\/integer>$/;"	k	key:diagnostics.path.location
-line	build/video.plist	/^      <key>line<\/key><integer>296<\/integer>$/;"	k	key:diagnostics.path.location
-line	build/video.plist	/^      <key>line<\/key><integer>301<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>317<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>319<\/integer>$/;"	k	key:diagnostics.path.location
 line	build/video.plist	/^      <key>line<\/key><integer>50450<\/integer>$/;"	k	key:diagnostics.path.location
 line	build/video.plist	/^      <key>line<\/key><integer>62351<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>650<\/integer>$/;"	k	key:diagnostics.path.location
 line	build/video.plist	/^      <key>line<\/key><integer>65268<\/integer>$/;"	k	key:diagnostics.path.location
 line	build/video.plist	/^      <key>line<\/key><integer>67681<\/integer>$/;"	k	key:diagnostics.path.location
-line	build/video.plist	/^   <key>line<\/key><integer>296<\/integer>$/;"	k	key:diagnostics.location
+line	build/video.plist	/^   <key>line<\/key><integer>319<\/integer>$/;"	k	key:diagnostics.location
 line	build/video.plist	/^   <key>line<\/key><integer>50450<\/integer>$/;"	k	key:diagnostics.location
 line	build/video.plist	/^   <key>line<\/key><integer>62351<\/integer>$/;"	k	key:diagnostics.location
+line	build/video.plist	/^   <key>line<\/key><integer>650<\/integer>$/;"	k	key:diagnostics.location
 line	build/video.plist	/^   <key>line<\/key><integer>65268<\/integer>$/;"	k	key:diagnostics.location
 line	build/video.plist	/^   <key>line<\/key><integer>67681<\/integer>$/;"	k	key:diagnostics.location
 linear	includes/miniaudio.h	/^    } linear;$/;"	E	struct:ma_resampler_config
@@ -4176,6 +4154,7 @@ main	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^int main(int
 main	src/main.cpp	/^int main(int argc, char** argv)$/;"	f	typeref:typename:int
 map	.vscode/settings.json	/^        "map": "cpp",$/;"	s	object:files.associations
 masterTime	src/video.cpp	/^        double masterTime = 0;$/;"	m	class:VideoState	typeref:typename:double	file:
+masterTimeMutex	src/video.cpp	/^        std::mutex masterTimeMutex;$/;"	m	class:VideoState	typeref:typename:std::mutex	file:
 masterVolumeFactor	includes/miniaudio.h	/^    MA_ATOMIC(4, float) masterVolumeFactor;     \/* Linear 0..1. Can be read and written simulta/;"	E	struct:ma_device
 maxDistance	includes/miniaudio.h	/^    float maxDistance;$/;"	E
 maxGain	includes/miniaudio.h	/^    float maxGain;$/;"	E
@@ -4194,6 +4173,7 @@ mutex	.vscode/settings.json	/^        "mutex": "cpp",$/;"	s	object:files.associa
 name	includes/miniaudio.h	/^    char name[MA_MAX_DEVICE_NAME_LENGTH + 1];   \/* +1 for null terminator. *\/$/;"	E
 nativeDataFormatCount	includes/miniaudio.h	/^    ma_uint32 nativeDataFormatCount;$/;"	E
 nativeDataFormats	includes/miniaudio.h	/^    } nativeDataFormats[\/*ma_format_count * ma_standard_sample_rate_count * MA_MAX_CHANNELS*\/ /;"	E
+nb_displayModes	src/video.cpp	/^        const static int nb_displayModes = 2;$/;"	m	class:VideoState	typeref:typename:const int	file:
 nb_samples	includes/video.h	/^    int nb_samples;$/;"	m	struct:AudioFrame	typeref:typename:int
 new	.vscode/settings.json	/^        "new": "cpp",$/;"	s	object:files.associations
 next	includes/doublelinkedlist.hpp	/^        Node<T>* next;$/;"	m	class:Node	typeref:typename:Node<T> *
@@ -4415,8 +4395,12 @@ pixels	includes/ascii_data.h	/^    uint8_t* pixels;$/;"	m	struct:pixel_data	type
 playback	includes/miniaudio.h	/^    } playback;$/;"	E	struct:ma_device
 playback	includes/miniaudio.h	/^    } playback;$/;"	E	struct:ma_device_config
 playback	src/video.cpp	/^        Playback* playback;$/;"	m	class:VideoState	typeref:typename:Playback *	file:
+playback_alloc	src/video.cpp	/^Playback* playback_alloc() {$/;"	f	typeref:typename:Playback *
+playback_free	src/video.cpp	/^void playback_free(Playback* playback) {$/;"	f	typeref:typename:void
 playing	includes/video.h	/^    bool playing = false;$/;"	m	struct:Playback	typeref:typename:bool
 pop	includes/doublelinkedlist.hpp	/^        T pop() {$/;"	f	class:DoubleLinkedList	typeref:typename:T
+pop_back	includes/doublelinkedlist.hpp	/^        T pop_back() {$/;"	f	class:DoubleLinkedList	typeref:typename:T
+pop_front	includes/doublelinkedlist.hpp	/^        T pop_front() {$/;"	f	class:DoubleLinkedList	typeref:typename:T
 position	includes/miniaudio.h	/^    ma_vec3f position;  \/* The absolute position of the listener. *\/$/;"	E
 position	includes/miniaudio.h	/^    ma_vec3f position;$/;"	E
 positioning	includes/miniaudio.h	/^    ma_positioning positioning;$/;"	E
@@ -4580,12 +4564,16 @@ thread	includes/miniaudio.h	/^    ma_thread thread;$/;"	E	struct:ma_job
 threadPriority	includes/miniaudio.h	/^    ma_thread_priority threadPriority;$/;"	E	struct:ma_context_config
 threadStackSize	includes/miniaudio.h	/^    size_t threadStackSize;$/;"	E	struct:ma_context_config
 time	includes/miniaudio.h	/^    double time;$/;"	E	struct:ma_encoder
+timeChangeWait	src/video.cpp	/^        const static std::chrono::milliseconds timeChangeWait;$/;"	m	class:VideoState	typeref:typename:const std::chrono::milliseconds	file:
+timeChangeWait	src/video.cpp	/^const std::chrono::milliseconds VideoState::timeChangeWait = std::chrono::milliseconds(TIME_CHAN/;"	m	class:VideoState	typeref:typename:const std::chrono::milliseconds
+timeOfLastTimeChange	src/video.cpp	/^        std::chrono::steady_clock::time_point timeOfLastTimeChange;$/;"	m	class:VideoState	typeref:typename:std::chrono::steady_clock::time_point	file:
 toc	includes/miniaudio.h	/^    } toc;  \/* 8 bytes. We encode the job code into the slot allocation data to save space. *\/$/;"	E	struct:ma_job
 totalLengthInPCMFrames	includes/miniaudio.h	/^    ma_uint64 totalLengthInPCMFrames;           \/* This is calculated when first loaded by the /;"	E	struct:ma_resource_manager_data_stream
 totalPackets	src/video.cpp	/^        int totalPackets;$/;"	m	class:VideoState	typeref:typename:int	file:
 tuple	.vscode/settings.json	/^        "tuple": "cpp",$/;"	s	object:files.associations
 type	build/ascii.plist	/^   <key>type<\/key><string>Dead assignment<\/string>$/;"	k	key:diagnostics
 type	build/video.plist	/^   <key>type<\/key><string>Dead assignment<\/string>$/;"	k	key:diagnostics
+type	build/video.plist	/^   <key>type<\/key><string>Dead initialization<\/string>$/;"	k	key:diagnostics
 type	build/video.plist	/^   <key>type<\/key><string>Memory leak<\/string>$/;"	k	key:diagnostics
 type	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_resource_manager_data_supply_type) type;    \/* Read and written from differ/;"	E
 type	includes/miniaudio.h	/^    ma_device_notification_type type;$/;"	E	struct:ma_job

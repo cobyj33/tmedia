@@ -4,8 +4,10 @@
 #define GIGABYTE_TO_BYTES 1000000000
 #define VIDEO_FIFO_MAX_SIZE GIGABYTE_TO_BYTES / FRAME_DATA_SIZE
 #define SECONDS_TO_NANOSECONDS 1000000000
-#define SYNC_THRESHOLD_MILLISECONDS 10
-#define FRAME_RESERVE_SIZE 20000
+#define SECONDS_TO_MILLISECONDS 1000
+#define SYNC_THRESHOLD_MILLISECONDS 200000
+#define FRAME_RESERVE_SIZE 100000
+#define TIME_CHANGE_WAIT_MILLISECONDS 250
 
 #include <ascii_data.h>
 
@@ -28,6 +30,9 @@ typedef struct Playback {
     bool playing = false;
     int64_t skippedPTS;
 } Playback;
+
+Playback* playback_alloc();
+void playback_free(Playback* playback);
 
 typedef struct VideoSymbol {
     int framesToDelete;

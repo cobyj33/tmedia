@@ -1,7 +1,7 @@
 #pragma once
-#include <mutex>
 #include <stdexcept>
 #include <iostream>
+#include <mutex>
 
 template<typename T>
 class Node {
@@ -38,48 +38,30 @@ class DoubleLinkedList {
         }
 
         T get_first() {
-            std::lock_guard<std::mutex> mutexLock(editingMutex);
             return this->first->data;
         }
 
         T get_last() {
-            std::lock_guard<std::mutex> mutexLock(editingMutex);
             return this->last->data;
         }
         
         T get() {
-            std::lock_guard<std::mutex> mutexLock(editingMutex);
             return this->current->data;
         }
 
         T pop() {
-            std::lock_guard<std::mutex> mutexLock(editingMutex);
             T data;
             
             if (length == 0) {
-                throw std::invalid_argument("Cannot pop from empty list");       
+                throw std::out_of_range("Cannot pop from empty list");       
             } else if (length == 1) {
                 data = this->current->data;
-                this->first = nullptr;
-                this->last = nullptr;
-                this->current = nullptr;
+                clear();
             } else if (length > 1) {
-
                 if (index == length - 1) {
-                    Node<T>* toDelete = this->last;
-                    data = this->last->data;
-                    this->last->prev->next = nullptr;
-                    this->last = this->last->prev;
-                    this->current = this->last;
-                    this->index--;
-                    delete toDelete;
+                    data = pop_back();
                 } else if (index == 0) {
-                    Node<T>* toDelete = this->first;
-                    data = this->first->data;
-                    this->first->next->prev = nullptr;
-                    this->first = this->first->next;
-                    this->current = this->first;
-                    delete toDelete;
+                    data = pop_front();
                 } else if (index > 0 && index < length - 1) {
                     Node<T>* toDelete = this->current;
                     this->current = this->current->next;
@@ -87,17 +69,73 @@ class DoubleLinkedList {
                     toDelete->next->prev = toDelete->prev;
                     data = toDelete->data;
                     delete toDelete;
+                    this->length--;
                 } else {
                     throw std::out_of_range("index not in range");
                 }
             }
-            this->length--;
 
             return data;
         }
 
+        T pop_front() {
+            T data;
+
+            if (empty()) {
+                throw std::out_of_range("Cannot pop from empty list");
+            }
+            else if (this->length == 1) {
+                data = this->first->data;
+                clear();
+            }
+            else if (this->length > 1) {
+                Node<T>* toDelete = this->first;
+                data = this->first->data;
+                this->first->next->prev = nullptr;
+                this->first = this->first->next;
+
+                if (this->index == 0) {
+                    this->current = this->first;
+                } else if (this->index > 0) {
+                    this->index--;
+                }
+
+                delete toDelete;
+                this->length--;
+            } 
+            
+            return data;
+        }
+
+        T pop_back() {
+            T data;
+
+            if (empty()) {
+                throw std::out_of_range("Cannot pop from empty list");
+            }
+            else if (this->length == 1) {
+                data = this->last->data;
+                clear();
+            }
+            else if (this->length > 1) {
+                Node<T>* toDelete = this->last;
+                data = this->last->data;
+                this->last->prev->next = nullptr;
+                this->last = this->last->prev;
+                this->current = this->last;
+
+                if (this->index == this->length - 1) {
+                    this->index--;
+                }
+
+                delete toDelete;
+                this->length--;
+            } 
+            
+            return data;
+        }
+
         void push_back(T data) {
-            std::lock_guard<std::mutex> mutexLock(editingMutex);
 
             Node<T>* newLast = new Node<T>(data);
 
@@ -114,7 +152,6 @@ class DoubleLinkedList {
         }
 
         void push_front(T data) {
-            std::lock_guard<std::mutex> mutexLock(editingMutex);
             Node<T>* newFirst = new Node<T>(data);
 
             if (this->first != nullptr) {
@@ -131,8 +168,6 @@ class DoubleLinkedList {
         }
 
         bool set_index(int newIndex) {
-            std::lock_guard<std::mutex> mutexLock(editingMutex);
-
             if (newIndex >= 0 && newIndex < this->length) {
                 if (newIndex < this->index) {
                     for (int i = 0; i < this->index - newIndex; i++) {
@@ -152,22 +187,18 @@ class DoubleLinkedList {
         }
 
         int get_index() {
-            std::lock_guard<std::mutex> mutexLock(editingMutex);
             return this->index;
         }
 
         int get_length() {
-            std::lock_guard<std::mutex> mutexLock(editingMutex);
             return this->length;
         }
 
         bool empty() {
-            std::lock_guard<std::mutex> mutexLock(editingMutex);
             return this->length == 0;
         }
 
         void clear() {
-            std::lock_guard<std::mutex> mutexLock(editingMutex);
             Node<T>* currentNode = first;
             while (currentNode->next != nullptr) {
                 Node<T>* temp = currentNode;
