@@ -81,22 +81,15 @@ bool init_icons() {
         }
 
         for (int i = 0; i < numOfIcons; i++) {
-            pixel_data* icon = (pixel_data*)malloc(sizeof(pixel_data));
-            icon->width = SPRITE_WIDTH;
-            icon->height = SPRITE_HEIGHT;
-            icon->pixels = (uint8_t*)malloc(SPRITE_WIDTH * SPRITE_HEIGHT * sizeof(uint8_t));
-
+            pixel_data* icon = pixel_data_alloc(SPRITE_WIDTH, SPRITE_HEIGHT);
             int currentSpriteY = i / SPRITE_COLUMNS * SPRITE_HEIGHT;
             int currentSpriteX = i % SPRITE_COLUMNS * SPRITE_WIDTH;
-
             std::cout << "Y: " << currentSpriteY << "X: " << currentSpriteX << std::endl;
-
             for (int row = 0; row < SPRITE_HEIGHT; row++) {
                 for (int col = 0; col < SPRITE_WIDTH; col++) {
                     icon->pixels[row * SPRITE_WIDTH + col] = iconData.pixels[(currentSpriteY + row) * (SPRITE_WIDTH * SPRITE_COLUMNS) + (currentSpriteX + col)];
                 }
             }
-
             std::cout << "icon " << i << " retrieved" << std::endl;
 
             iconFromEnum.emplace(std::make_pair(iconOrder[i], icon));
@@ -118,16 +111,11 @@ bool init_icons() {
 bool free_icons() {
     if (initialized) {
         for (auto itr = iconFromEnum.begin(); itr != iconFromEnum.end(); itr++) {
-            auto pair = *itr;
-            free(pair.second->pixels);
-            free(pair.second);
+            pixel_data_free(itr->second);
         }
-
         iconFromEnum.clear();
-        
         initialized = false;
     }
-
     return !initialized;
 }
 

@@ -4,8 +4,17 @@
 #define GIGABYTE_TO_BYTES 1000000000
 #define VIDEO_FIFO_MAX_SIZE GIGABYTE_TO_BYTES / FRAME_DATA_SIZE
 #define SECONDS_TO_NANOSECONDS 1000000000
+#define SECONDS_TO_MILLISECONDS 1000
+#define SYNC_THRESHOLD_MILLISECONDS 200000
+#define FRAME_RESERVE_SIZE 100000
+#define TIME_CHANGE_WAIT_MILLISECONDS 250
 
 #include <ascii_data.h>
+
+extern "C" {
+    #include <libavcodec/avcodec.h>
+#include <libavutil/avutil.h>
+}
 
 typedef enum VideoIcon {
     STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LOW_VOLUME_ICON, MEDIUM_VOLUME_ICON, HIGH_VOLUME_ICON, MAXIMIZED_ICON, MINIMIZED_ICON
@@ -22,6 +31,9 @@ typedef struct Playback {
     int64_t skippedPTS;
 } Playback;
 
+Playback* playback_alloc();
+void playback_free(Playback* playback);
+
 typedef struct VideoSymbol {
     int framesToDelete;
     int framesShown;
@@ -31,17 +43,33 @@ typedef struct VideoSymbol {
 typedef struct VideoFrame {
     pixel_data* pixelData;
     int64_t pts;
+    int repeat_pict;
+    VideoFrame* next;
+    VideoFrame* last;
 } VideoFrame;
 
+/* typedef struct VideoFrameList { */
+/*     VideoFrame* first; */
+/*     VideoFrame* last; */
+/*     VideoFrame* current; */
+/*     int currentPosition; */
+/*     int length; */
+/* } VideoFrameList; */
 
+typedef struct AudioFrame {
+    uint8_t *data[8];
+    AVChannelLayout ch_layout;
+    AVSampleFormat sample_fmt;
+    int64_t pts;
+    int nb_samples;
+} AudioFrame;
 
-// typedef struct VideoTuringDeque {
-//     uint8_t* frames;
-// } VideoTuringDeque;
+VideoFrame* video_frame_alloc(AVFrame* avFrame);
+void video_frame_free(VideoFrame* videoFrame);
 
-// typedef struct AudioTuringDeque {
+AudioFrame* audio_frame_alloc(AVFrame* avFrame);
+void audio_frame_free(AudioFrame* audioFrame);
 
-// } AudioTuringDeque;
 
 int testIconProgram();
 bool init_icons();

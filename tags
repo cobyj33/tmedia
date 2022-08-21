@@ -4,7 +4,11 @@
 !_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
 !_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
 !_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+<<<<<<< HEAD
 !_TAG_PROC_CWD	/home/cobyj33/Programming/C++/ascii_video/master/	//
+=======
+!_TAG_PROC_CWD	/home/cobyj33/Programming/C++/ascii_video/rewind/	//
+>>>>>>> rewind
 !_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
 !_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
@@ -16,6 +20,23 @@ $(VERBOSE)MAKESILENT	build/Makefile	/^$(VERBOSE)MAKESILENT = -s$/;"	m
 %	build/Makefile	/^% : RCS\/%,v$/;"	t
 %	build/Makefile	/^% : SCCS\/s.%$/;"	t
 %	build/Makefile	/^% : s.%$/;"	t
+*.ejs	.vscode/settings.json	/^        "*.ejs": "html",$/;"	s	object:files.associations
+*.tcc	.vscode/settings.json	/^        "*.tcc": "cpp",$/;"	s	object:files.associations
+0	build/ascii.plist	/^   <key>0<\/key>$/;"	k	key:diagnostics.ExecutedLines
+0	build/compile_commands.json	/^{$/;"	o
+0	build/video.plist	/^   <key>0<\/key>$/;"	k	key:diagnostics.ExecutedLines
+1	build/compile_commands.json	/^{$/;"	o
+1	build/video.plist	/^   <key>1<\/key>$/;"	k	key:diagnostics.ExecutedLines
+2	build/compile_commands.json	/^{$/;"	o
+2	build/video.plist	/^   <key>2<\/key>$/;"	k	key:diagnostics.ExecutedLines
+3	build/compile_commands.json	/^{$/;"	o
+3	build/video.plist	/^   <key>3<\/key>$/;"	k	key:diagnostics.ExecutedLines
+4	build/compile_commands.json	/^{$/;"	o
+4	build/video.plist	/^   <key>4<\/key>$/;"	k	key:diagnostics.ExecutedLines
+5	build/compile_commands.json	/^{$/;"	o
+5	build/video.plist	/^   <key>5<\/key>$/;"	k	key:diagnostics.ExecutedLines
+6	build/video.plist	/^   <key>6<\/key>$/;"	k	key:diagnostics.ExecutedLines
+7	build/video.plist	/^   <key>7<\/key>$/;"	k	key:diagnostics.ExecutedLines
 ARCHITECTURE_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#   define ARCHITECTURE_ID /;"	d	file:
 ARCHITECTURE_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define ARCHITECTURE_ID /;"	d	file:
 ARCHITECTURE_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define ARCHITECTURE_ID$/;"	d	file:
@@ -26,6 +47,11 @@ ASCII_CONSTANTS	includes/ascii_constants.h	/^#define ASCII_CONSTANTS$/;"	d
 ASCII_FILE_INFO	includes/info.h	/^#define ASCII_FILE_INFO$/;"	d
 ASCII_IMAGE_PROGRAM	includes/image.h	/^#define ASCII_IMAGE_PROGRAM$/;"	d
 ASCII_VIDEO_PROGRAM	includes/video.h	/^#define ASCII_VIDEO_PROGRAM$/;"	d
+<<<<<<< HEAD
+=======
+AudioFrame	includes/video.h	/^typedef struct AudioFrame {$/;"	s
+AudioFrame	includes/video.h	/^} AudioFrame;$/;"	t	typeref:struct:AudioFrame
+>>>>>>> rewind
 BACKWARD_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 C89ATOMIC_32BIT	includes/miniaudio.h	/^#define C89ATOMIC_32BIT$/;"	M
 C89ATOMIC_64BIT	includes/miniaudio.h	/^#define C89ATOMIC_64BIT$/;"	M
@@ -169,11 +195,15 @@ CMAKE_MT	build/CMakeFiles/3.22.1/CMakeCXXCompiler.cmake	/^set(CMAKE_MT "")$/;"	v
 CMAKE_OBJDUMP	build/cmake_install.cmake	/^  set(CMAKE_OBJDUMP "\/usr\/bin\/objdump")$/;"	v
 CMAKE_RANLIB	build/CMakeFiles/3.22.1/CMakeCCompiler.cmake	/^set(CMAKE_RANLIB "\/usr\/bin\/ranlib")$/;"	v
 CMAKE_RANLIB	build/CMakeFiles/3.22.1/CMakeCXXCompiler.cmake	/^set(CMAKE_RANLIB "\/usr\/bin\/ranlib")$/;"	v
-CMAKE_RELATIVE_PATH_TOP_BINARY	build/CMakeFiles/CMakeDirectoryInformation.cmake	/^set(CMAKE_RELATIVE_PATH_TOP_BINARY "\/home\/cobyj33\/Programming\/C++\/ascii_video\/build")$/;"	v
-CMAKE_RELATIVE_PATH_TOP_SOURCE	build/CMakeFiles/CMakeDirectoryInformation.cmake	/^set(CMAKE_RELATIVE_PATH_TOP_SOURCE "\/home\/cobyj33\/Programming\/C++\/ascii_video")$/;"	v
+CMAKE_RELATIVE_PATH_TOP_BINARY	build/CMakeFiles/CMakeDirectoryInformation.cmake	/^set(CMAKE_RELATIVE_PATH_TOP_BINARY "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/buil/;"	v
+CMAKE_RELATIVE_PATH_TOP_SOURCE	build/CMakeFiles/CMakeDirectoryInformation.cmake	/^set(CMAKE_RELATIVE_PATH_TOP_SOURCE "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind")$/;"	v
 CMAKE_SIZEOF_VOID_P	build/CMakeFiles/3.22.1/CMakeCCompiler.cmake	/^  set(CMAKE_SIZEOF_VOID_P "${CMAKE_C_SIZEOF_DATA_PTR}")$/;"	v
 CMAKE_SIZEOF_VOID_P	build/CMakeFiles/3.22.1/CMakeCXXCompiler.cmake	/^  set(CMAKE_SIZEOF_VOID_P "${CMAKE_CXX_SIZEOF_DATA_PTR}")$/;"	v
+<<<<<<< HEAD
 CMAKE_SOURCE_DIR	build/Makefile	/^CMAKE_SOURCE_DIR = \/home\/cobyj33\/Programming\/C++\/ascii_video$/;"	m
+=======
+CMAKE_SOURCE_DIR	build/Makefile	/^CMAKE_SOURCE_DIR = \/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind$/;"	m
+>>>>>>> rewind
 CMAKE_SYSTEM	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_SYSTEM "Linux-5.15.0-46-generic")$/;"	v
 CMAKE_SYSTEM_LOADED	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_SYSTEM_LOADED 1)$/;"	v
 CMAKE_SYSTEM_NAME	build/CMakeFiles/3.22.1/CMakeSystem.cmake	/^set(CMAKE_SYSTEM_NAME "Linux")$/;"	v
@@ -226,12 +256,22 @@ CXX_STD	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#  define
 C_VERSION	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define C_VERSION /;"	d	file:
 C_VERSION	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define C_VERSION$/;"	d	file:
 C_VERSION	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^# define C_VERSION /;"	d	file:
+DEBUG	src/video.cpp	/^    DEBUG, FULL$/;"	e	enum:VideoStateDisplayMode	file:
 DEC	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#define DEC(/;"	d	file:
 DEC	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#define DEC(/;"	d	file:
 DWORD_PTR	includes/miniaudio.h	/^typedef size_t DWORD_PTR;$/;"	t
+DoubleLinkedList	includes/doublelinkedlist.hpp	/^        DoubleLinkedList() {$/;"	f	class:DoubleLinkedList
+DoubleLinkedList	includes/doublelinkedlist.hpp	/^class DoubleLinkedList {$/;"	c
 EQUALS	build/Makefile	/^EQUALS = =$/;"	m
+<<<<<<< HEAD
+=======
+ExecutedLines	build/ascii.plist	/^  <key>ExecutedLines<\/key>$/;"	k	key:diagnostics
+ExecutedLines	build/video.plist	/^  <key>ExecutedLines<\/key>$/;"	k	key:diagnostics
+>>>>>>> rewind
 FORWARD_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 FRAME_DATA_SIZE	includes/ascii_constants.h	/^#define FRAME_DATA_SIZE /;"	d
+FRAME_RESERVE_SIZE	includes/video.h	/^#define FRAME_RESERVE_SIZE /;"	d
+FULL	src/video.cpp	/^    DEBUG, FULL$/;"	e	enum:VideoStateDisplayMode	file:
 Format	includes/miniaudio.h	/^    WAVEFORMATEX Format;$/;"	E
 GIGABYTE_TO_BYTES	includes/video.h	/^#define GIGABYTE_TO_BYTES /;"	d
 HEX	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#define HEX(/;"	d	file:
@@ -883,6 +923,11 @@ ManufacturerGuid	includes/miniaudio.h	/^    GUID ManufacturerGuid;$/;"	E	struct:
 NO_VOLUME_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 NULL	includes/miniaudio.h	/^#define NULL 0$/;"	M
 NameGuid	includes/miniaudio.h	/^    GUID NameGuid;$/;"	E	struct:ma_IDirectSoundNotify
+<<<<<<< HEAD
+=======
+Node	includes/doublelinkedlist.hpp	/^        Node(T data) {$/;"	f	class:Node
+Node	includes/doublelinkedlist.hpp	/^class Node {$/;"	c
+>>>>>>> rewind
 PAUSE_ICON	includes/video.h	/^    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LO/;"	e	enum:VideoIcon
 PLATFORM_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define PLATFORM_ID /;"	d	file:
 PLATFORM_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define PLATFORM_ID$/;"	d	file:
@@ -899,6 +944,10 @@ Playback	includes/video.h	/^typedef struct Playback {$/;"	s
 Playback	includes/video.h	/^} Playback;$/;"	t	typeref:struct:Playback
 ProductGuid	includes/miniaudio.h	/^    GUID ProductGuid;$/;"	E	struct:ma_IDirectSoundNotify
 RM	build/Makefile	/^RM = \/usr\/bin\/cmake -E rm -f$/;"	m
+<<<<<<< HEAD
+=======
+SECONDS_TO_MILLISECONDS	includes/video.h	/^#define SECONDS_TO_MILLISECONDS /;"	d
+>>>>>>> rewind
 SECONDS_TO_NANOSECONDS	includes/video.h	/^#define SECONDS_TO_NANOSECONDS /;"	d
 SHELL	build/Makefile	/^SHELL = \/bin\/sh$/;"	m
 SIMULATE_ID	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#  define SIMULATE_ID /;"	d	file:
@@ -944,8 +993,10 @@ STRINGIFY	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#define STRIN
 STRINGIFY	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#define STRINGIFY(/;"	d	file:
 STRINGIFY_HELPER	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^#define STRINGIFY_HELPER(/;"	d	file:
 STRINGIFY_HELPER	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^#define STRINGIFY_HELPER(/;"	d	file:
+SYNC_THRESHOLD_MILLISECONDS	includes/video.h	/^#define SYNC_THRESHOLD_MILLISECONDS /;"	d
 Samples	includes/miniaudio.h	/^    } Samples;$/;"	E
 SubFormat	includes/miniaudio.h	/^    GUID SubFormat;$/;"	E
+TIME_CHANGE_WAIT_MILLISECONDS	includes/video.h	/^#define TIME_CHANGE_WAIT_MILLISECONDS /;"	d
 ULONG	includes/miniaudio.h	/^        ULONG   (STDMETHODCALLTYPE * AddRef)        (ma_IActivateAudioInterfaceAsyncOperation* p/;"	E
 ULONG	includes/miniaudio.h	/^        ULONG   (STDMETHODCALLTYPE * AddRef)        (ma_IMMDevice* pThis);$/;"	E	struct:ma_IMMDeviceCollection
 ULONG	includes/miniaudio.h	/^        ULONG   (STDMETHODCALLTYPE * AddRef)        (ma_IMMDeviceCollection* pThis);$/;"	E
@@ -990,6 +1041,10 @@ VideoIcon	includes/video.h	/^} VideoIcon;$/;"	t	typeref:enum:VideoIcon
 VideoState	src/video.cpp	/^        VideoState() { }$/;"	f	class:VideoState	file:
 VideoState	src/video.cpp	/^        VideoState(const char* fileName) {$/;"	f	class:VideoState	file:
 VideoState	src/video.cpp	/^class VideoState {$/;"	c	file:
+<<<<<<< HEAD
+=======
+VideoStateDisplayMode	src/video.cpp	/^enum VideoStateDisplayMode {$/;"	g	file:
+>>>>>>> rewind
 VideoSymbol	includes/video.h	/^typedef struct VideoSymbol {$/;"	s
 VideoSymbol	includes/video.h	/^} VideoSymbol;$/;"	t	typeref:struct:VideoSymbol
 WAVEFORMATEXTENSIBLE	includes/miniaudio.h	/^} WAVEFORMATEXTENSIBLE;$/;"	t
@@ -1039,6 +1094,7 @@ aaudio	includes/miniaudio.h	/^    } aaudio;$/;"	E	struct:ma_device_config
 absoluteCursor	includes/miniaudio.h	/^    MA_ATOMIC(8, ma_uint64) absoluteCursor;     \/* The playback cursor, in absolute position st/;"	E	struct:ma_resource_manager_data_stream
 absoluteCursor	includes/miniaudio.h	/^    ma_uint64 absoluteCursor;$/;"	E	struct:ma_paged_audio_buffer_page
 advance	includes/miniaudio.h	/^    double advance;$/;"	E	struct:ma_encoder
+algorithm	.vscode/settings.json	/^        "algorithm": "cpp",$/;"	s	object:files.associations
 algorithm	includes/miniaudio.h	/^    ma_resample_algorithm algorithm;    \/* When set to ma_resample_algorithm_custom, pBackendVT/;"	E	struct:ma_resampler_config
 all	build/Makefile	/^all: cmake_check_build_system$/;"	t
 allPacketsRead	includes/video.h	/^    bool allPacketsRead = false;$/;"	m	struct:Playback	typeref:typename:bool
@@ -1056,6 +1112,7 @@ allowDynamicSampleRate	includes/miniaudio.h	/^    ma_bool32 allowDynamicSampleRa
 alsa	includes/miniaudio.h	/^    } alsa;$/;"	E	struct:ma_context_config
 alsa	includes/miniaudio.h	/^    } alsa;$/;"	E	struct:ma_device_config
 amplitude	includes/miniaudio.h	/^    double amplitude;$/;"	E	struct:ma_encoder
+array	.vscode/settings.json	/^        "array": "cpp",$/;"	s	object:files.associations
 ascii_image	includes/ascii_data.h	/^typedef struct ascii_image {$/;"	s
 ascii_image	includes/ascii_data.h	/^} ascii_image;$/;"	t	typeref:struct:ascii_image
 ascii_video	CMakeLists.txt	/^add_executable(ascii_video  ${SRC})$/;"	t
@@ -1063,16 +1120,24 @@ ascii_video	CMakeLists.txt	/^project( ascii_video )$/;"	p
 ascii_video	build/Makefile	/^ascii_video: cmake_check_build_system$/;"	t
 ascii_video/fast	build/Makefile	/^ascii_video\/fast:$/;"	t
 atEnd	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_bool32) atEnd;$/;"	E	struct:ma_sound
+atomic	.vscode/settings.json	/^        "atomic": "cpp",$/;"	s	object:files.associations
 attenuationModel	includes/miniaudio.h	/^    ma_attenuation_model attenuationModel;$/;"	E
 audioCodecContext	src/video.cpp	/^        AVCodecContext* audioCodecContext = nullptr;$/;"	m	class:VideoState	typeref:typename:AVCodecContext *	file:
 audioDataCallback	src/video.cpp	/^        static void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_/;"	f	class:VideoState	typeref:typename:void	file:
 audioDecoder	src/video.cpp	/^        const AVCodec* audioDecoder = nullptr;$/;"	m	class:VideoState	typeref:typename:const AVCodec *	file:
 audioDevice	src/video.cpp	/^        ma_device* audioDevice;$/;"	m	class:VideoState	typeref:typename:ma_device *	file:
-audioFifo	src/video.cpp	/^        AVAudioFifo* audioFifo;$/;"	m	class:VideoState	typeref:typename:AVAudioFifo *	file:
+audioFrameFifo	src/video.cpp	/^        AVFifo* audioFrameFifo;$/;"	m	class:VideoState	typeref:typename:AVFifo *	file:
+audioFrames	src/video.cpp	/^        DoubleLinkedList<AVFrame*>* audioFrames;$/;"	m	class:VideoState	typeref:typename:DoubleLinkedList<AVFrame * > *	file:
 audioMutex	src/video.cpp	/^        std::mutex audioMutex;$/;"	m	class:VideoState	typeref:typename:std::mutex	file:
 audioPlaybackThread	src/video.cpp	/^        static int audioPlaybackThread(VideoState* state) {$/;"	f	class:VideoState	typeref:typename:int	file:
 audioResampler	src/video.cpp	/^        SwrContext* audioResampler;$/;"	m	class:VideoState	typeref:typename:SwrContext *	file:
+audioSampleRate	src/video.cpp	/^        int audioSampleRate;$/;"	m	class:VideoState	typeref:typename:int	file:
 audioStream	src/video.cpp	/^        AVStream* audioStream;$/;"	m	class:VideoState	typeref:typename:AVStream *	file:
+<<<<<<< HEAD
+=======
+audioTime	src/video.cpp	/^        double audioTime = 0;$/;"	m	class:VideoState	typeref:typename:double	file:
+audioTimeBase	src/video.cpp	/^        double audioTimeBase;$/;"	m	class:VideoState	typeref:typename:double	file:
+>>>>>>> rewind
 b0	includes/miniaudio.h	/^    double b0;$/;"	E
 b0	includes/miniaudio.h	/^    ma_biquad_coefficient b0;$/;"	E
 b1	includes/miniaudio.h	/^    double b1;$/;"	E
@@ -1088,6 +1153,7 @@ baseNode	includes/miniaudio.h	/^    ma_node_base baseNode;$/;"	E
 begin	src/video.cpp	/^        void begin() {$/;"	f	class:VideoState	typeref:typename:void	file:
 biquad	includes/miniaudio.h	/^    ma_biquad biquad;$/;"	E
 biquad	includes/miniaudio.h	/^    ma_biquad_config biquad;$/;"	E
+bit	.vscode/settings.json	/^        "bit": "cpp",$/;"	s	object:files.associations
 bitfield	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) bitfield;   \/* Must be used atomically because the allocation and f/;"	E	struct:ma_resampler_config
 bpf	includes/miniaudio.h	/^    ma_bpf bpf;$/;"	E
 bpf	includes/miniaudio.h	/^    ma_bpf_config bpf;$/;"	E
@@ -1509,6 +1575,9 @@ capacity	includes/miniaudio.h	/^    ma_uint32 capacity; \/* The maximum number o
 capacity	includes/miniaudio.h	/^    ma_uint32 capacity;$/;"	E	struct:ma_resampler_config
 capture	includes/miniaudio.h	/^    } capture;$/;"	E	struct:ma_device
 capture	includes/miniaudio.h	/^    } capture;$/;"	E	struct:ma_device_config
+category	build/ascii.plist	/^   <key>category<\/key><string>Unused code<\/string>$/;"	k	key:diagnostics
+category	build/video.plist	/^   <key>category<\/key><string>Memory error<\/string>$/;"	k	key:diagnostics
+category	build/video.plist	/^   <key>category<\/key><string>Unused code<\/string>$/;"	k	key:diagnostics
 cb	includes/miniaudio.h	/^    ma_async_notification_callbacks cb;$/;"	E	struct:ma_resampler_config
 cb	includes/miniaudio.h	/^    ma_vfs_callbacks cb;$/;"	E	struct:ma_paged_audio_buffer_page
 cbSize	includes/miniaudio.h	/^    ma_uint32 cbSize;$/;"	E
@@ -1521,6 +1590,8 @@ cbwh	includes/miniaudio.h	/^typedef MMRESULT (WINAPI * MA_PFN_waveOutWrite)(HWAV
 cbwic	includes/miniaudio.h	/^typedef MMRESULT (WINAPI * MA_PFN_waveInGetDevCapsA)(ma_uintptr uDeviceID, LPWAVEINCAPSA pwic, U/;"	t	struct:ma_IDirectSoundNotify
 cbwoc	includes/miniaudio.h	/^typedef MMRESULT (WINAPI * MA_PFN_waveOutGetDevCapsA)(ma_uintptr uDeviceID, LPWAVEOUTCAPSA pwoc,/;"	t	struct:ma_IDirectSoundNotify
 cchMax	includes/miniaudio.h	/^typedef int     (WINAPI * MA_PFN_StringFromGUID2)(const GUID* const rguid, LPOLESTR lpsz, int cc/;"	t
+cctype	.vscode/settings.json	/^        "cctype": "cpp",$/;"	s	object:files.associations
+ch_layout	includes/video.h	/^    AVChannelLayout ch_layout;$/;"	m	struct:AudioFrame	typeref:typename:AVChannelLayout
 channelConverter	includes/miniaudio.h	/^    ma_channel_converter channelConverter;$/;"	E	struct:ma_resampler_config
 channelMap	includes/miniaudio.h	/^    ma_channel channelMap[MA_MAX_CHANNELS];$/;"	E	struct:ma_device_config
 channelMapIn	includes/miniaudio.h	/^    ma_channel channelMapIn[MA_MAX_CHANNELS];$/;"	E	struct:ma_completion_handler_uwp
@@ -1546,13 +1617,91 @@ channelsOut	includes/miniaudio.h	/^    ma_uint32 channelsOut;                   
 channelsOut	includes/miniaudio.h	/^    ma_uint32 channelsOut;$/;"	E
 channelsOut	includes/miniaudio.h	/^    ma_uint32 channelsOut;$/;"	E	struct:ma_completion_handler_uwp
 channelsOut	includes/miniaudio.h	/^    ma_uint32 channelsOut;$/;"	E	struct:ma_resampler_config
+check_name	build/ascii.plist	/^   <key>check_name<\/key><string>deadcode.DeadStores<\/string>$/;"	k	key:diagnostics
+check_name	build/video.plist	/^   <key>check_name<\/key><string>deadcode.DeadStores<\/string>$/;"	k	key:diagnostics
+check_name	build/video.plist	/^   <key>check_name<\/key><string>unix.Malloc<\/string>$/;"	k	key:diagnostics
+chrono	.vscode/settings.json	/^        "chrono": "cpp",$/;"	s	object:files.associations
+cinttypes	.vscode/settings.json	/^        "cinttypes": "cpp",$/;"	s	object:files.associations
+clang_version	build/ascii.plist	/^ <key>clang_version<\/key>$/;"	k
+clang_version	build/video.plist	/^ <key>clang_version<\/key>$/;"	k
 clean	build/Makefile	/^clean:$/;"	t
 clean/fast	build/Makefile	/^clean\/fast: clean$/;"	t
+clear	includes/doublelinkedlist.hpp	/^        void clear() {$/;"	f	class:DoubleLinkedList	typeref:typename:void
 clearOnWriteAcquire	includes/miniaudio.h	/^    ma_bool8 clearOnWriteAcquire;               \/* When set, clears the acquired write buffer b/;"	E	struct:ma_resampler_config
+clocale	.vscode/settings.json	/^        "clocale": "cpp",$/;"	s	object:files.associations
 cmake_check_build_system	build/Makefile	/^cmake_check_build_system:$/;"	t
 cmake_force	build/Makefile	/^cmake_force:$/;"	t
+cmath	.vscode/settings.json	/^        "cmath": "cpp",$/;"	s	object:files.associations
 code	includes/miniaudio.h	/^    int code;$/;"	E	struct:ma_context_config
+col	build/ascii.plist	/^         <key>col<\/key><integer>24<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/ascii.plist	/^         <key>col<\/key><integer>26<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/ascii.plist	/^         <key>col<\/key><integer>59<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/ascii.plist	/^         <key>col<\/key><integer>60<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/ascii.plist	/^      <key>col<\/key><integer>7<\/integer>$/;"	k	key:diagnostics.path.location
+col	build/ascii.plist	/^      <key>col<\/key><integer>9<\/integer>$/;"	k	key:diagnostics.path.location
+col	build/ascii.plist	/^   <key>col<\/key><integer>7<\/integer>$/;"	k	key:diagnostics.location
+col	build/ascii.plist	/^   <key>col<\/key><integer>9<\/integer>$/;"	k	key:diagnostics.location
+col	build/video.plist	/^           <key>col<\/key><integer>13<\/integer>$/;"	k	key:diagnostics.path.edges.end
+col	build/video.plist	/^           <key>col<\/key><integer>13<\/integer>$/;"	k	key:diagnostics.path.edges.start
+col	build/video.plist	/^           <key>col<\/key><integer>15<\/integer>$/;"	k	key:diagnostics.path.edges.start
+col	build/video.plist	/^           <key>col<\/key><integer>17<\/integer>$/;"	k	key:diagnostics.path.edges.end
+col	build/video.plist	/^           <key>col<\/key><integer>17<\/integer>$/;"	k	key:diagnostics.path.edges.start
+col	build/video.plist	/^           <key>col<\/key><integer>18<\/integer>$/;"	k	key:diagnostics.path.edges.end
+col	build/video.plist	/^           <key>col<\/key><integer>18<\/integer>$/;"	k	key:diagnostics.path.edges.start
+col	build/video.plist	/^           <key>col<\/key><integer>20<\/integer>$/;"	k	key:diagnostics.path.edges.end
+col	build/video.plist	/^           <key>col<\/key><integer>20<\/integer>$/;"	k	key:diagnostics.path.edges.start
+col	build/video.plist	/^           <key>col<\/key><integer>21<\/integer>$/;"	k	key:diagnostics.path.edges.end
+col	build/video.plist	/^           <key>col<\/key><integer>21<\/integer>$/;"	k	key:diagnostics.path.edges.start
+col	build/video.plist	/^           <key>col<\/key><integer>22<\/integer>$/;"	k	key:diagnostics.path.edges.end
+col	build/video.plist	/^           <key>col<\/key><integer>22<\/integer>$/;"	k	key:diagnostics.path.edges.start
+col	build/video.plist	/^           <key>col<\/key><integer>24<\/integer>$/;"	k	key:diagnostics.path.edges.end
+col	build/video.plist	/^           <key>col<\/key><integer>24<\/integer>$/;"	k	key:diagnostics.path.edges.start
+col	build/video.plist	/^           <key>col<\/key><integer>25<\/integer>$/;"	k	key:diagnostics.path.edges.end
+col	build/video.plist	/^           <key>col<\/key><integer>25<\/integer>$/;"	k	key:diagnostics.path.edges.start
+col	build/video.plist	/^           <key>col<\/key><integer>29<\/integer>$/;"	k	key:diagnostics.path.edges.end
+col	build/video.plist	/^           <key>col<\/key><integer>32<\/integer>$/;"	k	key:diagnostics.path.edges.end
+col	build/video.plist	/^           <key>col<\/key><integer>32<\/integer>$/;"	k	key:diagnostics.path.edges.start
+col	build/video.plist	/^           <key>col<\/key><integer>37<\/integer>$/;"	k	key:diagnostics.path.edges.end
+col	build/video.plist	/^           <key>col<\/key><integer>37<\/integer>$/;"	k	key:diagnostics.path.edges.start
+col	build/video.plist	/^         <key>col<\/key><integer>109<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>161<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>18<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>20<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>21<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>22<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>27<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>31<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>34<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>37<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>50<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>53<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>56<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>68<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>78<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^         <key>col<\/key><integer>92<\/integer>$/;"	k	key:diagnostics.path.ranges
+col	build/video.plist	/^      <key>col<\/key><integer>13<\/integer>$/;"	k	key:diagnostics.path.location
+col	build/video.plist	/^      <key>col<\/key><integer>17<\/integer>$/;"	k	key:diagnostics.path.location
+col	build/video.plist	/^      <key>col<\/key><integer>20<\/integer>$/;"	k	key:diagnostics.path.location
+col	build/video.plist	/^      <key>col<\/key><integer>21<\/integer>$/;"	k	key:diagnostics.path.location
+col	build/video.plist	/^      <key>col<\/key><integer>25<\/integer>$/;"	k	key:diagnostics.path.location
+col	build/video.plist	/^      <key>col<\/key><integer>37<\/integer>$/;"	k	key:diagnostics.path.location
+col	build/video.plist	/^      <key>col<\/key><integer>53<\/integer>$/;"	k	key:diagnostics.path.location
+col	build/video.plist	/^      <key>col<\/key><integer>9<\/integer>$/;"	k	key:diagnostics.path.location
+col	build/video.plist	/^   <key>col<\/key><integer>13<\/integer>$/;"	k	key:diagnostics.location
+col	build/video.plist	/^   <key>col<\/key><integer>17<\/integer>$/;"	k	key:diagnostics.location
+col	build/video.plist	/^   <key>col<\/key><integer>20<\/integer>$/;"	k	key:diagnostics.location
+col	build/video.plist	/^   <key>col<\/key><integer>25<\/integer>$/;"	k	key:diagnostics.location
+col	build/video.plist	/^   <key>col<\/key><integer>9<\/integer>$/;"	k	key:diagnostics.location
+command	build/compile_commands.json	/^  "command": "\/usr\/bin\/c++  -I\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/.\/incl/;"	s	object:0
+command	build/compile_commands.json	/^  "command": "\/usr\/bin\/c++  -I\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/.\/incl/;"	s	object:1
+command	build/compile_commands.json	/^  "command": "\/usr\/bin\/c++  -I\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/.\/incl/;"	s	object:2
+command	build/compile_commands.json	/^  "command": "\/usr\/bin\/c++  -I\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/.\/incl/;"	s	object:3
+command	build/compile_commands.json	/^  "command": "\/usr\/bin\/c++  -I\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/.\/incl/;"	s	object:4
+command	build/compile_commands.json	/^  "command": "\/usr\/bin\/c++  -I\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/.\/incl/;"	s	object:5
+compare	.vscode/settings.json	/^        "compare": "cpp",$/;"	s	object:files.associations
+concepts	.vscode/settings.json	/^        "concepts": "cpp",$/;"	s	object:files.associations
 cond	includes/miniaudio.h	/^    ma_pthread_cond_t cond;$/;"	E
+condition_variable	.vscode/settings.json	/^        "condition_variable": "cpp",$/;"	s	object:files.associations
 coneInnerAngleInRadians	includes/miniaudio.h	/^    float coneInnerAngleInRadians;$/;"	E
 coneOuterAngleInRadians	includes/miniaudio.h	/^    float coneOuterAngleInRadians;$/;"	E
 coneOuterGain	includes/miniaudio.h	/^    float coneOuterGain;$/;"	E
@@ -1576,6 +1725,16 @@ counter	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) counter;$/;"	E	struct
 counter	includes/miniaudio.h	/^    ma_int64 counter;$/;"	t
 counter	includes/miniaudio.h	/^    ma_uint32 counter;$/;"	E	struct:ma_job
 counter	includes/miniaudio.h	/^    ma_uint32 counter;$/;"	E	struct:ma_resampler_config
+<<<<<<< HEAD
+=======
+cstdarg	.vscode/settings.json	/^        "cstdarg": "cpp",$/;"	s	object:files.associations
+cstddef	.vscode/settings.json	/^        "cstddef": "cpp",$/;"	s	object:files.associations
+cstdint	.vscode/settings.json	/^        "cstdint": "cpp",$/;"	s	object:files.associations
+cstdio	.vscode/settings.json	/^        "cstdio": "cpp",$/;"	s	object:files.associations
+cstdlib	.vscode/settings.json	/^        "cstdlib": "cpp",$/;"	s	object:files.associations
+ctime	.vscode/settings.json	/^        "ctime": "cpp",$/;"	s	object:files.associations
+current	includes/doublelinkedlist.hpp	/^        Node<T>* current;$/;"	m	class:DoubleLinkedList	typeref:typename:Node<T> *
+>>>>>>> rewind
 currentPTS	includes/video.h	/^    int64_t currentPTS;$/;"	m	struct:Playback	typeref:typename:int64_t
 currentPacket	includes/video.h	/^    int currentPacket;$/;"	m	struct:Playback	typeref:typename:int
 currentPageIndex	includes/miniaudio.h	/^    ma_uint32 currentPageIndex;                 \/* Toggles between 0 and 1. Index 0 is the firs/;"	E	struct:ma_resource_manager_data_stream
@@ -1586,11 +1745,15 @@ custom	includes/miniaudio.h	/^    ma_backend_callbacks custom;$/;"	E	struct:ma_c
 customBackendCount	includes/miniaudio.h	/^    ma_uint32 customBackendCount;$/;"	E
 customDecodingBackendCount	includes/miniaudio.h	/^    ma_uint32 customDecodingBackendCount;$/;"	E
 cutoffFrequency	includes/miniaudio.h	/^    double cutoffFrequency;$/;"	E
+cwchar	.vscode/settings.json	/^        "cwchar": "cpp",$/;"	s	object:files.associations
+cwctype	.vscode/settings.json	/^        "cwctype": "cpp",$/;"	s	object:files.associations
+data	includes/doublelinkedlist.hpp	/^        T data;$/;"	m	class:Node	typeref:typename:T
 data	includes/miniaudio.h	/^    ma_resource_manager_data_supply data;$/;"	E	struct:ma_resource_manager_data_buffer_node
 data	includes/miniaudio.h	/^    } data;$/;"	E	struct:ma_context_config
 data	includes/miniaudio.h	/^    } data;$/;"	E	struct:ma_decoder
 data	includes/miniaudio.h	/^    } data;$/;"	E	struct:ma_encoder
 data	includes/miniaudio.h	/^    } data;$/;"	E	struct:ma_job
+data	includes/video.h	/^    uint8_t *data[8];$/;"	m	struct:AudioFrame	typeref:typename:uint8_t * [8]
 dataBufferBSTLock	includes/miniaudio.h	/^    ma_mutex dataBufferBSTLock;                                     \/* For synchronizing access/;"	E	struct:ma_resource_manager
 dataCallback	includes/miniaudio.h	/^    ma_device_data_proc dataCallback;$/;"	E	struct:ma_device_config
 decay	includes/miniaudio.h	/^    float decay;                \/* 0..1. Default = 0 (no feedback). Feedback decay. Use this fo/;"	E
@@ -1605,12 +1768,32 @@ delay	includes/miniaudio.h	/^    ma_delay_config delay;$/;"	E
 delayInFrames	includes/miniaudio.h	/^    ma_uint32 delayInFrames;$/;"	E
 delayStart	includes/miniaudio.h	/^    ma_bool32 delayStart;       \/* Set to true to delay the start of the output; false otherwis/;"	E
 depend	build/Makefile	/^depend:$/;"	t
+depth	build/ascii.plist	/^     <key>depth<\/key><integer>0<\/integer>$/;"	k	key:diagnostics.path
+depth	build/video.plist	/^     <key>depth<\/key><integer>0<\/integer>$/;"	k	key:diagnostics.path
+deque	.vscode/settings.json	/^        "deque": "cpp",$/;"	s	object:files.associations
+description	build/ascii.plist	/^   <key>description<\/key><string>Value stored to &apos;lastCheckedCol&apos; is never read<\/str/;"	k	key:diagnostics
+description	build/ascii.plist	/^   <key>description<\/key><string>Value stored to &apos;lastCheckedRow&apos; is never read<\/str/;"	k	key:diagnostics
+description	build/video.plist	/^   <key>description<\/key><string>Potential leak of memory pointed to by &apos;readingFrame&apos/;"	k	key:diagnostics
+description	build/video.plist	/^   <key>description<\/key><string>Value stored to &apos;isInputChannelPositionInOutput&apos; is /;"	k	key:diagnostics
+description	build/video.plist	/^   <key>description<\/key><string>Value stored to &apos;lastTime&apos; during its initialization/;"	k	key:diagnostics
+description	build/video.plist	/^   <key>description<\/key><string>Value stored to &apos;result&apos; is never read<\/string>$/;"	k	key:diagnostics
 deviceName	includes/miniaudio.h	/^    char deviceName[256];$/;"	E	struct:ma_completion_handler_uwp
 deviceType	includes/miniaudio.h	/^    ma_device_type deviceType;$/;"	E	struct:ma_IDirectSoundNotify
 deviceType	includes/miniaudio.h	/^    ma_device_type deviceType;$/;"	E	struct:ma_device_config
+diagnostics	build/ascii.plist	/^ <key>diagnostics<\/key>$/;"	k
+diagnostics	build/video.plist	/^ <key>diagnostics<\/key>$/;"	k
 direction	includes/miniaudio.h	/^    ma_vec3f direction; \/* The direction the listener is facing. The world up vector is config./;"	E
 direction	includes/miniaudio.h	/^    ma_vec3f direction;$/;"	E
 directionalAttenuationFactor	includes/miniaudio.h	/^    float directionalAttenuationFactor; \/* Set to 0 to disable directional attenuation. *\/$/;"	E
+directory	build/compile_commands.json	/^  "directory": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/build",$/;"	s	object:0
+directory	build/compile_commands.json	/^  "directory": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/build",$/;"	s	object:1
+directory	build/compile_commands.json	/^  "directory": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/build",$/;"	s	object:2
+directory	build/compile_commands.json	/^  "directory": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/build",$/;"	s	object:3
+directory	build/compile_commands.json	/^  "directory": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/build",$/;"	s	object:4
+directory	build/compile_commands.json	/^  "directory": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/build",$/;"	s	object:5
+displayModeIndex	src/video.cpp	/^        int displayModeIndex = 0;$/;"	m	class:VideoState	typeref:typename:int	file:
+displayModes	src/video.cpp	/^        const static VideoStateDisplayMode displayModes[nb_displayModes];$/;"	m	class:VideoState	typeref:typename:const VideoStateDisplayMode[]	file:
+displayModes	src/video.cpp	/^const VideoStateDisplayMode VideoState::displayModes[2] = { FULL, DEBUG };$/;"	m	class:VideoState	typeref:typename:const VideoStateDisplayMode[2]
 ditherMode	includes/miniaudio.h	/^    ma_dither_mode ditherMode;$/;"	E
 ditherMode	includes/miniaudio.h	/^    ma_dither_mode ditherMode;$/;"	E	struct:ma_resampler_config
 done	includes/miniaudio.h	/^    ma_resource_manager_pipeline_stage_notification done;    \/* Decoding fully completed. *\/$/;"	E
@@ -1670,28 +1853,62 @@ dwUnlockTransferRateHwBuffers	includes/miniaudio.h	/^    DWORD dwUnlockTransferR
 dwlConditionMask	includes/miniaudio.h	/^typedef BOOL      (WINAPI * ma_PFNVerifyVersionInfoW) (ma_OSVERSIONINFOEXW* lpVersionInfo, DWORD/;"	t
 e	includes/miniaudio.h	/^    ma_event e;$/;"	E	struct:ma_resampler_config
 eCategory	includes/miniaudio.h	/^    MA_AUDIO_STREAM_CATEGORY eCategory;$/;"	E
+edges	build/video.plist	/^     <key>edges<\/key>$/;"	k	key:diagnostics.path
 edit_cache	build/Makefile	/^edit_cache:$/;"	t
 edit_cache/fast	build/Makefile	/^edit_cache\/fast: edit_cache$/;"	t
+<<<<<<< HEAD
+=======
+editingMutex	includes/doublelinkedlist.hpp	/^        std::mutex editingMutex;$/;"	m	class:DoubleLinkedList	typeref:typename:std::mutex
+empty	includes/doublelinkedlist.hpp	/^        bool empty() {$/;"	f	class:DoubleLinkedList	typeref:typename:bool
+>>>>>>> rewind
 emptyPixelData	src/drawing.cpp	/^pixel_data* emptyPixelData = (pixel_data*)malloc(sizeof(pixel_data));$/;"	v	typeref:typename:pixel_data *
 encodedReadOffset	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) encodedReadOffset;  \/* Most significant bit is the loop flag. Lower/;"	E	struct:ma_resampler_config
 encodedWriteOffset	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) encodedWriteOffset; \/* Most significant bit is the loop flag. Lower/;"	E	struct:ma_resampler_config
 encodingFormat	includes/miniaudio.h	/^    ma_encoding_format encodingFormat;$/;"	E
+end	build/video.plist	/^        <key>end<\/key>$/;"	k	key:diagnostics.path.edges
 end	src/video.cpp	/^        void end() {$/;"	f	class:VideoState	typeref:typename:void	file:
 engineNode	includes/miniaudio.h	/^    ma_engine_node engineNode;          \/* Must be the first member for compatibility with the /;"	E	struct:ma_sound
 entryProc	includes/miniaudio.h	/^    ma_thread_entry_proc entryProc;$/;"	E
+exception	.vscode/settings.json	/^        "exception": "cpp",$/;"	s	object:files.associations
 executionCounter	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) executionCounter;       \/* For allocating execution orders for jobs/;"	E	struct:ma_resource_manager_data_buffer_node
 executionCounter	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) executionCounter;   \/* For allocating execution orders for jobs. *\/$/;"	E	struct:ma_resource_manager_data_stream
 executionPath	includes/miniaudio.h	/^    ma_data_converter_execution_path executionPath; \/* The execution path the data converter wi/;"	E	struct:ma_resampler_config
 executionPointer	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) executionPointer;       \/* For managing the order of execution for /;"	E	struct:ma_resource_manager_data_buffer_node
 executionPointer	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) executionPointer;   \/* For managing the order of execution for asyn/;"	E	struct:ma_resource_manager_data_stream
+extended_message	build/ascii.plist	/^     <key>extended_message<\/key>$/;"	k	key:diagnostics.path
+extended_message	build/video.plist	/^     <key>extended_message<\/key>$/;"	k	key:diagnostics.path
 f32	includes/miniaudio.h	/^    float    f32;$/;"	t
 fader	includes/miniaudio.h	/^    ma_fader fader;$/;"	E
 fdwOpen	includes/miniaudio.h	/^typedef MMRESULT (WINAPI * MA_PFN_waveInOpen)(LPHWAVEIN phwi, UINT uDeviceID, LPCWAVEFORMATEX pw/;"	t	struct:ma_IDirectSoundNotify
 fdwOpen	includes/miniaudio.h	/^typedef MMRESULT (WINAPI * MA_PFN_waveOutOpen)(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX /;"	t	struct:ma_IDirectSoundNotify
 fetch_next	src/video.cpp	/^        int fetch_next(int requestedPacketCount) {$/;"	f	class:VideoState	typeref:typename:int	file:
 fetchingMutex	src/video.cpp	/^        std::mutex fetchingMutex;$/;"	m	class:VideoState	typeref:typename:std::mutex	file:
+file	build/ascii.plist	/^         <key>file<\/key><integer>0<\/integer>$/;"	k	key:diagnostics.path.ranges
+file	build/ascii.plist	/^      <key>file<\/key><integer>0<\/integer>$/;"	k	key:diagnostics.path.location
+file	build/ascii.plist	/^   <key>file<\/key><integer>0<\/integer>$/;"	k	key:diagnostics.location
+file	build/compile_commands.json	/^  "file": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/src\/ascii.cpp"$/;"	s	object:0
+file	build/compile_commands.json	/^  "file": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/src\/drawing.cpp"$/;"	s	object:1
+file	build/compile_commands.json	/^  "file": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/src\/fileInfo.cpp"$/;"	s	object:2
+file	build/compile_commands.json	/^  "file": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/src\/image.cpp"$/;"	s	object:3
+file	build/compile_commands.json	/^  "file": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/src\/main.cpp"$/;"	s	object:4
+file	build/compile_commands.json	/^  "file": "\/home\/cobyj33\/Programming\/C++\/ascii_video\/rewind\/src\/video.cpp"$/;"	s	object:5
+file	build/video.plist	/^           <key>file<\/key><integer>1<\/integer>$/;"	k	key:diagnostics.path.edges.end
+file	build/video.plist	/^           <key>file<\/key><integer>1<\/integer>$/;"	k	key:diagnostics.path.edges.start
+file	build/video.plist	/^         <key>file<\/key><integer>0<\/integer>$/;"	k	key:diagnostics.path.ranges
+file	build/video.plist	/^         <key>file<\/key><integer>1<\/integer>$/;"	k	key:diagnostics.path.ranges
+file	build/video.plist	/^      <key>file<\/key><integer>0<\/integer>$/;"	k	key:diagnostics.path.location
+file	build/video.plist	/^      <key>file<\/key><integer>1<\/integer>$/;"	k	key:diagnostics.path.location
+file	build/video.plist	/^   <key>file<\/key><integer>0<\/integer>$/;"	k	key:diagnostics.location
+file	build/video.plist	/^   <key>file<\/key><integer>1<\/integer>$/;"	k	key:diagnostics.location
 fileInfoProgram	src/fileInfo.cpp	/^int fileInfoProgram(const char* fileName) {$/;"	f	typeref:typename:int
 fileName	src/video.cpp	/^        const char* fileName;$/;"	m	class:VideoState	typeref:typename:const char *	file:
+<<<<<<< HEAD
+=======
+files	build/ascii.plist	/^ <key>files<\/key>$/;"	k
+files	build/video.plist	/^ <key>files<\/key>$/;"	k
+files.associations	.vscode/settings.json	/^    "files.associations": {$/;"	o
+first	includes/doublelinkedlist.hpp	/^        Node<T>* first;$/;"	m	class:DoubleLinkedList	typeref:typename:Node<T> *
+>>>>>>> rewind
 flagMutex	src/video.cpp	/^        std::mutex flagMutex;$/;"	m	class:VideoState	typeref:typename:std::mutex	file:
 flags	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) flags;                          \/* Some state flags for tracking th/;"	E	struct:ma_node_output_bus
 flags	includes/miniaudio.h	/^    ma_uint32 flags;                            \/* A combination of MA_SOUND_FLAG_* flags. *\/$/;"	E
@@ -1727,14 +1944,22 @@ free_video_state	src/video.cpp	/^        void free_video_state() {$/;"	f	class:V
 frequency	includes/miniaudio.h	/^    double frequency;$/;"	E
 frequency	includes/miniaudio.h	/^    double frequency;$/;"	E	struct:ma_encoder
 fullyLoad	src/video.cpp	/^    static void fullyLoad(VideoState* state) {$/;"	f	class:VideoState	typeref:typename:void	file:
+functional	.vscode/settings.json	/^        "functional": "cpp",$/;"	s	object:files.associations
+future	.vscode/settings.json	/^        "future": "cpp",$/;"	s	object:files.associations
 gainDB	includes/miniaudio.h	/^    double gainDB;$/;"	E
 gainSmoothTimeInFrames	includes/miniaudio.h	/^    ma_uint32 gainSmoothTimeInFrames;           \/* The number of frames to interpolate the gain/;"	E	struct:ma_sound_inlined
 gainSmoothTimeInFrames	includes/miniaudio.h	/^    ma_uint32 gainSmoothTimeInFrames;   \/* When the gain of a channel changes during spatializa/;"	E
 gainSmoothTimeInMilliseconds	includes/miniaudio.h	/^    ma_uint32 gainSmoothTimeInMilliseconds;     \/* When set to 0, gainSmoothTimeInFrames will b/;"	E	struct:ma_sound_inlined
 gainer	includes/miniaudio.h	/^    ma_gainer gainer;   \/* For smooth gain transitions. *\/$/;"	E
+get	includes/doublelinkedlist.hpp	/^        T get() {$/;"	f	class:DoubleLinkedList	typeref:typename:T
 get_char_from_area	src/ascii.cpp	/^char get_char_from_area(uint8_t* pixels, int x, int y, int width, int height, int pixelWidth, in/;"	f	typeref:typename:char
 get_char_from_value	src/ascii.cpp	/^char get_char_from_value(uint8_t value) {$/;"	f	typeref:typename:char
+get_display_mode	src/video.cpp	/^        VideoStateDisplayMode get_display_mode() {$/;"	f	class:VideoState	typeref:typename:VideoStateDisplayMode	file:
+get_first	includes/doublelinkedlist.hpp	/^        T get_first() {$/;"	f	class:DoubleLinkedList	typeref:typename:T
 get_image	src/ascii.cpp	/^ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWidth, int outputH/;"	f	typeref:typename:ascii_image
+get_index	includes/doublelinkedlist.hpp	/^        int get_index() {$/;"	f	class:DoubleLinkedList	typeref:typename:int
+get_last	includes/doublelinkedlist.hpp	/^        T get_last() {$/;"	f	class:DoubleLinkedList	typeref:typename:T
+get_length	includes/doublelinkedlist.hpp	/^        int get_length() {$/;"	f	class:DoubleLinkedList	typeref:typename:int
 get_output_size	src/ascii.cpp	/^void get_output_size(int srcWidth, int srcHeight, int maxWidth, int maxHeight, int* width, int* /;"	f	typeref:typename:void
 get_packet_stats	src/video.cpp	/^int get_packet_stats(const char* fileName, int* videoPackets, int* audioPackets) {$/;"	f	typeref:typename:int
 get_pixel_data_from_image	src/image.cpp	/^pixel_data get_pixel_data_from_image(const char* fileName, int desiredWidth, int desiredHeight, /;"	f	typeref:typename:pixel_data
@@ -1784,6 +2009,7 @@ inAdvanceInt	includes/miniaudio.h	/^    ma_uint32 inAdvanceInt;$/;"	E
 inTimeFrac	includes/miniaudio.h	/^    ma_uint32 inTimeFrac;$/;"	E
 inTimeInt	includes/miniaudio.h	/^    ma_uint32 inTimeInt;$/;"	E
 inUse	src/video.cpp	/^        bool inUse = false;$/;"	m	class:VideoState	typeref:typename:bool	file:
+index	includes/doublelinkedlist.hpp	/^        int index;$/;"	m	class:DoubleLinkedList	typeref:typename:int
 info_arch	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^char const* info_arch = "INFO" ":" "arch[" ARCHITECTURE_ID "]";$/;"	v	typeref:typename:char const *
 info_arch	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^char const* info_arch = "INFO" ":" "arch[" ARCHITECTURE_ID "]";$/;"	v	typeref:typename:char const *
 info_compiler	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^char const* info_compiler = "INFO" ":" "compiler[" COMPILER_ID "]";$/;"	v	typeref:typename:char const *
@@ -1816,6 +2042,10 @@ initialSeekPointInPCMFrames	includes/miniaudio.h	/^    ma_uint64 initialSeekPoin
 initialSeekPointInPCMFrames	includes/miniaudio.h	/^    ma_uint64 initialSeekPointInPCMFrames;$/;"	E
 initialState	includes/miniaudio.h	/^    ma_node_state initialState;         \/* Defaults to ma_node_state_started. *\/$/;"	E
 initialized	src/drawing.cpp	/^bool initialized = false;$/;"	v	typeref:typename:bool
+<<<<<<< HEAD
+=======
+initializer_list	.vscode/settings.json	/^        "initializer_list": "cpp",$/;"	s	object:files.associations
+>>>>>>> rewind
 inputBusCount	includes/miniaudio.h	/^    ma_uint32 inputBusCount;            \/* Only used if the vtable specifies an input bus count/;"	E
 inputBusCount	includes/miniaudio.h	/^    ma_uint32 inputBusCount;$/;"	E	struct:ma_node_base
 inputBusCount	includes/miniaudio.h	/^    ma_uint8 inputBusCount;$/;"	E
@@ -1824,6 +2054,8 @@ inputCacheConsumed	includes/miniaudio.h	/^    ma_uint64 inputCacheConsumed;   \/
 inputCacheRemaining	includes/miniaudio.h	/^    ma_uint64 inputCacheRemaining;  \/* The number of valid frames remaining in the cahce. *\/$/;"	E	struct:ma_decoder
 inputListeningThread	src/video.cpp	/^        static void inputListeningThread(VideoState* state) {$/;"	f	class:VideoState	typeref:typename:void	file:
 inputNodeInputBusIndex	includes/miniaudio.h	/^    MA_ATOMIC(1, ma_uint8) inputNodeInputBusIndex;          \/* The index of the input bus on th/;"	E	struct:ma_node_output_bus
+iosfwd	.vscode/settings.json	/^        "iosfwd": "cpp",$/;"	s	object:files.associations
+iostream	.vscode/settings.json	/^        "iostream": "cpp",$/;"	s	object:files.associations
 isAttached	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_bool32) isAttached;                     \/* This is used to prevent iteratio/;"	E	struct:ma_node_output_bus
 isDataOwnedByResourceManager	includes/miniaudio.h	/^    ma_bool32 isDataOwnedByResourceManager;         \/* Set to true when the underlying data buf/;"	E	struct:ma_resource_manager_data_buffer_node
 isDecoderAtEnd	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_bool32) isDecoderAtEnd;     \/* Whether or not the decoder has reached the e/;"	E	struct:ma_resource_manager_data_stream
@@ -1841,6 +2073,34 @@ isPitchDisabled	includes/miniaudio.h	/^    ma_bool8 isPitchDisabled;           \
 isSpatializationDisabled	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_bool32) isSpatializationDisabled;   \/* Set to false by default. When set to/;"	E
 isSpatializationDisabled	includes/miniaudio.h	/^    ma_bool8 isSpatializationDisabled;  \/* Spatialization can be explicitly disabled with MA_SO/;"	E
 isValidPath	src/main.cpp	/^bool isValidPath(const char* path) {$/;"	f	typeref:typename:bool
+issue_context	build/ascii.plist	/^  <key>issue_context<\/key><string>get_image<\/string>$/;"	k	key:diagnostics
+issue_context	build/video.plist	/^  <key>issue_context<\/key><string>jumpToTime<\/string>$/;"	k	key:diagnostics
+issue_context	build/video.plist	/^  <key>issue_context<\/key><string>ma_channel_map_get_conversion_path<\/string>$/;"	k	key:diagnostics
+issue_context	build/video.plist	/^  <key>issue_context<\/key><string>ma_decoder_read_pcm_frames<\/string>$/;"	k	key:diagnostics
+issue_context	build/video.plist	/^  <key>issue_context<\/key><string>ma_job_process__resource_manager__load_data_buffer<\/string>$/;"	k	key:diagnostics
+issue_context	build/video.plist	/^  <key>issue_context<\/key><string>ma_resource_manager_data_buffer_node_decode_next_page<\/strin/;"	k	key:diagnostics
+issue_context	build/video.plist	/^  <key>issue_context<\/key><string>videoPlaybackThread<\/string>$/;"	k	key:diagnostics
+issue_context_kind	build/ascii.plist	/^  <key>issue_context_kind<\/key><string>function<\/string>$/;"	k	key:diagnostics
+issue_context_kind	build/video.plist	/^  <key>issue_context_kind<\/key><string>C++ method<\/string>$/;"	k	key:diagnostics
+issue_context_kind	build/video.plist	/^  <key>issue_context_kind<\/key><string>function<\/string>$/;"	k	key:diagnostics
+issue_hash_content_of_line_in_context	build/ascii.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>6898520c42723b7e837a86211e2eaa7c<\/s/;"	k	key:diagnostics
+issue_hash_content_of_line_in_context	build/ascii.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>77c4cc97c31498b57a76a256e734a6e6<\/s/;"	k	key:diagnostics
+issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>05652acdd038147c57653de43e542eea<\/s/;"	k	key:diagnostics
+issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>424185647ecf7753b198e3f4c0f2483b<\/s/;"	k	key:diagnostics
+issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>50870bab2878254f215afbe8c8bedc19<\/s/;"	k	key:diagnostics
+issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>53e2c4754e7ec788171f1c5b2104165d<\/s/;"	k	key:diagnostics
+issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>d31e435d3ed9947a84ae1730709646f9<\/s/;"	k	key:diagnostics
+issue_hash_content_of_line_in_context	build/video.plist	/^   <key>issue_hash_content_of_line_in_context<\/key><string>f761a85180cadfd23b6519abf7619afb<\/s/;"	k	key:diagnostics
+issue_hash_function_offset	build/ascii.plist	/^  <key>issue_hash_function_offset<\/key><string>38<\/string>$/;"	k	key:diagnostics
+issue_hash_function_offset	build/ascii.plist	/^  <key>issue_hash_function_offset<\/key><string>44<\/string>$/;"	k	key:diagnostics
+issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>10<\/string>$/;"	k	key:diagnostics
+issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>116<\/string>$/;"	k	key:diagnostics
+issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>27<\/string>$/;"	k	key:diagnostics
+issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>30<\/string>$/;"	k	key:diagnostics
+issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>57<\/string>$/;"	k	key:diagnostics
+issue_hash_function_offset	build/video.plist	/^  <key>issue_hash_function_offset<\/key><string>8<\/string>$/;"	k	key:diagnostics
+istream	.vscode/settings.json	/^        "istream": "cpp",$/;"	s	object:files.associations
+iterator	.vscode/settings.json	/^        "iterator": "cpp",$/;"	s	object:files.associations
 jack	includes/miniaudio.h	/^    } jack;$/;"	E	struct:ma_context_config
 jobQueue	includes/miniaudio.h	/^    ma_job_queue jobQueue;                                          \/* Multi-consumer, multi-pr/;"	E	struct:ma_resource_manager
 jobQueue	includes/miniaudio.h	/^    ma_job_queue jobQueue;$/;"	E	struct:ma_job
@@ -1850,14 +2110,75 @@ jobQueueFlags	includes/miniaudio.h	/^    ma_uint32 jobQueueFlags;$/;"	E	struct:m
 jobThreadCount	includes/miniaudio.h	/^    ma_uint32 jobThreadCount;       \/* Set to 0 if you want to self-manage your job threads. De/;"	E
 jobThreads	includes/miniaudio.h	/^    ma_thread jobThreads[MA_RESOURCE_MANAGER_MAX_JOB_THREAD_COUNT]; \/* The threads for executin/;"	E	struct:ma_resource_manager
 jobsOffset	includes/miniaudio.h	/^    size_t jobsOffset;$/;"	E
+<<<<<<< HEAD
 jumpToTime	src/video.cpp	/^        void jumpToTime(int pts) {$/;"	f	class:VideoState	typeref:typename:void	file:
+=======
+jumpToTime	src/video.cpp	/^        void jumpToTime(double targetTime) {$/;"	f	class:VideoState	typeref:typename:void	file:
+kind	build/ascii.plist	/^     <key>kind<\/key><string>event<\/string>$/;"	k	key:diagnostics.path
+kind	build/video.plist	/^     <key>kind<\/key><string>control<\/string>$/;"	k	key:diagnostics.path
+kind	build/video.plist	/^     <key>kind<\/key><string>event<\/string>$/;"	k	key:diagnostics.path
+last	includes/doublelinkedlist.hpp	/^        Node<T>* last;$/;"	m	class:DoubleLinkedList	typeref:typename:Node<T> *
+last	includes/video.h	/^    VideoFrame* last;$/;"	m	struct:VideoFrame	typeref:typename:VideoFrame *
+>>>>>>> rewind
 lastImage	src/video.cpp	/^        ascii_image lastImage;$/;"	m	class:VideoState	typeref:typename:ascii_image	file:
 lcg	includes/miniaudio.h	/^    ma_lcg lcg;$/;"	E	struct:ma_encoder
+length	includes/doublelinkedlist.hpp	/^        int length;$/;"	m	class:DoubleLinkedList	typeref:typename:int
 lengthInFrames	includes/miniaudio.h	/^    ma_uint64 lengthInFrames;   \/* The total length of the fade. *\/$/;"	E
+limits	.vscode/settings.json	/^        "limits": "cpp",$/;"	s	object:files.associations
+line	build/ascii.plist	/^         <key>line<\/key><integer>55<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/ascii.plist	/^         <key>line<\/key><integer>61<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/ascii.plist	/^      <key>line<\/key><integer>55<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/ascii.plist	/^      <key>line<\/key><integer>61<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/ascii.plist	/^   <key>line<\/key><integer>55<\/integer>$/;"	k	key:diagnostics.location
+line	build/ascii.plist	/^   <key>line<\/key><integer>61<\/integer>$/;"	k	key:diagnostics.location
+line	build/video.plist	/^           <key>line<\/key><integer>279<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^           <key>line<\/key><integer>287<\/integer>$/;"	k	key:diagnostics.path.edges.end
+line	build/video.plist	/^           <key>line<\/key><integer>287<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^           <key>line<\/key><integer>289<\/integer>$/;"	k	key:diagnostics.path.edges.end
+line	build/video.plist	/^           <key>line<\/key><integer>289<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^           <key>line<\/key><integer>291<\/integer>$/;"	k	key:diagnostics.path.edges.end
+line	build/video.plist	/^           <key>line<\/key><integer>291<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^           <key>line<\/key><integer>316<\/integer>$/;"	k	key:diagnostics.path.edges.end
+line	build/video.plist	/^           <key>line<\/key><integer>316<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^           <key>line<\/key><integer>317<\/integer>$/;"	k	key:diagnostics.path.edges.end
+line	build/video.plist	/^           <key>line<\/key><integer>317<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^           <key>line<\/key><integer>318<\/integer>$/;"	k	key:diagnostics.path.edges.end
+line	build/video.plist	/^           <key>line<\/key><integer>318<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^           <key>line<\/key><integer>319<\/integer>$/;"	k	key:diagnostics.path.edges.end
+line	build/video.plist	/^           <key>line<\/key><integer>319<\/integer>$/;"	k	key:diagnostics.path.edges.start
+line	build/video.plist	/^         <key>line<\/key><integer>287<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/video.plist	/^         <key>line<\/key><integer>289<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/video.plist	/^         <key>line<\/key><integer>291<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/video.plist	/^         <key>line<\/key><integer>317<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/video.plist	/^         <key>line<\/key><integer>50450<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/video.plist	/^         <key>line<\/key><integer>62351<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/video.plist	/^         <key>line<\/key><integer>650<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/video.plist	/^         <key>line<\/key><integer>65268<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/video.plist	/^         <key>line<\/key><integer>67681<\/integer>$/;"	k	key:diagnostics.path.ranges
+line	build/video.plist	/^      <key>line<\/key><integer>287<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>289<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>291<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>317<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>319<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>50450<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>62351<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>650<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>65268<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^      <key>line<\/key><integer>67681<\/integer>$/;"	k	key:diagnostics.path.location
+line	build/video.plist	/^   <key>line<\/key><integer>319<\/integer>$/;"	k	key:diagnostics.location
+line	build/video.plist	/^   <key>line<\/key><integer>50450<\/integer>$/;"	k	key:diagnostics.location
+line	build/video.plist	/^   <key>line<\/key><integer>62351<\/integer>$/;"	k	key:diagnostics.location
+line	build/video.plist	/^   <key>line<\/key><integer>650<\/integer>$/;"	k	key:diagnostics.location
+line	build/video.plist	/^   <key>line<\/key><integer>65268<\/integer>$/;"	k	key:diagnostics.location
+line	build/video.plist	/^   <key>line<\/key><integer>67681<\/integer>$/;"	k	key:diagnostics.location
 linear	includes/miniaudio.h	/^    } linear;$/;"	E	struct:ma_resampler_config
 lines	includes/ascii_data.h	/^    char lines[MAX_FRAME_HEIGHT + 1][MAX_FRAME_WIDTH + 1];$/;"	m	struct:ascii_image	typeref:typename:char[][]
 listenerCount	includes/miniaudio.h	/^    ma_uint32 listenerCount;                    \/* Must be between 1 and MA_ENGINE_MAX_LISTENER/;"	E	struct:ma_sound_inlined
 localTime	includes/miniaudio.h	/^    MA_ATOMIC(8, ma_uint64) localTime;      \/* The node's local clock. This is just a running s/;"	E	struct:ma_node_base
+location	build/ascii.plist	/^     <key>location<\/key>$/;"	k	key:diagnostics.path
+location	build/ascii.plist	/^  <key>location<\/key>$/;"	k	key:diagnostics
+location	build/video.plist	/^     <key>location<\/key>$/;"	k	key:diagnostics.path
+location	build/video.plist	/^  <key>location<\/key>$/;"	k	key:diagnostics
 lock	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_spinlock) lock;                         \/* Unfortunate lock, but significan/;"	E	struct:ma_node_output_bus
 lock	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_spinlock) lock;         \/* Unfortunate lock, but significantly simplifies t/;"	E	struct:ma_node_input_bus
 lock	includes/miniaudio.h	/^    ma_mutex lock;  \/* For thread safety just to make it easier and safer for the logging imple/;"	E
@@ -3873,9 +4194,16 @@ main	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^int main(argc, arg
 main	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^void main() {}$/;"	f	typeref:typename:void
 main	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^int main(int argc, char* argv[])$/;"	f	typeref:typename:int
 main	src/main.cpp	/^int main(int argc, char** argv)$/;"	f	typeref:typename:int
+map	.vscode/settings.json	/^        "map": "cpp",$/;"	s	object:files.associations
+masterTime	src/video.cpp	/^        double masterTime = 0;$/;"	m	class:VideoState	typeref:typename:double	file:
+masterTimeMutex	src/video.cpp	/^        std::mutex masterTimeMutex;$/;"	m	class:VideoState	typeref:typename:std::mutex	file:
 masterVolumeFactor	includes/miniaudio.h	/^    MA_ATOMIC(4, float) masterVolumeFactor;     \/* Linear 0..1. Can be read and written simulta/;"	E	struct:ma_device
 maxDistance	includes/miniaudio.h	/^    float maxDistance;$/;"	E
 maxGain	includes/miniaudio.h	/^    float maxGain;$/;"	E
+memory	.vscode/settings.json	/^        "memory": "cpp",$/;"	s	object:files.associations
+memory_resource	.vscode/settings.json	/^        "memory_resource": "cpp",$/;"	s	object:files.associations
+message	build/ascii.plist	/^     <key>message<\/key>$/;"	k	key:diagnostics.path
+message	build/video.plist	/^     <key>message<\/key>$/;"	k	key:diagnostics.path
 minDistance	includes/miniaudio.h	/^    float minDistance;$/;"	E
 minGain	includes/miniaudio.h	/^    float minGain;$/;"	E
 miniaudio_c	includes/miniaudio.h	/^#define miniaudio_c$/;"	M
@@ -3883,10 +4211,16 @@ miniaudio_h	includes/miniaudio.h	/^#define miniaudio_h$/;"	M
 mixingMode	includes/miniaudio.h	/^    ma_channel_mix_mode mixingMode;$/;"	E	struct:ma_resampler_config
 mode	includes/miniaudio.h	/^    ma_pan_mode mode;$/;"	E
 monoExpansionMode	includes/miniaudio.h	/^    ma_mono_expansion_mode monoExpansionMode;   \/* Controls how the mono channel should be expa/;"	E	struct:ma_sound_inlined
+mutex	.vscode/settings.json	/^        "mutex": "cpp",$/;"	s	object:files.associations
 name	includes/miniaudio.h	/^    char name[MA_MAX_DEVICE_NAME_LENGTH + 1];   \/* +1 for null terminator. *\/$/;"	E
 nativeDataFormatCount	includes/miniaudio.h	/^    ma_uint32 nativeDataFormatCount;$/;"	E
 nativeDataFormats	includes/miniaudio.h	/^    } nativeDataFormats[\/*ma_format_count * ma_standard_sample_rate_count * MA_MAX_CHANNELS*\/ /;"	E
+nb_displayModes	src/video.cpp	/^        const static int nb_displayModes = 2;$/;"	m	class:VideoState	typeref:typename:const int	file:
+nb_samples	includes/video.h	/^    int nb_samples;$/;"	m	struct:AudioFrame	typeref:typename:int
+new	.vscode/settings.json	/^        "new": "cpp",$/;"	s	object:files.associations
+next	includes/doublelinkedlist.hpp	/^        Node<T>* next;$/;"	m	class:Node	typeref:typename:Node<T> *
 next	includes/miniaudio.h	/^    MA_ATOMIC(8, ma_uint64) next; \/* refcount + slot for the next item. Does not include the jo/;"	E	struct:ma_job
+next	includes/video.h	/^    VideoFrame* next;$/;"	m	struct:VideoFrame	typeref:typename:VideoFrame *
 nextCounter	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) nextCounter;    \/* This is used to determine whether or not the inp/;"	E	struct:ma_node_input_bus
 noAutoConvertSRC	includes/miniaudio.h	/^    ma_bool32 noAutoConvertSRC;$/;"	E	struct:ma_completion_handler_uwp
 noAutoStart	includes/miniaudio.h	/^    ma_bool32 noAutoStart;                      \/* When set to true, requires an explicit call /;"	E	struct:ma_sound_inlined
@@ -3908,6 +4242,11 @@ notch	includes/miniaudio.h	/^    ma_notch2 notch;$/;"	E
 notch	includes/miniaudio.h	/^    ma_notch_config notch;$/;"	E
 notificationCallback	includes/miniaudio.h	/^    ma_device_notification_proc notificationCallback;$/;"	E	struct:ma_device_config
 numOfIcons	src/drawing.cpp	/^int numOfIcons = 12;$/;"	v	typeref:typename:int
+<<<<<<< HEAD
+=======
+numbers	.vscode/settings.json	/^        "numbers": "cpp",$/;"	s	object:files.associations
+numeric	.vscode/settings.json	/^        "numeric": "cpp",$/;"	s	object:files.associations
+>>>>>>> rewind
 oldDopplerPitch	includes/miniaudio.h	/^    float oldDopplerPitch;                              \/* For determining whether or not the r/;"	E
 oldPitch	includes/miniaudio.h	/^    float oldPitch;                                     \/* For determining whether or not the r/;"	E
 onData	includes/miniaudio.h	/^    ma_device_data_proc onData;                 \/* Set once at initialization time and should n/;"	E	struct:ma_device
@@ -3929,6 +4268,7 @@ order	includes/miniaudio.h	/^    ma_uint32 order;    \/* If set to 0, will be tr
 origin	includes/miniaudio.h	/^typedef ma_result (* ma_decoder_seek_proc)(ma_decoder* pDecoder, ma_int64 byteOffset, ma_seek_or/;"	t
 origin	includes/miniaudio.h	/^typedef ma_result (* ma_encoder_seek_proc)            (ma_encoder* pEncoder, ma_int64 offset, ma/;"	t
 origin	includes/miniaudio.h	/^typedef ma_result (* ma_seek_proc)(void* pUserData, ma_int64 offset, ma_seek_origin origin);$/;"	t	struct:ma_paged_audio_buffer_page
+ostream	.vscode/settings.json	/^        "ostream": "cpp",$/;"	s	object:files.associations
 outputBusCount	includes/miniaudio.h	/^    ma_uint32 outputBusCount;           \/* Only used if the vtable specifies an output bus coun/;"	E
 outputBusCount	includes/miniaudio.h	/^    ma_uint32 outputBusCount;$/;"	E	struct:ma_node_base
 outputBusCount	includes/miniaudio.h	/^    ma_uint8 outputBusCount;$/;"	E
@@ -4067,6 +4407,11 @@ pageFrameCount	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) pageFrameCount
 pan	includes/miniaudio.h	/^    float pan;  \/* -1..1 where 0 is no pan, -1 is left side, +1 is right side. Defaults to 0. */;"	E
 pan	includes/miniaudio.h	/^    float pan;$/;"	E
 panner	includes/miniaudio.h	/^    ma_panner panner;$/;"	E
+<<<<<<< HEAD
+=======
+path	build/ascii.plist	/^   <key>path<\/key>$/;"	k	key:diagnostics
+path	build/video.plist	/^   <key>path<\/key>$/;"	k	key:diagnostics
+>>>>>>> rewind
 pause	src/video.cpp	/^        void pause() {$/;"	f	class:VideoState	typeref:typename:void	file:
 peak	includes/miniaudio.h	/^    ma_peak2 peak;$/;"	E
 peak	includes/miniaudio.h	/^    ma_peak_config peak;$/;"	E
@@ -4092,11 +4437,25 @@ pixelData	includes/video.h	/^    pixel_data* pixelData;$/;"	m	struct:VideoFrame	
 pixelData	includes/video.h	/^    pixel_data* pixelData;$/;"	m	struct:VideoSymbol	typeref:typename:pixel_data *
 pixel_data	includes/ascii_data.h	/^typedef struct pixel_data {$/;"	s
 pixel_data	includes/ascii_data.h	/^} pixel_data;$/;"	t	typeref:struct:pixel_data
+<<<<<<< HEAD
+=======
+pixel_data_alloc	src/ascii.cpp	/^pixel_data* pixel_data_alloc(int width, int height) {$/;"	f	typeref:typename:pixel_data *
+pixel_data_free	src/ascii.cpp	/^void pixel_data_free(pixel_data* pixelData) {$/;"	f	typeref:typename:void
+>>>>>>> rewind
 pixels	includes/ascii_data.h	/^    uint8_t* pixels;$/;"	m	struct:pixel_data	typeref:typename:uint8_t *
 playback	includes/miniaudio.h	/^    } playback;$/;"	E	struct:ma_device
 playback	includes/miniaudio.h	/^    } playback;$/;"	E	struct:ma_device_config
 playback	src/video.cpp	/^        Playback* playback;$/;"	m	class:VideoState	typeref:typename:Playback *	file:
+<<<<<<< HEAD
 playing	includes/video.h	/^    bool playing = false;$/;"	m	struct:Playback	typeref:typename:bool
+=======
+playback_alloc	src/video.cpp	/^Playback* playback_alloc() {$/;"	f	typeref:typename:Playback *
+playback_free	src/video.cpp	/^void playback_free(Playback* playback) {$/;"	f	typeref:typename:void
+playing	includes/video.h	/^    bool playing = false;$/;"	m	struct:Playback	typeref:typename:bool
+pop	includes/doublelinkedlist.hpp	/^        T pop() {$/;"	f	class:DoubleLinkedList	typeref:typename:T
+pop_back	includes/doublelinkedlist.hpp	/^        T pop_back() {$/;"	f	class:DoubleLinkedList	typeref:typename:T
+pop_front	includes/doublelinkedlist.hpp	/^        T pop_front() {$/;"	f	class:DoubleLinkedList	typeref:typename:T
+>>>>>>> rewind
 position	includes/miniaudio.h	/^    ma_vec3f position;  \/* The absolute position of the listener. *\/$/;"	E
 position	includes/miniaudio.h	/^    ma_vec3f position;$/;"	E
 positioning	includes/miniaudio.h	/^    ma_positioning positioning;$/;"	E
@@ -4108,20 +4467,33 @@ ppv	includes/miniaudio.h	/^typedef HRESULT (WINAPI * MA_PFN_CoCreateInstance)(RE
 preferredFormat	includes/miniaudio.h	/^    ma_format preferredFormat;$/;"	E
 preinstall	build/Makefile	/^preinstall: all$/;"	t
 preinstall/fast	build/Makefile	/^preinstall\/fast:$/;"	t
+prev	includes/doublelinkedlist.hpp	/^        Node<T>* prev;$/;"	m	class:Node	typeref:typename:Node<T> *
+printToCout	includes/doublelinkedlist.hpp	/^        void printToCout() {$/;"	f	class:DoubleLinkedList	typeref:typename:void
 print_ascii_image	src/ascii.cpp	/^void print_ascii_image(ascii_image* textImage) {$/;"	f	typeref:typename:void
+<<<<<<< HEAD
 pts	includes/video.h	/^    int64_t pts;$/;"	m	struct:VideoFrame	typeref:typename:int64_t
 pts	src/video.cpp	/^        std::deque<int64_t> pts;$/;"	m	class:VideoState	typeref:typename:std::deque<int64_t>	file:
+=======
+pts	includes/video.h	/^    int64_t pts;$/;"	m	struct:AudioFrame	typeref:typename:int64_t
+pts	includes/video.h	/^    int64_t pts;$/;"	m	struct:VideoFrame	typeref:typename:int64_t
+>>>>>>> rewind
 pulse	includes/miniaudio.h	/^    } pulse;$/;"	E	struct:ma_context_config
 pulse	includes/miniaudio.h	/^    } pulse;$/;"	E	struct:ma_device_config
+push_back	includes/doublelinkedlist.hpp	/^        void push_back(T data) {$/;"	f	class:DoubleLinkedList	typeref:typename:void
+push_front	includes/doublelinkedlist.hpp	/^        void push_front(T data) {$/;"	f	class:DoubleLinkedList	typeref:typename:void
 pv	includes/miniaudio.h	/^typedef void    (WINAPI * MA_PFN_CoTaskMemFree)(LPVOID pv);$/;"	t
 pvar	includes/miniaudio.h	/^typedef HRESULT (WINAPI * MA_PFN_PropVariantClear)(PROPVARIANT *pvar);$/;"	t
 q	includes/miniaudio.h	/^    double q;$/;"	E
 qnxnto	build/CMakeFiles/3.22.1/CompilerIdC/CMakeCCompilerId.c	/^char const* qnxnto = "INFO" ":" "qnxnto[]";$/;"	v	typeref:typename:char const *
 qnxnto	build/CMakeFiles/3.22.1/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^char const* qnxnto = "INFO" ":" "qnxnto[]";$/;"	v	typeref:typename:char const *
+random	.vscode/settings.json	/^        "random": "cpp",$/;"	s	object:files.associations
 rangeBegInFrames	includes/miniaudio.h	/^    ma_uint64 rangeBegInFrames;$/;"	E	struct:ma_device
 rangeBegInPCMFrames	includes/miniaudio.h	/^    ma_uint64 rangeBegInPCMFrames;$/;"	E
 rangeEndInFrames	includes/miniaudio.h	/^    ma_uint64 rangeEndInFrames;             \/* Set to -1 for unranged (default). *\/$/;"	E	struct:ma_device
 rangeEndInPCMFrames	includes/miniaudio.h	/^    ma_uint64 rangeEndInPCMFrames;$/;"	E
+ranges	build/ascii.plist	/^     <key>ranges<\/key>$/;"	k	key:diagnostics.path
+ranges	build/video.plist	/^     <key>ranges<\/key>$/;"	k	key:diagnostics.path
+ratio	.vscode/settings.json	/^        "ratio": "cpp",$/;"	s	object:files.associations
 rb	includes/miniaudio.h	/^    ma_pcm_rb rb;$/;"	E	struct:ma_resampler_config
 rb	includes/miniaudio.h	/^    ma_rb rb;$/;"	E	struct:ma_resampler_config
 readPointerInPCMFrames	includes/miniaudio.h	/^    ma_uint64 readPointerInPCMFrames;      \/* In output sample rate. Used for keeping track of /;"	E	struct:ma_decoder
@@ -4132,6 +4504,7 @@ refCount	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_uint32) refCount;           
 refCount	includes/miniaudio.h	/^    ma_uint32 refCount;$/;"	E	struct:ma_resource_manager_data_buffer_node
 relativeCursor	includes/miniaudio.h	/^    ma_uint32 relativeCursor;                   \/* The playback cursor, relative to the current/;"	E	struct:ma_resource_manager_data_stream
 relativeCursor	includes/miniaudio.h	/^    ma_uint64 relativeCursor;                       \/* Relative to the current page. *\/$/;"	E	struct:ma_paged_audio_buffer_page
+repeat_pict	includes/video.h	/^    int repeat_pict;$/;"	m	struct:VideoFrame	typeref:typename:int
 resampler	includes/miniaudio.h	/^    ma_linear_resampler resampler;                      \/* For pitch shift. *\/$/;"	E
 resampler	includes/miniaudio.h	/^    ma_resampler resampler;$/;"	E	struct:ma_resampler_config
 resampling	includes/miniaudio.h	/^    ma_resampler_config resampling;$/;"	E
@@ -4157,12 +4530,15 @@ sampleRateIn	includes/miniaudio.h	/^    ma_uint32 sampleRateIn;$/;"	E	struct:ma_
 sampleRateOut	includes/miniaudio.h	/^    ma_uint32 sampleRateOut;$/;"	E
 sampleRateOut	includes/miniaudio.h	/^    ma_uint32 sampleRateOut;$/;"	E	struct:ma_completion_handler_uwp
 sampleRateOut	includes/miniaudio.h	/^    ma_uint32 sampleRateOut;$/;"	E	struct:ma_resampler_config
+sample_fmt	includes/video.h	/^    AVSampleFormat sample_fmt;$/;"	m	struct:AudioFrame	typeref:typename:AVSampleFormat
 seed	includes/miniaudio.h	/^    ma_int32 seed;$/;"	E	struct:ma_encoder
 seekCounter	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_bool32) seekCounter;        \/* When 0, no seeking is being performed. When /;"	E	struct:ma_resource_manager_data_stream
 seekPointCount	includes/miniaudio.h	/^    ma_uint32 seekPointCount;   \/* Set to > 0 to generate a seektable if the decoding backend s/;"	E
 seekPointCount	includes/miniaudio.h	/^    ma_uint32 seekPointCount;   \/* When set to > 0, specifies the number of seek points to use /;"	E
 seekTarget	includes/miniaudio.h	/^    MA_ATOMIC(8, ma_uint64) seekTarget; \/* The PCM frame index to seek to in the mixing thread./;"	E	struct:ma_sound
 sem	includes/miniaudio.h	/^    ma_semaphore sem;               \/* Only used when MA_JOB_QUEUE_FLAG_NON_BLOCKING is unset. /;"	E	struct:ma_job
+semaphore	.vscode/settings.json	/^        "semaphore": "cpp",$/;"	s	object:files.associations
+set_index	includes/doublelinkedlist.hpp	/^        bool set_index(int newIndex) {$/;"	f	class:DoubleLinkedList	typeref:typename:bool
 shareMode	includes/miniaudio.h	/^    ma_share_mode shareMode;$/;"	E	struct:ma_completion_handler_uwp
 shareMode	includes/miniaudio.h	/^    ma_share_mode shareMode;$/;"	E	struct:ma_device_config
 shelfSlope	includes/miniaudio.h	/^    double shelfSlope;$/;"	E
@@ -4213,6 +4589,7 @@ src/video.cpp.s	build/Makefile	/^src\/video.cpp.s:$/;"	t
 src/video.i	build/Makefile	/^src\/video.i: src\/video.cpp.i$/;"	t
 src/video.o	build/Makefile	/^src\/video.o: src\/video.cpp.o$/;"	t
 src/video.s	build/Makefile	/^src\/video.s: src\/video.cpp.s$/;"	t
+start	build/video.plist	/^        <key>start<\/key>$/;"	k	key:diagnostics.path.edges
 startEvent	includes/miniaudio.h	/^    ma_event startEvent;$/;"	E	struct:ma_device
 startStopLock	includes/miniaudio.h	/^    ma_mutex startStopLock;$/;"	E	struct:ma_device
 state	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_device_state) state;        \/* The state of the device is variable and can /;"	E	struct:ma_device
@@ -4221,51 +4598,85 @@ state	includes/miniaudio.h	/^    ma_int32 state;$/;"	E
 state	includes/miniaudio.h	/^    } state;    \/* State for stock resamplers so we can avoid a malloc. For stock resamplers, p/;"	E	struct:ma_resampler_config
 state	includes/miniaudio.h	/^    } state;$/;"	E	struct:ma_encoder
 stateTimes	includes/miniaudio.h	/^    MA_ATOMIC(8, ma_uint64) stateTimes[2];  \/* Indexed by ma_node_state. Specifies the time bas/;"	E	struct:ma_node_base
+stdexcept	.vscode/settings.json	/^        "stdexcept": "cpp",$/;"	s	object:files.associations
 stopCallback	includes/miniaudio.h	/^    ma_stop_proc stopCallback;$/;"	E	struct:ma_device_config
 stopEvent	includes/miniaudio.h	/^    ma_event stopEvent;$/;"	E	struct:ma_device
+stop_token	.vscode/settings.json	/^        "stop_token": "cpp",$/;"	s	object:files.associations
+streambuf	.vscode/settings.json	/^        "streambuf": "cpp",$/;"	s	object:files.associations
+string	.vscode/settings.json	/^        "string": "cpp",$/;"	s	object:files.associations
+string_view	.vscode/settings.json	/^        "string_view": "cpp",$/;"	s	object:files.associations
 subbufferCount	includes/miniaudio.h	/^    ma_uint32 subbufferCount;$/;"	E	struct:ma_resampler_config
 subbufferSizeInBytes	includes/miniaudio.h	/^    ma_uint32 subbufferSizeInBytes;$/;"	E	struct:ma_resampler_config
 subbufferStrideInBytes	includes/miniaudio.h	/^    ma_uint32 subbufferStrideInBytes;$/;"	E	struct:ma_resampler_config
 symbolMutex	src/video.cpp	/^        std::mutex symbolMutex;$/;"	m	class:VideoState	typeref:typename:std::mutex	file:
 symbols	src/video.cpp	/^        std::vector<VideoSymbol> symbols;$/;"	m	class:VideoState	typeref:typename:std::vector<VideoSymbol>	file:
+<<<<<<< HEAD
+=======
+system_error	.vscode/settings.json	/^        "system_error": "cpp",$/;"	s	object:files.associations
+>>>>>>> rewind
 szCSDVersion	includes/miniaudio.h	/^    WCHAR szCSDVersion[128];$/;"	E
 szPname	includes/miniaudio.h	/^    CHAR szPname[MAXPNAMELEN];$/;"	E	struct:ma_IDirectSoundNotify
 t	includes/miniaudio.h	/^    ma_uint32 t;$/;"	E
 tail	includes/miniaudio.h	/^    MA_ATOMIC(8, ma_uint64) tail;   \/* The last item in the list. Required for appending to the/;"	E	struct:ma_job
+tempAudio	src/video.cpp	/^        AVAudioFifo* tempAudio;$/;"	m	class:VideoState	typeref:typename:AVAudioFifo *	file:
 terminated	includes/miniaudio.h	/^    ma_bool32 terminated;$/;"	E	struct:ma_IDirectSoundNotify
 testIconProgram	src/drawing.cpp	/^int testIconProgram() {$/;"	f	typeref:typename:int
+<<<<<<< HEAD
+=======
+thread	.vscode/settings.json	/^        "thread": "cpp",$/;"	s	object:files.associations
+>>>>>>> rewind
 thread	includes/miniaudio.h	/^    ma_thread thread;$/;"	E	struct:ma_device
 thread	includes/miniaudio.h	/^    ma_thread thread;$/;"	E	struct:ma_job
 threadPriority	includes/miniaudio.h	/^    ma_thread_priority threadPriority;$/;"	E	struct:ma_context_config
 threadStackSize	includes/miniaudio.h	/^    size_t threadStackSize;$/;"	E	struct:ma_context_config
 time	includes/miniaudio.h	/^    double time;$/;"	E	struct:ma_encoder
+<<<<<<< HEAD
 timeBase	src/video.cpp	/^        double timeBase;$/;"	m	class:VideoState	typeref:typename:double	file:
+=======
+timeChangeWait	src/video.cpp	/^        const static std::chrono::milliseconds timeChangeWait;$/;"	m	class:VideoState	typeref:typename:const std::chrono::milliseconds	file:
+timeChangeWait	src/video.cpp	/^const std::chrono::milliseconds VideoState::timeChangeWait = std::chrono::milliseconds(TIME_CHAN/;"	m	class:VideoState	typeref:typename:const std::chrono::milliseconds
+timeOfLastTimeChange	src/video.cpp	/^        std::chrono::steady_clock::time_point timeOfLastTimeChange;$/;"	m	class:VideoState	typeref:typename:std::chrono::steady_clock::time_point	file:
+>>>>>>> rewind
 toc	includes/miniaudio.h	/^    } toc;  \/* 8 bytes. We encode the job code into the slot allocation data to save space. *\/$/;"	E	struct:ma_job
 totalLengthInPCMFrames	includes/miniaudio.h	/^    ma_uint64 totalLengthInPCMFrames;           \/* This is calculated when first loaded by the /;"	E	struct:ma_resource_manager_data_stream
 totalPackets	src/video.cpp	/^        int totalPackets;$/;"	m	class:VideoState	typeref:typename:int	file:
+tuple	.vscode/settings.json	/^        "tuple": "cpp",$/;"	s	object:files.associations
+type	build/ascii.plist	/^   <key>type<\/key><string>Dead assignment<\/string>$/;"	k	key:diagnostics
+type	build/video.plist	/^   <key>type<\/key><string>Dead assignment<\/string>$/;"	k	key:diagnostics
+type	build/video.plist	/^   <key>type<\/key><string>Dead initialization<\/string>$/;"	k	key:diagnostics
+type	build/video.plist	/^   <key>type<\/key><string>Memory leak<\/string>$/;"	k	key:diagnostics
 type	includes/miniaudio.h	/^    MA_ATOMIC(4, ma_resource_manager_data_supply_type) type;    \/* Read and written from differ/;"	E
 type	includes/miniaudio.h	/^    ma_device_notification_type type;$/;"	E	struct:ma_job
 type	includes/miniaudio.h	/^    ma_device_type type;$/;"	E	struct:ma_device
 type	includes/miniaudio.h	/^    ma_engine_node_type type;$/;"	E
 type	includes/miniaudio.h	/^    ma_noise_type type;$/;"	E	struct:ma_encoder
 type	includes/miniaudio.h	/^    ma_waveform_type type;$/;"	E	struct:ma_encoder
+type_traits	.vscode/settings.json	/^        "type_traits": "cpp",$/;"	s	object:files.associations
+typeinfo	.vscode/settings.json	/^        "typeinfo": "cpp"$/;"	s	object:files.associations
 union	includes/miniaudio.h	/^    };$/;"	E	struct:ma_device
+unordered_map	.vscode/settings.json	/^        "unordered_map": "cpp",$/;"	s	object:files.associations
 usingAudioClient3	includes/miniaudio.h	/^    ma_bool32 usingAudioClient3;$/;"	E	struct:ma_completion_handler_uwp
+utility	.vscode/settings.json	/^        "utility": "cpp",$/;"	s	object:files.associations
 vDriverVersion	includes/miniaudio.h	/^    MMVERSION vDriverVersion;$/;"	E	struct:ma_IDirectSoundNotify
 valid	src/video.cpp	/^        bool valid = false;$/;"	m	class:VideoState	typeref:typename:bool	file:
 value	includes/miniaudio.h	/^    int value;$/;"	E
 value	includes/miniaudio.h	/^    ma_uint32 value;$/;"	E
 value_characters	includes/ascii_data.h	/^const std::string value_characters = "@\\%#*+=-:._";$/;"	v	typeref:typename:const std::string
+vector	.vscode/settings.json	/^        "vector": "cpp",$/;"	s	object:files.associations
 velocity	includes/miniaudio.h	/^    ma_vec3f velocity;  \/* For doppler effect. *\/$/;"	E
 velocity	includes/miniaudio.h	/^    ma_vec3f velocity;$/;"	E
 videoCodecContext	src/video.cpp	/^        AVCodecContext* videoCodecContext = nullptr;$/;"	m	class:VideoState	typeref:typename:AVCodecContext *	file:
 videoDecoder	src/video.cpp	/^        const AVCodec* videoDecoder = nullptr;$/;"	m	class:VideoState	typeref:typename:const AVCodec *	file:
 videoFifo	src/video.cpp	/^        AVFifo* videoFifo;$/;"	m	class:VideoState	typeref:typename:AVFifo *	file:
+videoFrames	src/video.cpp	/^        DoubleLinkedList<VideoFrame*>* videoFrames;$/;"	m	class:VideoState	typeref:typename:DoubleLinkedList<VideoFrame * > *	file:
 videoMutex	src/video.cpp	/^        std::mutex videoMutex;$/;"	m	class:VideoState	typeref:typename:std::mutex	file:
 videoPlaybackThread	src/video.cpp	/^        static void videoPlaybackThread(VideoState* state) {$/;"	f	class:VideoState	typeref:typename:void	file:
 videoProgram	src/video.cpp	/^int videoProgram(const char* fileName) {$/;"	f	typeref:typename:int
 videoResizer	src/video.cpp	/^        SwsContext* videoResizer;$/;"	m	class:VideoState	typeref:typename:SwsContext *	file:
 videoStream	src/video.cpp	/^        AVStream* videoStream;$/;"	m	class:VideoState	typeref:typename:AVStream *	file:
+videoTimeBase	src/video.cpp	/^        double videoTimeBase;$/;"	m	class:VideoState	typeref:typename:double	file:
+video_frame_alloc	src/video.cpp	/^VideoFrame* video_frame_alloc(AVFrame* avFrame) {$/;"	f	typeref:typename:VideoFrame *
+video_frame_free	src/video.cpp	/^void video_frame_free(VideoFrame* videoFrame) {$/;"	f	typeref:typename:void
 void	includes/miniaudio.h	/^    void      (* onUninit                     )(void* pUserData, ma_resampling_backend* pBackend/;"	E
 void	includes/miniaudio.h	/^    void      (* onUninit    )(void* pUserData, ma_data_source* pBackend, const ma_allocation_ca/;"	E
 void	includes/miniaudio.h	/^    void  (* onFree)(void* p, void* pUserData);$/;"	E
