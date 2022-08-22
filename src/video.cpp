@@ -60,6 +60,7 @@ class VideoState {
 
         SwsContext* videoResizer;
         SwrContext* audioResampler;
+        SwrContext* inTimeAudioResampler;
 
         //Initialized
         ma_device* audioDevice;
@@ -93,6 +94,7 @@ class VideoState {
         std::vector<VideoSymbol> symbols;
         std::chrono::steady_clock::time_point timeOfLastTimeChange;
         const static std::chrono::milliseconds timeChangeWait;
+        const static std::chrono::milliseconds playbackSpeedChangeWait;
 
         const char* fileName;
 
@@ -195,6 +197,18 @@ class VideoState {
             AVChannelLayout inputLayout = this->audioStream->codecpar->ch_layout;
             AVChannelLayout outputLayout = inputLayout;
             this->audioResampler = swr_alloc();
+
+            if (this->audioResampler == NULL) {
+                std::cerr << "Could not allocate audio resampler" << std::endl;
+                return EXIT_FAILURE;
+            }
+
+            this->inTimeAudioResampler = swr_alloc();
+            if (this->inTimeAudioResampler == NULL) {
+                std::cerr << "Could not allocate in time audio resampler" << std::endl;
+                return EXIT_FAILURE;
+            }
+
             result = swr_alloc_set_opts2(
                 &audioResampler,
                 &outputLayout,
@@ -284,6 +298,7 @@ class VideoState {
 
             std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
             std::chrono::nanoseconds time_paused = std::chrono::nanoseconds(0);
+            std::chrono::nanoseconds speed_skipped_time = std::chrono::nanoseconds(0);
             VideoFrame* readingFrame = (VideoFrame*)malloc(sizeof(VideoFrame));
         
             int64_t counter = 0;
@@ -386,18 +401,24 @@ class VideoState {
 
                 double nextFrameTimeSinceStartInSeconds;
                 nextFrameTimeSinceStartInSeconds = readingFrame->pts * state->videoTimeBase;
-
                 state->playback->time = readingFrame->pts * state->videoTimeBase;
 
                 state->lastImage = asciiImage;
-                std::chrono::nanoseconds timeElapsed = std::chrono::steady_clock::now() - start_time - time_paused + std::chrono::nanoseconds((int64_t)(state->playback->skippedPTS * state->videoTimeBase * SECONDS_TO_NANOSECONDS));
+                std::chrono::nanoseconds skipped_time = std::chrono::nanoseconds((int64_t)(state->playback->skippedPTS * state->videoTimeBase * SECONDS_TO_NANOSECONDS));
+                std::chrono::nanoseconds frame_speed_skip_time = std::chrono::nanoseconds( (int64_t) ( ( (readingFrame->duration * state->videoTimeBase) - (readingFrame->duration * state->videoTimeBase) / state->playback->speed ) * SECONDS_TO_NANOSECONDS ) ); ;
+                speed_skipped_time += frame_speed_skip_time; 
+
+
+                //TODO: Check if adding speed_skipped_time actually does anything (since nextFrameTimeSinceStartInSeconds is altered by state->playback->speed)
+                std::chrono::nanoseconds timeElapsed = std::chrono::steady_clock::now() - start_time - time_paused + skipped_time + speed_skipped_time; 
                 std::chrono::nanoseconds timeOfNextFrame = std::chrono::nanoseconds((int64_t)(nextFrameTimeSinceStartInSeconds * SECONDS_TO_NANOSECONDS));
                 std::chrono::nanoseconds waitDuration = timeOfNextFrame - timeElapsed + std::chrono::nanoseconds( (int)((double)(readingFrame->repeat_pict) / (2 * state->frameRate) * SECONDS_TO_NANOSECONDS) );
-                waitDuration /= state->playback->speed;
+                waitDuration -= frame_speed_skip_time;
                 std::chrono::time_point<std::chrono::steady_clock> continueTime = std::chrono::steady_clock::now() + waitDuration;
 
                 if (state->get_display_mode() == DEBUG) {
                     printw("time Elapsed: %f, master time: %f, timeOfNextFrame: %f, waitDuration: %f\n", (double)timeElapsed.count() / SECONDS_TO_NANOSECONDS, state->playback->time, (double)timeOfNextFrame.count() / SECONDS_TO_NANOSECONDS, (double)waitDuration.count() / SECONDS_TO_NANOSECONDS);
+                    printw("Time Skipped due to Speed: %f, Time Skipped due to Speed on Current Frame: %f\n", (double)speed_skipped_time.count() / SECONDS_TO_NANOSECONDS, (double)frame_speed_skip_time.count() / SECONDS_TO_NANOSECONDS);
                     refresh();
                 }
 
@@ -423,16 +444,45 @@ class VideoState {
 
         static void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
             VideoState* state = static_cast<VideoState*>(pDevice->pUserData);
-            /* printw("Target Target PTS: %f", state->playback->speed / state->audioTimeBase); */
+            /* printw("Target Target PTS: %f", state->playback->time / state->audioTimeBase); */
             /* refresh(); */
             std::lock_guard<std::mutex> audioLock(state->audioMutex);
             std::lock_guard<std::mutex> playbackLock(state->playbackMutex);
+            pDevice->sampleRate = (ma_uint32)(state->audioCodecContext->sample_rate * state->playback->speed);
             int64_t targetAudioPTS = (int64_t)(state->playback->time / state->audioTimeBase);
 
+
             if (state->inUse && state->playback->playing) {
+
                 int samplesToSkip = 0;
                 int64_t lastPTS = state->audioFrames->get()->pts;
                 bool result = true;
+                bool shouldResample = false;
+
+                if (state->playback->speed != 1.0) {
+                    int result;
+                    result = swr_alloc_set_opts2(
+                        &(state->inTimeAudioResampler),
+                        &(state->audioStream->codecpar->ch_layout),
+                        AV_SAMPLE_FMT_FLT,
+                        pDevice->sampleRate,
+                        &(state->audioStream->codecpar->ch_layout),
+                        AV_SAMPLE_FMT_FLT,
+                        state->audioStream->codecpar->sample_rate,
+                        0,
+                        nullptr);
+
+                    if (result < 0) {
+                        std::cout << "Could not allocate parameters to in time audio resampler" << std::endl;
+                    } else {
+                        result = swr_init(state->inTimeAudioResampler);
+                        if (result < 0) {
+                            std::cout << "Could not initialize in time audio resampler" << std::endl;
+                        } else {
+                            shouldResample = true;
+                        }
+                    }
+                }
 
                 while (true) {
                     int64_t currentIndexPTS = state->audioFrames->get()->pts;
@@ -465,11 +515,31 @@ class VideoState {
                 samplesToSkip = std::round((state->playback->time - state->audioFrames->get()->pts * state->audioTimeBase) * pDevice->sampleRate); 
 
                 AVFrame* current = state->audioFrames->get();
+                AVFrame* resampledFrame = av_frame_alloc();
                 av_audio_fifo_reset(state->tempAudio);
                 int samplesWritten = 0;
   
+                //TODO: Possible vulnerability in current->nb_samples being checked although current may be resampled inside loop
                 while (samplesWritten < frameCount * 3 / 2 + samplesToSkip && av_audio_fifo_space(state->tempAudio) > current->nb_samples) {
-                    samplesWritten += av_audio_fifo_write(state->tempAudio, (void**)current->data, current->nb_samples);
+
+                    if (shouldResample) {
+                        resampledFrame->sample_rate = pDevice->sampleRate;
+                        resampledFrame->ch_layout = current->ch_layout;
+                        resampledFrame->format = AV_SAMPLE_FMT_FLT;
+
+                        int result = swr_convert_frame(state->inTimeAudioResampler, resampledFrame, current);
+                        if (result < 0) {
+                            std::cerr << "Unable to resample audio in time" << std::endl;
+                            samplesWritten += av_audio_fifo_write(state->tempAudio, (void**)current->data, current->nb_samples);
+                        } else {
+                            samplesWritten += av_audio_fifo_write(state->tempAudio, (void**)resampledFrame->data, resampledFrame->nb_samples);
+                        }
+                        
+                        av_frame_unref(resampledFrame);
+                    } else {
+                         samplesWritten += av_audio_fifo_write(state->tempAudio, (void**)current->data, current->nb_samples);
+                    }
+
                     if (state->audioFrames->get_index() < state->audioFrames->get_length() + 1) {
                         state->audioFrames->set_index(state->audioFrames->get_index() + 1);
                         current = state->audioFrames->get();
@@ -480,6 +550,7 @@ class VideoState {
 
                 samplesToSkip += std::round((state->playback->time - timeBeforeReading) * pDevice->sampleRate); 
                 av_audio_fifo_peek_at(state->tempAudio, &pOutput, std::min((int)frameCount, samplesWritten), samplesToSkip );
+                av_frame_free(&resampledFrame);
             }
 
             (void)pInput;
@@ -590,7 +661,20 @@ class VideoState {
                         state->audioDevice->masterVolumeFactor = std::max(0.0, state->audioDevice->masterVolumeFactor - 0.05);
                         state->symbols.push_back(get_symbol_from_volume(state->audioDevice->masterVolumeFactor));
                     }
+                } else if (ch == (int)('n') || ch == (int)('N')) {
+                    if ( (std::chrono::steady_clock::now() - state->timeOfLastTimeChange) > VideoState::timeChangeWait ) {
+                        playbackLock.lock();
+                        state->playback->speed = std::min(5.0, state->playback->speed + PLAYBACK_SPEED_CHANGE_INTERVAL);
+                        playbackLock.unlock();
+                    }
+                } else if (ch == (int)('m') || ch == (int)('M')) {
+                    if ( (std::chrono::steady_clock::now() - state->timeOfLastTimeChange) > VideoState::timeChangeWait ) {
+                        playbackLock.lock();
+                        state->playback->speed = std::max(0.25, state->playback->speed - PLAYBACK_SPEED_CHANGE_INTERVAL);
+                        playbackLock.unlock();
+                    }
                 }
+
                 symbolLock.unlock();
             
             }
@@ -606,6 +690,7 @@ class VideoState {
             avcodec_free_context(&(this->videoCodecContext));
             avcodec_free_context(&(this->audioCodecContext));
             swr_free(&(this->audioResampler));
+            swr_free(&(this->inTimeAudioResampler));
             sws_freeContext(this->videoResizer);
 
             /* VideoFrame* readingFrame; */
@@ -764,6 +849,7 @@ class VideoState {
                         resizedVideoFrame->height = this->frameHeight;
                         resizedVideoFrame->pts = originalVideoFrame->pts;
                         resizedVideoFrame->repeat_pict = originalVideoFrame->repeat_pict;
+                        resizedVideoFrame->duration = originalVideoFrame->duration;
                         av_frame_get_buffer(resizedVideoFrame, 1); //watch this alignment
 
                         sws_scale(videoResizer, (uint8_t const * const *)originalVideoFrame->data, originalVideoFrame->linesize, 0, this->videoCodecContext->height, resizedVideoFrame->data, resizedVideoFrame->linesize);
@@ -876,6 +962,8 @@ class VideoState {
 
 const VideoStateDisplayMode VideoState::displayModes[2] = { FULL, DEBUG };
 const std::chrono::milliseconds VideoState::timeChangeWait = std::chrono::milliseconds(TIME_CHANGE_WAIT_MILLISECONDS);
+const std::chrono::milliseconds VideoState::playbackSpeedChangeWait = std::chrono::milliseconds(PLAYBACK_SPEED_CHANGE_WAIT_MILLISECONDS);
+
 
 int videoProgram(const char* fileName) {
     init_icons();
@@ -960,6 +1048,7 @@ VideoFrame* video_frame_alloc(AVFrame* avFrame) {
     videoFrame->pixelData = pixelData;
     videoFrame->pts = avFrame->pts;
     videoFrame->repeat_pict = avFrame->repeat_pict;
+    videoFrame->duration = avFrame->duration;
     return videoFrame;
 }
 

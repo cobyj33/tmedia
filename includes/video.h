@@ -8,6 +8,8 @@
 #define SYNC_THRESHOLD_MILLISECONDS 200000
 #define FRAME_RESERVE_SIZE 100000
 #define TIME_CHANGE_WAIT_MILLISECONDS 250
+#define PLAYBACK_SPEED_CHANGE_WAIT_MILLISECONDS 250
+#define PLAYBACK_SPEED_CHANGE_INTERVAL 0.25
 
 #include <ascii_data.h>
 
@@ -38,8 +40,7 @@ typedef struct VideoFrame {
     pixel_data* pixelData;
     int64_t pts;
     int repeat_pict;
-    VideoFrame* next;
-    VideoFrame* last;
+    int64_t duration;
 } VideoFrame;
 
 typedef struct AudioFrame {
