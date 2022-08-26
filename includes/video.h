@@ -30,7 +30,19 @@ typedef struct Playback {
     int64_t skippedPTS;
     double speed;
     double time;
+    double lastAudioPlayTime;
 } Playback;
+
+
+typedef enum VideoStateDisplayMode {
+    MOVIE, VIDEO_DEBUG, AUDIO_DEBUG, WAVE
+} VideoStateDisplayMode;
+
+typedef struct VideoDisplaySettings {
+    bool debug;
+    bool subtitles;
+    VideoStateDisplayMode mode;
+} VideoDisplaySettings;
 
 Playback* playback_alloc();
 void playback_free(Playback* playback);
@@ -56,7 +68,6 @@ void video_frame_free(VideoFrame* videoFrame);
 
 AudioFrame* audio_frame_alloc(AVFrame* avFrame);
 void audio_frame_free(AudioFrame* audioFrame);
-
 
 
 #endif
