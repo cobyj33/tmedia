@@ -476,13 +476,14 @@ class VideoState {
 
             if (state->inUse && state->playback->playing) {
                 int samplesToSkip = 0;
+                bool shouldShrinkAudioSegment = state->playback->speed > 1.0;
                 bool shouldStretchAudioSegment = state->playback->speed < 1.0;
-                double stretchAmount = std::max(1.0, 1 / state->playback->speed);
+                double stretchAmount = 1 / state->playback->speed;
                 int bytesPerSample = av_get_bytes_per_sample(AV_SAMPLE_FMT_FLT);
                 int64_t lastPTS = state->audioFrames->get()->pts;
                 bool result;
 
-                if (shouldStretchAudioSegment) {
+                if (stretchAmount != 1.0) {
                     int result;
                     AVChannelLayout inLayout = state->audioCodecContext->ch_layout;
                     AVChannelLayout outLayout = inLayout;
@@ -499,6 +500,7 @@ class VideoState {
 
                     if (result < 0) {
                         shouldStretchAudioSegment = false;
+                        shouldShrinkAudioSegment = false;
                         if (debug)
                             printw("COULD NOT RESET AUDIO RESAMPLER PARAMETERS\n");
                     } else {
@@ -506,11 +508,13 @@ class VideoState {
                         if (result < 0) {
                             printw("COULD NOT INITIALIZE AUDIO RESAMPLER\n");
                             shouldStretchAudioSegment = false;
+                            shouldShrinkAudioSegment = false;
                         }
                     }
                 }
 
 
+                // Finds correct audio segment to begin at according to presentational time stamps of the audio frames
                 while (true) {
                     int64_t currentIndexPTS = state->audioFrames->get()->pts;
                     if (currentIndexPTS > targetAudioPTS) {
@@ -539,7 +543,7 @@ class VideoState {
                 } 
 
                 AVFrame* startingAudioFrame = state->audioFrames->get();
-                samplesToSkip = std::round((state->playback->time - startingAudioFrame->pts * state->audioTimeBase) * state->audioCodecContext->sample_rate); 
+                    samplesToSkip = std::round((state->playback->time - startingAudioFrame->pts * state->audioTimeBase) * state->audioCodecContext->sample_rate / stretchAmount); 
                 AVFrame* current = state->audioFrames->get();
                 av_audio_fifo_reset(state->tempAudio);
                 int samplesWritten = 0;
@@ -547,8 +551,11 @@ class VideoState {
 
                 while (samplesWritten < frameCount + samplesToSkip && av_audio_fifo_space(state->tempAudio) > current->nb_samples) {
                     framesRead++;
+                    if (debug) {
+                        printw("Frame %d:\n     ", framesRead);
+                    }
 
-                    if (shouldStretchAudioSegment) {
+                    if (state->playback->speed != 1.0) {
                         int samplesToWrite = (int)(current->nb_samples * stretchAmount);
                         int bytesToWrite = samplesToWrite * bytesPerSample;
                         float** originalValues;
@@ -562,7 +569,6 @@ class VideoState {
                         
                         if (debug) {
                             printw("Current nb_samples: %d, Stretch Amount: %f, bytesPerSample: %d, inputtedBytes: %d, bytesToWrite: %d\n", current->nb_samples, stretchAmount, bytesPerSample, current->nb_samples * bytesPerSample, samplesToWrite * bytesPerSample);
-                            printw("Frame %d:\n     ", framesRead);
                         }
 
                         /* if (debug) { */
@@ -574,46 +580,78 @@ class VideoState {
                         int channelCount = current->ch_layout.nb_channels;
                         float orignalSampleBlocks[current->nb_samples][channelCount];
                         float finalSampleBlocks[samplesToWrite][channelCount];
+
                         for (int i = 0; i < current->nb_samples * channelCount; i++) {
                             orignalSampleBlocks[i / channelCount][i % channelCount] = originalValues[0][i];
                         }
                         
-                        float currentSampleBlock[channelCount];
-                        float lastSampleBlock[channelCount];
-                        float currentFinalSampleBlockIndex = 0;
-                        for (int i = 0; i < current->nb_samples; i++) {
-                            for (int cpy = 0; cpy < channelCount; cpy++) {
-                                currentSampleBlock[cpy] = orignalSampleBlocks[i][cpy];
+                        if (shouldStretchAudioSegment) {
+                            float currentSampleBlock[channelCount];
+                            float lastSampleBlock[channelCount];
+                            float currentFinalSampleBlockIndex = 0;
+
+                            if (debug) {
+                                printw("Stretching audio segment by factor of %f\n", stretchAmount);
                             }
 
-                            if (i != 0) {
-                                for (int currentChannel = 0; currentChannel < channelCount; currentChannel++) {
-                                    float sampleStep = (currentSampleBlock[currentChannel] - lastSampleBlock[currentChannel]) / stretchAmount; 
-                                    float currentSampleValue = lastSampleBlock[currentChannel];
+                            for (int i = 0; i < current->nb_samples; i++) {
+                                for (int cpy = 0; cpy < channelCount; cpy++) {
+                                    currentSampleBlock[cpy] = orignalSampleBlocks[i][cpy];
+                                }
 
-                                    for (int finalSampleBlockIndex = (int)(currentFinalSampleBlockIndex); finalSampleBlockIndex < (int)(currentFinalSampleBlockIndex + stretchAmount); finalSampleBlockIndex++) {
-                                        finalSampleBlocks[finalSampleBlockIndex][currentChannel] = currentSampleValue;
-                                        currentSampleValue += sampleStep;
+                                if (i != 0) {
+                                    for (int currentChannel = 0; currentChannel < channelCount; currentChannel++) {
+                                        float sampleStep = (currentSampleBlock[currentChannel] - lastSampleBlock[currentChannel]) / stretchAmount; 
+                                        float currentSampleValue = lastSampleBlock[currentChannel];
+
+                                        for (int finalSampleBlockIndex = (int)(currentFinalSampleBlockIndex); finalSampleBlockIndex < (int)(currentFinalSampleBlockIndex + stretchAmount); finalSampleBlockIndex++) {
+                                            finalSampleBlocks[finalSampleBlockIndex][currentChannel] = currentSampleValue;
+                                            currentSampleValue += sampleStep;
+                                        }
+
                                     }
+                                }
 
+                                currentFinalSampleBlockIndex += stretchAmount;
+                                for (int cpy = 0; cpy < channelCount; cpy++) {
+                                    lastSampleBlock[cpy] = currentSampleBlock[cpy];
                                 }
                             }
 
-                            currentFinalSampleBlockIndex += stretchAmount;
-                            for (int cpy = 0; cpy < channelCount; cpy++) {
-                                lastSampleBlock[cpy] = currentSampleBlock[cpy];
-                            }
-                        }
+                        } else if (shouldShrinkAudioSegment) {
+                            float currentOriginalSampleBlockIndex = 0;
+                            float stretchStep = state->playback->speed;
 
-                        for (int i = 0; i < samplesToWrite * channelCount; i++) {
-                            finalValues[0][i] = finalSampleBlocks[i / channelCount][i / samplesToWrite];
+                            if (debug) {
+                                printw("Shrinking audio segment by factor of %f\n", stretchAmount);
+                            }
+
+                            for (int i = 0; i < samplesToWrite; i++) {
+                                float average = 0.0;
+                                for (int ichannel = 0; ichannel < channelCount; ichannel++) {
+                                   average = 0.0;
+                                   for (int origi = (int)(currentOriginalSampleBlockIndex); origi < (int)(currentOriginalSampleBlockIndex + stretchStep); origi++) {
+                                       average += orignalSampleBlocks[origi][ichannel];
+                                   }
+                                   average /= stretchStep;
+                                   finalSampleBlocks[i][ichannel] = average;
+                                }
+
+                                currentOriginalSampleBlockIndex += stretchStep;
+                            }
+
                         }
 
                         
+                        for (int i = 0; i < samplesToWrite * channelCount; i++) {
+                            /* finalValues[0][i] = finalSampleBlocks[i / channelCount][i / samplesToWrite]; */
+                            finalValues[0][i] = finalSampleBlocks[i / channelCount][i % channelCount];
+                        }
+
                         int conversionResult = swr_convert(state->inTimeAudioResampler, (uint8_t**)(resampledValues), current->nb_samples, (const uint8_t**)(finalValues), samplesToWrite);
                         if (conversionResult < 0) {
                             if (debug)
-                                addstr("Could not correctly perform SWR resampling");
+                                addstr("Could not correctly perform SWR resampling\n");
                             samplesWritten += av_audio_fifo_write(state->tempAudio, (void**)finalValues, samplesToWrite);
                         } else {
                             samplesWritten += av_audio_fifo_write(state->tempAudio, (void**)resampledValues, current->nb_samples);
@@ -628,7 +666,11 @@ class VideoState {
 
                          av_freep(&originalValues[0]);
                          av_freep(&finalValues[0]);
-                    } else if (!shouldStretchAudioSegment) {
+                         av_freep(&resampledValues[0]);
+                    } else if (!shouldStretchAudioSegment && !shouldShrinkAudioSegment) {
+                        if (debug) {
+                            printw("Feeding unaltered audio data\n");
+                        }
                          samplesWritten += av_audio_fifo_write(state->tempAudio, (void**)current->data, current->nb_samples);
                     }
 
@@ -640,21 +682,11 @@ class VideoState {
                     }
                 }
 
-                /* if (state->playback->speed < 1.0) { */
-                /*     pDevice->sampleRate = (int)(state->audioCodecContext->sample_rate); */
-                /* } else { */
-                /*     pDevice->sampleRate = (int)(state->audioCodecContext->sample_rate); */
-                /* } */
-
-                if (shouldStretchAudioSegment) {
-                    samplesToSkip = std::round((state->playback->time - startingAudioFrame->pts * state->audioTimeBase) * state->audioCodecContext->sample_rate / stretchAmount); 
-                }
-
                 av_audio_fifo_peek_at(state->tempAudio, &pOutput, std::min((int)frameCount, samplesWritten), samplesToSkip );
                 state->playback->lastAudioPlayTime = state->playback->time;
 
                 if (debug) {
-                    printw("Samples Written: %d, Samples Skipped: %d, Frames Read: %d Device Sample Rate: %d\n ", samplesWritten, samplesToSkip, framesRead, pDevice->sampleRate);
+                    printw("Samples Written: %d, Samples Requested: %d, Samples Skipped: %d, Frames Read: %d Device Sample Rate: %d\n ", samplesWritten, (int)frameCount, samplesToSkip, framesRead, pDevice->sampleRate);
                 }
 
             } else if (!state->inUse && debug) {
@@ -724,7 +756,6 @@ class VideoState {
         static void inputListeningThread(VideoState* state) {
             std::unique_lock<std::mutex> symbolLock(state->symbolMutex, std::defer_lock);
             std::unique_lock<std::mutex> playbackLock(state->playbackMutex, std::defer_lock);
-            
             
             while (state->inUse) {
 
