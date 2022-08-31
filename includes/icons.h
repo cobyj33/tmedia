@@ -82,4 +82,9 @@ pixel_data* get_video_icon(VideoIcon iconEnum);
 VideoSymbol get_video_symbol(VideoIcon iconEnum);
 VideoSymbol get_symbol_from_volume(double normalizedVolume);
 
+pixel_data* get_playback_icons_pixel_data();
+pixel_data* get_number_icons_pixel_data(); 
+pixel_data* get_number_symbols_icons_pixel_data(); 
+
 pixel_data* get_numbers_image(int* digits, int count);
+

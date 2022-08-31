@@ -40,7 +40,6 @@ std::map<int, VideoIcon> iconFromDigit = {
 pixel_data* emptyPixelData = (pixel_data*)malloc(sizeof(pixel_data));
 bool initialized = false;
 
-
 int testIconProgram() {
     init_icons();
     initscr();
@@ -63,13 +62,7 @@ int testIconProgram() {
     return EXIT_SUCCESS;
 }
 
-bool read_sprite_sheet(pixel_data** buffer, int bufferSize, const char* sheetPath, int rows, int cols, int spriteWidth, int spriteHeight) {
-    pixel_data* iconData = get_pixel_data_from_image(sheetPath);
-
-    if (iconData == nullptr) {
-        std::cout << "Could not Initialize " << sheetPath << std::endl;
-        return false;
-    }
+bool read_sprite_sheet(pixel_data** buffer, int bufferSize, pixel_data* iconData, int rows, int cols, int spriteWidth, int spriteHeight) {
 
     for (int i = 0; i < std::min(bufferSize, rows * cols); i++) {
         pixel_data* icon = pixel_data_alloc(spriteWidth, spriteHeight);
@@ -83,7 +76,6 @@ bool read_sprite_sheet(pixel_data** buffer, int bufferSize, const char* sheetPat
         buffer[i] = icon;
     }
 
-    pixel_data_free(iconData);
     return true;
 }
 
@@ -94,9 +86,20 @@ bool init_icons() {
         pixel_data* numberIconBuffer[numOfNumberIcons];
         pixel_data* numberSymbolBuffer[numOfNumberSymbolIcons];
 
-        success = read_sprite_sheet(playbackIconBuffer, numOfPlaybackIcons, PLAYBACK_ICONS_PATH, ICONS_SPRITE_ROWS, ICONS_SPRITE_COLUMNS, ICONS_SPRITE_WIDTH, ICONS_SPRITE_HEIGHT);
+        pixel_data* playbackIcons = get_playback_icons_pixel_data();
+        pixel_data* numberIcons = get_number_icons_pixel_data();
+        pixel_data* numberSymbolIcons = get_number_symbols_icons_pixel_data();
+
+        auto cleanup = [playbackIcons, numberIcons, numberSymbolIcons]() {
+            free(playbackIcons);
+            free(numberIcons);
+            free(numberSymbolIcons);
+        };
+
+        success = read_sprite_sheet(playbackIconBuffer, numOfPlaybackIcons, playbackIcons, ICONS_SPRITE_ROWS, ICONS_SPRITE_COLUMNS, ICONS_SPRITE_WIDTH, ICONS_SPRITE_HEIGHT);
         if (!success) {
             std::cout << "Could not initialize playback icons" << std::endl;
+            cleanup();
             return false;
         }
 
@@ -104,9 +107,10 @@ bool init_icons() {
             iconFromEnum.emplace(std::make_pair(playbackIconOrder[i], playbackIconBuffer[i]));
         }
 
-        success = read_sprite_sheet(numberIconBuffer, numOfNumberIcons, NUMBER_ICONS_PATH, NUMBERS_SPRITE_ROWS, NUMBERS_SPRITE_COLUMNS, NUMBERS_SPRITE_WIDTH, NUMBERS_SPRITE_HEIGHT);
+        success = read_sprite_sheet(numberIconBuffer, numOfNumberIcons, numberIcons, NUMBERS_SPRITE_ROWS, NUMBERS_SPRITE_COLUMNS, NUMBERS_SPRITE_WIDTH, NUMBERS_SPRITE_HEIGHT);
         if (!success) {
             std::cout << "Could not initialize number icons" << std::endl;
+            cleanup();
             return false;
         }
 
@@ -114,9 +118,10 @@ bool init_icons() {
             iconFromEnum.emplace(std::make_pair(numberIconOrder[i], numberIconBuffer[i]));
         }
 
-        success = read_sprite_sheet(numberSymbolBuffer, numOfNumberSymbolIcons, NUMBER_SYMBOLS_ICONS_PATH, NUMBER_SYMBOLS_SPRITE_ROWS, NUMBER_SYMBOLS_SPRITE_COLUMNS, NUMBER_SYMBOLS_SPRITE_WIDTH, NUMBER_SYMBOLS_SPRITE_HEIGHT);
+        success = read_sprite_sheet(numberSymbolBuffer, numOfNumberSymbolIcons, numberSymbolIcons, NUMBER_SYMBOLS_SPRITE_ROWS, NUMBER_SYMBOLS_SPRITE_COLUMNS, NUMBER_SYMBOLS_SPRITE_WIDTH, NUMBER_SYMBOLS_SPRITE_HEIGHT);
         if (!success) {
             std::cout << "Could not initialize number symbol icons" << std::endl;
+            cleanup();
             return false;
         }
 
@@ -179,4 +184,6 @@ pixel_data* get_stitched_image(pixel_data* images) {
 
     return pixelData;
 }
+
+
 
