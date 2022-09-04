@@ -298,7 +298,7 @@ class VideoState {
             AVFrame* readingFrame;
         
             int64_t counter = 0;
-            while (state->inUse && (!state->playback->allPacketsRead || (state->playback->allPacketsRead && state->videoPackets->get_length() > 0 ) )) {
+            while (state->inUse && (!state->playback->allPacketsRead || (state->playback->allPacketsRead && state->videoPackets->get_index() < state->videoPackets->get_length() - 1 ) )) {
                 alterLock.lock();
 
                 debug = state->displaySettings.mode == VIDEO_DEBUG;
@@ -411,6 +411,7 @@ class VideoState {
                             state->symbols[i].framesShown++;
                             if (state->symbols[i].framesShown >= state->symbols[i].framesToDelete) {
                                 state->symbols.erase(state->symbols.begin() + i);
+                                //Note to Self: symbols are not freed because the pixel data is reused
                             }
                         }
 
