@@ -2,6 +2,9 @@
 #include <video.h>
 #include <info.h>
 
+extern "C" {
+#include <libavutil/log.h>
+}
 
 #include <stdio.h>
 #include <iostream>
@@ -38,6 +41,8 @@ const char* help_text = "     ASCII_VIDEO         \n"
 
 int main(int argc, char** argv)
 {
+    av_log_set_level(AV_LOG_QUIET);
+
   if (argc == 1) {
     // testIconProgram();
     // return EXIT_SUCCESS;

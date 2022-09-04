@@ -6,7 +6,7 @@
 #define SECONDS_TO_NANOSECONDS 1000000000
 #define SECONDS_TO_MILLISECONDS 1000
 #define SYNC_THRESHOLD_MILLISECONDS 200000
-#define FRAME_RESERVE_SIZE 100000
+#define PACKET_RESERVE_SIZE 100000
 #define TIME_CHANGE_WAIT_MILLISECONDS 250
 #define PLAYBACK_SPEED_CHANGE_WAIT_MILLISECONDS 250
 #define PLAYBACK_SPEED_CHANGE_INTERVAL 0.25
@@ -30,6 +30,7 @@ typedef struct Playback {
     int64_t skippedPTS;
     double speed;
     double time;
+    double audioTime;
     double lastAudioPlayTime;
 } Playback;
 
