@@ -82,7 +82,11 @@ int main(int argc, char** argv)
       }
 
   } else {
-      std::cout << "Too many commands" << std::endl;
+      std::cout << "Too many commands: " << argc << std::endl;
+      for (int i = 0; i < argc; i++) {
+        std::cout << argv[i] << ", ";
+      }
+      std::cout << '\n' << std::endl;
       std::cout << help_text << std::endl;
   }
 
