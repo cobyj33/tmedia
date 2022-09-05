@@ -3,14 +3,7 @@
 #include <string>
 #include <ascii_constants.h>
 
-
-const std::string value_characters = "@\%#*+=-:._";
-
-/* typedef struct Color { */
-/*     int r; */
-/*     int g; */
-/*     int b; */
-/* } Color; */
+const std::string value_characters = "@$\%#O^*+o=-:._ ";
 
 typedef struct ascii_image {
     char lines[MAX_FRAME_HEIGHT + 1][MAX_FRAME_WIDTH + 1];

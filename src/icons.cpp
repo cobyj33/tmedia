@@ -47,9 +47,8 @@ int testIconProgram() {
     while (true) {
         for (int i = 0; i < 12; i++) {
             pixel_data* iconData = iconFromEnum.at(i);
-            int windowWidth, windowHeight, outputWidth, outputHeight;
-            get_window_size(&windowWidth, &windowHeight);
-            get_output_size(iconData->width, iconData->height, windowWidth, windowHeight, &outputWidth, &outputHeight);
+            int outputWidth, outputHeight;
+            get_output_size(iconData->width, iconData->height, COLS, LINES, &outputWidth, &outputHeight);
 
             ascii_image image = get_image(iconData->pixels, iconData->width, iconData->height, outputWidth, outputHeight);
             erase();
@@ -161,15 +160,22 @@ pixel_data* get_video_icon(VideoIcon iconEnum) {
     }
 }
 
-VideoSymbol get_video_symbol(VideoIcon iconEnum) {
-    VideoSymbol symbol;
-    symbol.framesToDelete = 10;
-    symbol.framesShown = 0;
-    symbol.pixelData = get_video_icon(iconEnum);
+VideoSymbol* get_video_symbol(VideoIcon iconEnum) {
+    VideoSymbol* symbol = (VideoSymbol*)malloc(sizeof(VideoSymbol));
+    symbol->startTime = std::chrono::steady_clock::now(); 
+    symbol->lifeTime = std::chrono::milliseconds(1000);
+    symbol->frames = 1;
+    symbol->frameData = (pixel_data**)malloc(sizeof(pixel_data*) * symbol->frames);
+    symbol->frameData[0] = get_video_icon(iconEnum);
     return symbol;
 }
 
-VideoSymbol get_symbol_from_volume(double normalizedVolume) {
+void free_video_symbol(VideoSymbol* symbol) {
+    free(symbol->frameData);
+    free(symbol);
+}
+
+VideoSymbol* get_symbol_from_volume(double normalizedVolume) {
     normalizedVolume = std::min(1.0, std::max(0.0, normalizedVolume));
     return get_video_symbol(volumeIcons[(int)(3.99 * normalizedVolume)]);
 }

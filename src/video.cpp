@@ -37,6 +37,18 @@ extern "C" {
 #include <libavfilter/avfilter.h>
 }
 
+/* typedef struct MediaState { */
+     
+/* } MediaState; */
+
+/* typedef struct MediaInfo { */
+    
+/* } MediaInfo; */
+
+/* class MediaPlayer { */
+    
+/* }; */
+
 class VideoState {
     public: 
         //Initialized in Init
@@ -47,11 +59,7 @@ class VideoState {
         const AVCodec* videoDecoder = nullptr;
         AVCodecContext* audioCodecContext = nullptr;
         AVCodecContext* videoCodecContext = nullptr;
-        AVFifo* videoFifo;
-        AVFifo* audioFrameFifo;
 
-        /* DoubleLinkedList<VideoFrame*>* videoFrames; */
-        /* DoubleLinkedList<AVFrame*>* audioFrames; */
         DoubleLinkedList<AVPacket*>* videoPackets;
         DoubleLinkedList<AVPacket*>* audioPackets;
         AVAudioFifo* tempAudio;
@@ -89,7 +97,7 @@ class VideoState {
         int displayModeIndex = 0;
 
         ascii_image lastImage;
-        std::vector<VideoSymbol> symbols;
+        std::vector<VideoSymbol*> symbols;
         std::chrono::steady_clock::time_point timeOfLastTimeChange;
         const static std::chrono::milliseconds timeChangeWait;
         const static std::chrono::milliseconds playbackSpeedChangeWait;
@@ -313,6 +321,8 @@ class VideoState {
                 if (state->playback->playing == false) {
                     alterLock.unlock();
                     std::chrono::steady_clock::time_point pauseTime = std::chrono::steady_clock::now();
+                    VideoSymbol* pauseSymbol = get_video_symbol(PAUSE_ICON);
+                    pixel_data* pauseSymbolPixelData = pauseSymbol->frameData[0];
                     while (state->playback->playing == false) {
                         std::this_thread::sleep_for(std::chrono::milliseconds(1));
                         if (!state->inUse) {
@@ -322,20 +332,20 @@ class VideoState {
                         if (debug || movie) {
                             alterLock.lock();
                             erase();
-                            for (int i = 0; i < state->symbols.size(); i++) {
-                                int symbolOutputWidth, symbolOutputHeight;
-                                get_output_size(state->symbols[i].pixelData->width, state->symbols[i].pixelData->height, state->lastImage.width, state->lastImage.height, &symbolOutputWidth, &symbolOutputHeight);
-                                ascii_image symbolImage = get_image(state->symbols[i].pixelData->pixels, state->symbols[i].pixelData->width, state->symbols[i].pixelData->height, symbolOutputWidth, symbolOutputHeight);
-                                overlap_ascii_images(&state->lastImage, &symbolImage);
-                            }
-
+                            int symbolOutputWidth, symbolOutputHeight;
+                            get_output_size(pauseSymbolPixelData->width, pauseSymbolPixelData->height, state->lastImage.width, state->lastImage.height, &symbolOutputWidth, &symbolOutputHeight);
+                            ascii_image symbolImage = get_image(pauseSymbolPixelData->pixels, pauseSymbolPixelData->width, pauseSymbolPixelData->height, symbolOutputWidth, symbolOutputHeight);
+                            overlap_ascii_images(&state->lastImage, &symbolImage);
                             print_ascii_image(&state->lastImage);
                             refresh();
                             alterLock.unlock();
                         }
                     }
+
                     alterLock.lock();
+                    free_video_symbol(pauseSymbol);
                     time_paused = time_paused + (std::chrono::steady_clock::now() - pauseTime);
+                    state->symbols.push_back(get_video_symbol(PLAY_ICON));
                 }
 
                 if (state->videoPackets->get_index() + 10 <= state->videoPackets->get_length()) {
@@ -384,16 +394,14 @@ class VideoState {
 
 
                 if (debug || movie) {
-                    int windowWidth, windowHeight;
-                    get_window_size(&windowWidth, &windowHeight);
                     int outputWidth, outputHeight;
-                    get_output_size(readingFrame->width, readingFrame->height, windowWidth, debug ? std::max(windowHeight - 12, 2) : windowHeight, &outputWidth, &outputHeight);
+                    get_output_size(readingFrame->width, readingFrame->height, COLS, debug ? std::max(LINES - 12, 2) : LINES, &outputWidth, &outputHeight);
 
                         ascii_image asciiImage = get_image(readingFrame->data[0], readingFrame->width, readingFrame->height, outputWidth, outputHeight);
                         if (debug) {
                             printw("Counter: %ld\n", counter);
-                            printw("Window Size: %d x %d", windowWidth, windowHeight);
-                            printw("Frame Width: %d Frame Height: %d Window Width: %d Window Height: %d Output Width: %d Output Height: %d \n", state->frameWidth, state->frameHeight, windowWidth, windowHeight, outputWidth, outputHeight);
+                            printw("Window Size: %d x %d", COLS, LINES);
+                            printw("Frame Width: %d Frame Height: %d Window Width: %d Window Height: %d Output Width: %d Output Height: %d \n", state->frameWidth, state->frameHeight, COLS, LINES, outputWidth, outputHeight);
                             printw("ASCII Width: %d ASCII Height: %d\n", asciiImage.width, asciiImage.height);
                             printw("Packets: %d of %d\n", state->playback->currentPacket, state->totalPackets);
                             printw("Playing: %s \n", state->playback->playing ? "true" : "false");
@@ -403,21 +411,32 @@ class VideoState {
                             printw("Video List Index: %d, Audio List Index: %d\n", state->videoPackets->get_index(), state->audioPackets->get_index());
                         }
                         
-                        for (int i = 0; i < state->symbols.size(); i++) {
-                            int symbolOutputWidth, symbolOutputHeight;
-                            get_output_size(state->symbols[i].pixelData->width, state->symbols[i].pixelData->height, asciiImage.width, asciiImage.height, &symbolOutputWidth, &symbolOutputHeight);
-                            ascii_image symbolImage = get_image(state->symbols[i].pixelData->pixels, state->symbols[i].pixelData->width, state->symbols[i].pixelData->height, symbolOutputWidth, symbolOutputHeight);
-                            overlap_ascii_images(&asciiImage, &symbolImage);
-                            state->symbols[i].framesShown++;
-                            if (state->symbols[i].framesShown >= state->symbols[i].framesToDelete) {
+                        for (int i = state->symbols.size() - 1; i >= 0; i--) {
+                            VideoSymbol* currentSymbol = state->symbols[i];
+                            if (std::chrono::steady_clock::now() - currentSymbol->startTime > currentSymbol->lifeTime) {
+                                free_video_symbol(state->symbols[i]);
                                 state->symbols.erase(state->symbols.begin() + i);
-                                //Note to Self: symbols are not freed because the pixel data is reused
                             }
+                        }
+        
+                        if (state->symbols.size() > 0) {
+                            VideoSymbol* currentSymbol = state->symbols[ state->symbols.size() - 1 ]; 
+                            int symbolOutputWidth, symbolOutputHeight;
+                            
+                            int currentSymbolFrame = (int)((double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - currentSymbol->startTime).count() / (double)currentSymbol->lifeTime.count() * (double)currentSymbol->frames); 
+                            pixel_data* currentPixelData = currentSymbol->frameData[currentSymbolFrame];
+                            if (debug) {
+                                printw("Current Symbol Frame: %d, Current Pixel Data: %d x %d", currentSymbolFrame, currentPixelData->width, currentPixelData->height);
+                                refresh();
+                            }
+                            get_output_size(currentPixelData->width, currentPixelData->height, asciiImage.width, asciiImage.height, &symbolOutputWidth, &symbolOutputHeight);
+                            ascii_image symbolImage = get_image(currentPixelData->pixels, currentPixelData->width, currentPixelData->height, symbolOutputWidth, symbolOutputHeight);
+                            overlap_ascii_images(&asciiImage, &symbolImage);
                         }
 
                         if (debug) {
-                            for (int i = 0; i < asciiImage.height && i < windowHeight; i++) {
-                                for (int j = 0; j < asciiImage.width && j < windowWidth; j++) {
+                            for (int i = 0; i < asciiImage.height && i < LINES; i++) {
+                                for (int j = 0; j < asciiImage.width && j < COLS; j++) {
                                     addch(asciiImage.lines[i][j]);
                                 }
                                 addch('\n');
@@ -826,11 +845,6 @@ class VideoState {
 
                 if (ch == (int)(' ')) {
                     if (state->inUse) {
-                            if (state->playback->playing) {
-                                state->symbols.push_back(get_video_symbol(PAUSE_ICON));
-                            } else {
-                                state->symbols.push_back(get_video_symbol(PLAY_ICON));
-                            }
                             state->playback->playing = !state->playback->playing;
                     }
                 } else if (ch == (int)('d') || ch == (int)('D')) {
@@ -838,15 +852,15 @@ class VideoState {
                     state->displaySettings.mode = VideoState::displayModes[state->displayModeIndex];
                 } else if (ch == KEY_LEFT) {
                     if ( (std::chrono::steady_clock::now() - state->timeOfLastTimeChange) > VideoState::timeChangeWait ) {
-                        state->symbols.push_back(get_video_symbol(BACKWARD_ICON));
                         double targetTime = state->playback->time - 10;
                         state->jumpToTime(targetTime);
+                        state->symbols.push_back(get_video_symbol(BACKWARD_ICON));
                     } 
                 } else if (ch == KEY_RIGHT) {
                     if ( (std::chrono::steady_clock::now() - state->timeOfLastTimeChange) > VideoState::timeChangeWait ) {
-                        state->symbols.push_back(get_video_symbol(FORWARD_ICON));
                         double targetTime = state->playback->time + 10;
                         state->jumpToTime(targetTime);
+                        state->symbols.push_back(get_video_symbol(FORWARD_ICON));
                     }
                 } else if (ch == KEY_UP) {
                     if (state->audioDevice != nullptr) {
@@ -991,7 +1005,6 @@ class VideoState {
             }
             audioPackets->clear();
             delete audioPackets;
-            /* av_fifo_freep2(&(this->videoFifo)); */
             av_audio_fifo_free(this->tempAudio);
 
             avformat_free_context(this->formatContext);
@@ -1098,7 +1111,6 @@ class VideoState {
 
         static void fullyLoad(VideoState* state) {
             const int MAX_PROGESS_BAR_WIDTH = 100;
-            int windowWidth, windowHeight;
             char progressBar[MAX_PROGESS_BAR_WIDTH + 1];
             progressBar[MAX_PROGESS_BAR_WIDTH] = '\0';
 

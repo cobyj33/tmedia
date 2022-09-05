@@ -1,5 +1,6 @@
 #pragma once
 #include <ascii_data.h>
+#include <chrono>
 
 #define ICONS_SPRITE_WIDTH 16
 #define ICONS_SPRITE_HEIGHT 16
@@ -27,9 +28,10 @@ typedef enum VideoIcon {
 } VideoIcon;
 
 typedef struct VideoSymbol {
-    int framesToDelete;
-    int framesShown;
-    pixel_data* pixelData;
+    std::chrono::steady_clock::time_point startTime;
+    std::chrono::milliseconds lifeTime;
+    int frames;
+    pixel_data** frameData;
 } VideoSymbol;
 
 const int numOfPlaybackIcons = 12;
@@ -79,8 +81,9 @@ bool init_icons();
 bool free_icons();
 bool read_sprite_sheet(pixel_data** buffer, int bufferSize, const char* sheetPath, int rows, int cols, int spriteWidth, int spriteHeight);
 pixel_data* get_video_icon(VideoIcon iconEnum);
-VideoSymbol get_video_symbol(VideoIcon iconEnum);
-VideoSymbol get_symbol_from_volume(double normalizedVolume);
+VideoSymbol* get_video_symbol(VideoIcon iconEnum);
+VideoSymbol* get_symbol_from_volume(double normalizedVolume);
+void free_video_symbol(VideoSymbol* symbol);
 
 pixel_data* get_playback_icons_pixel_data();
 pixel_data* get_number_icons_pixel_data(); 

@@ -22,8 +22,6 @@ extern "C" {
 
 int imageProgram(const char* fileName) {
     initscr();
-    int windowWidth, windowHeight;
-    get_window_size(&windowWidth, &windowHeight);
     pixel_data* pixelData = get_pixel_data_from_image(fileName);
     if (pixelData == nullptr) {
         std::cout << "Could not get image data from " << fileName;
@@ -32,7 +30,7 @@ int imageProgram(const char* fileName) {
     }
 
     int outputWidth, outputHeight;
-    get_output_size(pixelData->width, pixelData->height, windowWidth, windowHeight, &outputWidth, &outputHeight);
+    get_output_size(pixelData->width, pixelData->height, COLS, LINES, &outputWidth, &outputHeight);
     ascii_image asciiImage = get_image(pixelData->pixels, pixelData->width, pixelData->height, outputWidth, outputHeight);
    pixel_data_free(pixelData); 
 
