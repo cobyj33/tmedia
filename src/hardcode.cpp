@@ -1,5 +1,5 @@
 #include <icons.h>
-#include <ascii_data.h>
+#include <image.h>
 
 pixel_data* get_playback_icons_pixel_data() {
     const int width = 80;

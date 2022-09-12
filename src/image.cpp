@@ -1,13 +1,14 @@
-#include "ascii_data.h"
+#include <media.h>
+#include <renderer.h>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <image.h>
+#include <decode.h>
 #include <ascii.h>
 #include <ncurses.h>
 #include <iostream>
-#include <ascii_constants.h>
-
-
+#include <boiler.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -21,7 +22,7 @@ extern "C" {
 }
 
 int imageProgram(const char* fileName) {
-    initscr();
+    erase();
     pixel_data* pixelData = get_pixel_data_from_image(fileName);
     if (pixelData == nullptr) {
         std::cout << "Could not get image data from " << fileName;
@@ -29,14 +30,10 @@ int imageProgram(const char* fileName) {
         return EXIT_FAILURE;
     }
 
-    int outputWidth, outputHeight;
-    get_output_size(pixelData->width, pixelData->height, COLS, LINES, &outputWidth, &outputHeight);
-    ascii_image asciiImage = get_image(pixelData->pixels, pixelData->width, pixelData->height, outputWidth, outputHeight);
-   pixel_data_free(pixelData); 
-
-    print_ascii_image(&asciiImage);
+    ascii_image textImage = get_ascii_image_bounded(pixelData, COLS, LINES);
+    print_ascii_image_full(&textImage);
+    pixel_data_free(pixelData); 
     refresh();
-    char input[1000];
     getch();
 
     endwin();
@@ -44,139 +41,105 @@ int imageProgram(const char* fileName) {
 }
 
 pixel_data* get_pixel_data_from_image(const char* fileName) {
-    AVFormatContext* formatContext(nullptr);
-    pixel_data* data = (pixel_data*)malloc(sizeof(pixel_data));
-
-    int result = avformat_open_input(&formatContext, fileName, nullptr, nullptr);
-    if (result < 0) {
-        std::cout << "Could not open file " << fileName << std::endl;
-        avformat_free_context(formatContext);
-        pixel_data_free(data);
+    MediaData* mediaData = media_data_alloc(fileName);
+    if (mediaData == nullptr) {
+        std::cout << "Could not fetch media data of " << fileName << std::endl;
         return nullptr;
     }
 
-    result = avformat_find_stream_info(formatContext, nullptr);
-    if (result < 0) {
-        std::cout << "Could not find stream info on " << fileName << std::endl;
-        avformat_free_context(formatContext);
-        pixel_data_free(data);
+    MediaStream* imageStream = get_media_stream(mediaData, AVMEDIA_TYPE_VIDEO);
+    if (imageStream == nullptr) {
+        std::cerr << "Could not fetch image stream of " << fileName << std::endl;
         return nullptr;
     }
 
-    const AVCodec* imageDecoder(nullptr);
-    
-    int imageStreamIndex = -1;
-    imageStreamIndex = av_find_best_stream(formatContext, AVMEDIA_TYPE_VIDEO, -1, -1, &imageDecoder, 0);
-    if (imageStreamIndex < 0) {
-        std::cout << "Could not find image stream" << std::endl;
-        avformat_free_context(formatContext);
-        pixel_data_free(data);
-        return nullptr;
-    }
-
-    AVStream* imageStream = formatContext->streams[imageStreamIndex];
-    AVCodecContext* imageCodecContext = avcodec_alloc_context3(imageDecoder);
-
-    result = avcodec_parameters_to_context(imageCodecContext, imageStream->codecpar);
-    if (result < 0) {
-        std::cout << "Could not set image codec context parameters" << std::endl;
-        avformat_free_context(formatContext);
-        avcodec_free_context(&imageCodecContext);
-        pixel_data_free(data);
-        return nullptr;
-    }
-
-    result = avcodec_open2(imageCodecContext, imageDecoder, nullptr);
-    if (result < 0) {
-        std::cout << "Could not open codec context" << std::endl;
-        avformat_free_context(formatContext);
-        avcodec_free_context(&imageCodecContext);
-        pixel_data_free(data);
-        return nullptr;
-    }
-
-    SwsContext* imageConverter = sws_getContext(
-                imageCodecContext->width,
-                imageCodecContext->height,
-                imageCodecContext->pix_fmt,
-                imageCodecContext->width,
-                imageCodecContext->height,
-                AV_PIX_FMT_GRAY8,
-                0,
-                nullptr,
-                nullptr,
-                nullptr
+    AVCodecContext* codecContext = imageStream->info->codecContext;
+    VideoConverter* imageConverter = get_video_converter(
+            codecContext->width, codecContext->height, AV_PIX_FMT_GRAY8,
+            codecContext->width, codecContext->height, codecContext->pix_fmt
             );
     
-    if (imageConverter == NULL) {
+    if (imageConverter == nullptr) {
         std::cout << "Could not initialize image color converter" << std::endl;
-        avformat_free_context(formatContext);
-        avcodec_free_context(&imageCodecContext);
-        pixel_data_free(data);
+        media_data_free(mediaData);
         return nullptr;
     }
 
     AVPacket* packet = av_packet_alloc();
-    AVFrame* frame = av_frame_alloc();
-    AVFrame* finalFrame = av_frame_alloc();
+    AVFrame* finalFrame = nullptr;
 
-    while (av_read_frame(formatContext, packet) == 0) {
-        result = avcodec_send_packet(imageCodecContext, packet);
+    auto cleanup = [mediaData, packet, finalFrame, imageConverter](){
+        av_packet_free((AVPacket**)&packet);
+        av_frame_free((AVFrame**)&finalFrame);
+        free_video_converter(imageConverter);
+        media_data_free(mediaData);
+    };
 
-        if (result < 0) {
-            if (result == AVERROR(EAGAIN)) {
-                continue;
-            } else {
-                std::cout << "Packet Reading Error... " << result << std::endl;
-                pixel_data_free(data);
-                goto cleanup;
-            }
-        }
+    int result;
+    while (av_read_frame(mediaData->formatContext, packet) == 0) {
+        int nb_out;
+        if (packet->stream_index != imageStream->info->stream->index)
+            continue;
 
-        result = avcodec_receive_frame(imageCodecContext, frame);
-        if (result < 0 && result != AVERROR(EAGAIN)) {
-            std::cout << "Frame Reading Error..." << result << std::endl;
-            pixel_data_free(data);
-            goto cleanup;
+        AVFrame** originalFrame = decode_video_packet(codecContext, packet, &result, &nb_out);
+        if (result == AVERROR(EAGAIN)) {
+            continue;
+        } else if (result < 0) {
+            std::cout << "ERROR WHILE READING PACKET DATA FROM IMAGE " << fileName << std::endl;
+            cleanup();
+            free_frame_list(originalFrame, nb_out);
+            return nullptr;
         } else {
-            av_frame_unref(finalFrame);
-            finalFrame->width = imageCodecContext->width;
-            finalFrame->height = imageCodecContext->height;
-            finalFrame->format = AV_PIX_FMT_GRAY8;
-            av_frame_get_buffer(finalFrame, 1);
-            if (result == AVERROR(EAGAIN)) {
-                continue;
-            }
-
-            if (result < 0) {
-                std::cout << "Frame Reading Error... " << result << std::endl;
-                pixel_data_free(data);
-                goto cleanup;
-            }
-
-            sws_scale(imageConverter, (uint8_t const * const *)frame->data, frame->linesize, 0, imageCodecContext->height, finalFrame->data, finalFrame->linesize);
-            av_frame_unref(frame);
-            av_packet_unref(packet);
+            finalFrame = convert_video_frame(imageConverter, originalFrame[0]);
+            free_frame_list(originalFrame, nb_out);
             break;
         }
-        av_packet_unref(packet);
     }
 
-    data->width = finalFrame->width;
-    data->height = finalFrame->height;
-    data->pixels = (uint8_t*)malloc(finalFrame->width * finalFrame->height * sizeof(uint8_t));
-    
+    if (finalFrame == nullptr) {
+        cleanup();
+        return nullptr;
+    }
+
+    pixel_data* data = pixel_data_alloc(finalFrame->width, finalFrame->height);
     for (int i = 0; i < finalFrame->width * finalFrame->height; i++) {
         data->pixels[i] = finalFrame->data[0][i];
     }
 
-    cleanup:
-        av_frame_free(&frame);
-        av_packet_free(&packet);
-        av_frame_free(&finalFrame);
-        sws_freeContext(imageConverter);
-        avcodec_free_context(&imageCodecContext);
-        avformat_close_input(&formatContext);
+    cleanup();
+    return data;
+}
 
-        return data;
+pixel_data* pixel_data_alloc_from_frame(AVFrame* videoFrame) {
+    pixel_data* data = pixel_data_alloc(videoFrame->width, videoFrame->height);
+    for (int i = 0; i < videoFrame->width * videoFrame->height; i++) {
+        data->pixels[i] = videoFrame->data[0][i];
+    }
+    return data;
+}
+
+pixel_data* copy_pixel_data(pixel_data* data) {
+    pixel_data* new_data = pixel_data_alloc(data->width, data->height);
+    for (int i = 0; i < data->width * data->height; i++) {
+        new_data->pixels[i] = data->pixels[i];
+    }
+    return new_data;
+}
+
+pixel_data* pixel_data_alloc(int width, int height) {
+  pixel_data* pixelData = (pixel_data*)malloc(sizeof(pixel_data));
+  pixelData->pixels = (uint8_t*)malloc(width * height * sizeof(uint8_t));
+  pixelData->width = width;
+  pixelData->height = height;
+
+  for (int i = 0; i < width * height; i++) {
+      pixelData->pixels[i] = (uint8_t)0;
+  }
+
+  return pixelData;
+}
+
+void pixel_data_free(pixel_data* pixelData) {
+  free(pixelData->pixels);
+  free(pixelData);
 }

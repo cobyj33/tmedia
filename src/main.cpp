@@ -1,5 +1,7 @@
+#include "icons.h"
 #include <image.h>
 #include <video.h>
+#include <media.h>
 #include <info.h>
 
 extern "C" {
@@ -9,6 +11,7 @@ extern "C" {
 #include <stdio.h>
 #include <iostream>
 #include <string.h>
+#include <ncurses.h>
 
 #include <chrono>
 
@@ -41,18 +44,21 @@ const char* help_text = "     ASCII_VIDEO         \n"
 
 int main(int argc, char** argv)
 {
+    initscr();
+    noecho();
     av_log_set_level(AV_LOG_QUIET);
+    init_icons();
+    keypad(stdscr, true);
+
+    /* return testIconProgram(); */
 
   if (argc == 1) {
-    // testIconProgram();
-    // return EXIT_SUCCESS;
     std::cout << help_text << std::endl;
   } else if (argc == 2) {
     std::cout << argv[1] << std::endl;
     std::cout << help_text << std::endl;
 
   } else if (argc == 3) {
-
       if (strcmp(argv[1], "-i") == 0) {
           if (isValidPath(argv[2])) {
                 imageProgram(argv[2]); 
@@ -61,7 +67,7 @@ int main(int argc, char** argv)
           }
       } else if (strcmp(argv[1], "-v") == 0) {
           if (isValidPath(argv[2])) {
-                videoProgram(argv[2]); 
+            start_media_player_from_filename(argv[2]); 
           } else {
               std::cout << "Invalid Path " << argv[2] << std::endl;
           }
@@ -90,6 +96,8 @@ int main(int argc, char** argv)
       std::cout << help_text << std::endl;
   }
 
+      endwin();
+    free_icons();
   return EXIT_SUCCESS;
 
 }

@@ -1,7 +1,6 @@
 #pragma once
 #include <stdexcept>
 #include <iostream>
-#include <mutex>
 
 template<typename T>
 class Node {
@@ -26,7 +25,6 @@ class DoubleLinkedList {
         Node<T>* current;
         int length;
         int index;
-        std::mutex editingMutex;
 
     public:
         DoubleLinkedList() {
@@ -227,4 +225,6 @@ class DoubleLinkedList {
             std::cout << currentNode->data << std::endl;
             std::cout << "Length: " << length << "  Index: " << index << " Current Value: " << this->current->data << std::endl;
         }
+
+        
 };
