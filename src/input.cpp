@@ -16,7 +16,7 @@ void input_thread(MediaPlayer* player, std::mutex* alterMutex) {
     
     while (player->inUse) {
         resetty();
-        inputSleep = std::chrono::milliseconds(500);
+        inputSleep = std::chrono::milliseconds(1);
         int ch = getch();
         alterLock.lock();
         Playback* playback = player->timeline->playback;
