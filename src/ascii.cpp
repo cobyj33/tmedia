@@ -9,8 +9,8 @@ extern "C" {
 #include <libavutil/avutil.h>
 } 
 
-const int nb_val_chars = 12;
-const char val_chars[nb_val_chars] = "@%#*+=-:._ ";
+const int nb_val_chars = 11;
+const char val_chars[nb_val_chars + 1] = "@%#*+=-:._ ";
 
 ascii_image get_ascii_image_from_frame(AVFrame* videoFrame, int maxWidth, int maxHeight) {
     pixel_data* data = pixel_data_alloc_from_frame(videoFrame);

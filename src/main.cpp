@@ -45,7 +45,10 @@ const char* help_text = "     ASCII_VIDEO         \n"
 int main(int argc, char** argv)
 {
     initscr();
+    cbreak();
+    timeout(-1);
     noecho();
+    curs_set(0);
     av_log_set_level(AV_LOG_QUIET);
     init_icons();
     keypad(stdscr, true);

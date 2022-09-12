@@ -87,7 +87,6 @@ void render_movie_screen(MediaPlayer* player) {
             ascii_image symbolImage = get_ascii_image_bounded(pauseSymbol->frameData[0], textImage.width, textImage.height);
             overlap_ascii_images(&textImage, &symbolImage);
             free_video_symbol(pauseSymbol);
-            return;
         }
 
         print_ascii_image_full(&textImage);
