@@ -91,14 +91,14 @@ code blocks for commands
 
 ## Help
 
-Any advise for common problems or issues.
+* Open an issue or run
 ```
-command to run if program contains helper info
+<executable> -h
 ```
+* Will be glad to help anything that is not working
 
 ## Authors
 
-Contributors names and contact info
 Jacoby Johnson: [@cobyj33](https://www.github.com/cobyj33)
 
 ## Version History
