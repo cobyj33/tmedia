@@ -1,29 +1,56 @@
+#include <image.h>
 #include <ascii.h>
 #include <cstdint>
 #include <cmath>
 #include <stdexcept>
-
-
-
-#if defined(__linux__)
-  #include <sys/ioctl.h>
-  #include <unistd.h>
-#elif defined(_WIN32) || defined(_WIN64)
-  #include <windows.h>
-#endif
-
 #include <ncurses.h>
 
-ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWidth, int outputHeight) {
-  // int windowWidth, windowHeight;
-  // get_window_size(&windowWidth, &windowHeight);
+extern "C" {
+#include <libavutil/avutil.h>
+} 
+
+const int nb_val_chars = 11;
+const char val_chars[nb_val_chars + 1] = "@%#*+=-:._ ";
+
+ascii_image get_ascii_image_from_frame(AVFrame* videoFrame, int maxWidth, int maxHeight) {
+    pixel_data* data = pixel_data_alloc_from_frame(videoFrame);
+    ascii_image image = get_ascii_image_bounded(data, maxWidth, maxHeight);
+    pixel_data_free(data);
+    return image;
+}
+
+ascii_image get_ascii_image_bounded(pixel_data* pixelData, int maxWidth, int maxHeight) {
+    int outputWidth, outputHeight;
+    get_output_size(pixelData->width, pixelData->height, maxWidth, maxHeight, &outputWidth, &outputHeight);
+    return get_ascii_image(pixelData->pixels, pixelData->width, pixelData->height, outputWidth, outputHeight);
+}
+
+ascii_image copy_ascii_image(ascii_image* src) {
+    ascii_image dst;
+    dst.width = src->width;
+    dst.height = src->height;
+    
+    for (int row = 0; row < src->height; row++) {
+        for (int col = 0; col < src->width; col++) {
+            dst.lines[row][col] = src->lines[row][col];
+        }
+    }
+
+    return dst;
+}
+
+ascii_image get_ascii_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWidth, int outputHeight) {
   ascii_image textImage;
-  // printw("Stats: SrcWidth: %d SrcHeight: %d outputWidth: %d outputHeight: %d \n", srcWidth, srcHeight, outputWidth, outputHeight);
+  for (int i = 0; i < MAX_FRAME_HEIGHT + 1; i++) {
+      for (int j = 0; j < MAX_FRAME_WIDTH + 1; j++) {
+          textImage.lines[i][j] = ' ';
+      }
+  }
+
   textImage.width = outputWidth;
   textImage.height = outputHeight;
   
   if (srcWidth <= outputWidth && srcHeight <= outputHeight) {
-    // addstr("First Algorithm\n");
       for (int row = 0; row < outputHeight; row++) {
           for (int col = 0; col < outputWidth; col++) {
             int pixel = row * srcWidth + col;
@@ -31,9 +58,7 @@ ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWi
           }
           textImage.lines[row][outputWidth] = '\0';
       }
-      
   } else {
-    // addstr("Second Algorithm\n");
     double scanWidth = (double)srcWidth / outputWidth;
     double scanHeight = (double)srcHeight / outputHeight;
     double currentRowPixel = 0;
@@ -43,7 +68,6 @@ ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWi
     int lastCheckedCol = 0;
 
     for (int row = 0; row < outputHeight; row++) {
-      // char line[outputWidth + 1];
       currentColPixel = 0;
       int checkWidth, checkHeight;
       checkHeight = currentRowPixel != 0 ? (int)round(currentRowPixel - scanHeight * (row - 1)) : (int)scanHeight;
@@ -56,8 +80,6 @@ ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWi
         currentColPixel += scanWidth;
       }
       textImage.lines[row][outputWidth] = '\0';
-      // line[outputWidth] = '\0';
-      // textImage.lines.push_back(line);
       lastCheckedRow = (int)(currentRowPixel + checkHeight);
       currentRowPixel += scanHeight;
     }
@@ -67,23 +89,9 @@ ascii_image get_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWi
   return textImage;
 }
 
-void print_ascii_image(ascii_image* textImage) {
-  int windowWidth, windowHeight;
-  move(0, 0);
-  get_window_size(&windowWidth, &windowHeight);
-  std::string horizontalPadding((windowWidth - textImage->width) / 2, ' ');
-  std::string lineAcross(windowWidth, ' ');
-  for (int i = 0; i < (windowHeight - textImage->height) / 2; i++) {
-    printw("%s\n", lineAcross.c_str());
-  }
-
-  for (int row = 0; row < textImage->height; row++) {
-    printw("%s%s\n", horizontalPadding.c_str(), textImage->lines[row]);
-  }
-}
 
 char get_char_from_value(uint8_t value) {
-  return value_characters[ value * (value_characters.length() - 1) / 255 ];
+  return val_chars[ value * (nb_val_chars - 1) / 255 ];
 }
 
 char get_char_from_area(uint8_t* pixels, int x, int y, int width, int height, int pixelWidth, int pixelHeight ) {
@@ -109,26 +117,18 @@ char get_char_from_area(uint8_t* pixels, int x, int y, int width, int height, in
   }
 
   if (valueCount > 0) {
-    return value_characters[ value * (value_characters.length() - 1) / (255 * valueCount) ];
+    return val_chars[ value * (nb_val_chars - 1) / (255 * valueCount) ];
   } else {
-    return value_characters[0];
+    return val_chars[0];
   }
 
 }
 
-
-void get_window_size(int* width, int* height) {
-  #if defined(_WIN32) || defined(_WIN64)
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-    *width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-    *height = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-  #elif defined(__linux__)
-    struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    *width = w.ws_col;
-    *height = w.ws_row;
-  #endif
+void get_scale_size(int srcWidth, int srcHeight, int targetWidth, int targetHeight, int* width, int* height) { 
+    bool shouldShrink = srcWidth > targetWidth || srcHeight > targetHeight;
+    double scaleFactor = shouldShrink ? std::min((double)targetWidth / srcWidth, (double)targetHeight / srcHeight) : std::max((double)targetWidth / srcWidth, (double)targetHeight / srcHeight);
+    *width = (int)(srcWidth * scaleFactor);
+    *height = (int)(srcHeight * scaleFactor);
 }
 
 void get_output_size(int srcWidth, int srcHeight, int maxWidth, int maxHeight, int* width, int* height) {
@@ -136,38 +136,24 @@ void get_output_size(int srcWidth, int srcHeight, int maxWidth, int maxHeight, i
     *width = srcWidth;
     *height = srcHeight;
   } else {
-    double shrinkFactor = std::min((double)maxWidth / srcWidth, (double)maxHeight / srcHeight);
-    *width = (int)(srcWidth * shrinkFactor);
-    *height = (int)(srcHeight * shrinkFactor);
+      get_scale_size(srcWidth, srcHeight, maxWidth, maxHeight, width, height);
+    /* double shrinkFactor = std::min((double)maxWidth / srcWidth, (double)maxHeight / srcHeight); */
+    /* *width = (int)(srcWidth * shrinkFactor); */
+    /* *height = (int)(srcHeight * shrinkFactor); */
   }
 }
 
 void overlap_ascii_images(ascii_image* first, ascii_image* second) {
-
   int topLeftX = (first->width - second->width) / 2;
   int topLeftY = (first->height - second->height) / 2;
 
   for (int row = 0; row < second->height; row++) {
     for (int col = 0; col < second->width; col++) {
-      if (topLeftY + row < first->height && topLeftX + col < first->width) {
+      if (topLeftY + row < first->height && topLeftX + col < first->width && second->lines[row][col] != '\0') {
         first->lines[topLeftY + row][topLeftX + col] = second->lines[row][col];
       }
     }
   }
-  
 
 }
 
-pixel_data* pixel_data_alloc(int width, int height) {
-  pixel_data* pixelData = (pixel_data*)malloc(sizeof(pixel_data));
-  pixelData->pixels = (uint8_t*)malloc(width * height * sizeof(uint8_t));
-  pixelData->width = width;
-  pixelData->height = height;
-  
-  return pixelData;
-}
-
-void pixel_data_free(pixel_data* pixelData) {
-  free(pixelData->pixels);
-  free(pixelData);
-}

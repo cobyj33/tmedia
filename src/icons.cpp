@@ -1,8 +1,7 @@
+#include "renderer.h"
 #include <icons.h>
 #include <image.h>
 #include <ascii.h>
-#include <ascii_constants.h>
-#include <ascii_data.h>
 #include <ncurses.h>
 
 
@@ -37,26 +36,25 @@ std::map<int, VideoIcon> iconFromDigit = {
 };
 
 
-pixel_data* emptyPixelData = (pixel_data*)malloc(sizeof(pixel_data));
 bool initialized = false;
 
 int testIconProgram() {
-    init_icons();
-    initscr();
+    for (int i = 0; i < 12; i++) {
+        erase();
+        pixel_data* iconData = iconFromEnum.at(i);
+        ascii_image image = get_ascii_image_bounded(iconData, COLS, LINES);
 
-    while (true) {
-        for (int i = 0; i < 12; i++) {
-            pixel_data* iconData = iconFromEnum.at(i);
-            int windowWidth, windowHeight, outputWidth, outputHeight;
-            get_window_size(&windowWidth, &windowHeight);
-            get_output_size(iconData->width, iconData->height, windowWidth, windowHeight, &outputWidth, &outputHeight);
-
-            ascii_image image = get_image(iconData->pixels, iconData->width, iconData->height, outputWidth, outputHeight);
-            erase();
-            print_ascii_image(&image);
-            refresh();
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));    
-        }
+        /* printw("Image %d: %d x %d to %d x %d\n", i, iconData->width, iconData->height, image.width, image.height); */
+        /* for (int i = 0; i < image.height; i++) { */
+        /*     for (int j = 0; j < image.width; j++) { */
+        /*         addch(image.lines[i][j]); */
+        /*     } */
+        /*     addch('\n'); */
+        /* } */
+                
+        print_ascii_image_full(&image);
+        refresh();
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));    
     }
 
     return EXIT_SUCCESS;
@@ -157,33 +155,57 @@ pixel_data* get_video_icon(VideoIcon iconEnum) {
             std::cout << "ICONS NOT INITIALIZED" << std::endl;
         }
 
-        return emptyPixelData;
+        return nullptr;
     }
 }
 
-VideoSymbol get_video_symbol(VideoIcon iconEnum) {
-    VideoSymbol symbol;
-    symbol.framesToDelete = 10;
-    symbol.framesShown = 0;
-    symbol.pixelData = get_video_icon(iconEnum);
+VideoSymbol* get_video_symbol(VideoIcon iconEnum) {
+    VideoSymbol* symbol = (VideoSymbol*)malloc(sizeof(VideoSymbol));
+    symbol->startTime = std::chrono::steady_clock::now(); 
+    symbol->lifeTime = std::chrono::milliseconds(1000);
+    symbol->frames = 1;
+    symbol->frameData = (pixel_data**)malloc(sizeof(pixel_data*) * symbol->frames);
+    symbol->frameData[0] = get_video_icon(iconEnum);
     return symbol;
 }
 
-VideoSymbol get_symbol_from_volume(double normalizedVolume) {
+VideoSymbol* copy_video_symbol(VideoSymbol* original) {
+    VideoSymbol* copiedSymbol = (VideoSymbol*)malloc(sizeof(VideoSymbol));
+    copiedSymbol->startTime = original->startTime;
+    copiedSymbol->lifeTime = original->lifeTime;
+    copiedSymbol->frames = original->frames;
+    copiedSymbol->frameData = (pixel_data**)malloc(sizeof(pixel_data*) * original->frames);
+    
+    for (int i = 0; i < original->frames; i++) {
+        copiedSymbol->frameData[i] = original->frameData[i];
+    }
+    return copiedSymbol;
+}
+
+void free_video_symbol(VideoSymbol* symbol) {
+    free(symbol->frameData);
+    free(symbol);
+}
+
+VideoSymbol* get_symbol_from_volume(double normalizedVolume) {
     normalizedVolume = std::min(1.0, std::max(0.0, normalizedVolume));
     return get_video_symbol(volumeIcons[(int)(3.99 * normalizedVolume)]);
 }
 
 
+int get_video_symbol_current_frame(VideoSymbol* symbol) {
+    return  (int)((double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - symbol->startTime).count() / (double)symbol->lifeTime.count() * (double)symbol->frames); 
+}
 
-pixel_data* get_stitched_image(pixel_data* images) {
-    pixel_data* pixelData = (pixel_data*)malloc(sizeof(pixel_data));
-    int width;
-    int height;
+
+/* pixel_data* get_stitched_image(pixel_data** images) { */
+/*     pixel_data* pixelData = (pixel_data*)malloc(sizeof(pixel_data)); */
+/*     int width; */
+/*     int height; */
     
 
-    return pixelData;
-}
+/*     return pixelData; */
+/* } */
 
 
 

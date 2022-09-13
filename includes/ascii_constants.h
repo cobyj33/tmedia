@@ -1,6 +1,0 @@
-#ifndef ASCII_CONSTANTS
-#define ASCII_CONSTANTS
-#define MAX_FRAME_WIDTH (long)16 * 16
-#define MAX_FRAME_HEIGHT (long)9 * 16
-#define FRAME_DATA_SIZE MAX_FRAME_WIDTH * MAX_FRAME_HEIGHT
-#endif
