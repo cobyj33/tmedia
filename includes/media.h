@@ -47,6 +47,7 @@ typedef struct MediaData {
     bool allPacketsRead;
     int currentPacket;
     int totalPackets;
+    double duration;
 } MediaData;
 
 typedef struct MediaTimeline {

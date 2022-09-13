@@ -1,5 +1,6 @@
 #include "boiler.h"
 #include "decode.h"
+#include "doublelinkedlist.hpp"
 #include "media.h"
 #include <audio.h>
 #include <cstdlib>
@@ -27,21 +28,10 @@ typedef struct CallbackData {
     AudioResampler* audioResampler;
 } CallbackData;
 
-AVFrame** get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, AVPacket* packet, int* result, int* nb_packets_decoded) {
-    AVFrame** rawAudioFrames = decode_audio_packet(audioCodecContext, packet, result, nb_packets_decoded);
-    if (rawAudioFrames == nullptr) {
-        return nullptr;
-    }
+AVFrame** get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, AVPacket* packet, int* result, int* nb_frames_decoded);
+AVFrame** find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, AVPacket** packet_buffer, int packet_buffer_length, int* result, int* nb_frames_decoded);
+AVFrame** find_final_audio_frames_dll(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, DoubleLinkedList<AVPacket*>* packet_buffer, int* result, int* nb_frames_decoded);
 
-    AVFrame** audioFrames = resample_audio_frames(audioResampler, rawAudioFrames, *nb_packets_decoded);
-    free_frame_list(rawAudioFrames, *nb_packets_decoded);
-
-    if (audioFrames == nullptr) {
-        return nullptr;
-    }
-
-    return audioFrames;
-}
 
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
         CallbackData* callbackData = static_cast<CallbackData*>(pDevice->pUserData);
@@ -56,13 +46,12 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
         if (audio_stream == nullptr)
             return;
 
-
         AVCodecContext* audioCodecContext = audio_stream->info->codecContext; 
+        DoubleLinkedList<AVPacket*>* audioPackets = audio_stream->packets;
 
         if (!player->inUse) {
             return;
         }
-
 
         pDevice->masterVolumeFactor = playback->volume;
 
@@ -84,18 +73,18 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
         double stretchAmount = 1 / playback->speed;
         int bytesPerSample = av_get_bytes_per_sample(AV_SAMPLE_FMT_FLT);
 
-        move_packet_list_to_pts(audio_stream->packets, targetAudioPTS);
+        move_packet_list_to_pts(audioPackets, targetAudioPTS);
 
-        int result, nb_packets_decoded;
-        AVFrame** audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audio_stream->packets->get(), &result, &nb_packets_decoded);
-        /* while (result == AVERROR(EAGAIN) && audio_stream->packets->get_index() + 1 < audio_stream->packets->get_length()) { */
-        /*     audio_stream->packets->set_index(audio_stream->packets->get_index() + 1); */
-        /*     if (audioFrames != nullptr) { */
-        /*         free_frame_list(audioFrames, nb_packets_decoded); */
-        /*     } */
+        int result, nb_frames_decoded;
+        AVFrame** audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audioPackets->get(), &result, &nb_frames_decoded);
+        while (result == AVERROR(EAGAIN) && audioPackets->get_index() + 1 < audioPackets->get_length()) {
+            audioPackets->set_index(audioPackets->get_index() + 1);
+            if (audioFrames != nullptr) {
+                free_frame_list(audioFrames, nb_frames_decoded);
+            }
 
-        /*     audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audio_stream->packets->get(), &result, &nb_packets_decoded); */
-        /* } */
+            audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audioPackets->get(), &result, &nb_frames_decoded);
+        }
 
         if (audioFrames == nullptr) {
             add_debug_message(debug_info, "COULD NOT RESAMPLE AUDIO FRAMES");
@@ -107,7 +96,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
         if (audioFifo == NULL) {
             add_debug_message(debug_info, "COULD NOT ALLOCATE AUDIO FIFO FOR AUDIO PLAYBACK");
-            free_frame_list(audioFrames, nb_packets_decoded);
+            free_frame_list(audioFrames, nb_frames_decoded);
             return;
         }
 
@@ -163,22 +152,23 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
             }
 
             av_frame_free(&currentAudioFrame);
-            if (audioFrameIndex + 1 < nb_packets_decoded) {
+            if (audioFrameIndex + 1 < nb_frames_decoded) {
                 audioFrameIndex++;
                 currentAudioFrame = audioFrames[audioFrameIndex];
             } else {
                 audioFrameIndex = 0;
-                if (audio_stream->packets->get_index() + 1 < audio_stream->packets->get_length()) {
-                    audio_stream->packets->set_index( audio_stream->packets->get_index() + 1 );
-                    audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audio_stream->packets->get(), &result, &nb_packets_decoded);
-                    /* while (result == AVERROR(EAGAIN) && audio_stream->packets->get_index() + 1 < audio_stream->packets->get_length()) { */
-                    /*     audio_stream->packets->set_index(audio_stream->packets->get_index() + 1); */
-                    /*     if (audioFrames != nullptr) { */
-                    /*         free_frame_list(audioFrames, nb_packets_decoded); */
-                    /*     } */
+                if (audioPackets->get_index() + 1 < audioPackets->get_length()) {
+                    audioPackets->set_index( audioPackets->get_index() + 1 );
+                    audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audioPackets->get(), &result, &nb_frames_decoded);
+                    while (result == AVERROR(EAGAIN) && audioPackets->get_index() + 1 < audioPackets->get_length()) {
+                        audioPackets->set_index(audioPackets->get_index() + 1);
+                        if (audioFrames != nullptr) {
+                            free_frame_list(audioFrames, nb_frames_decoded);
+                        }
 
-                    /*     audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audio_stream->packets->get(), &result, &nb_packets_decoded); */
-                    /* } */
+                        audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audioPackets->get(), &result, &nb_frames_decoded);
+                    }
+
                     if (audioFrames == nullptr) {
                         add_debug_message(debug_info, "COULD NOT RESAMPLE AUDIO FRAMES");
                         break;
@@ -199,7 +189,9 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
            free_audio_resampler(inTimeAudioResampler); 
         }
 
-       free_frame_list(audioFrames, nb_packets_decoded);
+        if (audioFrames != nullptr) {
+           free_frame_list(audioFrames, nb_frames_decoded);
+        }
        av_audio_fifo_free(audioFifo);
         
         /* if (player->displaySettings->mode == AUDIO && player->displaySettings->show_debug == true) { */
@@ -213,8 +205,6 @@ int audio_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
     int result;
 
     MediaStream* audio_stream = get_media_stream(player->timeline->mediaData, AVMEDIA_TYPE_AUDIO);
-
-
     if (audio_stream == nullptr) {
         return EXIT_FAILURE;
     }
@@ -273,7 +263,6 @@ int audio_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
     }
 
     free_audio_resampler(audioResampler);
-    std::cout << "AUDIO THREAD ENDED" << std::endl;
     return EXIT_SUCCESS;
 }
 
@@ -382,3 +371,28 @@ float** shrinkAudioSamples(float** originalSamples, int linesize[8], int nb_samp
 }
 
 
+AVFrame** find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, AVPacket** packet_buffer, int packet_buffer_length, int* result, int* nb_frames_decoded) {
+    AVFrame** audioFrames = nullptr;
+    for (int i = 0; i < packet_buffer_length; i++) {
+        audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, packet_buffer[i], result, nb_frames_decoded);
+        if (*result >= 0 && *nb_frames_decoded > 0) {
+            return audioFrames;
+        }
+
+        free_frame_list(audioFrames, *nb_frames_decoded);
+    }
+
+    return audioFrames;
+}
+
+AVFrame** get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, AVPacket* packet, int* result, int* nb_frames_decoded) {
+    AVFrame** rawAudioFrames = decode_audio_packet(audioCodecContext, packet, result, nb_frames_decoded);
+    if (rawAudioFrames == nullptr || *result < 0 || *nb_frames_decoded == 0) {
+        return nullptr;
+    }
+
+    AVFrame** audioFrames = resample_audio_frames(audioResampler, rawAudioFrames, *nb_frames_decoded);
+    free_frame_list(rawAudioFrames, *nb_frames_decoded);
+
+    return audioFrames;
+}

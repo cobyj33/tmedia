@@ -30,28 +30,28 @@ const char* help_text = "     ASCII_VIDEO         \n"
       "  -i <file> => show image file                   \n"
       "  -v <file> => play video file                   \n"
       "       --VIDEO CONTROLS--                   \n"
-      "         RIGHT-ARROW -> Forward 5 seconds                   \n"
-      "         LEFT-ARROW -> Backward 5 seconds                   \n"
+      "         RIGHT-ARROW -> Forward 10 seconds                   \n"
+      "         LEFT-ARROW -> Backward 10 seconds                   \n"
       "         UP-ARROW -> Volume Up 5%                   \n"
       "         DOWN-ARROW -> Volume Down 5%                   \n"
       "         SPACEBAR -> Pause / Play                   \n"
       "         d or D -> Debug Mode                   \n"
       "       ------------------                   \n"
-      "  -ui <file> => play image URL                   \n"
-      "  -uv <file> => play video URL                   \n"
       "  -info <file> => print file info                   \n";
 
 
-int main(int argc, char** argv)
-{
+void ncurses_init() {
     initscr();
     cbreak();
-    timeout(-1);
     noecho();
     curs_set(0);
+    keypad(stdscr, true);
+}
+
+int main(int argc, char** argv)
+{
     av_log_set_level(AV_LOG_QUIET);
     init_icons();
-    keypad(stdscr, true);
 
     /* return testIconProgram(); */
 
@@ -64,19 +64,21 @@ int main(int argc, char** argv)
   } else if (argc == 3) {
       if (strcmp(argv[1], "-i") == 0) {
           if (isValidPath(argv[2])) {
+              ncurses_init();
                 imageProgram(argv[2]); 
           } else {
               std::cout << "Invalid Path: " << argv[2] << std::endl;
           }
       } else if (strcmp(argv[1], "-v") == 0) {
           if (isValidPath(argv[2])) {
+              ncurses_init();
             start_media_player_from_filename(argv[2]); 
           } else {
               std::cout << "Invalid Path " << argv[2] << std::endl;
           }
       } else if (strcmp(argv[1], "-info") == 0) {
         if (isValidPath(argv[2])) {
-                fileInfoProgram(argv[2]); 
+            fileInfoProgram(argv[2]); 
         } else {
             std::cout << "Invalid Path " << argv[2] << std::endl;
         }

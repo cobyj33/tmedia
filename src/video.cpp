@@ -59,6 +59,12 @@ void video_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
         alterLock.lock();
         counter++;
 
+        if (playback->time + 0.5 >= media_data->duration) {
+            player->inUse = false;
+            alterLock.unlock();
+            break;
+        }
+
         if (playback->playing == false) {
             alterLock.unlock();
             std::chrono::steady_clock::time_point pauseTime = std::chrono::steady_clock::now();

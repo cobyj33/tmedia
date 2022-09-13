@@ -1,4 +1,5 @@
 #include "video.h"
+#include "renderer.h"
 #include <chrono>
 #include <media.h>
 #include <mutex>
@@ -10,35 +11,47 @@
 
 void input_thread(MediaPlayer* player, std::mutex* alterMutex) {
     std::unique_lock<std::mutex> alterLock{*alterMutex, std::defer_lock};
-    std::chrono::milliseconds timeChangeWait = std::chrono::milliseconds(TIME_CHANGE_WAIT_MILLISECONDS);
     std::chrono::milliseconds inputSleep = std::chrono::milliseconds(0);
-    savetty();
+
+    WINDOW* inputWindow = newwin(0, 0, 1, 1);
+    nodelay(inputWindow, true);
+    keypad(inputWindow, true);
+
+    double jump_time_requested = 0;
     
     while (player->inUse) {
-        resetty();
         inputSleep = std::chrono::milliseconds(1);
-        int ch = getch();
+        int ch = wgetch(inputWindow);
         alterLock.lock();
         Playback* playback = player->timeline->playback;
 
-        if (ch == (int)(' ')) {
-            if (player->inUse) {
-                playback->playing = !playback->playing;
+        if (!player->inUse) {
+            break;
+        }
+
+        if (jump_time_requested != 0 && (ch != KEY_LEFT && ch != KEY_RIGHT)) {
+            double targetTime = playback->time + jump_time_requested;
+            if (targetTime >= player->timeline->mediaData->duration) {
+                player->inUse = false;
+                alterLock.unlock();
+                break;
             }
+
+            jump_to_time(player->timeline, targetTime);
+            video_symbol_stack_push(player->displayCache->symbol_stack, jump_time_requested < 0 ? get_video_symbol(BACKWARD_ICON) : get_video_symbol(FORWARD_ICON));
+            jump_time_requested = 0;
+        }
+
+        if (ch == (int)(' ')) {
+            playback->playing = !playback->playing;
         } else if (ch == (int)('d') || ch == (int)('D')) {
             player->displaySettings->show_debug = !player->displaySettings->show_debug;
         } else if (ch == (int)('c') || ch == (int)('C')) {
             player->displaySettings->mode = get_next_display_mode(player->displaySettings->mode);
         } else if (ch == KEY_LEFT) {
-            double targetTime = playback->time - TIME_CHANGE_AMOUNT;
-            jump_to_time(player->timeline, targetTime);
-            video_symbol_stack_push(player->displayCache->symbol_stack, get_video_symbol(BACKWARD_ICON));
-            /* inputSleep = timeChangeWait; */
+            jump_time_requested -= TIME_CHANGE_AMOUNT;
         } else if (ch == KEY_RIGHT) {
-            double targetTime = playback->time + TIME_CHANGE_AMOUNT;
-            jump_to_time(player->timeline, targetTime);
-            video_symbol_stack_push(player->displayCache->symbol_stack, get_video_symbol(FORWARD_ICON));
-            /* inputSleep = timeChangeWait; */
+            jump_time_requested += TIME_CHANGE_AMOUNT;
         } else if (ch == KEY_UP) {
             playback->volume = std::min(1.0, playback->volume + VOLUME_CHANGE_AMOUNT);
             video_symbol_stack_push(player->displayCache->symbol_stack,get_symbol_from_volume(playback->volume));
@@ -56,4 +69,6 @@ void input_thread(MediaPlayer* player, std::mutex* alterMutex) {
         alterLock.unlock();
         std::this_thread::sleep_for(inputSleep);
     }
+
+    delwin(inputWindow);
 }

@@ -1,16 +1,15 @@
 #include <cstdlib>
 #include <info.h>
-#include <ios>
 #include <iostream>
 #include <boiler.h>
-#include <libavutil/avutil.h>
-#include <libavutil/error.h>
-
+#include <libavutil/log.h>
 extern "C" {
     #include <libavformat/avformat.h>
 }
 
 int fileInfoProgram(const char* fileName) {
+    av_log_set_level(AV_LOG_INFO);
+
     int result;
     AVFormatContext* formatContext = open_format_context(fileName, &result);
     if (formatContext == nullptr) {
@@ -23,13 +22,13 @@ int fileInfoProgram(const char* fileName) {
     }
 
     av_dump_format(formatContext, 0, fileName, 0);
+
     int streams_found;
     PacketData* packetData = get_packet_stats(fileName, &streams_found);
-    
+    std::cout << std::endl;
     for (int i = 0; i < streams_found; i++) {
-        std::cout << av_get_media_type_string(packetData[i].mediaType) << " Stream Packet Count: " << packetData[i].packetCount;
+        std::cout << av_get_media_type_string(packetData[i].mediaType) << " Stream Packet Count: " << packetData[i].packetCount << std::endl;
     }
-
     free(packetData);
 
     avformat_close_input(&formatContext);
@@ -59,10 +58,6 @@ int get_num_packets(const char* fileName) {
     }
     
     AVPacket* readingPacket = av_packet_alloc();
-    PacketData* packetData = (PacketData*)malloc(sizeof(PacketData) * streams_found);
-    for (int i = 0; i < streams_found; i++) {
-        packetData[i] = { streamData[i]->mediaType, 0 };
-    }
 
     int count = 0;
     while (av_read_frame(formatContext, readingPacket) == 0) {

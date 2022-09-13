@@ -37,14 +37,12 @@ AVFormatContext* open_format_context(const char* fileName, int* result) {
     AVFormatContext* formatContext(nullptr);
     *result = avformat_open_input(&formatContext, fileName, nullptr, nullptr);
     if (*result < 0) {
-        std::cout << "Could not open file " << fileName << std::endl;
         avformat_free_context(formatContext);
         return nullptr;
     }
 
     *result = avformat_find_stream_info(formatContext, nullptr);
     if (*result < 0) {
-        std::cout << "Could not find stream info on " << fileName << std::endl;
         avformat_free_context(formatContext);
         return nullptr;
     }
@@ -71,7 +69,6 @@ StreamData** alloc_stream_datas(AVFormatContext* formatContext, const AVMediaTyp
         int streamIndex = -1;
         streamIndex = av_find_best_stream(formatContext, mediaTypes[i], -1, -1, &decoder, 0);
         if (streamIndex < 0) {
-            std::cout << "ERROR: Could not find stream " << av_get_media_type_string(mediaTypes[i]) << std::endl;
             stream_data_free(currentData);
             skipped++;
             continue;
@@ -84,16 +81,16 @@ StreamData** alloc_stream_datas(AVFormatContext* formatContext, const AVMediaTyp
 
         result = avcodec_parameters_to_context(currentData->codecContext, currentData->stream->codecpar);
         if (result < 0) {
-            std::cout << "Could not set image codec context parameters" << std::endl;
-            cleanup(i - skipped);
-            return nullptr;
+            stream_data_free(currentData);
+            skipped++;
+            continue;
         }
 
         result = avcodec_open2(currentData->codecContext, currentData->decoder, nullptr);
         if (result < 0) {
-            std::cout << "Could not open codec context" << std::endl;
-            cleanup(i - skipped);
-            return nullptr;
+            stream_data_free(currentData);
+            skipped++;
+            continue;
         }
 
         data[i - skipped] = currentData;

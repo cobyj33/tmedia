@@ -1,9 +1,6 @@
 #include "decode.h"
 #include <cstdlib>
 #include <iostream>
-#include <libavutil/channel_layout.h>
-#include <libavutil/error.h>
-#include <libavutil/frame.h>
 #include <vector>
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -32,6 +29,7 @@ void free_frame_list(AVFrame** frameList, int count) {
     for (int i = 0; i < count; i++) {
         av_frame_free(&(frameList[i]));
     }
+
     free(frameList);
 }
 
@@ -56,43 +54,45 @@ AVFrame** decode_video_packet(AVCodecContext* videoCodecContext, AVPacket* video
 
     AVFrame* videoFrame = av_frame_alloc();
     *result = avcodec_receive_frame(videoCodecContext, videoFrame);
-    if (*result == AVERROR(EAGAIN)) {
-        free(videoFrames);
-        av_frame_free(&videoFrame);
-        return nullptr;
-    } else if (*result < 0) {
-        std::cerr << "FATAL ERROR WHILE READING VIDEO PACKET: " << *result << std::endl;
-        free(videoFrames);
-        av_frame_free(&videoFrame);
-        return nullptr;
-    } else {
-        while (*result == 0) {
-            AVFrame* savedFrame = av_frame_alloc();
-            *result = av_frame_ref(savedFrame, videoFrame);
-            if (*result < 0) {
-                std::cerr << "ERROR WHILE REFERENCING VIDEO FRAMES DURING DECODING" << std::endl;
-                free_frame_list(videoFrames, *nb_out);
-                *nb_out = 0;
-                av_frame_free(&savedFrame);
-                av_frame_free(&videoFrame);
-                return nullptr;
-            }
-
-            videoFrames[*nb_out] = savedFrame;
-            *nb_out += 1;
-            if (*nb_out >= reservedFrames) {
-                reservedFrames *= 2;
-                videoFrames = (AVFrame**)realloc(videoFrames, sizeof(AVFrame*) * reservedFrames);
-            }
-
-            av_frame_unref(videoFrame);
-            *result = avcodec_receive_frame(videoCodecContext, videoFrame);
+    if (*result < 0) {
+        if (*result != AVERROR(EAGAIN)) {
+            char error_buffer[512];
+            av_strerror(*result, error_buffer, 512);
+            std::cerr << "FATAL ERROR WHILE READING VIDEO PACKET: " << error_buffer << std::endl;
         }
-        *result = 0;
+        free(videoFrames);
         av_frame_free(&videoFrame);
-
-        return videoFrames;
+        return nullptr;
     }
+
+
+    while (*result == 0) {
+        AVFrame* savedFrame = av_frame_alloc();
+        *result = av_frame_ref(savedFrame, videoFrame);
+        if (*result < 0) {
+            std::cerr << "ERROR WHILE REFERENCING VIDEO FRAMES DURING DECODING" << std::endl;
+            free_frame_list(videoFrames, *nb_out);
+            *nb_out = 0;
+            av_frame_free(&savedFrame);
+            av_frame_free(&videoFrame);
+            return nullptr;
+        }
+
+        videoFrames[*nb_out] = savedFrame;
+        *nb_out += 1;
+        if (*nb_out >= reservedFrames) {
+            reservedFrames *= 2;
+            videoFrames = (AVFrame**)realloc(videoFrames, sizeof(AVFrame*) * reservedFrames);
+        }
+
+        av_frame_unref(videoFrame);
+        *result = avcodec_receive_frame(videoCodecContext, videoFrame);
+    }
+    *result = 0;
+    av_frame_free(&videoFrame);
+
+    return videoFrames;
+    
 }
 
 
@@ -114,9 +114,11 @@ AVFrame** decode_audio_packet(AVCodecContext* audioCodecContext, AVPacket* audio
     AVFrame* audioFrame = av_frame_alloc();
     *result = avcodec_receive_frame(audioCodecContext, audioFrame);
     if (*result < 0) {
-        char error_buffer[512];
-        av_strerror(*result, error_buffer, 512);
-        std::cerr << "ERROR WHILE RECEIVING AUDIO FRAMES: " << error_buffer << std::endl; 
+        if (*result != AVERROR(EAGAIN)) {
+            char error_buffer[512];
+            av_strerror(*result, error_buffer, 512);
+            std::cerr << "ERROR WHILE RECEIVING AUDIO FRAMES: " << error_buffer << std::endl; 
+        }
         free(audioFrames);
         av_frame_free(&audioFrame);
         return nullptr;
@@ -145,6 +147,7 @@ AVFrame** decode_audio_packet(AVCodecContext* audioCodecContext, AVPacket* audio
         *result = avcodec_receive_frame(audioCodecContext, audioFrame);
     }
 
+    *result = 0;
     av_frame_free(&audioFrame);
     return audioFrames;
 }

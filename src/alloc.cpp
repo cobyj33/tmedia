@@ -93,6 +93,8 @@ MediaData* media_data_alloc(const char* fileName) {
         mediaData->media_streams[i] = media_stream_alloc(streamData[i]);
     }
 
+    mediaData->duration = (double)mediaData->formatContext->duration / AV_TIME_BASE;
+
     return mediaData;
 }
 
