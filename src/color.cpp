@@ -39,8 +39,62 @@ int available_color_pairs = 0;
 const double COLOR_DISTANCE_ALLOWANCE = 5;
 const double COLOR_DISTANCE_ALLOWANCE_SQUARED = COLOR_DISTANCE_ALLOWANCE * COLOR_DISTANCE_ALLOWANCE;
 
-void quantize_image(rgb* output, int output_len, rgb* colors, int width, int height) {
+typedef struct QuantizeTracker {
+    rgb* color;
+    long score;
+} QuantizeTracker;
 
+bool quantize_image(rgb* output, int output_len, rgb** colors, int width, int height) {
+    bool hash[255][255][255];
+    rgb* unique_colors = (rgb*)malloc(sizeof(rgb) * 10);
+    long* scores = (long*)malloc(sizeof(long) * 10);
+
+    int nb_unique_colors_initialized = 10;
+    int nb_unique_colors = 0;
+
+    for (int row = 0; row < height; row++) {
+        for (int col = 0; col < width; col++) {
+            if (hash[colors[row][col][0]][colors[row][col][1]][colors[row][col][2]] == false) {
+                hash[colors[row][col][0]][colors[row][col][1]][colors[row][col][2]] = true;
+                rgb_copy(unique_colors[nb_unique_colors], colors[row][col]); 
+                scores[nb_unique_colors] = 0;
+                nb_unique_colors++;
+
+                if (nb_unique_colors >= nb_unique_colors_initialized) {
+                    rgb* tmp_colors = (rgb*)realloc(unique_colors, sizeof(rgb) * nb_unique_colors_initialized * 2);
+                    long* tmp_scores = (long*)realloc(scores, sizeof(long) * nb_unique_colors_initialized * 2);
+                    if (tmp_colors != NULL && tmp_scores != NULL) {
+                        unique_colors = tmp_colors;
+                        scores = tmp_scores;
+                        nb_unique_colors_initialized *= 2;
+                    } else {
+                        if (unique_colors != NULL) {
+                            free(unique_colors);
+                        }
+                        if (scores != NULL) {
+                            free(scores);
+                        }
+                        return false;
+                    }
+                }
+
+            }
+        }
+    }
+
+    for (int i = 0; i < nb_unique_colors; i++) {
+        for (int c = 0; c < nb_unique_colors; c++) {
+            scores[i] += color_distance_squared(unique_colors[i], unique_colors[c]);
+        }
+    }
+    
+    for (int i = 0; i < output_len; i++) {
+        
+    }
+
+    free(unique_colors);
+    free(scores);
+    return true;
 }
 
 void init_default_color_palette() {
