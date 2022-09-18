@@ -8,6 +8,7 @@ bool start_media_player_from_filename(const char* fileName) {
     MediaPlayer* player = media_player_alloc(fileName);
     if (player != nullptr) {
         start_media_player(player);
+        media_player_free(player);
         return true;
     }
     return false;

@@ -1,36 +1,37 @@
+#include <ascii.h>
+#include "pixeldata.h"
+#include <image.h>
+#include <libavutil/pixfmt.h>
 #include <media.h>
 #include <renderer.h>
+#include <decode.h>
+#include <boiler.h>
+
+#include <ncurses.h>
+#include <iostream>
+
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <image.h>
-#include <decode.h>
-#include <ascii.h>
-#include <ncurses.h>
-#include <iostream>
-#include <boiler.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
+#include <libavutil/pixdesc.h>
 #include <libswscale/swscale.h>
-#include <libswresample/swresample.h>
-#include <libavdevice/avdevice.h>
-#include <libavutil/fifo.h>
-#include <libavutil/audio_fifo.h>
 }
 
-int imageProgram(const char* fileName) {
+int imageProgram(const char* fileName, bool use_colors) {
     erase();
-    pixel_data* pixelData = get_pixel_data_from_image(fileName);
+    PixelData* pixelData = get_pixel_data_from_image(fileName, use_colors ? RGB24 : GRAYSCALE8);
     if (pixelData == nullptr) {
         std::cout << "Could not get image data from " << fileName;
         endwin();
         return EXIT_FAILURE;
     }
 
-    ascii_image textImage = get_ascii_image_bounded(pixelData, COLS, LINES);
+    AsciiImage textImage = get_ascii_image_bounded(pixelData, COLS, LINES);
     print_ascii_image_full(&textImage);
     pixel_data_free(pixelData); 
     refresh();
@@ -40,7 +41,7 @@ int imageProgram(const char* fileName) {
     return EXIT_SUCCESS;
 }
 
-pixel_data* get_pixel_data_from_image(const char* fileName) {
+PixelData* get_pixel_data_from_image(const char* fileName, PixelDataFormat format) {
     MediaData* mediaData = media_data_alloc(fileName);
     if (mediaData == nullptr) {
         std::cout << "Could not fetch media data of " << fileName << std::endl;
@@ -55,7 +56,7 @@ pixel_data* get_pixel_data_from_image(const char* fileName) {
 
     AVCodecContext* codecContext = imageStream->info->codecContext;
     VideoConverter* imageConverter = get_video_converter(
-            codecContext->width, codecContext->height, AV_PIX_FMT_GRAY8,
+            codecContext->width, codecContext->height, PixelDataFormat_to_AVPixelFormat(format),
             codecContext->width, codecContext->height, codecContext->pix_fmt
             );
     
@@ -76,6 +77,7 @@ pixel_data* get_pixel_data_from_image(const char* fileName) {
     };
 
     int result;
+
     while (av_read_frame(mediaData->formatContext, packet) == 0) {
         int nb_out;
         if (packet->stream_index != imageStream->info->stream->index)
@@ -101,45 +103,84 @@ pixel_data* get_pixel_data_from_image(const char* fileName) {
         return nullptr;
     }
 
-    pixel_data* data = pixel_data_alloc(finalFrame->width, finalFrame->height);
-    for (int i = 0; i < finalFrame->width * finalFrame->height; i++) {
-        data->pixels[i] = finalFrame->data[0][i];
-    }
-
+    PixelData* data = pixel_data_alloc_from_frame(finalFrame);
     cleanup();
     return data;
 }
 
-pixel_data* pixel_data_alloc_from_frame(AVFrame* videoFrame) {
-    pixel_data* data = pixel_data_alloc(videoFrame->width, videoFrame->height);
-    for (int i = 0; i < videoFrame->width * videoFrame->height; i++) {
+PixelData* pixel_data_alloc_from_frame(AVFrame* videoFrame) {
+    PixelData* data = pixel_data_alloc(videoFrame->width, videoFrame->height, AVPixelFormat_to_PixelDataFormat((AVPixelFormat)videoFrame->format));
+
+    for (int i = 0; i < get_pixel_data_buffer_size(data); i++) {
         data->pixels[i] = videoFrame->data[0][i];
     }
+
     return data;
 }
 
-pixel_data* copy_pixel_data(pixel_data* data) {
-    pixel_data* new_data = pixel_data_alloc(data->width, data->height);
-    for (int i = 0; i < data->width * data->height; i++) {
+const char* pixel_data_format_string(PixelDataFormat format) {
+    switch (format) {
+        case RGB24: return "rgb24";
+        case GRAYSCALE8: return "grayscale8";
+        default: return "unknown";
+    }
+}
+
+PixelData* copy_pixel_data(PixelData* data) {
+    PixelData* new_data = pixel_data_alloc(data->width, data->height, data->format);
+    for (int i = 0; i < get_pixel_data_buffer_size(data); i++) {
         new_data->pixels[i] = data->pixels[i];
     }
     return new_data;
 }
 
-pixel_data* pixel_data_alloc(int width, int height) {
-  pixel_data* pixelData = (pixel_data*)malloc(sizeof(pixel_data));
-  pixelData->pixels = (uint8_t*)malloc(width * height * sizeof(uint8_t));
+int get_pixel_data_buffer_size(PixelData* data) {
+    switch (data->format) {
+        case RGB24: return data->width * data->height * 3 * sizeof(uint8_t);
+        case GRAYSCALE8: return data->width * data->height * sizeof(uint8_t);
+        default: return data->width * data->height;
+    }
+}
+
+
+AVPixelFormat PixelDataFormat_to_AVPixelFormat(PixelDataFormat format) {
+    switch (format) {
+        case RGB24: return AV_PIX_FMT_RGB24;
+        case GRAYSCALE8: return AV_PIX_FMT_GRAY8;
+        default: return AV_PIX_FMT_GRAY8;
+    }
+}
+
+PixelDataFormat AVPixelFormat_to_PixelDataFormat(AVPixelFormat format) {
+    switch (format) {
+        case AV_PIX_FMT_RGB24: return RGB24;
+        case AV_PIX_FMT_GRAY8: return GRAYSCALE8;
+        default: 
+            char data_buf[128];
+            av_get_pix_fmt_string(data_buf, 128, format);
+            fprintf(stderr, "Could not get PixelDataFormat of %s\n", data_buf);
+            return GRAYSCALE8;
+    }
+}
+
+PixelData* pixel_data_alloc(int width, int height, PixelDataFormat format) {
+  PixelData* pixelData = (PixelData*)malloc(sizeof(PixelData));
   pixelData->width = width;
   pixelData->height = height;
+  pixelData->format = format;
+  int buffer_size = get_pixel_data_buffer_size(pixelData);
+  pixelData->pixels = (uint8_t*)malloc(buffer_size);
 
-  for (int i = 0; i < width * height; i++) {
+  for (int i = 0; i < buffer_size; i++) {
       pixelData->pixels[i] = (uint8_t)0;
   }
 
   return pixelData;
 }
 
-void pixel_data_free(pixel_data* pixelData) {
+void pixel_data_free(PixelData* pixelData) {
   free(pixelData->pixels);
   free(pixelData);
 }
+
+

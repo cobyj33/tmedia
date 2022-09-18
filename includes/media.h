@@ -14,9 +14,6 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-
-
-
 typedef struct MediaStream {
     StreamData* info;
     DoubleLinkedList<AVPacket*>* packets;
@@ -66,16 +63,17 @@ MediaDisplayMode get_next_display_mode(MediaDisplayMode currentMode);
 typedef struct MediaDisplaySettings {
     bool show_debug;
     bool subtitles;
+    bool use_colors;
+    bool can_use_colors;
+    bool can_change_colors;
     MediaDisplayMode mode;
 } MediaDisplaySettings; 
 
-
 typedef struct MediaDisplayCache {
     MediaDebugInfo* debug_info;
-    pixel_data* image;
+    PixelData* image;
     VideoSymbolStack* symbol_stack;
 } MediaDisplayCache;
-
 
 typedef struct MediaPlayer {
     MediaTimeline* timeline;

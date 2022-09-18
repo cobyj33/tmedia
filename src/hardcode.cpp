@@ -1,10 +1,11 @@
+#include "pixeldata.h"
 #include <icons.h>
 #include <image.h>
 
-pixel_data* get_playback_icons_pixel_data() {
+PixelData* get_playback_icons_pixel_data() {
     const int width = 80;
     const int height = 64;
-    pixel_data* playbackIcons = pixel_data_alloc(width, height);
+    PixelData* playbackIcons = pixel_data_alloc(width, height, GRAYSCALE8);
     const uint8_t pixels[width * height] = {
         255, 255, 255, 255, 255, 255, 254, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
         255, 254, 255, 255, 254, 255, 255, 255, 255, 255, 255, 254, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
@@ -79,10 +80,10 @@ pixel_data* get_playback_icons_pixel_data() {
     return playbackIcons;
 } 
 
-pixel_data* get_number_icons_pixel_data() {
+PixelData* get_number_icons_pixel_data() {
     const int width = 50;
     const int height = 14;
-    pixel_data* numberIcons = pixel_data_alloc(width, height);
+    PixelData* numberIcons = pixel_data_alloc(width, height, GRAYSCALE8);
     uint8_t pixels[width * height] = {
         255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 254, 255, 255, 255, 255, 
         255, 0, 1, 0, 255, 255, 255, 0, 255, 255, 255, 0, 0, 0, 255, 255, 0, 0, 0, 255, 255, 0, 255, 1, 255, 255, 0, 0, 0, 255, 255, 0, 0, 0, 255, 255, 0, 0, 0, 255, 255, 0, 0, 0, 255, 255, 0, 0, 0, 255, 
@@ -107,10 +108,10 @@ pixel_data* get_number_icons_pixel_data() {
     return numberIcons;
 }
 
-pixel_data* get_number_symbols_icons_pixel_data() {
+PixelData* get_number_symbols_icons_pixel_data() {
     const int width = 25;
     const int height = 5;
-    pixel_data* numberSymbolIcons = pixel_data_alloc(width, height);
+    PixelData* numberSymbolIcons = pixel_data_alloc(width, height, GRAYSCALE8);
     const uint8_t pixels[width * height] = {
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
         255, 255, 255, 255, 255, 255, 0, 255, 0, 255, 255, 255, 0, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 

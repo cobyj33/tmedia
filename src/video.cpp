@@ -4,6 +4,7 @@
 #include "icons.h"
 #include "renderer.h"
 #include <cstdint>
+#include <libavutil/pixfmt.h>
 #include <video.h>
 #include <macros.h>
 #include <media.h>
@@ -45,9 +46,12 @@ void video_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
 
     AVCodecContext* videoCodecContext = video_stream->info->codecContext;
     int output_frame_width, output_frame_height;
-    get_output_size(videoCodecContext->width, videoCodecContext->height, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, &output_frame_width, &output_frame_height);
+    get_output_size(videoCodecContext->width, videoCodecContext->height, MAX_ASCII_IMAGE_WIDTH, MAX_ASCII_IMAGE_HEIGHT, &output_frame_width, &output_frame_height);
 
-    VideoConverter* videoConverter = get_video_converter(output_frame_width, output_frame_height, AV_PIX_FMT_GRAY8, videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt);
+    const bool use_colors = player->displaySettings->use_colors;
+
+    VideoConverter* videoConverter = get_video_converter(output_frame_width, output_frame_height, use_colors ? AV_PIX_FMT_RGB24 : AV_PIX_FMT_GRAY8, videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt);
+    
     if (videoConverter == nullptr) {
         return;
     }
@@ -101,20 +105,16 @@ void video_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
                 free_frame_list(decodedList, nb_decoded);
             } else {
                 add_debug_message(debug_info, "ERROR: NULL POINTED VIDEO FRAME: ERROR: %s");
-                if (videoPackets->get_index() + 1 < videoPackets->get_length()) {
-                    videoPackets->set_index(videoPackets->get_index() + 1);
-                }
+                videoPackets->try_move_index(1);
 
                 alterLock.unlock();
                 std::this_thread::sleep_for(std::chrono::nanoseconds((int64_t)(1 / frameRate * SECONDS_TO_NANOSECONDS )));
                 continue;
             }
 
-            if (videoPackets->get_index() + 1 < videoPackets->get_length()) {
-                videoPackets->set_index(videoPackets->get_index() + 1);
-            }
+            videoPackets->try_move_index(1);
         } else {
-            while (!media_data->allPacketsRead && videoPackets->get_index() + 10 >= videoPackets->get_length()) {
+            while (!media_data->allPacketsRead && videoPackets->can_move_index(10)) {
                 fetch_next(media_data, 10);
             }
             alterLock.unlock();
@@ -124,6 +124,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
         if (player->displayCache->image != nullptr) {
             pixel_data_free(player->displayCache->image);
         }
+
         player->displayCache->image = pixel_data_alloc_from_frame(readingFrame);
 
         double nextFrameTimeSinceStartInSeconds = (double)readingFrame->pts * videoTimeBase;
@@ -187,8 +188,8 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
      } else if (targetTime < playback->time) {
         avcodec_flush_buffers(videoCodecContext);
         double testTime = std::max(0.0, targetTime - 30);
-        while (videoPackets->get()->pts * videoTimeBase > testTime && videoPackets->get_index() > 0) {
-            videoPackets->set_index(videoPackets->get_index() - 1);
+        while (videoPackets->get()->pts * videoTimeBase > testTime && videoPackets->can_move_index(-1)) {
+            videoPackets->try_move_index(-1);
         }
     }
 
@@ -203,12 +204,12 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
         } 
 
         AVFrame** decodedFrames = decode_video_packet(videoCodecContext, videoPackets->get(), &readingStatus, &nb_decoded);
-        videoPackets->set_index(videoPackets->get_index() + 1 );
+        videoPackets->try_move_index(1);
 
-        while (readingStatus == AVERROR(EAGAIN) && videoPackets->get_index() + 1 < videoPackets->get_length() && nb_decoded > 0 && decodedFrames != nullptr) {
+        while (readingStatus == AVERROR(EAGAIN) && videoPackets->can_move_index(1) && nb_decoded > 0 && decodedFrames != nullptr) {
             free_frame_list(decodedFrames, nb_decoded);
             decodedFrames = decode_video_packet(videoCodecContext, videoPackets->get(), &readingStatus, &nb_decoded);
-            videoPackets->set_index(videoPackets->get_index() + 1 );
+            videoPackets->try_move_index(1);
         }
 
         if (readingStatus >= 0) {

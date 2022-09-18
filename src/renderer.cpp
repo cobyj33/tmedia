@@ -1,3 +1,6 @@
+#include "color.h"
+#include "macros.h"
+#include <image.h>
 #include <ascii.h>
 #include <renderer.h>
 #include <icons.h>
@@ -5,7 +8,9 @@
 #include <thread>
 #include <chrono>
 #include <mutex>
+
 #include <ncurses.h>
+#include <curses_helpers.h>
 
 void render_thread(MediaPlayer* player, std::mutex* alterMutex) {
     std::unique_lock<std::mutex> alterLock(*alterMutex, std::defer_lock);
@@ -17,8 +22,10 @@ void render_thread(MediaPlayer* player, std::mutex* alterMutex) {
         add_debug_message(player->displayCache->debug_info, "Frames Rendered: %d", frames_rendered);
         render_screen(player);
         alterLock.unlock();
+        refresh();
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
+
 }
 
 void render_screen(MediaPlayer* player) {
@@ -42,7 +49,6 @@ void render_screen(MediaPlayer* player) {
 void render_audio_screen(MediaPlayer *player) {
     erase();
     printw("AUDIO");
-    refresh();
 }
 
 void render_audio_debug(MediaPlayer* player) {
@@ -51,7 +57,6 @@ void render_audio_debug(MediaPlayer* player) {
         printw("%s", player->displayCache->debug_info->messages[i]);
     }
     clear_media_debug(player->displayCache->debug_info);
-    refresh();
 }
 
 void render_video_debug(MediaPlayer *player) {
@@ -61,20 +66,19 @@ void render_video_debug(MediaPlayer *player) {
     }
 
     clear_media_debug(player->displayCache->debug_info);
-    refresh();
 }
 
 void render_movie_screen(MediaPlayer* player) {
     erase();
     if (player->displayCache->image != nullptr) {
         VideoSymbolStack* symbol_stack = player->displayCache->symbol_stack;
-        ascii_image textImage = get_ascii_image_bounded(player->displayCache->image, COLS, LINES);
+        AsciiImage textImage = get_ascii_image_bounded(player->displayCache->image, COLS, LINES);
 
         while (player->displayCache->symbol_stack->top >= 0) {
             VideoSymbol* currentSymbol = video_symbol_stack_peek(symbol_stack); 
             if (std::chrono::steady_clock::now() - currentSymbol->startTime < currentSymbol->lifeTime) {
                 int currentSymbolFrame = get_video_symbol_current_frame(currentSymbol); 
-                ascii_image symbolImage = get_ascii_image_bounded(currentSymbol->frameData[currentSymbolFrame], textImage.width, textImage.height);
+                AsciiImage symbolImage = get_ascii_image_bounded(currentSymbol->frameData[currentSymbolFrame], textImage.width, textImage.height);
                 overlap_ascii_images(&textImage, &symbolImage);
                 break;
             } else {
@@ -84,17 +88,28 @@ void render_movie_screen(MediaPlayer* player) {
 
         if (!player->timeline->playback->playing) {
             VideoSymbol* pauseSymbol = get_video_symbol(PAUSE_ICON);
-            ascii_image symbolImage = get_ascii_image_bounded(pauseSymbol->frameData[0], textImage.width, textImage.height);
+            AsciiImage symbolImage = get_ascii_image_bounded(pauseSymbol->frameData[0], textImage.width, textImage.height);
             overlap_ascii_images(&textImage, &symbolImage);
             free_video_symbol(pauseSymbol);
         }
 
         print_ascii_image_full(&textImage);
     }
-    refresh();
 }
 
-void print_ascii_image_full(ascii_image* textImage) {
+void fill_with_char(char* str, int len, char ch) {
+    for (int i = 0; i < len; i++) {
+        str[i] = ch;
+    }
+}
+
+typedef struct ScreenChar {
+    char character;
+    int row;
+    int col;
+} ScreenChar;
+
+void print_ascii_image_full(AsciiImage* textImage) {
     move(0, 0);
     int horizontalPaddingWidth = (COLS - textImage->width) / 2; 
     int verticalPaddingHeight = (LINES - textImage->height) / 2;
@@ -103,19 +118,71 @@ void print_ascii_image_full(ascii_image* textImage) {
     char lineAcross[COLS + 1];
     lineAcross[COLS] = '\0';
 
-    for (int i = 0; i < horizontalPaddingWidth; i++) {
-        horizontalPadding[i] = ' ';
-    }
-
-    for (int i = 0; i < COLS; i++) {
-        lineAcross[i] = ' ';
-    }
+    fill_with_char(horizontalPadding, horizontalPaddingWidth, ' ');
+    fill_with_char(lineAcross, COLS, ' ');
 
     for (int i = 0; i < verticalPaddingHeight; i++) {
         printw("%s\n", lineAcross);
     }
 
-    for (int row = 0; row < textImage->height; row++) {
-        printw("%s%s\n", horizontalPadding, textImage->lines[row]);
+    const int max_color_pairs = std::min(COLORS - 8, COLOR_PAIRS);
+
+    if (textImage->colored && max_color_pairs > 16) {
+        ScreenChar* char_buckets[COLOR_PAIRS];
+        int char_buckets_lengths[COLOR_PAIRS];
+        int char_buckets_capacities[COLOR_PAIRS];
+        for (int i = 0; i < COLOR_PAIRS; i++) {
+            char_buckets[i] = nullptr;
+            char_buckets_lengths[i] = 0;
+            char_buckets_capacities[i] = 0;
+        }
+
+        for (int row = 0; row < textImage->height; row++) {
+            for (int col = 0; col < textImage->width; col++) {
+                int target_pair = get_closest_color_pair(textImage->color_data[row][col]);
+                if (char_buckets[target_pair] == nullptr) {
+                    char_buckets[target_pair] = (ScreenChar*)malloc(sizeof(ScreenChar) * 10);
+                    if (char_buckets[target_pair] == NULL) {
+                        char_buckets[target_pair] = nullptr;
+                        continue;
+                    }
+                    char_buckets_capacities[target_pair] = 10;
+                }
+
+                if (char_buckets_lengths[target_pair] >= char_buckets_capacities[target_pair]) {
+                    ScreenChar* tmp = (ScreenChar*)realloc(char_buckets[target_pair], sizeof(ScreenChar) * char_buckets_capacities[target_pair] * 2);
+                    if (tmp != NULL) {
+                        char_buckets[target_pair] = tmp;
+                        char_buckets_capacities[target_pair] *= 2;
+                    }
+                }
+
+                if (char_buckets_lengths[target_pair] < char_buckets_capacities[target_pair]) {
+                    char_buckets[target_pair][char_buckets_lengths[target_pair]] = { textImage->lines[row][col], row, col };
+                    char_buckets_lengths[target_pair] += 1;
+                }
+            }
+        }
+
+        for (int b = 0; b < COLOR_PAIRS; b++) {
+            if (char_buckets[b] == nullptr || char_buckets[b] == NULL) {
+                continue;
+            }
+
+            attron(COLOR_PAIR(b));
+            for (int i = 0; i < char_buckets_lengths[b]; i++) {
+                mvaddch(verticalPaddingHeight + char_buckets[b][i].row, horizontalPaddingWidth + char_buckets[b][i].col, char_buckets[b][i].character);
+            }
+
+            if (char_buckets[b] != nullptr && char_buckets[b] != NULL) {
+                free(char_buckets[b]);
+            }
+            attroff(COLOR_PAIR(b));
+        }
+    } else {
+        for (int row = 0; row < textImage->height; row++) {
+            printw("%s%s%s%s\n", horizontalPadding, "|", textImage->lines[row], "|");
+        }
     }
+
 }

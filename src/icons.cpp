@@ -1,3 +1,4 @@
+#include "pixeldata.h"
 #include "renderer.h"
 #include <icons.h>
 #include <image.h>
@@ -21,7 +22,7 @@ extern "C" {
     #include <libavutil/audio_fifo.h>
 }
 
-std::map<int, pixel_data*> iconFromEnum;
+std::map<int, PixelData*> iconFromEnum;
 std::map<int, VideoIcon> iconFromDigit = {
     { 0, ZERO_ICON },
     { 1, ONE_ICON },
@@ -41,8 +42,8 @@ bool initialized = false;
 int testIconProgram() {
     for (int i = 0; i < 12; i++) {
         erase();
-        pixel_data* iconData = iconFromEnum.at(i);
-        ascii_image image = get_ascii_image_bounded(iconData, COLS, LINES);
+        PixelData* iconData = iconFromEnum.at(i);
+        AsciiImage image = get_ascii_image_bounded(iconData, COLS, LINES);
 
         /* printw("Image %d: %d x %d to %d x %d\n", i, iconData->width, iconData->height, image.width, image.height); */
         /* for (int i = 0; i < image.height; i++) { */
@@ -60,10 +61,10 @@ int testIconProgram() {
     return EXIT_SUCCESS;
 }
 
-bool read_sprite_sheet(pixel_data** buffer, int bufferSize, pixel_data* iconData, int rows, int cols, int spriteWidth, int spriteHeight) {
+bool read_sprite_sheet(PixelData** buffer, int bufferSize, PixelData* iconData, int rows, int cols, int spriteWidth, int spriteHeight) {
 
     for (int i = 0; i < std::min(bufferSize, rows * cols); i++) {
-        pixel_data* icon = pixel_data_alloc(spriteWidth, spriteHeight);
+        PixelData* icon = pixel_data_alloc(spriteWidth, spriteHeight, GRAYSCALE8);
         int currentSpriteY = i / cols * spriteHeight;
         int currentSpriteX = i % cols * spriteWidth;
         for (int row = 0; row < spriteHeight; row++) {
@@ -80,13 +81,13 @@ bool read_sprite_sheet(pixel_data** buffer, int bufferSize, pixel_data* iconData
 bool init_icons() {
     if (!initialized) {
         bool success;
-        pixel_data* playbackIconBuffer[numOfPlaybackIcons];
-        pixel_data* numberIconBuffer[numOfNumberIcons];
-        pixel_data* numberSymbolBuffer[numOfNumberSymbolIcons];
+        PixelData* playbackIconBuffer[numOfPlaybackIcons];
+        PixelData* numberIconBuffer[numOfNumberIcons];
+        PixelData* numberSymbolBuffer[numOfNumberSymbolIcons];
 
-        pixel_data* playbackIcons = get_playback_icons_pixel_data();
-        pixel_data* numberIcons = get_number_icons_pixel_data();
-        pixel_data* numberSymbolIcons = get_number_symbols_icons_pixel_data();
+        PixelData* playbackIcons = get_playback_icons_pixel_data();
+        PixelData* numberIcons = get_number_icons_pixel_data();
+        PixelData* numberSymbolIcons = get_number_symbols_icons_pixel_data();
 
         auto cleanup = [playbackIcons, numberIcons, numberSymbolIcons]() {
             free(playbackIcons);
@@ -145,7 +146,7 @@ bool free_icons() {
     return !initialized;
 }
 
-pixel_data* get_video_icon(VideoIcon iconEnum) {
+PixelData* get_video_icon(VideoIcon iconEnum) {
     if (iconFromEnum.count(iconEnum) == 1) {
         return iconFromEnum.at(iconEnum);
     } else {
@@ -164,7 +165,7 @@ VideoSymbol* get_video_symbol(VideoIcon iconEnum) {
     symbol->startTime = std::chrono::steady_clock::now(); 
     symbol->lifeTime = std::chrono::milliseconds(1000);
     symbol->frames = 1;
-    symbol->frameData = (pixel_data**)malloc(sizeof(pixel_data*) * symbol->frames);
+    symbol->frameData = (PixelData**)malloc(sizeof(PixelData*) * symbol->frames);
     symbol->frameData[0] = get_video_icon(iconEnum);
     return symbol;
 }
@@ -174,7 +175,7 @@ VideoSymbol* copy_video_symbol(VideoSymbol* original) {
     copiedSymbol->startTime = original->startTime;
     copiedSymbol->lifeTime = original->lifeTime;
     copiedSymbol->frames = original->frames;
-    copiedSymbol->frameData = (pixel_data**)malloc(sizeof(pixel_data*) * original->frames);
+    copiedSymbol->frameData = (PixelData**)malloc(sizeof(PixelData*) * original->frames);
     
     for (int i = 0; i < original->frames; i++) {
         copiedSymbol->frameData[i] = original->frameData[i];
@@ -198,8 +199,8 @@ int get_video_symbol_current_frame(VideoSymbol* symbol) {
 }
 
 
-/* pixel_data* get_stitched_image(pixel_data** images) { */
-/*     pixel_data* pixelData = (pixel_data*)malloc(sizeof(pixel_data)); */
+/* PixelData* get_stitched_image(PixelData** images) { */
+/*     PixelData* pixelData = (PixelData*)malloc(sizeof(PixelData)); */
 /*     int width; */
 /*     int height; */
     

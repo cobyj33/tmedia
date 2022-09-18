@@ -77,8 +77,8 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
         int result, nb_frames_decoded;
         AVFrame** audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audioPackets->get(), &result, &nb_frames_decoded);
-        while (result == AVERROR(EAGAIN) && audioPackets->get_index() + 1 < audioPackets->get_length()) {
-            audioPackets->set_index(audioPackets->get_index() + 1);
+        while (result == AVERROR(EAGAIN) && audioPackets->can_move_index(1)) {
+            audioPackets->try_move_index(1);
             if (audioFrames != nullptr) {
                 free_frame_list(audioFrames, nb_frames_decoded);
             }
@@ -157,11 +157,11 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
                 currentAudioFrame = audioFrames[audioFrameIndex];
             } else {
                 audioFrameIndex = 0;
-                if (audioPackets->get_index() + 1 < audioPackets->get_length()) {
-                    audioPackets->set_index( audioPackets->get_index() + 1 );
+                if (audioPackets->can_move_index(1)) {
+                    audioPackets->try_move_index(1);
                     audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audioPackets->get(), &result, &nb_frames_decoded);
-                    while (result == AVERROR(EAGAIN) && audioPackets->get_index() + 1 < audioPackets->get_length()) {
-                        audioPackets->set_index(audioPackets->get_index() + 1);
+                    while (result == AVERROR(EAGAIN) && audioPackets->can_move_index(1)) {
+                        audioPackets->try_move_index(1);
                         if (audioFrames != nullptr) {
                             free_frame_list(audioFrames, nb_frames_decoded);
                         }

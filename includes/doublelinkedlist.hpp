@@ -226,5 +226,18 @@ class DoubleLinkedList {
             std::cout << "Length: " << length << "  Index: " << index << " Current Value: " << this->current->data << std::endl;
         }
 
+        bool can_move_index(int move_amount) {
+            return index + move_amount >= 0 && index + move_amount < length;
+        }
+
+        bool try_move_index(int move_amount) {
+            if (can_move_index(move_amount)) {
+                return set_index(index + move_amount);
+            }
+            return false;
+        }
+
+        
+
         
 };

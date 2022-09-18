@@ -34,7 +34,7 @@ typedef struct VideoSymbol {
     std::chrono::steady_clock::time_point startTime;
     std::chrono::milliseconds lifeTime;
     int frames;
-    pixel_data** frameData;
+    PixelData** frameData;
 } VideoSymbol;
 
 const int numOfPlaybackIcons = 12;
@@ -82,8 +82,8 @@ const VideoIcon volumeIcons[4] = { NO_VOLUME_ICON, LOW_VOLUME_ICON, MEDIUM_VOLUM
 int testIconProgram();
 bool init_icons();
 bool free_icons();
-bool read_sprite_sheet(pixel_data** buffer, int bufferSize, const char* sheetPath, int rows, int cols, int spriteWidth, int spriteHeight);
-pixel_data* get_video_icon(VideoIcon iconEnum);
+bool read_sprite_sheet(PixelData** buffer, int bufferSize, const char* sheetPath, int rows, int cols, int spriteWidth, int spriteHeight);
+PixelData* get_video_icon(VideoIcon iconEnum);
 VideoSymbol* get_video_symbol(VideoIcon iconEnum);
 VideoSymbol* get_symbol_from_volume(double normalizedVolume);
 VideoSymbol* copy_video_symbol(VideoSymbol* original);
@@ -103,7 +103,7 @@ void video_symbol_stack_erase_pop(VideoSymbolStack* stack);
 VideoSymbol* video_symbol_stack_peek(VideoSymbolStack* stack);
 void video_symbol_stack_clear(VideoSymbolStack* stack);
 
-pixel_data* get_playback_icons_pixel_data();
-pixel_data* get_number_icons_pixel_data(); 
-pixel_data* get_number_symbols_icons_pixel_data(); 
-pixel_data* get_numbers_image(int* digits, int count);
+PixelData* get_playback_icons_pixel_data();
+PixelData* get_number_icons_pixel_data(); 
+PixelData* get_number_symbols_icons_pixel_data(); 
+PixelData* get_numbers_image(int* digits, int count);

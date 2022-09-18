@@ -1,5 +1,6 @@
 #include "boiler.h"
 #include "decode.h"
+#include <curses.h>
 #include <media.h>
 #include <info.h>
 #include "doublelinkedlist.hpp"
@@ -45,6 +46,9 @@ MediaDisplaySettings* media_display_settings_alloc() {
     settings->show_debug = false;
     settings->subtitles = false;
     settings->mode = VIDEO;
+    settings->can_use_colors = has_colors();
+    settings->can_change_colors = can_change_color();
+    settings->use_colors = false;
     return settings;
 }
 
