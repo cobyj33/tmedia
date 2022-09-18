@@ -59,7 +59,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
     DoubleLinkedList<AVPacket*>* videoPackets = video_stream->packets;
     int64_t counter = 0;
 
-    while (player->inUse && (!media_data->allPacketsRead || (media_data->allPacketsRead && videoPackets->get_index() < videoPackets->get_length() - 1 ) )) {
+    while (player->inUse && (!media_data->allPacketsRead || (media_data->allPacketsRead && videoPackets->can_move_index(1) ) )) {
         alterLock.lock();
         counter++;
 
@@ -83,15 +83,15 @@ void video_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
             video_symbol_stack_push(player->displayCache->symbol_stack, get_video_symbol(PLAY_ICON));
         }
 
-        if (videoPackets->get_index() + 10 <= videoPackets->get_length()) {
+        if (videoPackets->can_move_index(10)) {
             int decodeResult;
             int nb_decoded;
             AVFrame** decodedList = decode_video_packet(videoCodecContext, videoPackets->get(), &decodeResult, &nb_decoded);
 
             int repeats = 1;
-            while (decodeResult == AVERROR(EAGAIN) && videoPackets->get_index() + 1 < videoPackets->get_length()) {
+            while (decodeResult == AVERROR(EAGAIN) && videoPackets->can_move_index(1)) {
                 repeats++;
-                videoPackets->set_index(videoPackets->get_index() + 1);
+                videoPackets->try_move_index(1);
                 free_frame_list(decodedList, nb_decoded);
                 decodedList = decode_video_packet(videoCodecContext, videoPackets->get(), &decodeResult, &nb_decoded);
             }
@@ -199,7 +199,7 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
 
     /* while (finalPTS < targetVideoPTS && videoPackets->get_index() + 1 < videoPackets->get_length() && (readingStatus > 0 || readingStatus == AVERROR(EAGAIN))  ) { */
     while (true) {
-        if (finalPTS >= targetVideoPTS || (videoPackets->get_index() + 1 >= videoPackets->get_length()) || (readingStatus < 0 && readingStatus != AVERROR(EAGAIN)) ) {
+        if (finalPTS >= targetVideoPTS || !videoPackets->can_move_index(1) || (readingStatus < 0 && readingStatus != AVERROR(EAGAIN)) ) {
             break;
         } 
 

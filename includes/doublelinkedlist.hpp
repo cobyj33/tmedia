@@ -165,6 +165,14 @@ class DoubleLinkedList {
             this->length += 1;
         }
 
+        void sub_list(int start, int len, T* output) {
+            set_index(start);
+            for (int i = 0; i < len; i++) {
+                output[i] = get();
+                try_move_index(1);
+            }
+        }
+
         bool set_index(int newIndex) {
             if (newIndex >= 0 && newIndex < this->length) {
                 if (newIndex < this->index) {
