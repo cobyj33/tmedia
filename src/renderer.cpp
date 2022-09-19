@@ -1,5 +1,6 @@
 #include "color.h"
 #include "macros.h"
+#include "pixeldata.h"
 #include <image.h>
 #include <ascii.h>
 #include <renderer.h>
@@ -25,11 +26,21 @@ void render_thread(MediaPlayer* player, std::mutex* alterMutex) {
         refresh();
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
-
 }
 
 void render_screen(MediaPlayer* player) {
-    render_movie_screen(player);
+    if (player->displayCache->image != nullptr && player->displayCache->last_rendered_image != nullptr) {
+        if (!pixel_data_equals(player->displayCache->image, player->displayCache->last_rendered_image)) {
+            render_movie_screen(player);
+        }
+    }
+
+    if (player->displayCache->last_rendered_image != nullptr) {
+        pixel_data_free(player->displayCache->last_rendered_image);
+    }
+    if (player->displayCache->image != nullptr) {
+        player->displayCache->last_rendered_image = copy_pixel_data(player->displayCache->image);
+    }
     /* render_video_debug(player); */
     /* if (player->displaySettings->show_debug) { */
     /*     if (player->displaySettings->mode == VIDEO) { */
@@ -93,6 +104,25 @@ void render_movie_screen(MediaPlayer* player) {
             free_video_symbol(pauseSymbol);
         }
 
+        /* int nb_quantized = 32; */
+        /* rgb output[nb_quantized]; */
+        /* rgb* color_data[textImage.height]; */
+        /* for (int i = 0; i < textImage.height; i++) { */
+        /*     color_data[i] = textImage.color_data[i]; */
+        /* } */
+
+        /* quantize_image(output, nb_quantized, color_data, textImage.width, textImage.height); */
+        /* rgb reinitialized[nb_quantized]; */
+        /* int nb_to_reinit = 0; */
+        /* rgb black = { 0, 0, 0 }; */
+        /* for (int i = 0; i < nb_quantized; i++) { */
+        /*     if (!rgb_equals(output[i], black)) { */
+        /*         rgb_copy(reinitialized[nb_to_reinit], output[i]); */
+        /*         nb_to_reinit++; */
+        /*     } */
+        /* } */
+
+        /* initialize_new_colors(reinitialized, nb_to_reinit); */
         print_ascii_image_full(&textImage);
     }
 }

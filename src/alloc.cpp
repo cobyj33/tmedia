@@ -32,6 +32,7 @@ MediaDisplayCache* media_display_cache_alloc() {
     cache->debug_info = (MediaDebugInfo*)malloc(sizeof(MediaDebugInfo));
     cache->symbol_stack = video_symbol_stack_alloc();
     cache->image = nullptr;
+    cache->last_rendered_image = nullptr;
     return cache;
 }
 

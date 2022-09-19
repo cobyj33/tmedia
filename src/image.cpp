@@ -183,4 +183,27 @@ void pixel_data_free(PixelData* pixelData) {
   free(pixelData);
 }
 
+bool pixel_data_equals(PixelData* first, PixelData* second) {
+    if (!(first->width == second->width && first->height == second->height && first->format == second->format)) {
+        return false;
+    }
+
+    for (int row = 0; row < first->height; row++) {
+        for (int col = 0; col < first->width; col++) {
+            if (first->format == RGB24) {
+                for (int i = 0; i < 3; i++) {
+                    if (first->pixels[row * first->width * 3 + col * 3 + i] != second->pixels[row * second->width * 3 + col * 3 + i]) {
+                        return false;
+                    }
+                }
+            } else if (first->format == GRAYSCALE8) {
+                if (first->pixels[row * first->width + col] != second->pixels[row * second->width + col]) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
 

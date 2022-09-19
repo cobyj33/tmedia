@@ -1,9 +1,7 @@
 #include "color.h"
-#include <chrono>
 #include <ncurses.h>
 #include <algorithm>
 #include <cmath>
-#include <thread>
 
 
 void init_color_rgb(rgb color, int init_index) {
@@ -32,68 +30,78 @@ typedef struct pair_distance {
 } pair_distance;
 
 const int max_colors = 256;
-int color_pairs_map[7][7][7];
-int color_map[7][7][7];
+const int COLOR_MAP_SIDE = 7;
+int color_pairs_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
+int color_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
 int available_colors = 0;
 int available_color_pairs = 0;
-const double COLOR_DISTANCE_ALLOWANCE = 5;
-const double COLOR_DISTANCE_ALLOWANCE_SQUARED = COLOR_DISTANCE_ALLOWANCE * COLOR_DISTANCE_ALLOWANCE;
 
-typedef struct QuantizeTracker {
-    rgb* color;
-    long score;
-} QuantizeTracker;
+int get_next_nearest_perfect_square(double num) {
+    double nsqrt = std::sqrt(num);
+    if (nsqrt == (int)nsqrt) {
+        return std::pow(std::ceil(std::sqrt(num) + 1), 2);
+    }
+
+    return std::pow(std::ceil(std::sqrt(num)), 2);
+}
 
 bool quantize_image(rgb* output, int output_len, rgb** colors, int width, int height) {
-    bool hash[255][255][255];
-    rgb* unique_colors = (rgb*)malloc(sizeof(rgb) * 10);
-    long* scores = (long*)malloc(sizeof(long) * 10);
+    //output_len_cbrt : nb boxes across the color space
+    //output_len: nb_boxes to split color space into
+    double output_len_cbrt = std::cbrt(output_len);
+    double box_side_size = 255 / output_len_cbrt;
+    int nb_buckets = get_next_nearest_perfect_square(output_len + 1);
+    rgb* buckets[nb_buckets];
+    int bucket_lengths[nb_buckets];
+    int bucket_capacities[nb_buckets];
 
-    int nb_unique_colors_initialized = 10;
-    int nb_unique_colors = 0;
+    for (int i = 0; i < nb_buckets; i++) {
+        bucket_lengths[i] = 0;
+        bucket_capacities[i] = 0;
+        buckets[i] = nullptr;
+    }
 
     for (int row = 0; row < height; row++) {
         for (int col = 0; col < width; col++) {
-            if (hash[colors[row][col][0]][colors[row][col][1]][colors[row][col][2]] == false) {
-                hash[colors[row][col][0]][colors[row][col][1]][colors[row][col][2]] = true;
-                rgb_copy(unique_colors[nb_unique_colors], colors[row][col]); 
-                scores[nb_unique_colors] = 0;
-                nb_unique_colors++;
+            uint8_t r, g, b;
+            rgb_get_values(colors[row][col], &r, &g, &b);
+            double box_coordinates[3] = { ((double)r / box_side_size), ((double)g / box_side_size), ((double)b / box_side_size)  };
+            int target_box = box_coordinates[0] * std::sqrt(nb_buckets) + box_coordinates[1] * std::cbrt(nb_buckets) + box_coordinates[2]; 
 
-                if (nb_unique_colors >= nb_unique_colors_initialized) {
-                    rgb* tmp_colors = (rgb*)realloc(unique_colors, sizeof(rgb) * nb_unique_colors_initialized * 2);
-                    long* tmp_scores = (long*)realloc(scores, sizeof(long) * nb_unique_colors_initialized * 2);
-                    if (tmp_colors != NULL && tmp_scores != NULL) {
-                        unique_colors = tmp_colors;
-                        scores = tmp_scores;
-                        nb_unique_colors_initialized *= 2;
-                    } else {
-                        if (unique_colors != NULL) {
-                            free(unique_colors);
-                        }
-                        if (scores != NULL) {
-                            free(scores);
-                        }
-                        return false;
-                    }
+            if (buckets[target_box] == nullptr) {
+                buckets[target_box] = (rgb*)malloc(sizeof(rgb) * 10);
+                if (buckets[target_box] == NULL) {
+                    buckets[target_box] = nullptr;
+                    continue;
                 }
+                bucket_capacities[target_box] = 10;
+            }
 
+            if (bucket_lengths[target_box] >= bucket_capacities[target_box]) {
+                rgb* tmp_bucket = (rgb*)realloc(buckets[target_box], sizeof(rgb) * bucket_capacities[target_box] * 2);
+                if (tmp_bucket != NULL) {
+                    buckets[target_box] = tmp_bucket;
+                    bucket_capacities[target_box] *= 2; 
+                }
+            }
+
+            if (bucket_lengths[target_box] < bucket_capacities[target_box]) {
+                rgb_copy(buckets[target_box][bucket_lengths[target_box]], colors[row][col]);
+                bucket_lengths[target_box]++;
             }
         }
     }
 
-    for (int i = 0; i < nb_unique_colors; i++) {
-        for (int c = 0; c < nb_unique_colors; c++) {
-            scores[i] += color_distance_squared(unique_colors[i], unique_colors[c]);
-        }
-    }
-    
     for (int i = 0; i < output_len; i++) {
-        
+        get_average_color(output[i], buckets[i], bucket_lengths[i]);
     }
 
-    free(unique_colors);
-    free(scores);
+    for (int i = 0; i < nb_buckets; i++) {
+        if (buckets[i] != nullptr) {
+            free(buckets[i]);
+        }
+    }
+
     return true;
 }
 
@@ -106,14 +114,15 @@ void init_default_color_palette() {
     int color_index = 8;
     int colors_to_add = std::min(COLORS - 8, max_colors - 8);
     double box_size = 255 / std::cbrt(colors_to_add);
-    for (double r = 0; r < 256; r += box_size) {
-        for (double g = 0; g < 256; g += box_size) {
-            for (double b = 0; b < 256; b += box_size) {
+    for (double r = 0; r < 255; r += box_size) {
+        for (double g = 0; g < 255; g += box_size) {
+            for (double b = 0; b < 255; b += box_size) {
                 init_color(color_index, r * 1000 / 255, g * 1000 / 255, b * 1000 / 255);
                 color_index++;
             }
         }
     }
+
     available_colors += colors_to_add;
 }
 
@@ -127,15 +136,15 @@ void init_color_palette(rgb* input, int len) {
     for (int i = 0; i < colors_to_add; i++) {
         init_color(i + 8, (short)input[i][0] * 1000 / 255, (short)input[i][1] * 1000 / 255, (short)input[i][2] * 1000 / 255);
     }
+
     available_colors += colors_to_add;
 }
 
-
 void init_color_map() {
-    for (int r = 0; r < 7; r++) {
-        for (int g = 0; g < 7; g++) {
-            for (int b = 0; b < 7; b++) {
-                rgb color = { (uint8_t)(r * 255 / 7), (uint8_t)(g * 255 / 7), (uint8_t)(b * 255 / 7) };
+    for (int r = 0; r < COLOR_MAP_SIDE; r++) {
+        for (int g = 0; g < COLOR_MAP_SIDE; g++) {
+            for (int b = 0; b < COLOR_MAP_SIDE; b++) {
+                rgb color = { (uint8_t)(r * 255 / (COLOR_MAP_SIDE - 1)), (uint8_t)(g * 255 / (COLOR_MAP_SIDE - 1)), (uint8_t)(b * 255 / (COLOR_MAP_SIDE - 1)) };
                 color_map[r][g][b] = find_closest_color(color);
             }
         }
@@ -143,10 +152,10 @@ void init_color_map() {
 }
 
 void init_color_pairs_map() {
-    for (int r = 0; r < 7; r++) {
-        for (int g = 0; g < 7; g++) {
-            for (int b = 0; b < 7; b++) {
-                rgb color = { (uint8_t)(r * 255 / 7), (uint8_t)(g * 255 / 7), (uint8_t)(b * 255 / 7) };
+    for (int r = 0; r < COLOR_MAP_SIDE; r++) {
+        for (int g = 0; g < COLOR_MAP_SIDE; g++) {
+            for (int b = 0; b < COLOR_MAP_SIDE; b++) {
+                rgb color = { (uint8_t)(r * 255 / (COLOR_MAP_SIDE - 1)), (uint8_t)(g * 255 / (COLOR_MAP_SIDE - 1)), (uint8_t)(b * 255 / (COLOR_MAP_SIDE - 1)) };
                 color_pairs_map[r][g][b] = find_closest_color_pair(color);
             }
         }
@@ -188,6 +197,7 @@ void initialize_color_pairs() {
         init_pair(i, get_closest_color(complementary), i);
         available_color_pairs++;
     }
+
     init_color_pairs_map();
 }
 
@@ -216,7 +226,8 @@ int get_closest_color(rgb input) {
         return -1;
     }
 
-    return color_map[(int)input[0] * 7 / 255][(int)input[1] * 7 / 255][(int)input[2] * 7 / 255];
+    /* return color_map[(int)input[0] * COLOR_MAP_SIDE / 255][(int)input[1] * COLOR_MAP_SIDE / 255][(int)input[2] * COLOR_MAP_SIDE / 255]; */
+    return color_map[(int)input[0] * (COLOR_MAP_SIDE - 1) / 255][(int)input[1] * (COLOR_MAP_SIDE - 1) / 255][(int)input[2] * (COLOR_MAP_SIDE - 1) / 255];
 }
 
 int get_closest_color_pair(rgb input) {
@@ -224,7 +235,7 @@ int get_closest_color_pair(rgb input) {
         return -1;
     }
 
-    return color_pairs_map[(int)input[0] * 7 / 255][(int)input[1] * 7 / 255][(int)input[2] * 7 / 255];
+    return color_pairs_map[(int)input[0] * (COLOR_MAP_SIDE - 1) / 255][(int)input[1] * (COLOR_MAP_SIDE - 1) / 255][(int)input[2] * (COLOR_MAP_SIDE - 1) / 255];
 }
 
 int find_closest_color_pair(rgb input) {
@@ -266,6 +277,22 @@ double color_distance_squared(rgb first, rgb second) {
     return (((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8);
 }
 
+void get_average_color(rgb output, rgb* colors, int len) {
+    if (len <= 0) {
+        rgb_set(output, 0, 0, 0);
+        return;
+    }
+
+    double sums[3] = { 0, 0, 0 };
+    for (int i = 0; i < len; i++) {
+        sums[0] += (double)colors[i][0] * colors[i][0];
+        sums[1] += (double)colors[i][1] * colors[i][1];
+        sums[2] += (double)colors[i][2] * colors[i][2];
+    }
+
+    rgb_set(output, (uint8_t)std::sqrt(sums[0]/len), (uint8_t)std::sqrt(sums[1]/len), (uint8_t)std::sqrt(sums[2]/len));
+}
+
 void rgb_copy(rgb dest, rgb src) {
     dest[0] = src[0];
     dest[1] = src[1];
@@ -304,4 +331,11 @@ void rgb255_to_rgb1000(rgb colors, int output[3]) {
 
 void rgb_complementary(rgb dest, rgb src) {
     rgb_set(dest, 255 - src[0], 255 - src[1], 255 - src[2] );
+}
+
+
+void rgb_get_values(rgb rgb, uint8_t* r, uint8_t* g, uint8_t* b) {
+    *r = rgb[0];
+    *g = rgb[1];
+    *b = rgb[2];
 }

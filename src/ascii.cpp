@@ -151,27 +151,21 @@ char get_char_from_area_rgb(uint8_t* pixels, int x, int y, int width, int height
 }
 
 void get_avg_color_from_area_rgb(uint8_t* pixels, int x, int y, int width, int height, int pixelWidth, int pixelHeight, rgb output) {
-  double additive[3] = { 0, 0, 0 };
-  int valueCount = 0;
+  rgb colors[width * height];
+  int nb_colors = 0;
 
   for (int row = 0; row < height; row++) {
     for (int col = 0; col < width; col++) {
       int pixelIndex = (row + y) * 3 * pixelWidth + (x + col) * 3;
       if (pixelIndex + 2 < pixelWidth * pixelHeight * 3 && pixelIndex >= 0 && (x + col) < pixelWidth && (row + y) < pixelHeight  ) {
-          additive[0] += (double)pixels[pixelIndex] * pixels[pixelIndex];
-          additive[1] += (double)pixels[pixelIndex + 1] * pixels[pixelIndex + 1];
-          additive[2] += (double)pixels[pixelIndex + 2] * pixels[pixelIndex + 2];
-          valueCount++;
+          rgb_set(colors[nb_colors],  pixels[pixelIndex], pixels[pixelIndex + 1], pixels[pixelIndex + 2] );
+          nb_colors++;
       }
     }
   }
 
-  /* if (valueCount > 0) { */
-  /*     printf("%c, %c, %c",  (uint8_t)std::sqrt((double)additive[0]/valueCount), (uint8_t)std::sqrt((double)additive[1]/valueCount), (uint8_t)std::sqrt((double)additive[2]/valueCount)); */
-  /* } */
-
-  if (valueCount > 0) {
-      rgb_set(output, (uint8_t)std::sqrt(additive[0]/valueCount), (uint8_t)std::sqrt(additive[1]/valueCount), (uint8_t)std::sqrt(additive[2]/valueCount));
+  if (nb_colors > 0) {
+      get_average_color(output, colors, nb_colors);
   } else {
       rgb_set(output, 0, 0, 0);
   }

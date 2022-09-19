@@ -81,6 +81,7 @@ int main(int argc, char** argv)
     }
 
         
+  srand(time(NULL));
   av_log_set_level(AV_LOG_QUIET);
   init_icons();
 

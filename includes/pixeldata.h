@@ -25,3 +25,4 @@ int get_pixel_data_buffer_size(PixelData* data);
 void pixel_data_free(PixelData* PixelData);
 PixelData* get_pixel_data_from_image(const char* fileName, PixelDataFormat format);
 const char* pixel_data_format_string(PixelDataFormat format);
+bool pixel_data_equals(PixelData* first, PixelData* second);

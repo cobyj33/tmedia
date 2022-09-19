@@ -11,6 +11,7 @@ int find_closest_color(rgb input);
 
 void initialize_color_pairs();
 void initialize_colors();
+void initialize_new_colors(rgb* input, int len);
 void get_pair_content(int pair, rgb fg, rgb bg);
 void get_color_content(int color, rgb output);
 
@@ -25,4 +26,8 @@ void rgb_set(rgb rgb, uint8_t r, uint8_t g, uint8_t b);
 void rgb_copy(rgb dest, rgb src);
 void rgb_complementary(rgb dest, rgb src);
 bool rgb_equals(rgb first, rgb second);
+void rgb_get_values(rgb rgb, uint8_t* r, uint8_t* g, uint8_t* b);
+
+void get_average_color(rgb output, rgb* colors, int len);
+bool quantize_image(rgb* output, int output_len, rgb** colors, int width, int height);
 

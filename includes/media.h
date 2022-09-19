@@ -72,6 +72,7 @@ typedef struct MediaDisplaySettings {
 typedef struct MediaDisplayCache {
     MediaDebugInfo* debug_info;
     PixelData* image;
+    PixelData* last_rendered_image;
     VideoSymbolStack* symbol_stack;
 } MediaDisplayCache;
 
