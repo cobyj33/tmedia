@@ -84,6 +84,7 @@ make -j2
 * use -h when executing in order to see commands
 ```
 <executable> -v <path-to-file>: Play a video File
+<executable> -v -c <path-to-file>: Play a video File with color (works if supported in the current terminal)
 <executable> -i <path-to-file>: display image file
 <executable> -info <path-to-file>: Get stream info about a multimedia file
 code blocks for commands
@@ -102,7 +103,9 @@ code blocks for commands
 Jacoby Johnson: [@cobyj33](https://www.github.com/cobyj33)
 
 ## Version History
-
+* 1.2
+  * Added support for colored output with the -c flag before entering the file path
+    * At most, uses 256 unique colors
 * 1.1
     * Current Release, Mostly personal refactoring of the code to be more readable by separating the VideoState class into multiple Media classes
     * Removed Delay on changing video time
@@ -134,6 +137,7 @@ Inspiration, code snippets, etc.
 
 ## Example Output
 ![example created in tmux](assets/example.gif)
+![example colored output](assets/colored_music_record.gif)
 
 <hr>
 @\%#*+=-:._@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._
