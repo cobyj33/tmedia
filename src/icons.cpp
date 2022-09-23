@@ -43,18 +43,13 @@ int testIconProgram() {
     for (int i = 0; i < 12; i++) {
         erase();
         PixelData* iconData = iconFromEnum.at(i);
-        AsciiImage image = get_ascii_image_bounded(iconData, COLS, LINES);
-
-        /* printw("Image %d: %d x %d to %d x %d\n", i, iconData->width, iconData->height, image.width, image.height); */
-        /* for (int i = 0; i < image.height; i++) { */
-        /*     for (int j = 0; j < image.width; j++) { */
-        /*         addch(image.lines[i][j]); */
-        /*     } */
-        /*     addch('\n'); */
-        /* } */
+        AsciiImage* image = get_ascii_image_bounded(iconData, COLS, LINES);
+        if (image != nullptr) {
+            print_ascii_image_full(image);
+            refresh();
+            ascii_image_free(image);
+        }
                 
-        print_ascii_image_full(&image);
-        refresh();
         std::this_thread::sleep_for(std::chrono::milliseconds(500));    
     }
 

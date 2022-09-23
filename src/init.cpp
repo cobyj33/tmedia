@@ -28,14 +28,11 @@ void start_media_player(MediaPlayer* player) {
     std::thread video(video_playback_thread, player, &alterMutex);
     std::thread audio(audio_playback_thread, player, &alterMutex);
     std::thread bufferLoader(data_loading_thread, player, &alterMutex);
-    std::thread inputThread(input_thread, player, &alterMutex);
-    std::thread renderingThread(render_thread, player, &alterMutex);
+    render_thread(player, &alterMutex);
     
     video.join();
     audio.join();
     bufferLoader.join();
-    inputThread.join();
-    renderingThread.join();
 
     player->timeline->playback->playing = false;
     player->inUse = false;

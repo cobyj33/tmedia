@@ -62,36 +62,6 @@ bool has_media_stream(MediaData* media_data, AVMediaType media_type) {
     return get_media_stream(media_data, media_type) != nullptr;
 }
 
-MediaDisplayMode get_next_display_mode(MediaDisplayMode currentMode) {
-    for (int i = 0; i < nb_display_modes; i++) {
-        if (display_modes[i] == currentMode) {
-            return display_modes[i + 1 % nb_display_modes];
-        }
-    }
-    return currentMode;
-}
-
-void add_debug_message(MediaDebugInfo* debug_info, const char* format, ...) {
-    if (debug_info->nb_messages >= MEDIA_DEBUG_MESSAGE_BUFFER_SIZE) {
-        return;
-    }
-
-    va_list args;
-    va_start(args, format);
-    std::size_t alloc_size = std::vsnprintf(NULL, 0, format, args);
-    char* string = (char*)malloc(alloc_size);
-    std::vsnprintf(string, alloc_size, format, args);
-    debug_info->messages[debug_info->nb_messages] = string;
-    debug_info->nb_messages++;
-    va_end(args);
-}
-
-void clear_media_debug(MediaDebugInfo* debug) {
-    for (int i = 0; i < debug->nb_messages; i++) {
-        free(debug->messages[i]);
-    }
-    debug->nb_messages = 0; 
-}
 
 void move_packet_list_to_pts(DoubleLinkedList<AVPacket*>* packets, int64_t targetPTS) {
     bool result = true;

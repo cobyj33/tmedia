@@ -2,7 +2,7 @@
 #include <mediadump.h>
 
 /* int get_media_player_dump_size(MediaPlayer* player) { */
-    
+
 /* } */
 
 /* void dump_media_player(MediaPlayer* player, char* buffer) { */

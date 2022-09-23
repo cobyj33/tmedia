@@ -1,10 +1,13 @@
 #include "color.h"
 #include "icons.h"
+#include "pixeldata.h"
 #include <cstdlib>
 #include <image.h>
 #include <video.h>
 #include <media.h>
 #include <info.h>
+
+#include <signal.h>
 
 extern "C" {
 #include <libavutil/log.h>
@@ -57,9 +60,6 @@ const char* help_text = "     ASCII_VIDEO         \n"
       "       ------------------                   \n"
       "  -info <file> => print file info                   \n";
 
-
-
-
 const int nb_input_flags = 6;
 const char* input_flags[nb_input_flags] = { "-v", "--video", "-i", "--image", "-a", "--audio" };
 InputType flag_to_input_type(const char* flag);
@@ -80,12 +80,9 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-        
   srand(time(NULL));
   av_log_set_level(AV_LOG_QUIET);
   init_icons();
-
-  /* return testIconProgram(); */
 
   ProgramCommands commands = { FORMAT_TYPE_GRAYSCALE, INPUT_TYPE_VIDEO, nullptr, PRIORITY_TYPE_UNKNOWN };
   for (int i = 1; i < argc; i++) {

@@ -35,11 +35,14 @@ AVFrame** get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampl
 AVFrame** find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, AVPacket** packet_buffer, int packet_buffer_length, int* result, int* nb_frames_decoded);
 AVFrame** find_final_audio_frames_dll(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, DoubleLinkedList<AVPacket*>* packet_buffer, int* result, int* nb_frames_decoded);
 
+const char* debug_audio_source = "audio";
+const char* debug_audio_type = "debug";
 
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
         CallbackData* callbackData = static_cast<CallbackData*>(pDevice->pUserData);
         std::mutex* alterMutex = callbackData->mutex;
         std::lock_guard<std::mutex> alterLock{*alterMutex};
+
 
         MediaPlayer* player = callbackData->player;
         AudioResampler* audioResampler = callbackData->audioResampler;
@@ -56,13 +59,13 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
         int samplesToSkip = 0;
         const double stretchAmount = 1 / playback->speed;
-        const int bytesPerSample = av_get_bytes_per_sample(AV_SAMPLE_FMT_FLT);
+        /* const int bytesPerSample = av_get_bytes_per_sample(AV_SAMPLE_FMT_FLT); */
         const double since_last_call = (double)std::chrono::duration_cast<std::chrono::nanoseconds>((std::chrono::steady_clock::now() - callbackData->last_time)).count() / SECONDS_TO_NANOSECONDS;
         audio_stream->streamTime += since_last_call;
         const double audio_async_time = std::abs(audio_stream->streamTime  - playback->time); 
         const int64_t targetAudioPTS = (int64_t)(audio_stream->streamTime / audio_stream->timeBase);
 
-        add_debug_message(debug_info, "AUDIO DEBUG: \n\n Playback: \n  Master Time: %f \n Audio Time: %f \n Unsync Amount: %f \n    Speed: %f \n    Playing: %s\n Volume: %f\n", playback->time, audio_stream->streamTime, std::abs(audio_stream->streamTime - playback->time), playback->speed, playback->playing ? "true" : "false", playback->volume);
+        add_debug_message(debug_info, debug_audio_source, debug_audio_type, "AUDIO DEBUG: \n\n Playback: \n  Master Time: %f \n Audio Time: %f \n Unsync Amount: %f \n    Speed: %f \n    Playing: %s\n Volume: %f\n", playback->time, audio_stream->streamTime, std::abs(audio_stream->streamTime - playback->time), playback->speed, playback->playing ? "true" : "false", playback->volume);
 
         if (audio_async_time >= MAX_AUDIO_ASYNC_TIME_SECONDS) {
             audio_stream->streamTime = playback->time;
@@ -82,13 +85,13 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
         }
 
         if (audioFrames == nullptr) {
-            add_debug_message(debug_info, "COULD NOT RESAMPLE AUDIO FRAMES");
+            add_debug_message(debug_info, debug_audio_source, debug_audio_type, "COULD NOT RESAMPLE AUDIO FRAMES");
             return;
         }
 
         AVAudioFifo* tempBuffer = av_audio_fifo_alloc(AV_SAMPLE_FMT_FLT, audioCodecContext->ch_layout.nb_channels, AUDIO_FIFO_BUFFER_SIZE);
         if (tempBuffer == NULL) {
-            add_debug_message(debug_info, "COULD NOT ALLOCATE TEMPORARY AUDIO FIFO");
+            add_debug_message(debug_info, debug_audio_source, debug_audio_type, "COULD NOT ALLOCATE TEMPORARY AUDIO FIFO");
             return;
         }
 
@@ -105,7 +108,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
             &(audioCodecContext->ch_layout), AV_SAMPLE_FMT_FLT,  audioCodecContext->sample_rate / stretchAmount,
             &(audioCodecContext->ch_layout) , AV_SAMPLE_FMT_FLT, audioCodecContext->sample_rate);
             if (inTimeAudioResampler == nullptr) {
-                add_debug_message(debug_info, "COULD NOT ALLOCATE AND INITIALIZE IN TIME AUDIO RESAMPLER FOR AUDIO PLAYBACK");
+                add_debug_message(debug_info, debug_audio_source, debug_audio_type, "COULD NOT ALLOCATE AND INITIALIZE IN TIME AUDIO RESAMPLER FOR AUDIO PLAYBACK");
                 shouldResampleAudioFrames = false;
             }
         }
@@ -113,7 +116,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
         while (samplesWritten < frameCount + samplesToSkip && av_audio_fifo_space(tempBuffer) > currentAudioFrame->nb_samples) {
             framesRead++;
-            add_debug_message(debug_info, "Frame %d:\n     ", framesRead);
+            add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Frame %d:\n     ", framesRead);
 
             if (shouldResampleAudioFrames) {
                 int samplesToWrite = (int)(currentAudioFrame->nb_samples * stretchAmount);
@@ -123,7 +126,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
                 int conversionResult = swr_convert(inTimeAudioResampler->context, (uint8_t**)(resampledValues), currentAudioFrame->nb_samples, (const uint8_t**)(finalValues), samplesToWrite);
 
                 if (conversionResult < 0) {
-                    add_debug_message(debug_info, "Could not correctly perform SWR resampling\n");
+                    add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Could not correctly perform SWR resampling\n");
                     samplesWritten += av_audio_fifo_write(tempBuffer, (void**)finalValues, samplesToWrite);
                 } else {
                     samplesWritten += av_audio_fifo_write(tempBuffer, (void**)resampledValues, currentAudioFrame->nb_samples);
@@ -133,7 +136,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
                  av_freep(&finalValues[0]);
                  av_freep(&resampledValues[0]);
             } else  {
-                add_debug_message(debug_info, "Feeding unaltered audio data\n");
+                add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Feeding unaltered audio data\n");
                 samplesWritten += av_audio_fifo_write(tempBuffer, (void**)currentAudioFrame->data, currentAudioFrame->nb_samples);
             }
 
@@ -156,7 +159,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
                     }
 
                     if (audioFrames == nullptr) {
-                        add_debug_message(debug_info, "COULD NOT RESAMPLE AUDIO FRAMES");
+                        add_debug_message(debug_info, debug_audio_source, debug_audio_type, "COULD NOT RESAMPLE AUDIO FRAMES");
                         break;
                     }
 
@@ -171,7 +174,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
         av_audio_fifo_drain(tempBuffer, samplesToSkip);
         av_audio_fifo_read(tempBuffer, &pOutput, audioSamplesToOutput);
 
-        add_debug_message(debug_info, "Samples Written: %d, Samples Requested: %d, Samples Skipped: %d, Frames Read: %d Device Sample Rate: %d\n ", samplesWritten, (int)frameCount, samplesToSkip, framesRead, pDevice->sampleRate);
+        add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Samples Written: %d, Samples Requested: %d, Samples Skipped: %d, Frames Read: %d Device Sample Rate: %d\n ", samplesWritten, (int)frameCount, samplesToSkip, framesRead, pDevice->sampleRate);
 
         if (inTimeAudioResampler != nullptr) {
            free_audio_resampler(inTimeAudioResampler); 

@@ -20,18 +20,20 @@ typedef struct ColorChar {
 } ColorChar;
 
 typedef struct AsciiImage {
-    char lines[MAX_ASCII_IMAGE_HEIGHT + 1][MAX_ASCII_IMAGE_WIDTH + 1];
-    rgb color_data[MAX_ASCII_IMAGE_HEIGHT + 1][MAX_ASCII_IMAGE_WIDTH + 1];
+    char* lines;
+    rgb* color_data;
     bool colored;
     int width;
     int height;
 } AsciiImage;
 
 
-AsciiImage copy_ascii_image(AsciiImage* src);
-AsciiImage get_ascii_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWidth, int outputHeight, PixelDataFormat format);
-AsciiImage get_ascii_image_bounded(PixelData* pixelData, int maxWidth, int maxHeight);
-AsciiImage get_ascii_image_from_frame(AVFrame* videoFrame, int maxWidth, int maxHeight);
+AsciiImage* ascii_image_alloc(int width, int height, bool colored);
+void ascii_image_free(AsciiImage* image);
+AsciiImage* copy_ascii_image(AsciiImage* src);
+AsciiImage* get_ascii_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWidth, int outputHeight, PixelDataFormat format);
+AsciiImage* get_ascii_image_bounded(PixelData* pixelData, int maxWidth, int maxHeight);
+AsciiImage* get_ascii_image_from_frame(AVFrame* videoFrame, int maxWidth, int maxHeight);
 
 char get_char_from_value(uint8_t value);
 char get_char_from_area(uint8_t* pixels, int x, int y, int width, int height, int pixelWidth, int pixelHeight );

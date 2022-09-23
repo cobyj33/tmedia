@@ -1,4 +1,5 @@
 #include "boiler.h"
+#include "debug.h"
 #include "decode.h"
 #include <curses.h>
 #include <media.h>
@@ -36,6 +37,17 @@ MediaDisplayCache* media_display_cache_alloc() {
     return cache;
 }
 
+MediaDebugInfo* media_debug_info_alloc() {
+    MediaDebugInfo* debug_info = (MediaDebugInfo*)malloc(sizeof(MediaDebugInfo));
+    debug_info->nb_messages = 0;
+    return debug_info;
+}
+
+void media_debug_info_free(MediaDebugInfo* info) {
+    clear_media_debug(info, "", "");
+    free(info);
+}
+
 VideoSymbolStack* video_symbol_stack_alloc() {
     VideoSymbolStack* stack = (VideoSymbolStack*)malloc(sizeof(VideoSymbolStack));
     stack->top = -1;
@@ -46,10 +58,20 @@ MediaDisplaySettings* media_display_settings_alloc() {
     MediaDisplaySettings* settings = (MediaDisplaySettings*)malloc(sizeof(MediaDisplaySettings));
     settings->show_debug = false;
     settings->subtitles = false;
-    settings->mode = VIDEO;
+    settings->mode = DISPLAY_MODE_VIDEO;
     settings->can_use_colors = has_colors();
     settings->can_change_colors = can_change_color();
     settings->use_colors = false;
+
+    settings->train_palette = true;
+    settings->best_palette = (rgb*)malloc(sizeof(rgb) * 16);
+    if (settings->best_palette == NULL) {
+        std::cerr << "Could not allocate best color palette container for media player" << std::endl;
+        return nullptr;
+    }
+
+    settings->palette_size = 16;
+
     return settings;
 }
 
@@ -136,6 +158,7 @@ void media_display_cache_free(MediaDisplayCache* cache) {
 
 void media_display_settings_free(MediaDisplaySettings *settings) {
     free(settings);
+    free(settings->best_palette);
     settings = nullptr;
 }
 

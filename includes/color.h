@@ -5,9 +5,13 @@ typedef uint8_t rgb[3];
 typedef int rgb_i32[3];
 
 int get_closest_color_pair(rgb input);
-int find_closest_color_pair(rgb input);
 int get_closest_color(rgb input);
-int find_closest_color(rgb input);
+bool get_most_common_colors(rgb* output, int k, rgb* colors, int nb_colors, int* actual_output_size);
+
+int find_best_initialized_color_pair(rgb input);
+int find_best_initialized_color(rgb input);
+int find_closest_color_index(rgb input, rgb* colors, int nb_colors);
+void find_closest_color(rgb input, rgb* colors, int nb_colors, rgb output);
 
 void initialize_color_pairs();
 void initialize_colors();
@@ -29,5 +33,5 @@ bool rgb_equals(rgb first, rgb second);
 void rgb_get_values(rgb rgb, uint8_t* r, uint8_t* g, uint8_t* b);
 
 void get_average_color(rgb output, rgb* colors, int len);
-bool quantize_image(rgb* output, int output_len, rgb** colors, int width, int height);
+bool quantize_image(rgb* output, int output_len, rgb* colors, int nb_colors);
 

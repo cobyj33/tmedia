@@ -1,12 +1,14 @@
 #pragma once
 #include "decode.h"
-#include <cstdint>
-#include <mutex>
-#include "doublelinkedlist.hpp"
-#include <chrono>
 #include "boiler.h"
 #include "icons.h"
 #include "debug.h"
+#include "doublelinkedlist.hpp"
+#include "color.h"
+
+#include <cstdint>
+#include <mutex>
+#include <chrono>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -53,19 +55,24 @@ typedef struct MediaTimeline {
 } MediaTimeline;
 
 typedef enum MediaDisplayMode {
-    VIDEO, AUDIO
+    DISPLAY_MODE_VIDEO, DISPLAY_MODE_AUDIO
 } MediaDisplayMode;
 
 const int nb_display_modes = 2;
-const MediaDisplayMode display_modes[nb_display_modes] = { VIDEO, AUDIO };
+const MediaDisplayMode display_modes[nb_display_modes] = { DISPLAY_MODE_VIDEO, DISPLAY_MODE_AUDIO };
 MediaDisplayMode get_next_display_mode(MediaDisplayMode currentMode);
 
 typedef struct MediaDisplaySettings {
     bool show_debug;
     bool subtitles;
+
     bool use_colors;
     bool can_use_colors;
     bool can_change_colors;
+
+    bool train_palette;
+    int palette_size;
+    rgb* best_palette;
     MediaDisplayMode mode;
 } MediaDisplaySettings; 
 

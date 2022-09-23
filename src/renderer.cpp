@@ -1,7 +1,10 @@
 #include "color.h"
+#include "debug.h"
 #include "macros.h"
 #include "pixeldata.h"
+#include <cstring>
 #include <image.h>
+#include <video.h>
 #include <ascii.h>
 #include <renderer.h>
 #include <icons.h>
@@ -13,22 +16,95 @@
 #include <ncurses.h>
 #include <curses_helpers.h>
 
+const char KEY_ESCAPE = 27;
+
 void render_thread(MediaPlayer* player, std::mutex* alterMutex) {
     std::unique_lock<std::mutex> alterLock(*alterMutex, std::defer_lock);
-    int frames_rendered = 0;
+    WINDOW* inputWindow = newwin(0, 0, 1, 1);
+    nodelay(inputWindow, true);
+    keypad(inputWindow, true);
+    std::chrono::milliseconds inputSleep = std::chrono::milliseconds(0);
+    double jump_time_requested = 0;
 
     while (player->inUse) {
         alterLock.lock();
-        frames_rendered++;
-        add_debug_message(player->displayCache->debug_info, "Frames Rendered: %d", frames_rendered);
+        inputSleep = std::chrono::milliseconds(1);
+        int ch = wgetch(inputWindow);
+        Playback* playback = player->timeline->playback;
+
+        if (!player->inUse) {
+            break;
+        }
+
+        if (jump_time_requested != 0 && (ch != KEY_LEFT && ch != KEY_RIGHT)) {
+            double targetTime = playback->time + jump_time_requested;
+            if (targetTime >= player->timeline->mediaData->duration) {
+                player->inUse = false;
+                alterLock.unlock();
+                break;
+            }
+
+            jump_to_time(player->timeline, targetTime);
+            video_symbol_stack_push(player->displayCache->symbol_stack, jump_time_requested < 0 ? get_video_symbol(BACKWARD_ICON) : get_video_symbol(FORWARD_ICON));
+            jump_time_requested = 0;
+        }
+
+        if (ch == (int)(' ')) {
+            playback->playing = !playback->playing;
+        } else if (ch == (int)('d') || ch == (int)('D')) {
+            player->displaySettings->show_debug = !player->displaySettings->show_debug;
+        } else if (ch == (int)('c') || ch == (int)('C')) {
+            player->displaySettings->mode = get_next_display_mode(player->displaySettings->mode);
+        } else if (ch == KEY_LEFT) {
+            jump_time_requested -= TIME_CHANGE_AMOUNT;
+        } else if (ch == KEY_RIGHT) {
+            jump_time_requested += TIME_CHANGE_AMOUNT;
+        } else if (ch == KEY_UP) {
+            playback->volume = std::min(1.0, playback->volume + VOLUME_CHANGE_AMOUNT);
+            video_symbol_stack_push(player->displayCache->symbol_stack,get_symbol_from_volume(playback->volume));
+        } else if (ch == KEY_DOWN) {
+            playback->volume = std::min(1.0, playback->volume - VOLUME_CHANGE_AMOUNT);
+            video_symbol_stack_push(player->displayCache->symbol_stack,get_symbol_from_volume(playback->volume));
+        } else if (ch == (int)('n') || ch == (int)('N')) {
+            playback->speed = std::min(5.0, playback->speed + PLAYBACK_SPEED_CHANGE_INTERVAL);
+        } else if (ch == (int)('m') || ch == (int)('M')) {
+            playback->speed = std::max(0.25, playback->speed - PLAYBACK_SPEED_CHANGE_INTERVAL);
+        } else if (ch == (int)('x') || ch == (int)('X') || ch == KEY_ESCAPE) {
+            player->inUse = !player->inUse;
+        } else if (ch == KEY_RESIZE) {
+            endwin();
+            refresh();
+        }
+
         render_screen(player);
+
         alterLock.unlock();
         refresh();
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5) + inputSleep);
     }
+
+    delwin(inputWindow);
 }
 
 void render_screen(MediaPlayer* player) {
+    /* if (player->displaySettings->show_debug) { */
+    /*     if (player->displaySettings->mode == DISPLAY_MODE_VIDEO) { */
+    /*         render_video_debug(player); */
+    /*     } else if (player->displaySettings->mode == DISPLAY_MODE_AUDIO) { */
+    /*         render_audio_debug(player); */
+    /*     } */
+    /* } else { */
+    /*     if (player->displaySettings->mode == DISPLAY_MODE_VIDEO) { */
+    /*         if (player->displayCache->image != nullptr && player->displayCache->last_rendered_image != nullptr) { */
+    /*             if (!pixel_data_equals(player->displayCache->image, player->displayCache->last_rendered_image)) { */
+    /*                 render_movie_screen(player); */
+    /*             } */
+    /*         } */
+    /*     } else if (player->displaySettings->mode == DISPLAY_MODE_AUDIO) { */
+    /*         render_audio_screen(player); */
+    /*     } */
+    /* } */
+
     if (player->displayCache->image != nullptr && player->displayCache->last_rendered_image != nullptr) {
         if (!pixel_data_equals(player->displayCache->image, player->displayCache->last_rendered_image)) {
             render_movie_screen(player);
@@ -41,20 +117,7 @@ void render_screen(MediaPlayer* player) {
     if (player->displayCache->image != nullptr) {
         player->displayCache->last_rendered_image = copy_pixel_data(player->displayCache->image);
     }
-    /* render_video_debug(player); */
-    /* if (player->displaySettings->show_debug) { */
-    /*     if (player->displaySettings->mode == VIDEO) { */
-    /*         render_video_debug(player); */
-    /*     } else if (player->displaySettings->mode == AUDIO) { */
-    /*         render_audio_debug(player); */
-    /*     } */
-    /* } else { */
-    /*     if (player->displaySettings->mode == VIDEO) { */
-    /*         render_movie_screen(player); */
-    /*     } else if (player->displaySettings->mode == AUDIO) { */
-    /*         render_audio_screen(player); */
-    /*     } */
-    /* } */
+
 }
 
 void render_audio_screen(MediaPlayer *player) {
@@ -62,35 +125,44 @@ void render_audio_screen(MediaPlayer *player) {
     printw("AUDIO");
 }
 
+void print_debug(MediaDebugInfo* debug_info, const char* source, const char* type) {
+    for (int i = 0; i < debug_info->nb_messages; i++) {
+        if (std::strcmp(source, debug_info->messages[i]->source) == 0 && std::strcmp(type, debug_info->messages[i]->type) == 0) {
+            printw("%s", debug_info->messages[i]->message);
+        }
+    }
+}
+
 void render_audio_debug(MediaPlayer* player) {
     erase();
-    for (int i = 0; i < player->displayCache->debug_info->nb_messages; i++) {
-        printw("%s", player->displayCache->debug_info->messages[i]);
+    print_debug(player->displayCache->debug_info, "audio", "debug");
+    if (player->displayCache->debug_info->nb_messages == MEDIA_DEBUG_MESSAGE_BUFFER_SIZE) {
+        clear_media_debug(player->displayCache->debug_info, "audio", "debug");
     }
-    clear_media_debug(player->displayCache->debug_info);
 }
 
 void render_video_debug(MediaPlayer *player) {
     erase();
-    for (int i = 0; i < player->displayCache->debug_info->nb_messages; i++) {
-        printw("%s", player->displayCache->debug_info->messages[i]);
+    print_debug(player->displayCache->debug_info, "video", "debug");
+    if (player->displayCache->debug_info->nb_messages == MEDIA_DEBUG_MESSAGE_BUFFER_SIZE) {
+        clear_media_debug(player->displayCache->debug_info, "video", "debug");
     }
-
-    clear_media_debug(player->displayCache->debug_info);
 }
+
 
 void render_movie_screen(MediaPlayer* player) {
     erase();
     if (player->displayCache->image != nullptr) {
         VideoSymbolStack* symbol_stack = player->displayCache->symbol_stack;
-        AsciiImage textImage = get_ascii_image_bounded(player->displayCache->image, COLS, LINES);
+        AsciiImage* textImage = get_ascii_image_bounded(player->displayCache->image, COLS, LINES);
 
         while (player->displayCache->symbol_stack->top >= 0) {
             VideoSymbol* currentSymbol = video_symbol_stack_peek(symbol_stack); 
             if (std::chrono::steady_clock::now() - currentSymbol->startTime < currentSymbol->lifeTime) {
                 int currentSymbolFrame = get_video_symbol_current_frame(currentSymbol); 
-                AsciiImage symbolImage = get_ascii_image_bounded(currentSymbol->frameData[currentSymbolFrame], textImage.width, textImage.height);
-                overlap_ascii_images(&textImage, &symbolImage);
+                AsciiImage* symbolImage = get_ascii_image_bounded(currentSymbol->frameData[currentSymbolFrame], textImage->width, textImage->height);
+                overlap_ascii_images(textImage, symbolImage);
+                ascii_image_free(symbolImage);
                 break;
             } else {
                 video_symbol_stack_erase_pop(symbol_stack);
@@ -99,31 +171,26 @@ void render_movie_screen(MediaPlayer* player) {
 
         if (!player->timeline->playback->playing) {
             VideoSymbol* pauseSymbol = get_video_symbol(PAUSE_ICON);
-            AsciiImage symbolImage = get_ascii_image_bounded(pauseSymbol->frameData[0], textImage.width, textImage.height);
-            overlap_ascii_images(&textImage, &symbolImage);
+            AsciiImage* symbolImage = get_ascii_image_bounded(pauseSymbol->frameData[0], textImage->width, textImage->height);
+            overlap_ascii_images(textImage, symbolImage);
             free_video_symbol(pauseSymbol);
+            ascii_image_free(symbolImage);
         }
 
-        /* int nb_quantized = 32; */
-        /* rgb output[nb_quantized]; */
-        /* rgb* color_data[textImage.height]; */
-        /* for (int i = 0; i < textImage.height; i++) { */
-        /*     color_data[i] = textImage.color_data[i]; */
+        /* const int palette_size = 16; */
+        /* int actual_output_size; */
+        /* rgb trained_colors[palette_size]; */
+        /* get_most_common_colors(trained_colors, palette_size, textImage->color_data, textImage->width * textImage->height, &actual_output_size); */
+        /* initialize_new_colors(trained_colors, actual_output_size); */
+
+        /* printw("Actual Output Size: %d\n", actual_output_size); */
+        /* for (int i = 0; i < palette_size; i++) { */
+        /*     printw("Color #%d: %d %d %d\n", i, trained_colors[i][0], trained_colors[i][1], trained_colors[i][2]); */
         /* } */
 
-        /* quantize_image(output, nb_quantized, color_data, textImage.width, textImage.height); */
-        /* rgb reinitialized[nb_quantized]; */
-        /* int nb_to_reinit = 0; */
-        /* rgb black = { 0, 0, 0 }; */
-        /* for (int i = 0; i < nb_quantized; i++) { */
-        /*     if (!rgb_equals(output[i], black)) { */
-        /*         rgb_copy(reinitialized[nb_to_reinit], output[i]); */
-        /*         nb_to_reinit++; */
-        /*     } */
-        /* } */
 
-        /* initialize_new_colors(reinitialized, nb_to_reinit); */
-        print_ascii_image_full(&textImage);
+        print_ascii_image_full(textImage);
+        ascii_image_free(textImage);
     }
 }
 
@@ -141,15 +208,17 @@ typedef struct ScreenChar {
 
 void print_ascii_image_full(AsciiImage* textImage) {
     move(0, 0);
-    int horizontalPaddingWidth = (COLS - textImage->width) / 2; 
-    int verticalPaddingHeight = (LINES - textImage->height) / 2;
+    const int screen_cols = COLS;
+    const int screen_lines = LINES;
+    int horizontalPaddingWidth = (screen_cols - textImage->width) / 2; 
+    int verticalPaddingHeight = (screen_lines - textImage->height) / 2;
     char horizontalPadding[horizontalPaddingWidth + 1];
     horizontalPadding[horizontalPaddingWidth] = '\0';
-    char lineAcross[COLS + 1];
-    lineAcross[COLS] = '\0';
+    char lineAcross[screen_cols + 1];
+    lineAcross[screen_cols] = '\0';
 
     fill_with_char(horizontalPadding, horizontalPaddingWidth, ' ');
-    fill_with_char(lineAcross, COLS, ' ');
+    fill_with_char(lineAcross, screen_cols, ' ');
 
     for (int i = 0; i < verticalPaddingHeight; i++) {
         printw("%s\n", lineAcross);
@@ -169,7 +238,7 @@ void print_ascii_image_full(AsciiImage* textImage) {
 
         for (int row = 0; row < textImage->height; row++) {
             for (int col = 0; col < textImage->width; col++) {
-                int target_pair = get_closest_color_pair(textImage->color_data[row][col]);
+                int target_pair = get_closest_color_pair(textImage->color_data[row * textImage->width + col]);
                 if (char_buckets[target_pair] == nullptr) {
                     char_buckets[target_pair] = (ScreenChar*)malloc(sizeof(ScreenChar) * 10);
                     if (char_buckets[target_pair] == NULL) {
@@ -188,7 +257,7 @@ void print_ascii_image_full(AsciiImage* textImage) {
                 }
 
                 if (char_buckets_lengths[target_pair] < char_buckets_capacities[target_pair]) {
-                    char_buckets[target_pair][char_buckets_lengths[target_pair]] = { textImage->lines[row][col], row, col };
+                    char_buckets[target_pair][char_buckets_lengths[target_pair]] = { textImage->lines[row * textImage->width + col], row, col };
                     char_buckets_lengths[target_pair] += 1;
                 }
             }
@@ -210,9 +279,12 @@ void print_ascii_image_full(AsciiImage* textImage) {
             attroff(COLOR_PAIR(b));
         }
     } else {
-        for (int row = 0; row < textImage->height; row++) {
-            printw("%s%s%s%s\n", horizontalPadding, "|", textImage->lines[row], "|");
+        for (int row = 0; row < std::min(textImage->height, LINES); row++) {
+            printw("%s|", horizontalPadding);
+            for (int col = 0; col < std::min(textImage->width, COLS); col++) {
+                addch(textImage->lines[row * textImage->width + col]);
+            }
+            addstr("|\n");
         }
     }
-
 }

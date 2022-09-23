@@ -31,9 +31,15 @@ int imageProgram(const char* fileName, bool use_colors) {
         return EXIT_FAILURE;
     }
 
-    AsciiImage textImage = get_ascii_image_bounded(pixelData, COLS, LINES);
-    print_ascii_image_full(&textImage);
+    AsciiImage* textImage = get_ascii_image_bounded(pixelData, COLS, LINES);
+    if (textImage == nullptr) {
+        pixel_data_free(pixelData);
+        return EXIT_FAILURE;
+    }
+
+    print_ascii_image_full(textImage);
     pixel_data_free(pixelData); 
+    ascii_image_free(textImage);
     refresh();
     getch();
 
@@ -207,3 +213,20 @@ bool pixel_data_equals(PixelData* first, PixelData* second) {
     return true;
 }
 
+void pixel_data_to_rgb(PixelData* data, rgb* output) {
+    for (int row = 0; row < data->height; row++) {
+        for (int col = 0; col < data->width; col++) {
+
+            if (data->format == RGB24) {
+                int pixel_index = row * data->width * 3 + col * 3;
+                rgb pixel = { data->pixels[pixel_index], data->pixels[pixel_index + 1], data->pixels[pixel_index + 2] };
+                rgb_copy(output[row * data->width + col], pixel); 
+            } else if (data->format == GRAYSCALE8) {
+                uint8_t value = data->pixels[row * data->width + col];
+                rgb_set(output[row * data->width + col], value, value, value);
+            }
+
+        }
+    }
+
+}

@@ -21,9 +21,15 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+const int MAX_FRAME_WIDTH = 16 * 16;
+const int MAX_FRAME_HEIGHT = 16 * 9; 
+
 double nanoseconds_duration_to_seconds(std::chrono::nanoseconds nanoseconds) {
     return (double)nanoseconds.count() / SECONDS_TO_NANOSECONDS;
 }
+
+const char* debug_video_source = "video";
+const char* debug_video_type = "debug";
 
 void video_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
     std::unique_lock<std::mutex> alterLock{*alterMutex, std::defer_lock};
@@ -46,7 +52,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
 
     AVCodecContext* videoCodecContext = video_stream->info->codecContext;
     int output_frame_width, output_frame_height;
-    get_output_size(videoCodecContext->width, videoCodecContext->height, MAX_ASCII_IMAGE_WIDTH, MAX_ASCII_IMAGE_HEIGHT, &output_frame_width, &output_frame_height);
+    get_output_size(videoCodecContext->width, videoCodecContext->height, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, &output_frame_width, &output_frame_height);
 
     const bool use_colors = player->displaySettings->use_colors;
 
@@ -96,15 +102,15 @@ void video_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
                 decodedList = decode_video_packet(videoCodecContext, videoPackets->get(), &decodeResult, &nb_decoded);
             }
 
-            add_debug_message(debug_info, "Fed %d packets to decode\n", repeats);
+            add_debug_message(debug_info, debug_video_source, debug_video_type, "Fed %d packets to decode\n", repeats);
 
             if (nb_decoded > 0 && decodeResult >= 0) {
                 av_frame_free(&readingFrame);
-                add_debug_message(debug_info, "Decoded List Time: %f", decodedList[0]->pts * videoTimeBase );
+                add_debug_message(debug_info, debug_video_source, debug_video_type, "Decoded List Time: %f", decodedList[0]->pts * videoTimeBase );
                 readingFrame = convert_video_frame(videoConverter, decodedList[0]);
                 free_frame_list(decodedList, nb_decoded);
             } else {
-                add_debug_message(debug_info, "ERROR: NULL POINTED VIDEO FRAME: ERROR: %s");
+                add_debug_message(debug_info, debug_video_source, debug_video_type, "ERROR: NULL POINTED VIDEO FRAME: ERROR: %s");
                 videoPackets->try_move_index(1);
 
                 alterLock.unlock();
@@ -133,15 +139,13 @@ void video_playback_thread(MediaPlayer* player, std::mutex* alterMutex) {
         std::chrono::nanoseconds frame_speed_skip_time = std::chrono::nanoseconds( (int64_t) ( ( (readingFrame->duration * videoTimeBase) - (readingFrame->duration * videoTimeBase) / playback->speed ) * SECONDS_TO_NANOSECONDS ) ); ;
         clock->realTimeSkipped += frame_speed_skip_time;
 
-
-        //TODO: Check if adding speed_skipped_time actually does anything (since nextFrameTimeSinceStartInSeconds is altered by state->playback->speed)
         clock->realTimeElapsed = std::chrono::steady_clock::now() - start_time - clock->realTimePaused + clock->realTimeSkipped;
         std::chrono::nanoseconds timeOfNextFrame = std::chrono::nanoseconds((int64_t)(nextFrameTimeSinceStartInSeconds * SECONDS_TO_NANOSECONDS));
         std::chrono::nanoseconds waitDuration = timeOfNextFrame - clock->realTimeElapsed + std::chrono::nanoseconds( (int)((double)(readingFrame->repeat_pict) / (2 * frameRate) * SECONDS_TO_NANOSECONDS) );
         waitDuration -= frame_speed_skip_time;
         std::chrono::time_point<std::chrono::steady_clock> continueTime = std::chrono::steady_clock::now() + waitDuration;
 
-        add_debug_message(debug_info, "master time: %f, time paused: %f\n \
+        add_debug_message(debug_info, debug_video_source, debug_video_type, "master time: %f, time paused: %f\n \
             time Elapsed: %f,  timeOfNextFrame: %f, waitDuration: %f\n \
             Speed Factor: %f, Time Skipped: %f, Time Skipped due to Speed on Current Frame: %f\n\n ",
            playback->time, nanoseconds_duration_to_seconds(clock->realTimePaused),
