@@ -16,6 +16,9 @@
 AVFrame** resample_audio_frames(AudioResampler* resampler, AVFrame** originals, int nb_frames) {
     int currently_allocated = 0;
     AVFrame** resampled_frames = (AVFrame**)malloc(sizeof(AVFrame*) * nb_frames);
+    if (resampled_frames == NULL) {
+        return NULL;
+    }
 
     for (int i = 0; i < nb_frames; i++) {
         AVFrame* resampledFrame = resample_audio_frame(resampler, originals[i]);
@@ -34,7 +37,9 @@ AVFormatContext* open_format_context(const char* fileName, int* result) {
     AVFormatContext* formatContext = NULL;
     *result = avformat_open_input(&formatContext, fileName, NULL, NULL);
     if (*result < 0) {
-        avformat_free_context(formatContext);
+        if (formatContext == NULL) {
+            avformat_free_context(formatContext);
+        }
         return NULL;
     }
 
@@ -50,6 +55,9 @@ AVFormatContext* open_format_context(const char* fileName, int* result) {
 StreamData** alloc_stream_datas(AVFormatContext* formatContext, const enum AVMediaType* mediaTypes, int nb_target_streams, int* out_stream_count) {
     *out_stream_count = 0;
     StreamData** data = (StreamData**)malloc(sizeof(StreamData*) * nb_target_streams);
+    if (data == NULL) {
+        return NULL;
+    }
     
     int result;
     int skipped = 0;

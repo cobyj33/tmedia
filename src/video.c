@@ -90,6 +90,15 @@ void* video_playback_thread(void* args) {
             int decodeResult;
             int nb_decoded;
             AVPacket* currentPacket = (AVPacket*)selection_list_get(videoPackets);
+            while (currentPacket == NULL && selection_list_can_move_index(videoPackets, 1)) {
+                selection_list_try_move_index(videoPackets, 1);
+                currentPacket = (AVPacket*)selection_list_get(videoPackets);
+            }
+            if (currentPacket == NULL) {
+                pthread_mutex_unlock(alterMutex);
+                continue;
+            }
+
             AVFrame** decodedList = decode_video_packet(videoCodecContext, currentPacket, &decodeResult, &nb_decoded);
 
             int repeats = 1;
@@ -98,12 +107,20 @@ void* video_playback_thread(void* args) {
                 selection_list_try_move_index(videoPackets, 1);
                 free_frame_list(decodedList, nb_decoded);
                 currentPacket = (AVPacket*)selection_list_get(videoPackets);
+                while (currentPacket == NULL && selection_list_can_move_index(videoPackets, 1)) {
+                    selection_list_try_move_index(videoPackets, 1);
+                    currentPacket = (AVPacket*)selection_list_get(videoPackets);
+                }
+                if (currentPacket == NULL) {
+                    break;
+                }
+
                 decodedList = decode_video_packet(videoCodecContext, currentPacket, &decodeResult, &nb_decoded);
             }
 
             add_debug_message(debug_info, debug_video_source, debug_video_type, "Fed %d packets to decode\n", repeats);
 
-            if (nb_decoded > 0 && decodeResult >= 0) {
+            if ((nb_decoded > 0 && decodeResult >= 0) || currentPacket == NULL) {
                 av_frame_free(&readingFrame);
                 add_debug_message(debug_info, debug_video_source, debug_video_type, "Decoded List Time: %f", decodedList[0]->pts * videoTimeBase );
                 readingFrame = convert_video_frame(videoConverter, decodedList[0]);
@@ -180,9 +197,14 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
         avcodec_flush_buffers(videoCodecContext);
         double testTime = fmax(0.0, targetTime - 30);
         packet_get = (AVPacket*)selection_list_get(videoPackets);
-        while (packet_get->pts * videoTimeBase > testTime && selection_list_can_move_index(videoPackets, -1)) {
-            selection_list_try_move_index(videoPackets, -1);
-            packet_get = (AVPacket*)selection_list_get(videoPackets);
+        if (packet_get != NULL) {
+            while (packet_get->pts * videoTimeBase > testTime && selection_list_can_move_index(videoPackets, -1)) {
+                selection_list_try_move_index(videoPackets, -1);
+                packet_get = (AVPacket*)selection_list_get(videoPackets);
+                if (packet_get == NULL) {
+                    break;
+                }
+            }
         }
     }
 
@@ -197,12 +219,21 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
         } 
 
         packet_get = (AVPacket*)selection_list_get(videoPackets);
+        if (packet_get == NULL) {
+            selection_list_try_move_index(videoPackets, 1);
+            continue;
+        }
+
         AVFrame** decodedFrames = decode_video_packet(videoCodecContext, packet_get, &readingStatus, &nb_decoded);
         selection_list_try_move_index(videoPackets, 1);
 
         while (readingStatus == AVERROR(EAGAIN) && selection_list_can_move_index(videoPackets, 1) && nb_decoded > 0 && decodedFrames != NULL) {
             free_frame_list(decodedFrames, nb_decoded);
             packet_get = (AVPacket*)selection_list_get(videoPackets);
+            if (packet_get == NULL) {
+                continue;
+            }
+
             decodedFrames = decode_video_packet(videoCodecContext, packet_get, &readingStatus, &nb_decoded);
             selection_list_try_move_index(videoPackets, 1);
         }
@@ -216,7 +247,7 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
     }
 
     packet_get = (AVPacket*)selection_list_get(videoPackets);
-    finalPTS = finalPTS == -1 ? packet_get->pts : finalPTS;
+    finalPTS = finalPTS == -1 && packet_get != NULL ? packet_get->pts : finalPTS;
     double timeMoved = (finalPTS * videoTimeBase) - originalTime;
     playback->skipped_time += timeMoved;
 }

@@ -62,7 +62,6 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     move_packet_list_to_pts(audioPackets, targetAudioPTS);
 
     int result, nb_frames_decoded;
-    AVPacket* currentPacket = (AVPacket*)selection_list_get(audioPackets);
     AVFrame** audioFrames = find_final_audio_frames(audioCodecContext, audioResampler, audioPackets, &result, &nb_frames_decoded);
     if (audioFrames == NULL) {
         add_debug_message(debug_info, debug_audio_source, debug_audio_type, "COULD NOT RESAMPLE AUDIO FRAMES");
@@ -204,6 +203,15 @@ AVFrame** get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampl
 AVFrame** find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, SelectionList* audioPackets, int* result, int* nb_frames_decoded) {
     *result = 0;
     AVPacket* currentPacket = (AVPacket*)selection_list_get(audioPackets);
+    while (currentPacket == NULL && selection_list_can_move_index(audioPackets, 1)) {
+        selection_list_try_move_index(audioPackets, 1);
+        currentPacket = (AVPacket*)selection_list_get(audioPackets);
+    }
+    if (currentPacket == NULL) {
+        return NULL;
+    }
+
+
     AVFrame** audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, currentPacket, result, nb_frames_decoded);
     while (*result == AVERROR(EAGAIN) && selection_list_can_move_index(audioPackets, 1)) {
         selection_list_try_move_index(audioPackets, 1);
@@ -212,6 +220,13 @@ AVFrame** find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResamp
         }
 
         currentPacket = (AVPacket*)selection_list_get(audioPackets);
+        while (currentPacket == NULL && selection_list_can_move_index(audioPackets, 1)) {
+            selection_list_try_move_index(audioPackets, 1);
+            currentPacket = (AVPacket*)selection_list_get(audioPackets);
+        }
+        if (currentPacket == NULL) {
+            return NULL;
+        }
         audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, currentPacket, result, nb_frames_decoded);
     }
 
