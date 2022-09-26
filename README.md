@@ -103,6 +103,10 @@ code blocks for commands
 Jacoby Johnson: [@cobyj33](https://www.github.com/cobyj33)
 
 ## Version History
+* 1.3
+  * Migration from C++ to fully C
+  * Cleaner audio output, all media streams now share one single time state
+  * Much more concise code, no more std::this::is::annoying::to::read
 * 1.2
   * Added support for colored output with the -c flag before entering the file path
     * At most, uses 256 unique colors
