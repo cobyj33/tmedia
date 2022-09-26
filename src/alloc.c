@@ -1,44 +1,84 @@
 #include "boiler.h"
 #include "debug.h"
 #include "decode.h"
-#include <curses.h>
+#include "selectionlist.h"
+#include <stdio.h>
 #include <media.h>
 #include <info.h>
-#include "doublelinkedlist.hpp"
-#include <chrono>
+#include <curses.h>
 
-extern "C" {
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
-}
 
 MediaPlayer* media_player_alloc(const char* fileName) {
-    MediaPlayer* mediaPlayer = new MediaPlayer();
-    mediaPlayer->displaySettings = media_display_settings_alloc();
-    mediaPlayer->displayCache = media_display_cache_alloc();
-    mediaPlayer->timeline = media_timeline_alloc(fileName);
-    if (mediaPlayer->timeline == nullptr) {
-        std::cerr << "Could not allocate media player because of error while allocating media timeline" << std::endl;
-        delete mediaPlayer;
-        return nullptr;
+    MediaPlayer* mediaPlayer = malloc(sizeof(MediaPlayer));
+    if (mediaPlayer == NULL) {
+        fprintf(stderr, "%s", "Could not allocate media player");
+        return NULL;
     }
+
+    mediaPlayer->displaySettings = media_display_settings_alloc();
+    if (mediaPlayer->displaySettings == NULL) {
+        fprintf(stderr, "%s\n" ,"Could not allocate media player because of error while allocating media display settings");
+        free(mediaPlayer);
+        return NULL;
+    }
+
+    mediaPlayer->displayCache = media_display_cache_alloc();
+    if (mediaPlayer->displayCache == NULL) {
+        fprintf(stderr, "%s\n" ,"Could not allocate media player because of error while allocating media display cache");
+        media_display_settings_free(mediaPlayer->displaySettings);
+        free(mediaPlayer);
+        return NULL;
+    }
+
+    mediaPlayer->timeline = media_timeline_alloc(fileName);
+    if (mediaPlayer->timeline == NULL) {
+        fprintf(stderr, "%s\n" ,"Could not allocate media player because of error while allocating media timeline");
+        media_display_settings_free(mediaPlayer->displaySettings);
+        media_display_cache_free(mediaPlayer->displayCache);
+        free(mediaPlayer);
+        return NULL;
+    }
+
     mediaPlayer->inUse = false;
     mediaPlayer->fileName = fileName;
-
     return mediaPlayer;
 }
 
 MediaDisplayCache* media_display_cache_alloc() {
     MediaDisplayCache* cache = (MediaDisplayCache*)malloc(sizeof(MediaDisplayCache));
-    cache->debug_info = (MediaDebugInfo*)malloc(sizeof(MediaDebugInfo));
+    if (cache == NULL) {
+       fprintf(stderr, "%s", "Could not allocate Media Display Cache"); 
+       return NULL;
+    }
+
+    cache->debug_info = media_debug_info_alloc();
+    if (cache->debug_info == NULL) {
+       fprintf(stderr, "%s", "Could not allocate Media Debug Info"); 
+       free(cache);
+       return NULL;
+    }
+
     cache->symbol_stack = video_symbol_stack_alloc();
-    cache->image = nullptr;
-    cache->last_rendered_image = nullptr;
+    if (cache->symbol_stack == NULL) {
+       fprintf(stderr, "%s", "Could not allocate Media Debug Info"); 
+       media_debug_info_free(cache->debug_info);
+       free(cache);
+       return NULL;
+    }
+
+    cache->image = NULL;
+    cache->last_rendered_image = NULL;
     return cache;
 }
 
 MediaDebugInfo* media_debug_info_alloc() {
     MediaDebugInfo* debug_info = (MediaDebugInfo*)malloc(sizeof(MediaDebugInfo));
+    if (debug_info == NULL) {
+        fprintf(stderr, "%s", "Could not allocate Media Debug Info");
+        return NULL;
+    }
     debug_info->nb_messages = 0;
     return debug_info;
 }
@@ -50,24 +90,35 @@ void media_debug_info_free(MediaDebugInfo* info) {
 
 VideoSymbolStack* video_symbol_stack_alloc() {
     VideoSymbolStack* stack = (VideoSymbolStack*)malloc(sizeof(VideoSymbolStack));
+    if (stack == NULL) {
+        fprintf(stderr, "%s", "Could not allocate Video Symbol Stack");
+        return NULL;
+    }
+
     stack->top = -1;
     return stack;
 } 
 
 MediaDisplaySettings* media_display_settings_alloc() {
     MediaDisplaySettings* settings = (MediaDisplaySettings*)malloc(sizeof(MediaDisplaySettings));
+    if (settings == NULL) {
+        fprintf(stderr,  "%s", "Could not allocate Media Display Settings");
+        return NULL;
+    }
+
     settings->show_debug = false;
     settings->subtitles = false;
     settings->mode = DISPLAY_MODE_VIDEO;
-    settings->can_use_colors = has_colors();
-    settings->can_change_colors = can_change_color();
+    settings->can_use_colors = has_colors() == TRUE ? 1 : 0;
+    settings->can_change_colors = can_change_color() == TRUE ? 1 : 0;
     settings->use_colors = false;
 
     settings->train_palette = true;
     settings->best_palette = (rgb*)malloc(sizeof(rgb) * 16);
     if (settings->best_palette == NULL) {
-        std::cerr << "Could not allocate best color palette container for media player" << std::endl;
-        return nullptr;
+        fprintf(stderr, "%s\n", "Could not allocate best color palette container for media player");
+        free(settings);
+        return NULL;
     }
 
     settings->palette_size = 16;
@@ -77,13 +128,24 @@ MediaDisplaySettings* media_display_settings_alloc() {
 
 MediaTimeline* media_timeline_alloc(const char* fileName) {
     MediaTimeline* timeline = (MediaTimeline*)malloc(sizeof(MediaTimeline));
+    if (timeline == NULL) {
+        fprintf(stderr, "%s", "Could not allocate media timeline");
+        return NULL;
+    }
+
     timeline->playback = playback_alloc();
+    if (timeline->playback == NULL) {
+        fprintf(stderr, "%s %s %s\n", "Could not allocate media timeline of", fileName, "because of error while allocating media playback");
+        free(timeline);
+        return NULL;
+    }
+
     timeline->mediaData = media_data_alloc(fileName);
-    if (timeline->mediaData == nullptr) {
-        std::cerr << "Could not allocate media timeline of " << fileName << " because of error while fetching media data" << std::endl;
+    if (timeline->mediaData == NULL) {
+        fprintf(stderr, "%s %s %s\n", "Could not allocate media timeline of", fileName, "because of error while fetching media data");
         playback_free(timeline->playback);
         free(timeline);
-        return nullptr;
+        return NULL;
     }
 
 
@@ -93,22 +155,26 @@ MediaTimeline* media_timeline_alloc(const char* fileName) {
 MediaData* media_data_alloc(const char* fileName) {
     int result;
     MediaData* mediaData = (MediaData*)malloc(sizeof(MediaData)); 
+    if (mediaData == NULL) {
+        fprintf(stderr, "%s %s\n", "Could not allocate media data of", fileName );
+    }
+
     mediaData->formatContext = open_format_context(fileName, &result);
-    if (mediaData->formatContext == nullptr || result < 0) {
-        std::cerr << "Could not allocate media data of " << fileName << " because of error while fetching file format data" << std::endl;
+    if (mediaData->formatContext == NULL || result < 0) {
+        fprintf(stderr, "%s %s %s\n", "Could not allocate media data of", fileName, "because of error while fetching file format data");
         free(mediaData);
-        return nullptr;
+        return NULL;
     }
 
     //TODO: Add subtitle stream
-    AVMediaType mediaTypes[2] = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
+    enum AVMediaType mediaTypes[2] = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
     int out_stream_count;
     StreamData** streamData  = alloc_stream_datas(mediaData->formatContext, mediaTypes, 2, &out_stream_count);
-    if (streamData == nullptr) {
-        std::cerr << "Could not fetch allocate media data of " << fileName << " because of error while reading stream data of file" << std::endl;
+    if (streamData == NULL) {
+        fprintf(stderr,"%s %s %s", "Could not fetch allocate media data of", fileName, "because of error while reading stream data of file");
         avformat_free_context(mediaData->formatContext);
         free(mediaData);
-        return nullptr;
+        return NULL;
     }
 
     mediaData->allPacketsRead = false;
@@ -116,6 +182,15 @@ MediaData* media_data_alloc(const char* fileName) {
     mediaData->totalPackets = get_num_packets(fileName);
     mediaData->nb_streams = out_stream_count;
     mediaData->media_streams = (MediaStream**)malloc(sizeof(MediaStream*) * out_stream_count);
+
+    if (mediaData->media_streams == NULL) {
+        fprintf(stderr,"%s %s %s", "Could not fetch allocate media data of", fileName, "because of error while reading stream data of file");
+        avformat_free_context(mediaData->formatContext);
+        stream_datas_free(streamData, out_stream_count);
+        free(mediaData);
+        return NULL;
+    }
+
     for (int i = 0; i < out_stream_count; i++) {
         mediaData->media_streams[i] = media_stream_alloc(streamData[i]);
     }
@@ -127,9 +202,18 @@ MediaData* media_data_alloc(const char* fileName) {
 
 MediaStream* media_stream_alloc(StreamData* streamData) {
     MediaStream* mediaStream = (MediaStream*)malloc(sizeof(MediaStream));
+    if (mediaStream == NULL) {
+        fprintf(stderr, "%s", "Could not allocate Media Stream");
+        return NULL;
+    }
+
     mediaStream->info = streamData;
-    mediaStream->packets = new DoubleLinkedList<AVPacket*>();
-    mediaStream->streamTime = 0.0;
+    mediaStream->packets = selection_list_alloc();
+    if (mediaStream->packets == NULL) {
+        free(mediaStream);
+        return NULL;
+    }
+
     mediaStream->timeBase = av_q2d(streamData->stream->time_base);
     mediaStream->decodePacket = get_stream_decoder(streamData->mediaType); 
     //TODO: STREAM DECODER FOR SUBTITLE DATA
@@ -140,33 +224,33 @@ void media_player_free(MediaPlayer* player) {
     media_display_settings_free(player->displaySettings);
     media_timeline_free(player->timeline);
     media_display_cache_free(player->displayCache);
-    delete player;
-    player = nullptr;
+    free(player);
+    player = NULL;
 }
 
 void video_symbol_stack_free(VideoSymbolStack *stack) {
     free(stack);
-    stack = nullptr;
+    stack = NULL;
 }
 
 void media_display_cache_free(MediaDisplayCache* cache) {
     free(cache->debug_info);
     free(cache->image);
     free(cache);
-    cache = nullptr;
+    cache = NULL;
 }
 
 void media_display_settings_free(MediaDisplaySettings *settings) {
     free(settings);
     free(settings->best_palette);
-    settings = nullptr;
+    settings = NULL;
 }
 
 void media_timeline_free(MediaTimeline *timeline) {
     playback_free(timeline->playback);
     media_data_free(timeline->mediaData);
     free(timeline);
-    timeline = nullptr;
+    timeline = NULL;
 }
 
 void media_data_free(MediaData* mediaData) {
@@ -176,36 +260,28 @@ void media_data_free(MediaData* mediaData) {
     avformat_close_input(&(mediaData->formatContext));
     avformat_free_context(mediaData->formatContext);
     free(mediaData);
-    mediaData = nullptr;
+    mediaData = NULL;
 }
 
 void media_stream_free(MediaStream* mediaStream) {
-    delete mediaStream->packets;
+    selection_list_free(mediaStream->packets);
     stream_data_free(mediaStream->info);
     free(mediaStream);
-    mediaStream = nullptr;
+    mediaStream = NULL;
 }
 
 Playback* playback_alloc() {
     Playback* playback = (Playback*)malloc(sizeof(Playback));
-    playback->time = 0.0;
+    playback->start_time = 0.0;
+    playback->paused_time = 0.0;
+    playback->skipped_time = 0.0;
     playback->speed = 1.0;
     playback->volume = 1.0;
-    playback->playing = false;
-    playback->clock = media_clock_alloc();
+    playback->playing = 0;
     return playback; 
 }
 
 void playback_free(Playback* playback) {
-    free(playback->clock);
     free(playback);
-    playback = nullptr;
-}
-
-MediaClock* media_clock_alloc() {
-    MediaClock* clock = (MediaClock*)malloc(sizeof(MediaClock));
-    clock->realTimeElapsed = std::chrono::nanoseconds(0);
-    clock->realTimeSkipped = std::chrono::nanoseconds(0);
-    clock->realTimePaused = std::chrono::nanoseconds(0);
-    return clock;
+    playback = NULL;
 }

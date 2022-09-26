@@ -1,11 +1,13 @@
 #include "debug.h"
-#include <cstring>
+#include <string.h>
 #include <media.h>
 
+const MediaDisplayMode display_modes[NUMBER_OF_DISPLAY_MODES] = { DISPLAY_MODE_VIDEO, DISPLAY_MODE_AUDIO };
+
 MediaDisplayMode get_next_display_mode(MediaDisplayMode currentMode) {
-    for (int i = 0; i < nb_display_modes; i++) {
+    for (int i = 0; i < NUMBER_OF_DISPLAY_MODES; i++) {
         if (display_modes[i] == currentMode) {
-            return display_modes[i + 1 % nb_display_modes];
+            return display_modes[i + 1 % NUMBER_OF_DISPLAY_MODES];
         }
     }
     return currentMode;
@@ -19,7 +21,7 @@ void add_debug_message(MediaDebugInfo* debug_info, const char* message_source, c
 
     va_list args;
     va_start(args, format);
-    std::size_t alloc_size = std::vsnprintf(NULL, 0, format, args);
+    size_t alloc_size = vsnprintf(NULL, 0, format, args);
     char* string = (char*)malloc(alloc_size);
     if (string != NULL) {
         DebugMessage* debug_message = (DebugMessage*)malloc(sizeof(DebugMessage));
@@ -27,7 +29,7 @@ void add_debug_message(MediaDebugInfo* debug_info, const char* message_source, c
         debug_message->source = message_source;
         debug_message->type = message_type;
 
-        std::vsnprintf(string, alloc_size, format, args);
+        vsnprintf(string, alloc_size, format, args);
         debug_message->message = string;
         debug_info->messages[debug_info->nb_messages] = debug_message;
         debug_info->nb_messages++;
@@ -40,7 +42,7 @@ void clear_media_debug(MediaDebugInfo* debug, const char* source, const char* ty
     DebugMessage* saved_messages[debug->nb_messages];
     int nb_saved_messages = 0;
     for (int i = 0; i < debug->nb_messages; i++) {
-        if (( std::strlen(source) == 0 || std::strcmp(debug->messages[i]->source, source) == 0) && (std::strlen(type) == 0 || std::strcmp(debug->messages[i]->type, type) == 0)) {
+        if (( strlen(source) == 0 || strcmp(debug->messages[i]->source, source) == 0) && (strlen(type) == 0 || strcmp(debug->messages[i]->type, type) == 0)) {
             free(debug->messages[i]->message);
             free(debug->messages[i]);
         } else {

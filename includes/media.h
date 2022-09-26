@@ -1,49 +1,40 @@
-#pragma once
+#ifndef ASCII_VIDEO_MEDIA
+#define ASCII_VIDEO_MEDIA
 #include "decode.h"
 #include "boiler.h"
 #include "icons.h"
 #include "debug.h"
-#include "doublelinkedlist.hpp"
+#include "selectionlist.h"
 #include "color.h"
 
-#include <cstdint>
-#include <mutex>
-#include <chrono>
+#include <stdint.h>
 
-extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
-}
 
 typedef struct MediaStream {
     StreamData* info;
-    DoubleLinkedList<AVPacket*>* packets;
-    double streamTime;
+    SelectionList* packets;
     double timeBase;
     decoder_function decodePacket;
 } MediaStream;
 
-typedef struct MediaClock {
-    std::chrono::nanoseconds realTimeElapsed;
-    std::chrono::nanoseconds realTimeSkipped;
-    std::chrono::nanoseconds realTimePaused;
-    std::chrono::steady_clock::time_point start_time;
-} MediaClock;
 
 typedef struct Playback {
-    bool playing;
+    int playing;
     double speed;
-    double time;
     double volume;
-    MediaClock* clock;
+    double start_time;
+    double paused_time;
+    double skipped_time;
 } Playback;
 
 typedef struct MediaData {
     AVFormatContext* formatContext;
     MediaStream** media_streams;
     int nb_streams;
-    bool allPacketsRead;
+    int allPacketsRead;
     int currentPacket;
     int totalPackets;
     double duration;
@@ -54,23 +45,21 @@ typedef struct MediaTimeline {
     Playback* playback;
 } MediaTimeline;
 
+#define NUMBER_OF_DISPLAY_MODES 2
 typedef enum MediaDisplayMode {
     DISPLAY_MODE_VIDEO, DISPLAY_MODE_AUDIO
 } MediaDisplayMode;
-
-const int nb_display_modes = 2;
-const MediaDisplayMode display_modes[nb_display_modes] = { DISPLAY_MODE_VIDEO, DISPLAY_MODE_AUDIO };
 MediaDisplayMode get_next_display_mode(MediaDisplayMode currentMode);
 
 typedef struct MediaDisplaySettings {
-    bool show_debug;
-    bool subtitles;
+    int show_debug;
+    int subtitles;
 
-    bool use_colors;
-    bool can_use_colors;
-    bool can_change_colors;
+    int use_colors;
+    int can_use_colors;
+    int can_change_colors;
 
-    bool train_palette;
+    int train_palette;
     int palette_size;
     rgb* best_palette;
     MediaDisplayMode mode;
@@ -88,19 +77,19 @@ typedef struct MediaPlayer {
     MediaDisplaySettings* displaySettings;
     MediaDisplayCache* displayCache;
     const char* fileName;
-    bool inUse;
+    int inUse;
 } MediaPlayer;
 
 /* typedef struct ThreadPriveliges { */
-/*     bool masterTimeThread; */
+/*     int masterTimeThread; */
 /* } ThreadPriveliges; */
 
 MediaPlayer* media_player_alloc(const char* fileName);
 void media_player_free(MediaPlayer* player);
 
 
-void start_media_player(MediaPlayer* player);
-bool start_media_player_from_filename(const char* fileName);
+int start_media_player(MediaPlayer* player);
+int start_media_player_from_filename(const char* fileName);
 
 MediaDisplayCache* media_display_cache_alloc();
 void media_display_cache_free(MediaDisplayCache* cache);
@@ -119,13 +108,12 @@ void media_stream_free(MediaStream* mediaStream);
 
 Playback* playback_alloc();
 void playback_free(Playback* playback);
+double get_playback_current_time(Playback* playback);
 
-MediaClock* media_clock_alloc();
+MediaStream* get_media_stream(MediaData* media_data, enum AVMediaType media_type);
+int has_media_stream(MediaData* media_data, enum AVMediaType media_type);
 
-MediaStream* get_media_stream(MediaData* media_data, AVMediaType media_type);
-bool has_media_stream(MediaData* media_data, AVMediaType media_type);
-
-void move_packet_list_to_pts(DoubleLinkedList<AVPacket*>* packets, int64_t targetPTS);
+void move_packet_list_to_pts(SelectionList* packets, int64_t targetPTS);
 
 
 int get_media_player_dump_size(MediaPlayer* player);
@@ -145,4 +133,4 @@ void dump_stream_info(StreamData* stream_data, char* buffer);
 
 int get_playback_dump_size(Playback* playback);
 void dump_playback(Playback* playback, char* buffer);
-
+#endif

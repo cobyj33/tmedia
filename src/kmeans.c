@@ -1,12 +1,9 @@
-#include <cstdint>
-#include <math.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <wmath.h>
 #include <color.h>
 
-double frand() {
-    return rand() / (double)RAND_MAX;
-}
-
-bool get_most_common_colors(rgb* output, int k, rgb* colors, int nb_colors, int* actual_output_size) {
+int get_most_common_colors(rgb* output, int k, rgb* colors, int nb_colors, int* actual_output_size) {
     const int nb_tests_to_run = 5;
     rgb best_centroids[k];
     double best_deviation = (double)INT32_MAX;
@@ -21,7 +18,7 @@ bool get_most_common_colors(rgb* output, int k, rgb* colors, int nb_colors, int*
             rgb_copy(centroids[i], colors[(int)(frand() * nb_colors)]);
         }
 
-        while (true) {
+        while (1) {
             for (int i = 0; i < k; i++) {
                 if (clusters[i] != NULL) {
                     free(clusters[i]);
@@ -100,10 +97,10 @@ bool get_most_common_colors(rgb* output, int k, rgb* colors, int nb_colors, int*
 
     int skipped = 0;
     for (int i = 0; i < k; i++) {
-        bool skip = false;
+        int skip = 0;
         for (int j = i - 1; j >= 0; j--) {
             if (rgb_equals(best_centroids[i], best_centroids[j])) {
-                skip = true;
+                skip = 1;
                 break;
             }
         }
@@ -117,6 +114,6 @@ bool get_most_common_colors(rgb* output, int k, rgb* colors, int nb_colors, int*
 
     *actual_output_size = k - skipped;
 
-    return true;
+    return 1;
 }
 

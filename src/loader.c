@@ -1,21 +1,26 @@
-#include <thread>
-#include <chrono>
+#include <curses.h>
+#include <libavutil/avutil.h>
+#include <pthread.h>
 #include <loader.h>
 #include <media.h>
 #include <macros.h>
+#include <threads.h>
 
-void data_loading_thread(MediaPlayer* player, std::mutex* alterMutex) {
-    std::unique_lock<std::mutex> alterLock{*alterMutex, std::defer_lock};
-    bool shouldFetch;
+void* data_loading_thread(void* args) {
+    MediaThreadData* thread_data = (MediaThreadData*)args;
+    MediaPlayer* player = thread_data->player;
+    pthread_mutex_t* alterMutex = thread_data->alterMutex;
+
+    int shouldFetch = 1;
     MediaData* media_data = player->timeline->mediaData;
 
     while (!player->timeline->mediaData->allPacketsRead) {
-        alterLock.lock();
-        shouldFetch = true;
+        pthread_mutex_lock(alterMutex);
+        shouldFetch = 1;
 
         for (int i = 0; i < media_data->nb_streams; i++) {
-            if (media_data->media_streams[i]->packets->get_length() > PACKET_RESERVE_SIZE) {
-                shouldFetch = false;
+            if (selection_list_length(media_data->media_streams[i]->packets) > PACKET_RESERVE_SIZE) {
+                shouldFetch = 0;
                 break;
             }
         }
@@ -24,15 +29,15 @@ void data_loading_thread(MediaPlayer* player, std::mutex* alterMutex) {
             fetch_next(media_data, 20);
         }
 
-        alterLock.unlock();
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        pthread_mutex_unlock(alterMutex);
+        sleep_for_ms(30);
     }
+    return NULL;
 }
 
 
 void fetch_next(MediaData* media_data, int requestedPacketCount) {
     AVPacket* readingPacket = av_packet_alloc();
-    int result;
     int packetsRead = 0;
 
     while (av_read_frame(media_data->formatContext, readingPacket) == 0) {
@@ -45,7 +50,10 @@ void fetch_next(MediaData* media_data, int requestedPacketCount) {
             if (media_data->media_streams[i]->info->stream->index == readingPacket->stream_index) {
                 AVPacket* savedPacket = av_packet_alloc();
                 av_packet_ref(savedPacket, readingPacket);
-                media_data->media_streams[i]->packets->push_back(savedPacket);
+                selection_list_push_back(media_data->media_streams[i]->packets, savedPacket);
+                /* erase(); */
+                /* printw("Packet List For %s: %d", av_get_media_type_string(media_data->media_streams[i]->info->mediaType), selection_list_length(media_data->media_streams[i]->packets)); */
+                /* refresh(); */
                 break;
             }
         }
@@ -53,6 +61,6 @@ void fetch_next(MediaData* media_data, int requestedPacketCount) {
         av_packet_unref(readingPacket);
     }
 
-    media_data->allPacketsRead = true;
+    media_data->allPacketsRead = 1;
     av_packet_free(&readingPacket);
 }

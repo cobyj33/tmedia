@@ -1,5 +1,5 @@
 #include <curses_helpers.h>
-#include <cstdarg>
+#include <stdarg.h>
 #include <ncurses.h>
 
 #define CUSTOM_COLOR 16

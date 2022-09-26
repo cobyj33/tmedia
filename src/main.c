@@ -1,24 +1,16 @@
 #include "color.h"
 #include "icons.h"
 #include "pixeldata.h"
-#include <cstdlib>
+#include <stdlib.h>
 #include <image.h>
 #include <video.h>
 #include <media.h>
 #include <info.h>
 
-#include <signal.h>
-
-extern "C" {
 #include <libavutil/log.h>
-}
-
 #include <stdio.h>
-#include <iostream>
 #include <string.h>
 #include <ncurses.h>
-
-#include <chrono>
 
 typedef struct ProgramCommands ProgramCommands;
 
@@ -61,16 +53,16 @@ const char* help_text = "     ASCII_VIDEO         \n"
       "  -info <file> => print file info                   \n";
 
 const int nb_input_flags = 6;
-const char* input_flags[nb_input_flags] = { "-v", "--video", "-i", "--image", "-a", "--audio" };
+const char* input_flags[6] = { "-v", "--video", "-i", "--image", "-a", "--audio" };
 InputType flag_to_input_type(const char* flag);
 
 const int nb_format_flags = 2;
-const char* format_flags[nb_format_flags] = { "-c", "--color" };
+const char* format_flags[2] = { "-c", "--color" };
 const int nb_valid_flags = nb_input_flags + nb_format_flags;
 FormatType flag_to_format_type(const char* flag);
 
 const int nb_priority_flags = 4;
-const char* priority_flags[nb_priority_flags] = { "-h", "--help", "-info", "--information" };
+const char* priority_flags[4] = { "-h", "--help", "-info", "--information" };
 PriorityType flag_to_priority_type(const char* flag);
 
 int main(int argc, char** argv)
@@ -82,9 +74,10 @@ int main(int argc, char** argv)
 
   srand(time(NULL));
   av_log_set_level(AV_LOG_QUIET);
+  /* av_log_set_level(AV_LOG_VERBOSE); */
   init_icons();
 
-  ProgramCommands commands = { FORMAT_TYPE_GRAYSCALE, INPUT_TYPE_VIDEO, nullptr, PRIORITY_TYPE_UNKNOWN };
+  ProgramCommands commands = { FORMAT_TYPE_GRAYSCALE, INPUT_TYPE_VIDEO, NULL, PRIORITY_TYPE_UNKNOWN };
   for (int i = 1; i < argc; i++) {
       if (is_valid_path(argv[i])) {
         commands.file = argv[i];
@@ -111,9 +104,9 @@ int use_program(ProgramCommands* commands) {
     if (commands->priority == PRIORITY_TYPE_HELP) {
         printf("%s", help_text);
         return EXIT_SUCCESS;
-    } else if (commands->priority == PRIORITY_TYPE_INFORMATION && commands->file != nullptr) {
+    } else if (commands->priority == PRIORITY_TYPE_INFORMATION && commands->file != NULL) {
         return fileInfoProgram(commands->file);
-    } else if (commands->file != nullptr) {
+    } else if (commands->file != NULL) {
         if (commands->input == INPUT_TYPE_IMAGE) {
             ncurses_init();
             return imageProgram(commands->file, has_colors() && commands->format == FORMAT_TYPE_COLORED ? true : false);
@@ -121,7 +114,7 @@ int use_program(ProgramCommands* commands) {
             ncurses_init();
             MediaPlayer* player = media_player_alloc(commands->file);
             player->displaySettings->use_colors = commands->format == FORMAT_TYPE_COLORED && player->displaySettings->can_use_colors;
-            if (player != nullptr) {
+            if (player != NULL) {
                 start_media_player(player);
                 media_player_free(player);
                 return EXIT_SUCCESS;

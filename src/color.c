@@ -1,8 +1,7 @@
 #include "color.h"
 #include <ncurses.h>
-#include <algorithm>
-#include <cmath>
-
+#include <wmath.h>
+#include <malloc.h>
 
 void init_color_rgb(rgb color, int init_index) {
     rgb_i32 output;
@@ -29,27 +28,27 @@ typedef struct pair_distance {
     double distance;
 } pair_distance;
 
-const int max_colors = 256;
-const int COLOR_MAP_SIDE = 7;
+#define COLOR_MAP_SIDE 7
+#define MAX_TERMINAL_COLORS 256
 int color_pairs_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
 int color_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
 int available_colors = 0;
 int available_color_pairs = 0;
 
 int get_next_nearest_perfect_square(double num) {
-    double nsqrt = std::sqrt(num);
+    double nsqrt = sqrt(num);
     if (nsqrt == (int)nsqrt) {
-        return std::pow(std::ceil(std::sqrt(num) + 1), 2);
+        return pow(ceil(sqrt(num) + 1), 2);
     }
 
-    return std::pow(std::ceil(std::sqrt(num)), 2);
+    return pow(ceil(sqrt(num)), 2);
 }
 
 
-bool quantize_image(rgb* output, int output_len, rgb* colors, int nb_colors) {
+int quantize_image(rgb* output, int output_len, rgb* colors, int nb_colors) {
     //output_len_cbrt : nb boxes across the color space
     //output_len: nb_boxes to split color space into
-    double output_len_cbrt = std::cbrt(output_len);
+    double output_len_cbrt = cbrt(output_len);
     double box_side_size = 255 / output_len_cbrt;
     int nb_buckets = get_next_nearest_perfect_square(output_len + 1);
     rgb* buckets[nb_buckets];
@@ -59,19 +58,18 @@ bool quantize_image(rgb* output, int output_len, rgb* colors, int nb_colors) {
     for (int i = 0; i < nb_buckets; i++) {
         bucket_lengths[i] = 0;
         bucket_capacities[i] = 0;
-        buckets[i] = nullptr;
+        buckets[i] = NULL;
     }
 
     for (int c = 0; c < nb_colors; c++) {
         uint8_t r, g, b;
         rgb_get_values(colors[c], &r, &g, &b);
         double box_coordinates[3] = { ((double)r / box_side_size), ((double)g / box_side_size), ((double)b / box_side_size)  };
-        int target_box = box_coordinates[0] * std::sqrt(nb_buckets) + box_coordinates[1] * std::cbrt(nb_buckets) + box_coordinates[2]; 
+        int target_box = box_coordinates[0] * sqrt(nb_buckets) + box_coordinates[1] * cbrt(nb_buckets) + box_coordinates[2]; 
 
-        if (buckets[target_box] == nullptr) {
+        if (buckets[target_box] == NULL) {
             buckets[target_box] = (rgb*)malloc(sizeof(rgb) * 10);
             if (buckets[target_box] == NULL) {
-                buckets[target_box] = nullptr;
                 continue;
             }
             bucket_capacities[target_box] = 10;
@@ -96,12 +94,12 @@ bool quantize_image(rgb* output, int output_len, rgb* colors, int nb_colors) {
     }
 
     for (int i = 0; i < nb_buckets; i++) {
-        if (buckets[i] != nullptr) {
+        if (buckets[i] != NULL) {
             free(buckets[i]);
         }
     }
 
-    return true;
+    return 1;
 }
 
 void init_default_color_palette() {
@@ -111,8 +109,8 @@ void init_default_color_palette() {
 
     available_colors = 8;
     int color_index = 8;
-    int colors_to_add = std::min(COLORS - 8, max_colors - 8);
-    double box_size = 255 / std::cbrt(colors_to_add);
+    int colors_to_add = i32min(COLORS - 8, MAX_TERMINAL_COLORS - 8);
+    double box_size = 255 / cbrt(colors_to_add);
     for (double r = 0; r < 255; r += box_size) {
         for (double g = 0; g < 255; g += box_size) {
             for (double b = 0; b < 255; b += box_size) {
@@ -131,7 +129,7 @@ void init_color_palette(rgb* input, int len) {
     }
 
     available_colors = 8;
-    int colors_to_add = std::min(len, std::min(COLORS - 8, max_colors - 8));
+    int colors_to_add = i32min(len, i32min(COLORS - 8, MAX_TERMINAL_COLORS - 8));
     for (int i = 0; i < colors_to_add; i++) {
         init_color(i + 8, (short)input[i][0] * 1000 / 255, (short)input[i][1] * 1000 / 255, (short)input[i][2] * 1000 / 255);
     }
@@ -296,7 +294,7 @@ double color_distance(rgb first, rgb second) {
     long r = (long)first[0] - (long)second[0];
     long g = (long)first[1] - (long)second[1];
     long b = (long)first[2] - (long)second[2];
-    return std::sqrt((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8));
+    return sqrt((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8));
 }
 
 double color_distance_squared(rgb first, rgb second) {
@@ -321,7 +319,7 @@ void get_average_color(rgb output, rgb* colors, int len) {
         sums[2] += (double)colors[i][2] * colors[i][2];
     }
 
-    rgb_set(output, (uint8_t)std::sqrt(sums[0]/len), (uint8_t)std::sqrt(sums[1]/len), (uint8_t)std::sqrt(sums[2]/len));
+    rgb_set(output, (uint8_t)sqrt(sums[0]/len), (uint8_t)sqrt(sums[1]/len), (uint8_t)sqrt(sums[2]/len));
 }
 
 void rgb_copy(rgb dest, rgb src) {
@@ -337,8 +335,8 @@ void rgb_set(rgb rgb, uint8_t r, uint8_t g, uint8_t b) {
     rgb[2] = b;
 }
 
-bool rgb_equals(rgb first, rgb second) {
-    return first[0] == second[0] && first[1] == second[1] && first[2] == second[2];
+int rgb_equals(rgb first, rgb second) {
+    return first[0] == second[0] && first[1] == second[1] && first[2] == second[2] ? 1 : 0;
 }
 
 

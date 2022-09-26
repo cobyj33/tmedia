@@ -2,11 +2,12 @@
 #include <icons.h>
 #include <image.h>
 
+#define PLAYBACK_ICONS_PIXEL_WIDTH 80
+#define PLAYBACK_ICONS_PIXEL_HEIGHT 64
+#define PLAYBACK_ICONS_PIXEL_COUNT PLAYBACK_ICONS_PIXEL_WIDTH * PLAYBACK_ICONS_PIXEL_HEIGHT
 PixelData* get_playback_icons_pixel_data() {
-    const int width = 80;
-    const int height = 64;
-    PixelData* playbackIcons = pixel_data_alloc(width, height, GRAYSCALE8);
-    const uint8_t pixels[width * height] = {
+    PixelData* playbackIcons = pixel_data_alloc(PLAYBACK_ICONS_PIXEL_WIDTH, PLAYBACK_ICONS_PIXEL_HEIGHT, GRAYSCALE8);
+    const uint8_t pixels[PLAYBACK_ICONS_PIXEL_COUNT] = {
         255, 255, 255, 255, 255, 255, 254, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
         255, 254, 255, 255, 254, 255, 255, 255, 255, 255, 255, 254, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
         255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 
@@ -73,18 +74,21 @@ PixelData* get_playback_icons_pixel_data() {
         255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
     };
 
-    for (int i = 0; i < width * height; i++) {
+    for (int i = 0; i < PLAYBACK_ICONS_PIXEL_COUNT; i++) {
         playbackIcons->pixels[i] = pixels[i];
     }
 
     return playbackIcons;
 } 
 
+
+
+#define NUMBER_ICONS_PIXEL_WIDTH 80
+#define NUMBER_ICONS_PIXEL_HEIGHT 64
+#define NUMBER_ICONS_PIXEL_COUNT NUMBER_ICONS_PIXEL_WIDTH * NUMBER_ICONS_PIXEL_HEIGHT
 PixelData* get_number_icons_pixel_data() {
-    const int width = 50;
-    const int height = 14;
-    PixelData* numberIcons = pixel_data_alloc(width, height, GRAYSCALE8);
-    uint8_t pixels[width * height] = {
+    PixelData* numberIcons = pixel_data_alloc(NUMBER_ICONS_PIXEL_WIDTH, NUMBER_ICONS_PIXEL_HEIGHT, GRAYSCALE8);
+    uint8_t pixels[NUMBER_ICONS_PIXEL_COUNT] = {
         255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 254, 255, 255, 255, 255, 
         255, 0, 1, 0, 255, 255, 255, 0, 255, 255, 255, 0, 0, 0, 255, 255, 0, 0, 0, 255, 255, 0, 255, 1, 255, 255, 0, 0, 0, 255, 255, 0, 0, 0, 255, 255, 0, 0, 0, 255, 255, 0, 0, 0, 255, 255, 0, 0, 0, 255, 
         255, 0, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 0, 255, 255, 255, 255, 0, 255, 255, 0, 255, 0, 255, 254, 0, 255, 0, 255, 255, 0, 255, 0, 255, 255, 0, 254, 0, 255, 255, 0, 255, 0, 255, 255, 0, 255, 0, 255, 
@@ -101,18 +105,19 @@ PixelData* get_number_icons_pixel_data() {
         255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
     };
     
-    for (int i = 0; i < width * height; i++) {
+    for (int i = 0; i < NUMBER_ICONS_PIXEL_COUNT; i++) {
         numberIcons->pixels[i] = pixels[i];
     }
 
     return numberIcons;
 }
 
+#define NUMBER_SYMBOLS_ICONS_PIXEL_WIDTH 80
+#define NUMBER_SYMBOLS_ICONS_PIXEL_HEIGHT 64
+#define NUMBER_SYMBOLS_ICONS_PIXEL_COUNT NUMBER_SYMBOLS_ICONS_PIXEL_WIDTH * NUMBER_SYMBOLS_ICONS_PIXEL_HEIGHT
 PixelData* get_number_symbols_icons_pixel_data() {
-    const int width = 25;
-    const int height = 5;
-    PixelData* numberSymbolIcons = pixel_data_alloc(width, height, GRAYSCALE8);
-    const uint8_t pixels[width * height] = {
+    PixelData* numberSymbolIcons = pixel_data_alloc(NUMBER_SYMBOLS_ICONS_PIXEL_WIDTH, NUMBER_SYMBOLS_ICONS_PIXEL_HEIGHT, GRAYSCALE8);
+    const uint8_t pixels[NUMBER_SYMBOLS_ICONS_PIXEL_COUNT] = {
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
         255, 255, 255, 255, 255, 255, 0, 255, 0, 255, 255, 255, 0, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 
         255, 255, 0, 255, 255, 255, 255, 0, 254, 255, 255, 0, 0, 0, 255, 255, 254, 0, 255, 255, 255, 0, 0, 0, 255, 
@@ -120,7 +125,7 @@ PixelData* get_number_symbols_icons_pixel_data() {
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
     }; 
 
-    for (int i = 0; i < width * height; i++) {
+    for (int i = 0; i < NUMBER_SYMBOLS_ICONS_PIXEL_COUNT; i++) {
         numberSymbolIcons->pixels[i] = pixels[i];
     }
 

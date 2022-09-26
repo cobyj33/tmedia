@@ -1,7 +1,7 @@
-#pragma once
+#ifndef ASCII_VIDEO_ICONS
+#define ASCII_VIDEO_ICONS
 #include "image.h"
-
-#include <chrono>
+#include <time.h>
 
 #define ICONS_SPRITE_WIDTH 16
 #define ICONS_SPRITE_HEIGHT 16
@@ -31,58 +31,16 @@ typedef enum VideoIcon {
 } VideoIcon;
 
 typedef struct VideoSymbol {
-    std::chrono::steady_clock::time_point startTime;
-    std::chrono::milliseconds lifeTime;
+    double startTime;
+    double lifeTime;
     int frames;
     PixelData** frameData;
 } VideoSymbol;
 
-const int numOfPlaybackIcons = 12;
-const VideoIcon playbackIconOrder[numOfPlaybackIcons] = { 
-    STOP_ICON,
-    PLAY_ICON,
-    FORWARD_ICON,
-    BACKWARD_ICON,
-    PAUSE_ICON,
-    NO_VOLUME_ICON,
-    LOW_VOLUME_ICON,
-    MEDIUM_VOLUME_ICON,
-    HIGH_VOLUME_ICON,
-    MUTE_ICON,
-    MAXIMIZED_ICON,
-    MINIMIZED_ICON,
-};
-
-const int numOfNumberIcons = 10;
-const VideoIcon numberIconOrder[numOfNumberIcons] = {
-   ONE_ICON,
-   TWO_ICON,
-   THREE_ICON,
-   FOUR_ICON,
-   FIVE_ICON,
-   SIX_ICON,
-   SEVEN_ICON,
-   EIGHT_ICON,
-   NINE_ICON
-};
-
-
-const int numOfNumberSymbolIcons = 5;
-const VideoIcon numberSymbolIconOrder[numOfNumberSymbolIcons] = {
-    POINT_ICON,
-    TIMES_ICON,
-    PLUS_ICON,
-    DIVIDE_ICON,
-    MINUS_ICON
-};
-
-
-const VideoIcon volumeIcons[4] = { NO_VOLUME_ICON, LOW_VOLUME_ICON, MEDIUM_VOLUME_ICON, HIGH_VOLUME_ICON };
-
 int testIconProgram();
-bool init_icons();
-bool free_icons();
-bool read_sprite_sheet(PixelData** buffer, int bufferSize, const char* sheetPath, int rows, int cols, int spriteWidth, int spriteHeight);
+int init_icons();
+int free_icons();
+int read_sprite_sheet(PixelData** buffer, int bufferSize, PixelData* iconData, int rows, int cols, int spriteWidth, int spriteHeight);
 PixelData* get_video_icon(VideoIcon iconEnum);
 VideoSymbol* get_video_symbol(VideoIcon iconEnum);
 VideoSymbol* get_symbol_from_volume(double normalizedVolume);
@@ -107,3 +65,4 @@ PixelData* get_playback_icons_pixel_data();
 PixelData* get_number_icons_pixel_data(); 
 PixelData* get_number_symbols_icons_pixel_data(); 
 PixelData* get_numbers_image(int* digits, int count);
+#endif

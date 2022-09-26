@@ -1,10 +1,11 @@
-#include "doublelinkedlist.hpp"
 #include "icons.h"
-#include <cstdarg>
-#include <cstddef>
-#include <cstdint>
+#include "selectionlist.h"
+#include "wtime.h"
+#include <stddef.h>
+#include <stdint.h>
 #include <media.h>
 #include <stdarg.h>
+#include <wmath.h>
 
 void video_symbol_stack_push(VideoSymbolStack* stack, VideoSymbol *symbol) {
     if (stack->top < VIDEO_SYMBOL_BUFFER_SIZE - 1) {
@@ -31,14 +32,14 @@ VideoSymbol* video_symbol_stack_pop(VideoSymbolStack* stack) {
         return copiedSymbol;
     }
 
-    return nullptr;
+    return NULL;
 }
 
 VideoSymbol* video_symbol_stack_peek(VideoSymbolStack* stack) {
     if (stack->top >= 0) {
         return stack->symbols[stack->top];    
     }
-    return nullptr;
+    return NULL;
 }
 
 void video_symbol_stack_clear(VideoSymbolStack* stack) {
@@ -49,39 +50,52 @@ void video_symbol_stack_clear(VideoSymbolStack* stack) {
     stack->top = -1;
 }
 
-MediaStream* get_media_stream(MediaData* media_data, AVMediaType media_type) {
+MediaStream* get_media_stream(MediaData* media_data, enum AVMediaType media_type) {
     for (int i = 0; i < media_data->nb_streams; i++) {
         if (media_data->media_streams[i]->info->mediaType == media_type) {
             return media_data->media_streams[i];
         }
     }
-    return nullptr;
+    return NULL;
 }
 
-bool has_media_stream(MediaData* media_data, AVMediaType media_type) {
-    return get_media_stream(media_data, media_type) != nullptr;
+int has_media_stream(MediaData* media_data, enum AVMediaType media_type) {
+    return get_media_stream(media_data, media_type) == NULL ? 0 : 1;
+}
+
+double get_playback_current_time(Playback* playback) {
+    return clock_sec() - playback->start_time - playback->paused_time + playback->skipped_time; 
 }
 
 
-void move_packet_list_to_pts(DoubleLinkedList<AVPacket*>* packets, int64_t targetPTS) {
-    bool result = true;
-    int64_t lastPTS = packets->get()->pts;
+void move_packet_list_to_pts(SelectionList* packets, int64_t targetPTS) {
+    int result = 1;
+    if (selection_list_length(packets) == 0) {
+        return;
+    }
 
-    while (true) {
-        int64_t currentIndexPTS = packets->get()->pts;
-        if (packets->get_index() == 0 || packets->get_index() == packets->get_length() - 1) {
+    AVPacket* current = (AVPacket*)selection_list_get(packets);
+    int64_t lastPTS = current->pts;
+
+    while (1) {
+        current = (AVPacket*)selection_list_get(packets);
+
+        int64_t currentIndexPTS = current->pts;
+        if (selection_list_index(packets) == 0 || selection_list_index(packets) == selection_list_length(packets) - 1) {
             break;
         } 
 
         if (currentIndexPTS > targetPTS) {
-            result = packets->set_index(packets->get_index() - 1);
-            if (packets->get()->pts < targetPTS) {
+            result = selection_list_try_move_index(packets, -1);
+            current = (AVPacket*)selection_list_get(packets);
+            if (current->pts < targetPTS) {
                 break;
             }
         } else if (currentIndexPTS < targetPTS) {
-            result = packets->set_index(packets->get_index() + 1);
-            if (packets->get()->pts > targetPTS) {
-                packets->set_index(packets->get_index() - 1);
+            result = selection_list_try_move_index(packets, 1);
+            current = (AVPacket*)selection_list_get(packets);
+            if (current->pts > targetPTS) {
+                selection_list_try_move_index(packets, -1);
                 break;
             }
         } else if (currentIndexPTS == targetPTS) {
@@ -92,9 +106,10 @@ void move_packet_list_to_pts(DoubleLinkedList<AVPacket*>* packets, int64_t targe
             break;
         }
 
-        currentIndexPTS = packets->get()->pts;
+        current = (AVPacket*)selection_list_get(packets);
+        currentIndexPTS = current->pts;
 
-        if (std::min(currentIndexPTS, lastPTS) <= targetPTS && std::max(currentIndexPTS, lastPTS) >= targetPTS) {
+        if (i64min(currentIndexPTS, lastPTS) <= targetPTS && i64max(currentIndexPTS, lastPTS) >= targetPTS) {
             break;
         }
 

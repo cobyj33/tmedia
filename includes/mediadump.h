@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ASCII_VIDEO_DUMP
+#define ASCII_VIDEO_DUMP
 #include <media.h>
 
 int get_media_player_dump_size(MediaPlayer* player);
@@ -18,4 +19,4 @@ void dump_stream_info(StreamData* stream_data, char* buffer);
 
 int get_playback_dump_size(Playback* playback);
 void dump_playback(Playback* playback, char* buffer);
-
+#endif

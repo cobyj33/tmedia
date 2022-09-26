@@ -2,17 +2,13 @@
 #include <image.h>
 #include <ascii.h>
 #include <macros.h>
-#include <cstdint>
-#include <cmath>
-#include <stdexcept>
+#include <stdint.h>
+#include <wmath.h>
 #include <ncurses.h>
-
-extern "C" {
 #include <libavutil/avutil.h>
-} 
 
 const int nb_val_chars = 11;
-const char val_chars[nb_val_chars + 1] = "@\%#*+=-:._ ";
+const char val_chars[11] = "@\%#*+=-:._ ";
 
 AsciiImage* get_ascii_image_from_frame(AVFrame* videoFrame, int maxWidth, int maxHeight) {
     PixelData* data = pixel_data_alloc_from_frame(videoFrame);
@@ -28,7 +24,7 @@ AsciiImage* get_ascii_image_bounded(PixelData* pixelData, int maxWidth, int maxH
 }
 
 
-AsciiImage* ascii_image_alloc(int width, int height, bool colored) {
+AsciiImage* ascii_image_alloc(int width, int height, int colored) {
     AsciiImage* dst = (AsciiImage*)malloc(sizeof(AsciiImage));
     dst->width = width;
     dst->height = height;
@@ -36,7 +32,7 @@ AsciiImage* ascii_image_alloc(int width, int height, bool colored) {
     dst->lines = colored ? (char*)malloc(sizeof(char) * width * height * 3) : (char*)malloc(sizeof(char) * width * height);
     if (dst->lines == NULL) {
         free(dst);
-        return nullptr;
+        return NULL;
     }
 
     if (colored) {
@@ -44,10 +40,10 @@ AsciiImage* ascii_image_alloc(int width, int height, bool colored) {
         if (dst->color_data == NULL) {
             free(dst->lines);
             free(dst);
-            return nullptr;
+            return NULL;
         }
     } else {
-        dst->color_data = nullptr;
+        dst->color_data = NULL;
     }
 
   for (int i = 0; i < height; i++) {
@@ -64,7 +60,7 @@ AsciiImage* ascii_image_alloc(int width, int height, bool colored) {
 
 void ascii_image_free(AsciiImage* image) {
     free(image->lines);
-    if (image->color_data != nullptr) {
+    if (image->color_data != NULL) {
         free(image->color_data);
     }
     free(image);
@@ -73,7 +69,7 @@ void ascii_image_free(AsciiImage* image) {
 AsciiImage* copy_ascii_image(AsciiImage* src) {
     AsciiImage* dst = ascii_image_alloc(src->width, src->height, src->colored);
     if (dst == NULL) {
-        return nullptr;
+        return NULL;
     }
     
     for (int row = 0; row < src->width; row++) {
@@ -88,8 +84,8 @@ AsciiImage* copy_ascii_image(AsciiImage* src) {
 
 AsciiImage* get_ascii_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWidth, int outputHeight, PixelDataFormat pixel_format) {
   AsciiImage* textImage = ascii_image_alloc(outputWidth, outputHeight, pixel_format == RGB24 ? true : false);
-  if (textImage == nullptr) {
-      return nullptr;
+  if (textImage == NULL) {
+      return NULL;
   }
 
   if (srcWidth <= outputWidth && srcHeight <= outputHeight) {
@@ -214,7 +210,7 @@ void get_avg_color_from_area_rgb(uint8_t* pixels, int x, int y, int width, int h
 
 void get_scale_size(int srcWidth, int srcHeight, int targetWidth, int targetHeight, int* width, int* height) { 
     bool shouldShrink = srcWidth > targetWidth || srcHeight > targetHeight;
-    double scaleFactor = shouldShrink ? std::min((double)targetWidth / srcWidth, (double)targetHeight / srcHeight) : std::max((double)targetWidth / srcWidth, (double)targetHeight / srcHeight);
+    double scaleFactor = shouldShrink ? fmin((double)targetWidth / srcWidth, (double)targetHeight / srcHeight) : fmax((double)targetWidth / srcWidth, (double)targetHeight / srcHeight);
     *width = (int)(srcWidth * scaleFactor);
     *height = (int)(srcHeight * scaleFactor);
 }

@@ -1,9 +1,7 @@
 #include "decode.h"
 #include <boiler.h>
-#include <iostream>
+#include <stdio.h>
 #include <libavutil/error.h>
-
-extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
@@ -14,7 +12,6 @@ extern "C" {
 #include <libavutil/audio_fifo.h>
 #include <libavutil/samplefmt.h>
 #include <libavfilter/avfilter.h>
-}
 
 AVFrame** resample_audio_frames(AudioResampler* resampler, AVFrame** originals, int nb_frames) {
     int currently_allocated = 0;
@@ -22,9 +19,9 @@ AVFrame** resample_audio_frames(AudioResampler* resampler, AVFrame** originals, 
 
     for (int i = 0; i < nb_frames; i++) {
         AVFrame* resampledFrame = resample_audio_frame(resampler, originals[i]);
-        if (resampledFrame == nullptr) {
+        if (resampledFrame == NULL) {
             free_frame_list(resampled_frames, currently_allocated);
-            return nullptr;
+            return NULL;
         }
         resampled_frames[i] = resampledFrame;
         currently_allocated++;
@@ -34,37 +31,31 @@ AVFrame** resample_audio_frames(AudioResampler* resampler, AVFrame** originals, 
 }
 
 AVFormatContext* open_format_context(const char* fileName, int* result) {
-    AVFormatContext* formatContext(nullptr);
-    *result = avformat_open_input(&formatContext, fileName, nullptr, nullptr);
+    AVFormatContext* formatContext = NULL;
+    *result = avformat_open_input(&formatContext, fileName, NULL, NULL);
     if (*result < 0) {
         avformat_free_context(formatContext);
-        return nullptr;
+        return NULL;
     }
 
-    *result = avformat_find_stream_info(formatContext, nullptr);
+    *result = avformat_find_stream_info(formatContext, NULL);
     if (*result < 0) {
         avformat_free_context(formatContext);
-        return nullptr;
+        return NULL;
     }
 
     return formatContext;
 }
 
-StreamData** alloc_stream_datas(AVFormatContext* formatContext, const AVMediaType* mediaTypes, int nb_target_streams, int* out_stream_count) {
+StreamData** alloc_stream_datas(AVFormatContext* formatContext, const enum AVMediaType* mediaTypes, int nb_target_streams, int* out_stream_count) {
     *out_stream_count = 0;
     StreamData** data = (StreamData**)malloc(sizeof(StreamData*) * nb_target_streams);
-    auto cleanup = [data](int allocated) {
-            for (int f = 0; f <= allocated; f++) {
-                stream_data_free(data[f]);
-                free(data);
-            }
-    };
     
     int result;
     int skipped = 0;
     for (int i = 0; i < nb_target_streams; i++) {
         StreamData* currentData = (StreamData*)malloc(sizeof(StreamData));
-        currentData->codecContext = nullptr;
+        currentData->codecContext = NULL;
         const AVCodec* decoder;
         int streamIndex = -1;
         streamIndex = av_find_best_stream(formatContext, mediaTypes[i], -1, -1, &decoder, 0);
@@ -86,7 +77,7 @@ StreamData** alloc_stream_datas(AVFormatContext* formatContext, const AVMediaTyp
             continue;
         }
 
-        result = avcodec_open2(currentData->codecContext, currentData->decoder, nullptr);
+        result = avcodec_open2(currentData->codecContext, currentData->decoder, NULL);
         if (result < 0) {
             stream_data_free(currentData);
             skipped++;
@@ -108,21 +99,21 @@ void stream_datas_free(StreamData** streamDatas, int nb_streams) {
 }
 
 void stream_data_free (StreamData *streamData) {
-    if (streamData->codecContext != nullptr) {
+    if (streamData->codecContext != NULL) {
         avcodec_free_context(&(streamData->codecContext));
     }
 
     free(streamData);
 }
 
-VideoConverter* get_video_converter(int dst_width, int dst_height, AVPixelFormat dst_pix_fmt, int src_width, int src_height, AVPixelFormat src_pix_fmt) {
+VideoConverter* get_video_converter(int dst_width, int dst_height, enum AVPixelFormat dst_pix_fmt, int src_width, int src_height, enum AVPixelFormat src_pix_fmt) {
     VideoConverter* converter = (VideoConverter*)malloc(sizeof(VideoConverter));
     converter->context = sws_getContext(
             src_width, src_height, src_pix_fmt, 
             dst_width, dst_height, dst_pix_fmt, 
-            SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
+            SWS_FAST_BILINEAR, NULL, NULL, NULL);
     if (converter->context == NULL) {
-        return nullptr;
+        return NULL;
     }
     
     converter->dst_width = dst_width;
@@ -134,25 +125,25 @@ VideoConverter* get_video_converter(int dst_width, int dst_height, AVPixelFormat
     return converter;
 }
 
-AudioResampler* get_audio_resampler(int* result, AVChannelLayout* dst_ch_layout, AVSampleFormat dst_sample_fmt, int dst_sample_rate, AVChannelLayout* src_ch_layout, AVSampleFormat src_sample_fmt, int src_sample_rate) {
+AudioResampler* get_audio_resampler(int* result, AVChannelLayout* dst_ch_layout, enum AVSampleFormat dst_sample_fmt, int dst_sample_rate, AVChannelLayout* src_ch_layout, enum AVSampleFormat src_sample_fmt, int src_sample_rate) {
     SwrContext* context = swr_alloc();
     *result = swr_alloc_set_opts2(
         &context, dst_ch_layout, dst_sample_fmt, 
         dst_sample_rate, src_ch_layout, src_sample_fmt,
-        src_sample_rate, 0, nullptr);
+        src_sample_rate, 0, NULL);
 
     if (*result < 0) {
         if (context == NULL) {
             swr_free(&context);
         }
-        return nullptr;
+        return NULL;
     } else {
         *result = swr_init(context);
         if (*result < 0) {
             if (context == NULL) {
                 swr_free(&context);
             }
-            return nullptr;
+            return NULL;
         }
     }
 
@@ -190,9 +181,9 @@ AVFrame* resample_audio_frame(AudioResampler* resampler, AVFrame* original) {
 
         result = swr_convert_frame(resampler->context, resampledFrame, original);
         if (result < 0) {
-            std::cout << "Unable to resample audio frame" << std::endl;
+            fprintf(stderr, "%s\n", "Unable to resample audio frame");
             av_frame_free(&resampledFrame);
-            return nullptr;
+            return NULL;
         }
 
         return resampledFrame;
@@ -208,7 +199,6 @@ AVFrame* convert_video_frame(VideoConverter* converter, AVFrame* original) {
     resizedVideoFrame->repeat_pict = original->repeat_pict;
     resizedVideoFrame->duration = original->duration;
     av_frame_get_buffer(resizedVideoFrame, 1); //watch this alignment
-
     sws_scale(converter->context, (uint8_t const * const *)original->data, original->linesize, 0, original->height, resizedVideoFrame->data, resizedVideoFrame->linesize);
 
     return resizedVideoFrame;

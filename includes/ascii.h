@@ -1,16 +1,13 @@
-#pragma once
-#include <cstdint>
-#include <string>
+#ifndef ASCII_VIDEO_ASCII
+#define ASCII_VIDEO_ASCII
+#include <stdint.h>
 #include "macros.h"
 #include "image.h"
 
-extern "C" {
 #include <libavutil/frame.h>
-} 
 
 // const std::string value_characters = "@MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry\%1v7l+it[]{}?j|()=~!-/<>\"^_';,:`.";
 // const std::string value_characters = "█▉▊▋▌▍▎▏";
-
 // const std::string value_characters = "░▒▓";
 
 
@@ -22,13 +19,13 @@ typedef struct ColorChar {
 typedef struct AsciiImage {
     char* lines;
     rgb* color_data;
-    bool colored;
+    int colored;
     int width;
     int height;
 } AsciiImage;
 
 
-AsciiImage* ascii_image_alloc(int width, int height, bool colored);
+AsciiImage* ascii_image_alloc(int width, int height, int colored);
 void ascii_image_free(AsciiImage* image);
 AsciiImage* copy_ascii_image(AsciiImage* src);
 AsciiImage* get_ascii_image(uint8_t* pixels, int srcWidth, int srcHeight, int outputWidth, int outputHeight, PixelDataFormat format);
@@ -46,4 +43,4 @@ void get_avg_color_from_area_rgb(uint8_t* pixels, int x, int y, int width, int h
 void get_output_size(int srcWidth, int srcHeight, int maxWidth, int maxHeight, int* width, int* height);
 void get_scale_size(int srcWidth, int srcHeight, int targetWidth, int targetHeight, int* width, int* height);
 void overlap_ascii_images(AsciiImage* first, AsciiImage* second);
-
+#endif

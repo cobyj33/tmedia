@@ -1,8 +1,8 @@
 #include "decode.h"
-#include <cstdlib>
-#include <iostream>
-#include <vector>
-extern "C" {
+#include <libavutil/error.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
@@ -13,15 +13,15 @@ extern "C" {
 #include <libavutil/audio_fifo.h>
 #include <libavutil/samplefmt.h>
 #include <libavfilter/avfilter.h>
-}
 
-decoder_function get_stream_decoder(AVMediaType mediaType) {
+decoder_function get_stream_decoder(enum AVMediaType mediaType) {
     switch (mediaType) {
         case AVMEDIA_TYPE_VIDEO: return decode_video_packet;
         case AVMEDIA_TYPE_AUDIO: return decode_audio_packet;
-        default: 
-                std::cout << "CANNOT RETURN DECODER FOR MEDIA TYPE: " << mediaType << std::endl;
-                return nullptr;
+        default: {
+                    fprintf(stderr, "%s %s\n", "CANNOT RETURN DECODER FOR MEDIA TYPE: ", av_get_media_type_string(mediaType));
+                    return NULL;
+                 }
     }
 }
 
@@ -42,13 +42,14 @@ AVFrame** decode_video_packet(AVCodecContext* videoCodecContext, AVPacket* video
     *result = avcodec_send_packet(videoCodecContext, videoPacket);
     if (*result < 0) {
         if (*result == AVERROR(EAGAIN) ) {
-            std::cout << "Video Packet reading Error: " << result << std::endl;
             free(videoFrames);
-            return nullptr;
+            return NULL;
         } else if (*result != AVERROR(EAGAIN) ) {
-            std::cout << "Video Packet reading Error: " << result << std::endl;
+            char err[128];
+            av_strerror(*result, err, 128);
+            fprintf(stderr, "%s %s\n", "ERROR WHILE SENDING VIDEO PACKET:", err);
             free(videoFrames);
-            return nullptr;
+            return NULL;
         }
     }
 
@@ -56,13 +57,13 @@ AVFrame** decode_video_packet(AVCodecContext* videoCodecContext, AVPacket* video
     *result = avcodec_receive_frame(videoCodecContext, videoFrame);
     if (*result < 0) {
         if (*result != AVERROR(EAGAIN)) {
-            char error_buffer[512];
-            av_strerror(*result, error_buffer, 512);
-            std::cerr << "FATAL ERROR WHILE READING VIDEO PACKET: " << error_buffer << std::endl;
+            char error_buffer[128];
+            av_strerror(*result, error_buffer, 128);
+            fprintf(stderr, "%s %s\n", "FATAL ERROR WHILE RECEIVING VIDEO FRAME:", error_buffer);
         }
         free(videoFrames);
         av_frame_free(&videoFrame);
-        return nullptr;
+        return NULL;
     }
 
 
@@ -70,12 +71,14 @@ AVFrame** decode_video_packet(AVCodecContext* videoCodecContext, AVPacket* video
         AVFrame* savedFrame = av_frame_alloc();
         *result = av_frame_ref(savedFrame, videoFrame);
         if (*result < 0) {
-            std::cerr << "ERROR WHILE REFERENCING VIDEO FRAMES DURING DECODING" << std::endl;
+            char error_buffer[128];
+            av_strerror(*result, error_buffer, 128);
+            fprintf(stderr, "%s %s\n", "ERROR WHILE REFERENCING VIDEO FRAMES DURING DECODING:", error_buffer);
             free_frame_list(videoFrames, *nb_out);
             *nb_out = 0;
             av_frame_free(&savedFrame);
             av_frame_free(&videoFrame);
-            return nullptr;
+            return NULL;
         }
 
         videoFrames[*nb_out] = savedFrame;
@@ -92,7 +95,6 @@ AVFrame** decode_video_packet(AVCodecContext* videoCodecContext, AVPacket* video
     av_frame_free(&videoFrame);
 
     return videoFrames;
-    
 }
 
 
@@ -106,34 +108,38 @@ AVFrame** decode_audio_packet(AVCodecContext* audioCodecContext, AVPacket* audio
 
     *result = avcodec_send_packet(audioCodecContext, audioPacket);
     if (*result < 0) {
-        std::cerr << "ERROR WHILE SENDING AUDIO PACKET: " << result << std::endl; 
+        char err[128];
+        av_strerror(*result, err, 128);
+        fprintf(stderr, "%s %s\n", "ERROR WHILE SENDING AUDIO PACKET:", err);
         free(audioFrames);
-        return nullptr;
+        return NULL;
     }
 
     AVFrame* audioFrame = av_frame_alloc();
     *result = avcodec_receive_frame(audioCodecContext, audioFrame);
     if (*result < 0) {
         if (*result != AVERROR(EAGAIN)) {
-            char error_buffer[512];
-            av_strerror(*result, error_buffer, 512);
-            std::cerr << "ERROR WHILE RECEIVING AUDIO FRAMES: " << error_buffer << std::endl; 
+            char error_buffer[128];
+            av_strerror(*result, error_buffer, 128);
+            fprintf(stderr, "%s %s\n", "FATAL ERROR WHILE RECEIVING AUDIO FRAME:", error_buffer);
         }
         free(audioFrames);
         av_frame_free(&audioFrame);
-        return nullptr;
+        return NULL;
     }
 
     while (*result == 0) {
         AVFrame* savedFrame = av_frame_alloc();
         *result = av_frame_ref(savedFrame, audioFrame); 
         if (*result < 0) {
-            std::cerr << "ERROR WHILE REFERENCING AUDIO FRAMES DURING DECODING" << std::endl;
+            char error_buffer[128];
+            av_strerror(*result, error_buffer, 128);
+            fprintf(stderr, "%s %s\n", "ERROR WHILE REFERENCING AUDIO FRAMES DURING DECODING:", error_buffer);
             free_frame_list(audioFrames, *nb_out);
             *nb_out = 0;
             av_frame_free(&savedFrame);
             av_frame_free(&audioFrame);
-            return nullptr;
+            return NULL;
         }
 
         av_frame_unref(audioFrame);
