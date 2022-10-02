@@ -143,6 +143,17 @@ char get_char_from_value(uint8_t value) {
   return val_chars[ (int)value * (nb_val_chars - 1) / 255 ];
 }
 
+int get_rgb_from_char(rgb output, char ch) {
+    for (int i = 0; i < nb_val_chars; i++) {
+        if (ch == val_chars[i]) {
+            uint8_t val = i * 255 / (nb_val_chars - 1); 
+            rgb_set(output, val, val, val);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 char get_char_from_rgb(rgb colors) {
     return val_chars[get_grayscale_rgb(colors) * (nb_val_chars - 1) / 255];
 }
@@ -239,5 +250,43 @@ void overlap_ascii_images(AsciiImage* first, AsciiImage* second) {
       }
     }
   }
+}
+
+int ascii_init_color(AsciiImage* image) {
+    if (image->colored) {
+        return 1;
+    }
+
+    if (image->color_data != NULL) {
+        free(image->color_data);
+    }
+
+    image->color_data = (rgb*)malloc(sizeof(rgb) * image->width * image->height);
+    if (image->color_data == NULL) {
+        return 0;
+    }
+
+    rgb output;
+    for (int i = 0; i < image->width * image->height; i++) {
+        get_rgb_from_char(output, image->lines[i]);
+        rgb_copy(image->color_data[i], output);
+    }
+    image->colored = true;
+    return 1;
+}
+
+int ascii_fill_color(AsciiImage* image, rgb color) {
+    if (!image->colored) {
+        int result = ascii_init_color(image);
+        if (!result) {
+            fprintf(stderr, "%s", "Could not convert grayscale ascii image to color");
+            return 0;
+        }
+    }
+
+    for (int i = 0; i < image->width * image->height; i++) {
+        rgb_copy(image->color_data[i], color);
+    }
+    return 1;
 }
 

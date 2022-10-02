@@ -70,6 +70,9 @@ MediaDisplayCache* media_display_cache_alloc() {
 
     cache->image = NULL;
     cache->last_rendered_image = NULL;
+    cache->last_samples = NULL;
+    cache->nb_last_samples = 0;
+    cache->nb_channels = 0;
     return cache;
 }
 
@@ -106,9 +109,7 @@ MediaDisplaySettings* media_display_settings_alloc() {
         return NULL;
     }
 
-    settings->show_debug = false;
     settings->subtitles = false;
-    settings->mode = DISPLAY_MODE_VIDEO;
     settings->can_use_colors = has_colors() == TRUE ? 1 : 0;
     settings->can_change_colors = can_change_color() == TRUE ? 1 : 0;
     settings->use_colors = false;

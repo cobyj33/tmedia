@@ -4,6 +4,8 @@
 #include "pixeldata.h"
 #include "selectionlist.h"
 #include <libavutil/avutil.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <image.h>
 #include <video.h>
@@ -20,11 +22,22 @@
 #include <curses_helpers.h>
 #define KEY_ESCAPE 27
 
+void render_playbar(MediaPlayer* player, GuiData gui_data);
+
+void get_index_display_color(int index, int length, rgb output) {
+    const double step = (255.0 / 2.0) / length;
+    const double color_space_size = 255 - (step * (double)(index / 6));
+    output[0] = index % 6 >= 3 ? color_space_size : 0;
+    output[1] = index % 2 == 0 ? color_space_size : 0;
+    output[2] = index % 6 < 3 ? color_space_size : 0;
+}
+
 void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
     WINDOW* inputWindow = newwin(0, 0, 1, 1);
     nodelay(inputWindow, true);
     keypad(inputWindow, true);
     double jump_time_requested = 0;
+    GuiData gui_data = { DISPLAY_MODE_VIDEO, { 0, 1 }, { player->displaySettings->use_colors, 1 }, 0 };
 
     while (player->inUse) {
         pthread_mutex_lock(alterMutex);
@@ -48,47 +61,51 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
             jump_time_requested = 0;
         }
 
-        if (ch == (int)(' ')) {
+        if (ch == ' ') {
             playback->playing = !playback->playing;
-        } else if (ch == (int)('d') || ch == (int)('D')) {
-            player->displaySettings->show_debug = !player->displaySettings->show_debug;
-        } else if (ch == (int)('c') || ch == (int)('C')) {
-            player->displaySettings->mode = get_next_display_mode(player->displaySettings->mode);
+        } else if (ch == 'd' || ch == 'D') {
+            gui_data.show_debug = !gui_data.show_debug;
+        } else if (ch == 'c' || ch == 'C') {
+            gui_data.mode = get_next_display_mode(gui_data.mode);
         } else if (ch == KEY_LEFT) {
             jump_time_requested -= TIME_CHANGE_AMOUNT;
         } else if (ch == KEY_RIGHT) {
-            jump_time_requested += TIME_CHANGE_AMOUNT;
+
+            if (gui_data.mode == DISPLAY_MODE_VIDEO) {
+                jump_time_requested += TIME_CHANGE_AMOUNT;
+            } else if (gui_data.mode == DISPLAY_MODE_AUDIO) {
+
+                if (gui_data.audio.show_all_channels) {
+                    gui_data.audio.channel_index = 0;
+                    gui_data.audio.show_all_channels = 0;
+                } else if (gui_data.audio.channel_index == player->displayCache->nb_channels - 1) {
+                    gui_data.audio.show_all_channels = 1;
+                } else {
+                    gui_data.audio.channel_index++; 
+                }
+            }
+
         } else if (ch == KEY_UP) {
             playback->volume = fmin(1.0, playback->volume + VOLUME_CHANGE_AMOUNT);
             video_symbol_stack_push(player->displayCache->symbol_stack,get_symbol_from_volume(playback->volume));
         } else if (ch == KEY_DOWN) {
             playback->volume = fmin(1.0, playback->volume - VOLUME_CHANGE_AMOUNT);
             video_symbol_stack_push(player->displayCache->symbol_stack,get_symbol_from_volume(playback->volume));
-        } else if (ch == (int)('n') || ch == (int)('N')) {
+        } else if (ch == 'n' || ch == 'N') {
             playback->speed = fmin(5.0, playback->speed + PLAYBACK_SPEED_CHANGE_INTERVAL);
-        } else if (ch == (int)('m') || ch == (int)('M')) {
+        } else if (ch == 'm' || ch == 'M') {
             playback->speed = fmax(0.25, playback->speed - PLAYBACK_SPEED_CHANGE_INTERVAL);
-        } else if (ch == (int)('x') || ch == (int)('X') || ch == KEY_ESCAPE) {
+        } else if (ch == 'x' || ch == 'X' || ch == KEY_ESCAPE) {
             player->inUse = !player->inUse;
+        } else if (ch == 'f' || ch == 'F') {
+            gui_data.video.fullscreen = gui_data.video.fullscreen == 1 ? 0 : 1;
         } else if (ch == KEY_RESIZE) {
             endwin();
             refresh();
         }
 
-        render_screen(player);
+        render_screen(player, gui_data);
         pthread_mutex_unlock(alterMutex);
-        /* erase(); */
-        /* printw("time: %.2f", player->timeline->playback->time); */
-        /* MediaStream* audioStream = get_media_stream(player->timeline->mediaData, AVMEDIA_TYPE_AUDIO); */
-        /* MediaStream* videoStream = get_media_stream(player->timeline->mediaData, AVMEDIA_TYPE_VIDEO); */
-        /* if (audioStream != NULL) { */
-        /*     printw("Audio Stream Time: %.2f", audioStream->streamTime); */
-        /*     printw("Audio Stream Packets: %d, index: %d\n", selection_list_length(audioStream->packets), selection_list_index(audioStream->packets)); */
-        /* } */
-        /* if (videoStream != NULL) { */
-        /*     printw("Video Stream Packets: %d, index: %d\n", selection_list_length(videoStream->packets), selection_list_index(videoStream->packets)); */
-        /* } */
-
         refresh();
         sleep_for_ms(5);
     }
@@ -96,30 +113,25 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
     delwin(inputWindow);
 }
 
-void render_screen(MediaPlayer* player) {
-    /* if (player->displaySettings->show_debug) { */
-    /*     if (player->displaySettings->mode == DISPLAY_MODE_VIDEO) { */
-    /*         render_video_debug(player); */
-    /*     } else if (player->displaySettings->mode == DISPLAY_MODE_AUDIO) { */
-    /*         render_audio_debug(player); */
-    /*     } */
-    /* } else { */
-    /*     if (player->displaySettings->mode == DISPLAY_MODE_VIDEO) { */
-    /*         if (player->displayCache->image != NULL && player->displayCache->last_rendered_image != NULL) { */
-    /*             if (!pixel_data_equals(player->displayCache->image, player->displayCache->last_rendered_image)) { */
-    /*                 render_movie_screen(player); */
-    /*             } */
-    /*         } */
-    /*     } else if (player->displaySettings->mode == DISPLAY_MODE_AUDIO) { */
-    /*         render_audio_screen(player); */
-    /*     } */
-    /* } */
-
-    if (player->displayCache->image != NULL && player->displayCache->last_rendered_image != NULL) {
-        if (!pixel_data_equals(player->displayCache->image, player->displayCache->last_rendered_image)) {
-            render_movie_screen(player);
+void render_screen(MediaPlayer* player, GuiData gui_data) {
+    if (gui_data.show_debug) {
+        if (gui_data.mode == DISPLAY_MODE_VIDEO) {
+            render_video_debug(player, gui_data);
+        } else if (gui_data.mode == DISPLAY_MODE_AUDIO) {
+            render_audio_debug(player, gui_data);
+        }
+    } else {
+        if (gui_data.mode == DISPLAY_MODE_VIDEO) {
+            if (player->displayCache->image != NULL && player->displayCache->last_rendered_image != NULL) {
+                if (!pixel_data_equals(player->displayCache->image, player->displayCache->last_rendered_image)) {
+                    render_movie_screen(player, gui_data);
+                }
+            }
+        } else if (gui_data.mode == DISPLAY_MODE_AUDIO) {
+            render_audio_screen(player, gui_data);
         }
     }
+
 
     if (player->displayCache->last_rendered_image != NULL) {
         pixel_data_free(player->displayCache->last_rendered_image);
@@ -127,12 +139,90 @@ void render_screen(MediaPlayer* player) {
     if (player->displayCache->image != NULL) {
         player->displayCache->last_rendered_image = copy_pixel_data(player->displayCache->image);
     }
-
 }
 
-void render_audio_screen(MediaPlayer *player) {
+void collapse_wave(float* output, int output_sample_count, float* input, int input_sample_count, int nb_channels) {
+    float step = (float)input_sample_count / output_sample_count;
+    float current_step = 0.0f;
+    for (int i = 0; i < output_sample_count; i++) {
+    float average = 0.0f;
+        for (int ichannel = 0; ichannel < nb_channels; ichannel++) {
+           average = 0.0;
+           for (int origi = (int)(current_step); origi < (int)(current_step + step); origi++) {
+               average += input[origi * nb_channels + ichannel];
+           }
+           average /= step;
+           output[i * nb_channels + ichannel] = average;
+        }
+        current_step += step;
+    }
+}
+
+void normalize_wave(float* to_normalize, int nb_samples, int nb_channels) {
+    float maxes[nb_channels];
+    for (int i = 0; i < nb_channels; i++) {
+        maxes[i] = -(float)INT32_MAX;
+    }
+
+    for (int i = 0; i < nb_samples * nb_channels; i++) {
+        maxes[i % nb_channels] = to_normalize[i] > maxes[i % nb_channels] ? to_normalize[i] : maxes[i % nb_channels];
+    }
+
+    for (int i = 0; i < nb_samples * nb_channels; i++) {
+        to_normalize[i] /= maxes[i % nb_channels];
+    }
+}
+
+void print_wave(int x, int y, int width, int height, float* wave, int nb_samples, int channel_index, int nb_channels, int use_color) {
+    const int midline = y + (height / 2);
+    for (int i = channel_index; i < i32min(nb_samples, width) * nb_channels; i += nb_channels) {
+        if (wave[i] == 0.0) {
+            continue;
+        }
+
+        if (use_color) {
+            rgb color = { 255, 255, 255 };
+            get_index_display_color(i % nb_channels, nb_channels, color);
+            int color_pair = get_closest_color_pair(color);
+            attron(COLOR_PAIR(color_pair));
+            for (int top = midline - (int)((double)height / 2 * wave[i]); top != midline; top += fsignum(wave[i])) {
+                mvaddch(top, x + i / nb_channels, '*');
+            }
+            mvaddch(midline, x + i / nb_channels, '*');
+            attroff(COLOR_PAIR(color_pair));
+        } else {
+            for (int top = midline - (int)((double)height / 2 * wave[i]); top != midline; top += fsignum(wave[i])) {
+                mvaddch(top, x + i / nb_channels, '*');
+            }
+            mvaddch(midline, x + i / nb_channels, '*');
+        }
+    }
+} 
+
+void render_audio_screen(MediaPlayer *player, GuiData gui_data) {
     erase();
-    printw("AUDIO");
+    const MediaDisplayCache* cache = player->displayCache;
+    if (cache->last_samples == NULL || cache->nb_last_samples == 0 || cache->nb_channels == 0) {
+        printw("%s\n", "CURRENTLY NO AUDIO DATA TO DISPLAY");
+        return;
+    }
+
+    float wave[COLS * cache->nb_channels];
+    for (int i = 0; i < COLS * cache->nb_channels; i++) {
+        wave[i] = 0.0f;
+    }
+
+    collapse_wave(wave, COLS, cache->last_samples, cache->nb_last_samples, cache->nb_channels);
+    normalize_wave(wave, COLS, cache->nb_channels);
+
+    if (gui_data.audio.show_all_channels) {
+        for (int i = 0; i < cache->nb_channels; i++) {
+            print_wave(0, i * ( LINES / cache->nb_channels), COLS, LINES / cache->nb_channels, wave, COLS, i, cache->nb_channels, player->displaySettings->use_colors);
+        }
+    } else {
+        print_wave(0, 0, COLS, LINES, wave, COLS, gui_data.audio.channel_index, cache->nb_channels, player->displaySettings->use_colors);
+    }
+
 }
 
 void print_debug(MediaDebugInfo* debug_info, const char* source, const char* type) {
@@ -143,7 +233,7 @@ void print_debug(MediaDebugInfo* debug_info, const char* source, const char* typ
     }
 }
 
-void render_audio_debug(MediaPlayer* player) {
+void render_audio_debug(MediaPlayer* player, GuiData gui_data) {
     erase();
     print_debug(player->displayCache->debug_info, "audio", "debug");
     if (player->displayCache->debug_info->nb_messages == MEDIA_DEBUG_MESSAGE_BUFFER_SIZE) {
@@ -151,7 +241,7 @@ void render_audio_debug(MediaPlayer* player) {
     }
 }
 
-void render_video_debug(MediaPlayer *player) {
+void render_video_debug(MediaPlayer *player, GuiData gui_data) {
     erase();
     print_debug(player->displayCache->debug_info, "video", "debug");
     if (player->displayCache->debug_info->nb_messages == MEDIA_DEBUG_MESSAGE_BUFFER_SIZE) {
@@ -160,47 +250,60 @@ void render_video_debug(MediaPlayer *player) {
 }
 
 
-void render_movie_screen(MediaPlayer* player) {
+void render_movie_screen(MediaPlayer* player, GuiData gui_data) {
     erase();
-    if (player->displayCache->image != NULL) {
-        VideoSymbolStack* symbol_stack = player->displayCache->symbol_stack;
-        AsciiImage* textImage = get_ascii_image_bounded(player->displayCache->image, COLS, LINES);
+    if (player->displayCache->image == NULL) {
+        return;
+    }
+    rgb black = { 0, 0, 0 };
+    VideoSymbolStack* symbol_stack = player->displayCache->symbol_stack;
+    AsciiImage* textImage = get_ascii_image_bounded(player->displayCache->image, COLS, LINES);
 
-        while (player->displayCache->symbol_stack->top >= 0) {
-            VideoSymbol* currentSymbol = video_symbol_stack_peek(symbol_stack); 
-            if (clock_sec() - currentSymbol->startTime < currentSymbol->lifeTime) {
-                int currentSymbolFrame = get_video_symbol_current_frame(currentSymbol); 
-                AsciiImage* symbolImage = get_ascii_image_bounded(currentSymbol->frameData[currentSymbolFrame], textImage->width, textImage->height);
-                overlap_ascii_images(textImage, symbolImage);
-                ascii_image_free(symbolImage);
-                break;
-            } else {
-                video_symbol_stack_erase_pop(symbol_stack);
+    while (player->displayCache->symbol_stack->top >= 0) {
+        VideoSymbol* currentSymbol = video_symbol_stack_peek(symbol_stack); 
+        if (clock_sec() - currentSymbol->startTime < currentSymbol->lifeTime) {
+            int currentSymbolFrame = get_video_symbol_current_frame(currentSymbol); 
+            AsciiImage* symbolImage = get_ascii_image_bounded(currentSymbol->frameData[currentSymbolFrame], textImage->width, textImage->height);
+            if (player->displaySettings->use_colors) {
+                ascii_init_color(symbolImage);
             }
-        }
 
-        if (!player->timeline->playback->playing) {
-            VideoSymbol* pauseSymbol = get_video_symbol(PAUSE_ICON);
-            AsciiImage* symbolImage = get_ascii_image_bounded(pauseSymbol->frameData[0], textImage->width, textImage->height);
             overlap_ascii_images(textImage, symbolImage);
-            free_video_symbol(pauseSymbol);
             ascii_image_free(symbolImage);
+            break;
+        } else {
+            video_symbol_stack_erase_pop(symbol_stack);
+        }
+    }
+
+    if (!player->timeline->playback->playing) {
+        VideoSymbol* pauseSymbol = get_video_symbol(PAUSE_ICON);
+        AsciiImage* symbolImage = get_ascii_image_bounded(pauseSymbol->frameData[0], textImage->width, textImage->height);
+        if (player->displaySettings->use_colors) {
+            ascii_init_color(symbolImage);
         }
 
-        /* const int palette_size = 16; */
-        /* int actual_output_size; */
-        /* rgb trained_colors[palette_size]; */
-        /* get_most_common_colors(trained_colors, palette_size, textImage->color_data, textImage->width * textImage->height, &actual_output_size); */
-        /* initialize_new_colors(trained_colors, actual_output_size); */
+        overlap_ascii_images(textImage, symbolImage);
+        free_video_symbol(pauseSymbol);
+        ascii_image_free(symbolImage);
+    }
 
-        /* printw("Actual Output Size: %d\n", actual_output_size); */
-        /* for (int i = 0; i < palette_size; i++) { */
-        /*     printw("Color #%d: %d %d %d\n", i, trained_colors[i][0], trained_colors[i][1], trained_colors[i][2]); */
-        /* } */
+    /* const int palette_size = 16; */
+    /* int actual_output_size; */
+    /* rgb trained_colors[palette_size]; */
+    /* get_most_common_colors(trained_colors, palette_size, textImage->color_data, textImage->width * textImage->height, &actual_output_size); */
+    /* initialize_new_colors(trained_colors, actual_output_size); */
+
+    /* printw("Actual Output Size: %d\n", actual_output_size); */
+    /* for (int i = 0; i < palette_size; i++) { */
+    /*     printw("Color #%d: %d %d %d\n", i, trained_colors[i][0], trained_colors[i][1], trained_colors[i][2]); */
+    /* } */
 
 
-        print_ascii_image_full(textImage);
-        ascii_image_free(textImage);
+    print_ascii_image_full(textImage);
+    ascii_image_free(textImage);
+    if (!gui_data.video.fullscreen) {
+        render_playbar(player, gui_data);
     }
 }
 
@@ -294,4 +397,37 @@ void print_ascii_image_full(AsciiImage* textImage) {
             addstr("|\n");
         }
     }
+}
+
+int format_time(char* buffer, int buf_size, double time_in_seconds) {
+    const long units[4] = { (60 * 60 * 24), (60 * 60), 60, 1 };
+    long conversions[4];
+    for (int i = 0; i < 4; i++) {
+        conversions[i] = time_in_seconds / units[i];
+        time_in_seconds -= conversions[i] * units[i];
+    }
+
+    return sprintf(buffer, "%ld:%ld:%ld", conversions[1], conversions[2], conversions[3]);
+}
+
+void render_playbar(MediaPlayer* player, GuiData gui_data) {
+    const double height = fmin(3, fmax(1, LINES * 0.05));
+    const double width = COLS;
+    werasebox(stdscr, LINES - height, 0, width, height);
+
+    const char* status = player->timeline->playback->playing ? "Playing" : "Paused";
+    const double time = get_playback_current_time(player->timeline->playback);
+    const double duration = player->timeline->mediaData->duration;
+
+    const int bar_start = strlen(status);
+    const int bar_end = COLS;
+    mvprintw(LINES - height / 2, 0, "%s", status);
+    wfill_box(stdscr, LINES - height / 2, bar_start, bar_end - bar_start, height, '-');
+    if (duration != 0.0) {
+        wfill_box(stdscr, LINES - height, bar_start, (bar_end - bar_start) * (time / duration), height, '*');
+    }
+    char playTime[15], durationTime[15];
+    format_time(playTime, 15, time);
+    format_time(durationTime, 15, duration);
+    mvprintw(LINES - height / 2, COLS - (strlen(playTime) + strlen(durationTime) + 1 ), "%s/%s", playTime, durationTime );
 }

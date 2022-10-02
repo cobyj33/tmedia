@@ -43,4 +43,7 @@ void get_avg_color_from_area_rgb(uint8_t* pixels, int x, int y, int width, int h
 void get_output_size(int srcWidth, int srcHeight, int maxWidth, int maxHeight, int* width, int* height);
 void get_scale_size(int srcWidth, int srcHeight, int targetWidth, int targetHeight, int* width, int* height);
 void overlap_ascii_images(AsciiImage* first, AsciiImage* second);
+int ascii_fill_color(AsciiImage* image, rgb color);
+int ascii_init_color(AsciiImage* image);
+int get_rgb_from_char(rgb output, char ch);
 #endif

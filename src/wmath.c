@@ -2,7 +2,8 @@
 #include <stdlib.h>
 
 double dabs(double d) {
-    return d > 0 ? d : -d;
+
+    return d > 0.0 ? d : -d;
 }
 
 int i32min(int a, int b) {
@@ -23,4 +24,16 @@ long i64max(long a, long b) {
 
 double frand() {
     return rand() / (double)RAND_MAX;
+}
+
+int signum(int num) {
+    if (num < 0) return -1;
+    if (num > 0) return 1;
+    return 0;
+}
+
+int fsignum(double num) {
+    if (num < 0.0) return -1;
+    if (num > 0.0) return 1;
+    return 0;
 }

@@ -5,6 +5,18 @@
 #define CUSTOM_COLOR 16
 #define CUSTOM_COLOR_PAIR 1
 
+void wfill_box(WINDOW* window, int y, int x, int width, int height, char ch) {
+    for (int row = y; row <= y + height; row++) {
+        for (int col = x; col <= x + width; col++) {
+            mvwaddch(window, row, col, ch);
+        }
+    }
+}
+
+void werasebox(WINDOW* window, int y, int x, int width, int height) {
+    wfill_box(window, y, x, width, height, ' ');
+}
+
 void printwrgb(char* line, rgb* colors, int len) {
     static int color_index = CUSTOM_COLOR;
     static int color_pair = CUSTOM_COLOR_PAIR;

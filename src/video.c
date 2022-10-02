@@ -73,6 +73,7 @@ void* video_playback_thread(void* args) {
             break;
         } else if (playback->playing == 0) {
             pthread_mutex_unlock(alterMutex);
+
             double pauseTime = clock_sec();
             while (playback->playing == 0) {
                 sleep_for_ms(1);
@@ -118,16 +119,15 @@ void* video_playback_thread(void* args) {
                 decodedList = decode_video_packet(videoCodecContext, currentPacket, &decodeResult, &nb_decoded);
             }
 
-            add_debug_message(debug_info, debug_video_source, debug_video_type, "Fed %d packets to decode\n", repeats);
+            add_debug_message(debug_info, debug_video_source, debug_video_type, "Number of video packets sent to decoder","Fed %d packets to decode\n", repeats);
 
             if ((nb_decoded > 0 && decodeResult >= 0) || currentPacket == NULL) {
                 av_frame_free(&readingFrame);
-                add_debug_message(debug_info, debug_video_source, debug_video_type, "Decoded List Time: %f", decodedList[0]->pts * videoTimeBase );
+                add_debug_message(debug_info, debug_video_source, debug_video_type, "Time of decoded video packet","Decoded List Time: %.3f", decodedList[0]->pts * videoTimeBase );
                 readingFrame = convert_video_frame(videoConverter, decodedList[0]);
                 free_frame_list(decodedList, nb_decoded);
             } else {
-                add_debug_message(debug_info, debug_video_source, debug_video_type, "ERROR: NULL POINTED VIDEO FRAME: %d", decodeResult);
-                printw("ERROR: NULL POINTED VIDEO FRAME: ERROR: %d", decodeResult);
+                add_debug_message(debug_info, debug_video_source, debug_video_type, "Null video packet", "ERROR: NULL POINTED VIDEO PACKET: %d", decodeResult);
                 selection_list_try_move_index(videoPackets, 1);
 
                 pthread_mutex_unlock(alterMutex);
@@ -158,8 +158,8 @@ void* video_playback_thread(void* args) {
         waitDuration -= frame_speed_skip_time_sec;
         double continueTime = clock_sec() + waitDuration;
 
-        add_debug_message(debug_info, debug_video_source, debug_video_type, "  timeOfNextFrame: %f, waitDuration: %f\n \
-            Speed Factor: %f, Time Skipped due to Speed on Current Frame: %f\n\n ",
+        add_debug_message(debug_info, debug_video_source, debug_video_type, "Video Timing Information", "  timeOfNextFrame: %.3f, waitDuration: %.3f\n \
+            Speed Factor: %.3f, Time Skipped due to Speed on Current Frame: %.3f\n\n ",
            nextFrameTimeSinceStartInSeconds, waitDuration,
             playback->speed, frame_speed_skip_time_sec);
 
@@ -177,6 +177,7 @@ void* video_playback_thread(void* args) {
 }
 
 void jump_to_time(MediaTimeline* timeline, double targetTime) {
+    targetTime = fmax(targetTime, 0.0);
     Playback* playback = timeline->playback;
     MediaData* media_data = timeline->mediaData;
     const double originalTime = get_playback_current_time(timeline->playback);

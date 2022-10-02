@@ -52,7 +52,6 @@ typedef enum MediaDisplayMode {
 MediaDisplayMode get_next_display_mode(MediaDisplayMode currentMode);
 
 typedef struct MediaDisplaySettings {
-    int show_debug;
     int subtitles;
 
     int use_colors;
@@ -62,13 +61,17 @@ typedef struct MediaDisplaySettings {
     int train_palette;
     int palette_size;
     rgb* best_palette;
-    MediaDisplayMode mode;
 } MediaDisplaySettings; 
 
 typedef struct MediaDisplayCache {
     MediaDebugInfo* debug_info;
     PixelData* image;
     PixelData* last_rendered_image;
+
+    float* last_samples;
+    int nb_channels;
+    int nb_last_samples;
+
     VideoSymbolStack* symbol_stack;
 } MediaDisplayCache;
 
@@ -86,7 +89,6 @@ typedef struct MediaPlayer {
 
 MediaPlayer* media_player_alloc(const char* fileName);
 void media_player_free(MediaPlayer* player);
-
 
 int start_media_player(MediaPlayer* player);
 int start_media_player_from_filename(const char* fileName);
