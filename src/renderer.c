@@ -4,6 +4,7 @@
 #include "pixeldata.h"
 #include "selectionlist.h"
 #include <libavutil/avutil.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,8 +33,15 @@ void get_index_display_color(int index, int length, rgb output) {
     output[2] = index % 6 < 3 ? color_space_size : 0;
 }
 
+int digit_to_int(char num) {
+    return num - 48;
+}
+
 void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
     WINDOW* inputWindow = newwin(0, 0, 1, 1);
+    MEVENT mouse_event;
+    mousemask(BUTTON1_PRESSED, NULL);
+
     nodelay(inputWindow, true);
     keypad(inputWindow, true);
     double jump_time_requested = 0;
@@ -45,6 +53,7 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
         Playback* playback = player->timeline->playback;
 
         if (!player->inUse) {
+            pthread_mutex_unlock(alterMutex);
             break;
         }
 
@@ -78,11 +87,11 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
                 if (gui_data.audio.show_all_channels) {
                     gui_data.audio.channel_index = 0;
                     gui_data.audio.show_all_channels = 0;
-                } else if (gui_data.audio.channel_index == player->displayCache->nb_channels - 1) {
+                } else if (gui_data.audio.channel_index == player->displayCache->audio_stream->nb_channels - 1) {
                     gui_data.audio.show_all_channels = 1;
                 } else {
                     gui_data.audio.channel_index++; 
-                }
+               }
             }
 
         } else if (ch == KEY_UP) {
@@ -96,15 +105,49 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
         } else if (ch == 'm' || ch == 'M') {
             playback->speed = fmax(0.25, playback->speed - PLAYBACK_SPEED_CHANGE_INTERVAL);
         } else if (ch == 'x' || ch == 'X' || ch == KEY_ESCAPE) {
-            player->inUse = !player->inUse;
+            player->inUse = player->inUse == 1 ? 0 : 1;
         } else if (ch == 'f' || ch == 'F') {
             gui_data.video.fullscreen = gui_data.video.fullscreen == 1 ? 0 : 1;
         } else if (ch == KEY_RESIZE) {
             endwin();
             refresh();
+        } else if (ch >= '0' && ch <= '9') {
+            int digit = digit_to_int(ch);
+            if (gui_data.mode == DISPLAY_MODE_VIDEO) {
+                double time = digit * player->timeline->mediaData->duration / 10;
+                jump_time_requested = time - get_playback_current_time(player->timeline->playback);
+            } else if (gui_data.mode == DISPLAY_MODE_AUDIO) {
+                if (digit == 0) {
+                    gui_data.audio.show_all_channels = 1;
+                } else {
+                    if (player->displayCache->audio_stream->nb_channels > 0) {
+                        gui_data.audio.show_all_channels = 0;
+                        gui_data.audio.channel_index = (digit - 1) % player->displayCache->audio_stream->nb_channels;
+                    }
+                }
+
+            }
+        } else if (ch == KEY_MOUSE) {
+            if (getmouse(&mouse_event) == OK) {
+                if (mouse_event.bstate & BUTTON1_PRESSED) {
+                    if (mouse_event.y >= LINES - 3) {
+                        if (player->timeline->mediaData->duration > 0 && COLS > 0) {
+                            double time = ((double)mouse_event.x / COLS) * player->timeline->mediaData->duration;
+                            jump_time_requested = time - get_playback_current_time(player->timeline->playback);
+                        }
+                    } else {
+                        playback->playing = !playback->playing;
+                    }
+                }
+            }
+
         }
 
         render_screen(player, gui_data);
+        if (get_playback_current_time(player->timeline->playback) > player->timeline->mediaData->duration) {
+            player->inUse = 0;
+        }
+
         pthread_mutex_unlock(alterMutex);
         refresh();
         sleep_for_ms(5);
@@ -158,6 +201,24 @@ void collapse_wave(float* output, int output_sample_count, float* input, int inp
     }
 }
 
+void expand_wave(float* output, int output_sample_count, float* input, int input_sample_count, int nb_channels) {
+    float stretch = (float)output_sample_count / input_sample_count;
+    float current_step = 0.0f;
+    for (int i = 0; i < output_sample_count; i++) {
+        for (int ch = 0; ch < nb_channels; ch++) {
+            float current_input = input[(int)(current_step * nb_channels) + ch];
+            float last_input = current_step > stretch ? input[(int)((current_step - stretch) * nb_channels) + ch] : 0.0f;
+            float step = (current_input - last_input) / stretch;
+            float current_sample_value = last_input;
+            for (int orig = (int)current_step; orig < (int)(current_step + stretch); orig++) {
+                output[(i + orig) * nb_channels + ch] = current_sample_value;
+                current_sample_value += step;
+            }
+        }
+        current_step += stretch;
+    }
+}
+
 void normalize_wave(float* to_normalize, int nb_samples, int nb_channels) {
     float maxes[nb_channels];
     for (int i = 0; i < nb_channels; i++) {
@@ -175,52 +236,77 @@ void normalize_wave(float* to_normalize, int nb_samples, int nb_channels) {
 
 void print_wave(int x, int y, int width, int height, float* wave, int nb_samples, int channel_index, int nb_channels, int use_color) {
     const int midline = y + (height / 2);
+    int color_pair;
+    if (use_color) {
+        rgb color;
+        get_index_display_color(channel_index, nb_channels, color);
+        color_pair = get_closest_color_pair(color);
+        attron(COLOR_PAIR(color_pair));
+    }
+
     for (int i = channel_index; i < i32min(nb_samples, width) * nb_channels; i += nb_channels) {
-        if (wave[i] == 0.0) {
+        if (wave[i] == 0.0f) {
             continue;
         }
 
-        if (use_color) {
-            rgb color = { 255, 255, 255 };
-            get_index_display_color(i % nb_channels, nb_channels, color);
-            int color_pair = get_closest_color_pair(color);
-            attron(COLOR_PAIR(color_pair));
-            for (int top = midline - (int)((double)height / 2 * wave[i]); top != midline; top += fsignum(wave[i])) {
-                mvaddch(top, x + i / nb_channels, '*');
-            }
-            mvaddch(midline, x + i / nb_channels, '*');
-            attroff(COLOR_PAIR(color_pair));
-        } else {
-            for (int top = midline - (int)((double)height / 2 * wave[i]); top != midline; top += fsignum(wave[i])) {
-                mvaddch(top, x + i / nb_channels, '*');
-            }
-            mvaddch(midline, x + i / nb_channels, '*');
+        for (int top = midline - (int)((double)height / 2 * wave[i]); top != midline; top += fsignum(wave[i])) {
+            mvaddch(top, x + i / nb_channels, '*');
+            if (top < 0 || top > LINES) { break; }
         }
+        mvaddch(midline, x + i / nb_channels, '*');
+    }
+
+    mvprintw(midline, (COLS / 2) - 6, "Channel #%d", channel_index);
+
+    if (use_color) {
+        attroff(COLOR_PAIR(color_pair));
     }
 } 
 
 void render_audio_screen(MediaPlayer *player, GuiData gui_data) {
     erase();
     const MediaDisplayCache* cache = player->displayCache;
-    if (cache->last_samples == NULL || cache->nb_last_samples == 0 || cache->nb_channels == 0) {
+    AudioStream* audio_stream = cache->audio_stream;
+    if (audio_stream->stream == NULL || audio_stream->nb_samples == 0 || audio_stream->nb_channels == 0) {
         printw("%s\n", "CURRENTLY NO AUDIO DATA TO DISPLAY");
         return;
     }
 
-    float wave[COLS * cache->nb_channels];
-    for (int i = 0; i < COLS * cache->nb_channels; i++) {
+    const int shown_sample_size = 8192 * 2;
+    if (audio_stream->playhead + shown_sample_size >= audio_stream->nb_samples) {
+        printw("%s\n", "CURRENTLY NOT ENOUGH AUDIO DATA TO DISPLAY");
+        return;
+    }
+
+    float wave[COLS * audio_stream->nb_channels];
+    for (int i = 0; i < COLS * audio_stream->nb_channels; i++) {
         wave[i] = 0.0f;
     }
 
-    collapse_wave(wave, COLS, cache->last_samples, cache->nb_last_samples, cache->nb_channels);
-    normalize_wave(wave, COLS, cache->nb_channels);
+    float* last_samples = audio_stream->stream + (audio_stream->playhead * audio_stream->nb_channels);
+    if (shown_sample_size < COLS) {
+        expand_wave(wave, COLS, last_samples, shown_sample_size, audio_stream->nb_channels);
+    } else if (shown_sample_size > COLS) {
+        collapse_wave(wave, COLS, last_samples, shown_sample_size, audio_stream->nb_channels);
+    } else {
+        for (int i = 0; i < COLS * audio_stream->nb_channels; i++) {
+            wave[i] = last_samples[i];
+        } 
+    }
+    normalize_wave(wave, COLS, audio_stream->nb_channels);
 
     if (gui_data.audio.show_all_channels) {
-        for (int i = 0; i < cache->nb_channels; i++) {
-            print_wave(0, i * ( LINES / cache->nb_channels), COLS, LINES / cache->nb_channels, wave, COLS, i, cache->nb_channels, player->displaySettings->use_colors);
+        for (int i = 0; i < audio_stream->nb_channels; i++) {
+            print_wave(0, i * ( LINES / audio_stream->nb_channels), COLS, LINES / audio_stream->nb_channels, wave, COLS, i, audio_stream->nb_channels, player->displaySettings->use_colors);
         }
     } else {
-        print_wave(0, 0, COLS, LINES, wave, COLS, gui_data.audio.channel_index, cache->nb_channels, player->displaySettings->use_colors);
+        print_wave(0, 0, COLS, LINES, wave, COLS, gui_data.audio.channel_index, audio_stream->nb_channels, player->displaySettings->use_colors);
+    }
+
+    const char* format = "Press 0 to see all Channels, Otherwise, press a number to see its specific channel: ";
+    mvprintw(0, (COLS / 2) - (strlen(format) + audio_stream->nb_channels * 3 + 6) / 2, "%s%s", format, gui_data.audio.show_all_channels == 1 ? "|All Channels (0)| " : "All Channels (0) ");
+    for (int i = 0; i < audio_stream->nb_channels; i++) {
+        printw(gui_data.audio.channel_index == i && !gui_data.audio.show_all_channels ? "|%d| " : "%d ", i + 1);  
     }
 
 }
@@ -249,21 +335,23 @@ void render_video_debug(MediaPlayer *player, GuiData gui_data) {
     }
 }
 
-
-void render_movie_screen(MediaPlayer* player, GuiData gui_data) {
-    erase();
-    if (player->displayCache->image == NULL) {
-        return;
-    }
-    rgb black = { 0, 0, 0 };
+AsciiImage* stitch_video(MediaPlayer* player, int width, int height) {
     VideoSymbolStack* symbol_stack = player->displayCache->symbol_stack;
-    AsciiImage* textImage = get_ascii_image_bounded(player->displayCache->image, COLS, LINES);
+    AsciiImage* textImage = get_ascii_image_bounded(player->displayCache->image, width, height);
+    if (textImage == NULL) {
+        return NULL;
+    }
 
     while (player->displayCache->symbol_stack->top >= 0) {
         VideoSymbol* currentSymbol = video_symbol_stack_peek(symbol_stack); 
         if (clock_sec() - currentSymbol->startTime < currentSymbol->lifeTime) {
             int currentSymbolFrame = get_video_symbol_current_frame(currentSymbol); 
             AsciiImage* symbolImage = get_ascii_image_bounded(currentSymbol->frameData[currentSymbolFrame], textImage->width, textImage->height);
+            if (symbolImage == NULL) {
+                free(textImage);
+                return NULL;
+            }
+
             if (player->displaySettings->use_colors) {
                 ascii_init_color(symbolImage);
             }
@@ -279,6 +367,11 @@ void render_movie_screen(MediaPlayer* player, GuiData gui_data) {
     if (!player->timeline->playback->playing) {
         VideoSymbol* pauseSymbol = get_video_symbol(PAUSE_ICON);
         AsciiImage* symbolImage = get_ascii_image_bounded(pauseSymbol->frameData[0], textImage->width, textImage->height);
+        if (symbolImage == NULL) {
+            free(textImage);
+            return NULL;
+        }
+
         if (player->displaySettings->use_colors) {
             ascii_init_color(symbolImage);
         }
@@ -286,6 +379,19 @@ void render_movie_screen(MediaPlayer* player, GuiData gui_data) {
         overlap_ascii_images(textImage, symbolImage);
         free_video_symbol(pauseSymbol);
         ascii_image_free(symbolImage);
+    }
+
+    return textImage;
+}
+
+void render_movie_screen(MediaPlayer* player, GuiData gui_data) {
+    erase();
+    if (player->displayCache->image == NULL) {
+        return;
+    }
+    AsciiImage* textImage = stitch_video(player, COLS, LINES - (gui_data.video.fullscreen ? 0 : 5));
+    if (textImage == NULL) {
+        return;
     }
 
     /* const int palette_size = 16; */

@@ -30,6 +30,16 @@ const int MAX_FRAME_HEIGHT = 16 * 9;
 const char* debug_video_source = "video";
 const char* debug_video_type = "debug";
 
+void load_image_buffer(MediaPlayer* player, VideoConverter* converter, int amount) {
+    const MediaDisplayCache* cache = player->displayCache;
+    for (int i = 0; i < amount; i++) {
+
+
+
+
+    }
+}
+
 void* video_playback_thread(void* args) {
     MediaThreadData* thread_data = (MediaThreadData*)args;
     MediaPlayer* player = thread_data->player;
@@ -39,6 +49,7 @@ void* video_playback_thread(void* args) {
     Playback* playback = player->timeline->playback;
     MediaDebugInfo* debug_info = player->displayCache->debug_info;
     MediaData* media_data = player->timeline->mediaData;
+    MediaDisplayCache* cache = player->displayCache;
     MediaStream* video_stream = get_media_stream(media_data, AVMEDIA_TYPE_VIDEO);
     if (video_stream == NULL) {
         fprintf(stderr, "%s\n", "COULD NOT FIND VIDEO STREAM");
@@ -61,11 +72,10 @@ void* video_playback_thread(void* args) {
     }
 
     SelectionList* videoPackets = video_stream->packets;
-    int64_t counter = 0;
-
     while (player->inUse && (!media_data->allPacketsRead || (media_data->allPacketsRead && selection_list_can_move_index(videoPackets, 1) ) )) {
         pthread_mutex_lock(alterMutex);
-        counter++;
+        /* int64_t targetVideoPTS = get_playback_current_time(playback) * videoTimeBase; */
+        /* move_frame_list_to_pts(cache->image_buffer, targetVideoPTS); */
 
         if (get_playback_current_time(playback) >= media_data->duration) {
             player->inUse = 0;
@@ -84,7 +94,6 @@ void* video_playback_thread(void* args) {
 
             pthread_mutex_lock(alterMutex);
             playback->paused_time += clock_sec() - pauseTime;
-            video_symbol_stack_push(player->displayCache->symbol_stack, get_video_symbol(PLAY_ICON));
         }
 
         if (selection_list_can_move_index(videoPackets, 10)) {
@@ -169,7 +178,10 @@ void* video_playback_thread(void* args) {
         if (waitDuration <= 0) {
             continue;
         }
-        fsleep_for_sec(waitDuration);
+        /* fsleep_for_sec(waitDuration); */
+        while (clock_sec() < continueTime) {
+
+        }
     }
 
     av_frame_free(&readingFrame);
@@ -194,20 +206,27 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
 
     if (targetTime == originalTime) {
         return;
-     } else if (targetTime < originalTime) {
+     } else if (targetTime < originalTime || targetTime > originalTime + 60) {
         avcodec_flush_buffers(videoCodecContext);
         double testTime = fmax(0.0, targetTime - 30);
         packet_get = (AVPacket*)selection_list_get(videoPackets);
+        if (packet_get == NULL) { return; }
+        double last_time = packet_get->pts * videoTimeBase;
         if (packet_get != NULL) {
-            while (packet_get->pts * videoTimeBase > testTime && selection_list_can_move_index(videoPackets, -1)) {
-                selection_list_try_move_index(videoPackets, -1);
+            while (selection_list_can_move_index(videoPackets, fsignum(testTime - originalTime))) {
+                selection_list_try_move_index(videoPackets, fsignum(testTime - originalTime));
                 packet_get = (AVPacket*)selection_list_get(videoPackets);
                 if (packet_get == NULL) {
                     break;
                 }
+
+                if (testTime >= fmin(last_time, packet_get->pts * videoTimeBase) && testTime <= fmax(last_time, packet_get->pts * videoTimeBase)) {
+                    break;
+                }
+                last_time = packet_get->pts * videoTimeBase;
             }
         }
-    }
+     }
 
     int64_t finalPTS = -1;
     int readingStatus = 0;

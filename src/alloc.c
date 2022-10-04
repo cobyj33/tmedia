@@ -1,6 +1,7 @@
 #include "boiler.h"
 #include "debug.h"
 #include "decode.h"
+#include "icons.h"
 #include "selectionlist.h"
 #include <stdio.h>
 #include <media.h>
@@ -69,10 +70,25 @@ MediaDisplayCache* media_display_cache_alloc() {
     }
 
     cache->image = NULL;
+    cache->image_buffer = selection_list_alloc();
+    if (cache->image_buffer == NULL) {
+       fprintf(stderr, "%s", "Could not allocate Media Cache Image Buffer"); 
+        media_debug_info_free(cache->debug_info);
+        video_symbol_stack_free(cache->symbol_stack);
+        free(cache);
+        return NULL;
+    }
+
+    cache->audio_stream = audio_stream_alloc();
+    if (cache->audio_stream == NULL) {
+        free(cache->image_buffer);
+        media_debug_info_free(cache->debug_info);
+        video_symbol_stack_free(cache->symbol_stack);
+        free(cache);
+        return NULL;
+    }
+
     cache->last_rendered_image = NULL;
-    cache->last_samples = NULL;
-    cache->nb_last_samples = 0;
-    cache->nb_channels = 0;
     return cache;
 }
 
@@ -225,18 +241,31 @@ void media_player_free(MediaPlayer* player) {
     media_display_settings_free(player->displaySettings);
     media_timeline_free(player->timeline);
     media_display_cache_free(player->displayCache);
+
     free(player);
     player = NULL;
 }
 
 void video_symbol_stack_free(VideoSymbolStack *stack) {
+    video_symbol_stack_clear(stack);
     free(stack);
     stack = NULL;
 }
 
 void media_display_cache_free(MediaDisplayCache* cache) {
     free(cache->debug_info);
-    free(cache->image);
+    free(cache->image_buffer);
+    video_symbol_stack_free(cache->symbol_stack);
+    if (cache->image != NULL) {
+        free(cache->image);
+    }
+    if (cache->last_rendered_image != NULL) {
+        free(cache->last_rendered_image);
+    }
+    if (cache->audio_stream != NULL) {
+        audio_stream_free(cache->audio_stream);
+    }
+
     free(cache);
     cache = NULL;
 }
@@ -285,4 +314,62 @@ Playback* playback_alloc() {
 void playback_free(Playback* playback) {
     free(playback);
     playback = NULL;
+}
+
+AudioStream* audio_stream_alloc() {
+    AudioStream* audio_stream = (AudioStream*)malloc(sizeof(AudioStream));
+    if (audio_stream == NULL) {
+        return NULL;
+    }
+    audio_stream->stream = NULL;
+    audio_stream->playhead = 0;
+    audio_stream->nb_channels = 0;
+    audio_stream->start_time = 0.0;
+    audio_stream->sample_capacity = 0;
+    audio_stream->nb_samples = 0;
+    audio_stream->sample_rate = 0;
+    return audio_stream;
+}
+
+int audio_stream_init(AudioStream* stream, int nb_channels, int initial_size, int sample_rate) {
+    if (stream->stream != NULL) {
+        free(stream->stream);
+    }
+
+    stream->stream = (float*)malloc(sizeof(float) * nb_channels * initial_size * 2);
+    if (stream->stream == NULL) {
+        return 0;
+    }
+
+    stream->sample_capacity = initial_size * 2;
+    stream->nb_samples = 0;
+    stream->nb_channels = nb_channels;
+    stream->start_time = 0.0;
+    stream->sample_rate = sample_rate;
+    stream->playhead = 0;
+    return 1;
+}
+
+int audio_stream_clear(AudioStream* stream, int cleared_capacity) {
+    if (stream->stream != NULL) {
+        free(stream->stream);
+    }
+
+    float* tmp =  (float*)malloc(sizeof(float) * stream->nb_channels * cleared_capacity * 2);
+    if (tmp == NULL) {
+        return 0;
+    }
+    stream->stream = tmp;
+    stream->nb_samples = 0;
+    stream->playhead = 0;
+    stream->sample_capacity = cleared_capacity;
+    stream->playhead = 0;
+    return 1;
+}
+
+void audio_stream_free(AudioStream* stream) {
+    if (stream->stream != NULL) {
+        free(stream->stream);
+    }
+    free(stream);
 }

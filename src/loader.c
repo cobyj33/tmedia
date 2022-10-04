@@ -32,6 +32,7 @@ void* data_loading_thread(void* args) {
         pthread_mutex_unlock(alterMutex);
         sleep_for_ms(30);
     }
+
     return NULL;
 }
 

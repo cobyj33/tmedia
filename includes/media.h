@@ -63,14 +63,23 @@ typedef struct MediaDisplaySettings {
     rgb* best_palette;
 } MediaDisplaySettings; 
 
+typedef struct AudioStream {
+    float* stream;
+    float start_time;
+    size_t nb_samples;
+    size_t playhead;
+    size_t sample_capacity;
+    int nb_channels;
+    int sample_rate;
+} AudioStream;
+
 typedef struct MediaDisplayCache {
     MediaDebugInfo* debug_info;
     PixelData* image;
     PixelData* last_rendered_image;
+    SelectionList* image_buffer;
 
-    float* last_samples;
-    int nb_channels;
-    int nb_last_samples;
+    AudioStream* audio_stream;
 
     VideoSymbolStack* symbol_stack;
 } MediaDisplayCache;
@@ -112,10 +121,19 @@ Playback* playback_alloc();
 void playback_free(Playback* playback);
 double get_playback_current_time(Playback* playback);
 
+AudioStream* audio_stream_alloc();
+void audio_stream_free(AudioStream* stream);
+int audio_stream_init(AudioStream* stream, int nb_channels, int initial_size, int sample_rate);
+int audio_stream_clear(AudioStream* stream, int cleared_capacity);
+double audio_stream_time(AudioStream* stream);
+double audio_stream_end_time(AudioStream* stream);
+double audio_stream_set_time(AudioStream* stream, double time);
+
 MediaStream* get_media_stream(MediaData* media_data, enum AVMediaType media_type);
 int has_media_stream(MediaData* media_data, enum AVMediaType media_type);
 
 void move_packet_list_to_pts(SelectionList* packets, int64_t targetPTS);
+void move_frame_list_to_pts(SelectionList* frames, int64_t targetPTS);
 
 
 int get_media_player_dump_size(MediaPlayer* player);

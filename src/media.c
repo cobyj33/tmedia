@@ -116,3 +116,66 @@ void move_packet_list_to_pts(SelectionList* packets, int64_t targetPTS) {
         lastPTS = currentIndexPTS;
     } 
 }
+
+void move_frame_list_to_pts(SelectionList* frames, int64_t targetPTS) {
+    int result = 1;
+    if (selection_list_length(frames) == 0) {
+        return;
+    }
+
+    AVFrame* current = (AVFrame*)selection_list_get(frames);
+    int64_t lastPTS = current->pts;
+
+    while (1) {
+        current = (AVFrame*)selection_list_get(frames);
+
+        int64_t currentIndexPTS = current->pts;
+        if (selection_list_index(frames) == 0 || selection_list_index(frames) == selection_list_length(frames) - 1) {
+            break;
+        } 
+
+        if (currentIndexPTS > targetPTS) {
+            result = selection_list_try_move_index(frames, -1);
+            current = (AVFrame*)selection_list_get(frames);
+            if (current->pts < targetPTS) {
+                break;
+            }
+        } else if (currentIndexPTS < targetPTS) {
+            result = selection_list_try_move_index(frames, 1);
+            current = (AVFrame*)selection_list_get(frames);
+            if (current->pts > targetPTS) {
+                selection_list_try_move_index(frames, -1);
+                break;
+            }
+        } else if (currentIndexPTS == targetPTS) {
+            break;
+        }
+
+        if (!result) {
+            break;
+        }
+
+        current = (AVFrame*)selection_list_get(frames);
+        currentIndexPTS = current->pts;
+
+        if (i64min(currentIndexPTS, lastPTS) <= targetPTS && i64max(currentIndexPTS, lastPTS) >= targetPTS) {
+            break;
+        }
+
+        lastPTS = currentIndexPTS;
+    } 
+}
+
+double audio_stream_time(AudioStream* stream) {
+    return stream->start_time + ((double)stream->playhead / stream->sample_rate);
+}
+
+double audio_stream_set_time(AudioStream* stream, double time) {
+    if (stream->nb_samples == 0) return 0.0;
+    stream->playhead = (size_t)(fmin(stream->nb_samples - 1, fmax( 0.0, (time - stream->start_time) * stream->sample_rate  )  )  );
+    return stream->playhead;
+}
+
+double audio_stream_end_time(AudioStream *stream) {
+    return stream->start_time + ((double)stream->nb_samples / stream->sample_rate);
+}

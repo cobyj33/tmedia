@@ -181,7 +181,9 @@ int init_icons() {
 int free_icons() {
     if (initialized) {
         for (int i = 0; i < NUMBER_OF_VIDEO_ICONS; i++) {
-            pixel_data_free(icons[i]);
+            if (icons[i] != NULL) {
+                pixel_data_free(icons[i]);
+            }
         }
         initialized = 0;
     }

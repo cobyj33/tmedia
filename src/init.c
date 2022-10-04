@@ -25,7 +25,8 @@ int start_media_player(MediaPlayer* player) {
     player->inUse = 1;
     player->timeline->playback->playing = 1;
     player->timeline->playback->start_time = clock_sec();
-    fetch_next(player->timeline->mediaData, 100);
+    fetch_next(player->timeline->mediaData, 5000);
+
     pthread_mutex_t alterMutex;
     pthread_mutex_init(&alterMutex, NULL);
 

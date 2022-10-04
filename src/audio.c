@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "decode.h"
 #include "media.h"
+#include <curses.h>
 #include <wtime.h>
 #include <selectionlist.h>
 #include <audio.h>
@@ -29,161 +30,41 @@ typedef struct CallbackData {
     AudioResampler* audioResampler;
 } CallbackData;
 
+const char* debug_audio_source = "audio";
+const char* debug_audio_type = "debug";
 
 AVFrame** get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, AVPacket* packet, int* result, int* nb_frames_decoded);
 AVFrame** find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, SelectionList* packet_buffer, int* result, int* nb_frames_decoded);
 AVAudioFifo* av_audio_fifo_combine(AVAudioFifo* first, AVAudioFifo* second);
 
+void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+{
+    CallbackData* data = (CallbackData*)(pDevice->pUserData);
+    pthread_mutex_lock(data->mutex);
+    AudioStream* audioStream = data->player->displayCache->audio_stream;
 
-void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
-    const char* debug_audio_source = "audio";
-    const char* debug_audio_type = "debug";
-
-    CallbackData* callbackData = (CallbackData*)(pDevice->pUserData);
-    pthread_mutex_t* alterMutex = callbackData->mutex;
-    pthread_mutex_lock(alterMutex);
-
-    MediaPlayer* player = callbackData->player;
-    AudioResampler* audioResampler = callbackData->audioResampler;
-    Playback* playback = player->timeline->playback;
-    MediaDebugInfo* debug_info = player->displayCache->debug_info;
-    MediaStream* audio_stream = get_media_stream(player->timeline->mediaData, AVMEDIA_TYPE_AUDIO);
-    if (audio_stream == NULL || !player->inUse) {
+    if (audioStream == NULL) {
+        pthread_mutex_unlock(data->mutex);
         return;
     }
 
-    AVCodecContext* audioCodecContext = audio_stream->info->codecContext; 
-    const int nb_channels = audioCodecContext->ch_layout.nb_channels;
-
-    SelectionList* audioPackets = audio_stream->packets;
-    pDevice->masterVolumeFactor = playback->volume;
-
-    int samplesToSkip = 0;
-    const double stretchAmount = 1 / playback->speed;
-    const double stream_time = get_playback_current_time(playback);
-
-    const int64_t targetAudioPTS = (int64_t)(stream_time / audio_stream->timeBase);
-
-    move_packet_list_to_pts(audioPackets, targetAudioPTS);
-
-    int result, nb_frames_decoded;
-    AVFrame** audioFrames = find_final_audio_frames(audioCodecContext, audioResampler, audioPackets, &result, &nb_frames_decoded);
-    if (audioFrames == NULL) {
-        add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Audio Resampling Error", "%s", "COULD NOT RESAMPLE AUDIO FRAMES");
-        return;
-    }
-
-    AVAudioFifo* tempBuffer = av_audio_fifo_alloc(AV_SAMPLE_FMT_FLT, nb_channels, AUDIO_FIFO_BUFFER_SIZE);
-    if (tempBuffer == NULL) {
-        add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Audio Fifo Allocation Error", "COULD NOT ALLOCATE TEMPORARY AUDIO FIFO");
-        return;
-    }
-
-    int target_buffer_size = (frameCount + samplesToSkip);
-    float* samples = (float*)malloc(sizeof(float) * target_buffer_size * nb_channels);
-    int saved_samples_written = 0;
-    if (samples == NULL) {
-        fprintf(stderr, "%s", "Could not allocate saved samples");
-        av_audio_fifo_free(tempBuffer);
-        return;
-    }
-    for (int i = 0; i < target_buffer_size * nb_channels; i++) {
-        samples[i] = 0.0f;
-    }
-
-    int audioFrameIndex = 0;
-    samplesToSkip = round((stream_time - audioFrames[audioFrameIndex]->pts * audio_stream->timeBase) * audioCodecContext->sample_rate / stretchAmount); 
-    AVFrame* currentAudioFrame = audioFrames[audioFrameIndex];
-    int samplesWritten = 0;
-    int framesRead = 0;
-
-    while (samplesWritten < target_buffer_size && av_audio_fifo_space(tempBuffer) > currentAudioFrame->nb_samples) {
-        framesRead++;
-
-        const int cutoff_size = 125;
-        if ( samplesWritten + currentAudioFrame->nb_samples > samplesToSkip && samplesWritten < samplesToSkip ) { 
-            const int offset = samplesToSkip - samplesWritten;
-            for (int i = 0; i < cutoff_size && (offset + i) < currentAudioFrame->nb_samples; i++) {
-                for (int s = 0; s < currentAudioFrame->ch_layout.nb_channels; s++) {
-                    ((float*)(currentAudioFrame->data[0]))[ (offset + i) * nb_channels + s] *= i / (double)cutoff_size;
-                }
-            }
-        } else if (samplesWritten + currentAudioFrame->nb_samples > target_buffer_size) {
-
-            int fade_out_length = i32min(cutoff_size, target_buffer_size - samplesWritten);
-            for (int i = 0; i < fade_out_length && i < currentAudioFrame->nb_samples; i++) {
-                for (int s = 0; s < currentAudioFrame->ch_layout.nb_channels; s++) {
-                    ((float*)(currentAudioFrame->data[0]))[i * nb_channels + s] *= 1.0 - (i / (double)(fade_out_length));
-                }
-            }
+    if (audioStream->playhead + frameCount < audioStream->nb_samples) {
+        for (int i = 0; i < frameCount * audioStream->nb_channels; i++) {
+            ((float*)(pOutput))[i] = audioStream->stream[audioStream->playhead * audioStream->nb_channels + i];
         }
-
-        samplesWritten += av_audio_fifo_write(tempBuffer, (void**)currentAudioFrame->data, currentAudioFrame->nb_samples);
-
-        if (samplesWritten >= samplesToSkip) {
-            int current_audio_frame_index = samplesWritten - samplesToSkip < currentAudioFrame->nb_samples ? samplesWritten - samplesToSkip : 0;
-            while (current_audio_frame_index < currentAudioFrame->nb_samples && saved_samples_written < target_buffer_size) {
-                for (int s = 0; s < currentAudioFrame->ch_layout.nb_channels; s++) {
-                    samples[saved_samples_written * nb_channels + s] = ((float*)(currentAudioFrame->data[0]))[current_audio_frame_index * nb_channels + s];
-                }
-                saved_samples_written++;
-                current_audio_frame_index++;
-            }
-        }
-
-        av_frame_free(&currentAudioFrame);
-        if (audioFrameIndex + 1 < nb_frames_decoded) {
-            audioFrameIndex++;
-            currentAudioFrame = audioFrames[audioFrameIndex];
-        } else {
-            audioFrameIndex = 0;
-            if (selection_list_can_move_index(audioPackets, 1)) {
-                selection_list_try_move_index(audioPackets, 1);
-                audioFrames = find_final_audio_frames(audioCodecContext, audioResampler, audioPackets, &result, &nb_frames_decoded);
-                if (audioFrames == NULL) {
-                    add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Audio Resampling Error", "COULD NOT RESAMPLE AUDIO FRAMES");
-                    break;
-                }
-
-                currentAudioFrame = audioFrames[audioFrameIndex];
-                continue;
-            } 
-            break;
-        }
+        audioStream->playhead += frameCount;
     }
 
-    const int audioSamplesToOutput = i32min((int)frameCount, samplesWritten);
-    av_audio_fifo_drain(tempBuffer, samplesToSkip);
-    av_audio_fifo_peek(tempBuffer, &pOutput, audioSamplesToOutput);
-    MediaDisplayCache* cache = player->displayCache;
-
-    if (cache->last_samples != NULL) {
-        free(cache->last_samples);
-        cache->nb_last_samples = 0;
-        cache->nb_channels = 0;
-    }
-
-    cache->last_samples = samples;
-    cache->nb_last_samples = saved_samples_written;
-    cache->nb_channels = nb_channels;
-
-    add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Sampling Information", "Samples Written: %d, Samples Requested: %d, Samples Skipped: %d, Frames Read: %d Device Sample Rate: %d\n ", samplesWritten, (int)frameCount, samplesToSkip, framesRead, pDevice->sampleRate);
-
-    if (audioFrames != NULL) {
-       free_frame_list(audioFrames, nb_frames_decoded);
-    }
-    av_audio_fifo_free(tempBuffer);
-    
     (void)pInput;
-    pthread_mutex_unlock(alterMutex);
+    pthread_mutex_unlock(data->mutex);
 }
 
 void* audio_playback_thread(void* args) {
     MediaThreadData* thread_data = (MediaThreadData*)args;
     MediaPlayer* player = thread_data->player;
     pthread_mutex_t* alterMutex = thread_data->alterMutex;
+    MediaDebugInfo* debug_info = player->displayCache->debug_info;
     int result;
-
     MediaStream* audio_stream = get_media_stream(player->timeline->mediaData, AVMEDIA_TYPE_AUDIO);
     if (audio_stream == NULL) {
         return NULL;
@@ -196,11 +77,12 @@ void* audio_playback_thread(void* args) {
     AudioResampler* audioResampler = get_audio_resampler(&result,     
             &(audioCodecContext->ch_layout), AV_SAMPLE_FMT_FLT, audioCodecContext->sample_rate,
             &(audioCodecContext->ch_layout), audioCodecContext->sample_fmt, audioCodecContext->sample_rate);
-    AVAudioFifo* audioFifo = av_audio_fifo_alloc(AV_SAMPLE_FMT_FLT, nb_channels, 8192);
-    if (audioResampler == NULL || audioFifo == NULL) {
+    if (audioResampler == NULL) {
+        add_debug_message(player->displayCache->debug_info, debug_audio_source, debug_audio_type, "Audio Resampler Allocation Error", "COULD NOT ALLOCATE TEMPORARY AUDIO RESAMPLER");
         return NULL;
     }   
-    player->displayCache->nb_channels = nb_channels;
+
+    audio_stream_init(player->displayCache->audio_stream, nb_channels, AUDIO_FIFO_BUFFER_SIZE, audioCodecContext->sample_rate);
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format  = ma_format_f32;
@@ -208,7 +90,7 @@ void* audio_playback_thread(void* args) {
     config.sampleRate = audioCodecContext->sample_rate;           
     config.dataCallback = audioDataCallback;   
 
-    CallbackData userData = { player, alterMutex, audioResampler}; 
+    CallbackData userData = { player, alterMutex, audioResampler }; 
    config.pUserData = &userData;   
 
     ma_result miniAudioLog;
@@ -224,24 +106,80 @@ void* audio_playback_thread(void* args) {
     sleep_for((long)(audio_stream->info->stream->start_time * audio_stream->timeBase * SECONDS_TO_NANOSECONDS));
     
     while (player->inUse) {
+        pthread_mutex_lock(alterMutex);
+
         if (playback->playing == 0 && ma_device_get_state(&audioDevice) == ma_device_state_started) {
+            pthread_mutex_unlock(alterMutex);
             miniAudioLog = ma_device_stop(&audioDevice);
             if (miniAudioLog != MA_SUCCESS) {
                 fprintf(stderr, "%s %d\n", "Failed to stop playback: ", miniAudioLog);
                 ma_device_uninit(&audioDevice);
                 return NULL;
             };
+            pthread_mutex_lock(alterMutex);
         } else if (playback->playing && ma_device_get_state(&audioDevice) == ma_device_state_stopped) {
+            pthread_mutex_unlock(alterMutex);
             miniAudioLog = ma_device_start(&audioDevice);
             if (miniAudioLog != MA_SUCCESS) {
                 fprintf(stderr, "%s %d\n", "Failed to start playback: ", miniAudioLog);
                 ma_device_uninit(&audioDevice);
                 return NULL;
             };
+            pthread_mutex_lock(alterMutex);
         }
 
-        sleep_for_ms(1);
+        AudioStream* audioStream = player->displayCache->audio_stream;
+        if (selection_list_try_move_index(audio_stream->packets, 1)) {
+            AVPacket* packet = (AVPacket*)selection_list_get(audio_stream->packets);
+            int result, nb_frames_decoded;
+            AVFrame** audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, packet, &result, &nb_frames_decoded);
+            if (audioFrames != NULL) {
+                if (result >= 0 && nb_frames_decoded > 0) {
+                    for (int i = 0; i < nb_frames_decoded; i++) {
+                        AVFrame* current_frame = audioFrames[i];
+
+                        if (current_frame->nb_samples + audioStream->nb_samples >= audioStream->sample_capacity) {
+                            float* tmp = (float*)realloc(audioStream->stream, sizeof(float) * audioStream->sample_capacity * audioStream->nb_channels * 2);
+                            if (tmp != NULL) {
+                                audioStream->stream = tmp;
+                                audioStream->sample_capacity *= 2;
+                            }
+                        }
+
+                        if (audioStream->nb_samples + current_frame->nb_samples < audioStream->sample_capacity) {
+                            float* frameData = (float*)(current_frame->data[0]);
+                            for (int i = 0; i < current_frame->nb_samples * current_frame->ch_layout.nb_channels; i++) {
+                                audioStream->stream[audioStream->nb_samples * audioStream->nb_channels + i] = frameData[i];
+                            }
+                            audioStream->nb_samples += current_frame->nb_samples;
+                        }
+                    }
+                }
+                free_frame_list(audioFrames, nb_frames_decoded);
+            }
+        }
+
+
+        audioDevice.sampleRate = audioCodecContext->sample_rate * playback->speed;
+        double current_time = get_playback_current_time(playback);
+        double desync = dabs(audio_stream_time(audioStream) - current_time);
+        add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Audio Desync", "%s%.2f\n", "Audio Desync Amount: ", desync);
+        if (desync > 0.15) {
+            if (current_time > audio_stream_end_time(audioStream) || current_time < audioStream->start_time) {
+                int success = audio_stream_clear(audioStream, AUDIO_FIFO_BUFFER_SIZE);
+                if (success) {
+                    audioStream->start_time = current_time;
+                    move_packet_list_to_pts(audio_stream->packets, current_time / audio_stream->timeBase);
+                }
+            } else {
+                audio_stream_set_time(audioStream, current_time);
+            }
+        }
+
+        pthread_mutex_unlock(alterMutex);
+        sleep_for_ms(3);
     }
+
 
     free_audio_resampler(audioResampler);
     return NULL;
@@ -250,12 +188,15 @@ void* audio_playback_thread(void* args) {
 AVFrame** get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, AVPacket* packet, int* result, int* nb_frames_decoded) {
     AVFrame** rawAudioFrames = decode_audio_packet(audioCodecContext, packet, result, nb_frames_decoded);
     if (rawAudioFrames == NULL || *result < 0 || *nb_frames_decoded == 0) {
+        if (rawAudioFrames != NULL) {
+            free_frame_list(rawAudioFrames, *nb_frames_decoded);
+        }
+
         return NULL;
     }
 
     AVFrame** audioFrames = resample_audio_frames(audioResampler, rawAudioFrames, *nb_frames_decoded);
     free_frame_list(rawAudioFrames, *nb_frames_decoded);
-
     return audioFrames;
 }
 
