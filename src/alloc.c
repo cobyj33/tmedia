@@ -3,6 +3,7 @@
 #include "decode.h"
 #include "icons.h"
 #include "selectionlist.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <media.h>
 #include <info.h>
@@ -336,7 +337,7 @@ int audio_stream_init(AudioStream* stream, int nb_channels, int initial_size, in
         free(stream->stream);
     }
 
-    stream->stream = (float*)malloc(sizeof(float) * nb_channels * initial_size * 2);
+    stream->stream = (uint8_t*)malloc(sizeof(uint8_t) * nb_channels * initial_size * 2);
     if (stream->stream == NULL) {
         return 0;
     }
@@ -355,7 +356,7 @@ int audio_stream_clear(AudioStream* stream, int cleared_capacity) {
         free(stream->stream);
     }
 
-    float* tmp =  (float*)malloc(sizeof(float) * stream->nb_channels * cleared_capacity * 2);
+    uint8_t* tmp =  (uint8_t*)malloc(sizeof(uint8_t) * stream->nb_channels * cleared_capacity * 2);
     if (tmp == NULL) {
         return 0;
     }

@@ -21,8 +21,8 @@
 #include <libswresample/swresample.h>
 #include <libavutil/audio_fifo.h>
 
-const int AUDIO_FIFO_BUFFER_SIZE = 8192;
-const int MAX_AUDIO_FIFO_BUFFER_SIZE = 524288;
+const int AUDIO_BUFFER_SIZE = 8192;
+const int MAX_AUDIO_BUFFER_SIZE = 524288;
 
 typedef struct CallbackData {
     MediaPlayer* player;
@@ -50,8 +50,11 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
     if (audioStream->playhead + frameCount < audioStream->nb_samples) {
         for (int i = 0; i < frameCount * audioStream->nb_channels; i++) {
-            ((float*)(pOutput))[i] = audioStream->stream[audioStream->playhead * audioStream->nb_channels + i];
+            /* ((float*)(pOutput))[i] = audioStream->stream[audioStream->playhead * audioStream->nb_channels + i]; */
+            /* ((float*)(pOutput))[i] = ((int)((255.0 / 2) * (audioStream->stream[audioStream->playhead * audioStream->nb_channels + i] + 1)) - 128) / 128.0  ; */
+            ((float*)(pOutput))[i] = uint8_sample_to_float(audioStream->stream[audioStream->playhead * audioStream->nb_channels + i]);
         }
+
         audioStream->playhead += frameCount;
     }
 
@@ -82,7 +85,7 @@ void* audio_playback_thread(void* args) {
         return NULL;
     }   
 
-    audio_stream_init(player->displayCache->audio_stream, nb_channels, AUDIO_FIFO_BUFFER_SIZE, audioCodecContext->sample_rate);
+    audio_stream_init(player->displayCache->audio_stream, nb_channels, AUDIO_BUFFER_SIZE, audioCodecContext->sample_rate);
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format  = ma_format_f32;
@@ -139,7 +142,8 @@ void* audio_playback_thread(void* args) {
                         AVFrame* current_frame = audioFrames[i];
 
                         if (current_frame->nb_samples + audioStream->nb_samples >= audioStream->sample_capacity) {
-                            float* tmp = (float*)realloc(audioStream->stream, sizeof(float) * audioStream->sample_capacity * audioStream->nb_channels * 2);
+                            uint8_t* tmp = (uint8_t*)realloc(audioStream->stream, sizeof(uint8_t) * audioStream->sample_capacity * audioStream->nb_channels * 2);
+
                             if (tmp != NULL) {
                                 audioStream->stream = tmp;
                                 audioStream->sample_capacity *= 2;
@@ -149,7 +153,7 @@ void* audio_playback_thread(void* args) {
                         if (audioStream->nb_samples + current_frame->nb_samples < audioStream->sample_capacity) {
                             float* frameData = (float*)(current_frame->data[0]);
                             for (int i = 0; i < current_frame->nb_samples * current_frame->ch_layout.nb_channels; i++) {
-                                audioStream->stream[audioStream->nb_samples * audioStream->nb_channels + i] = frameData[i];
+                                audioStream->stream[audioStream->nb_samples * audioStream->nb_channels + i] = float_sample_to_uint8(frameData[i]);
                             }
                             audioStream->nb_samples += current_frame->nb_samples;
                         }
@@ -166,7 +170,7 @@ void* audio_playback_thread(void* args) {
         add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Audio Desync", "%s%.2f\n", "Audio Desync Amount: ", desync);
         if (desync > 0.15) {
             if (current_time > audio_stream_end_time(audioStream) || current_time < audioStream->start_time) {
-                int success = audio_stream_clear(audioStream, AUDIO_FIFO_BUFFER_SIZE);
+                int success = audio_stream_clear(audioStream, AUDIO_BUFFER_SIZE);
                 if (success) {
                     audioStream->start_time = current_time;
                     move_packet_list_to_pts(audio_stream->packets, current_time / audio_stream->timeBase);
@@ -340,3 +344,10 @@ float** shrinkAudioSamples(float** originalSamples, int linesize[8], int nb_samp
     return finalValues;
 }
 
+uint8_t float_sample_to_uint8(float num) {
+    return (255.0 / 2.0) * (num + 1.0);
+}
+
+float uint8_sample_to_float(uint8_t sample) {
+    return ((float)sample - 128.0) / 128.0;
+}

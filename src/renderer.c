@@ -1,3 +1,4 @@
+#include "audio.h"
 #include "color.h"
 #include "debug.h"
 #include "macros.h"
@@ -283,7 +284,13 @@ void render_audio_screen(MediaPlayer *player, GuiData gui_data) {
         wave[i] = 0.0f;
     }
 
-    float* last_samples = audio_stream->stream + (audio_stream->playhead * audio_stream->nb_channels);
+    uint8_t* last_samples_compressed = audio_stream->stream + (audio_stream->playhead * audio_stream->nb_channels);
+    float last_samples[shown_sample_size * audio_stream->nb_channels];
+
+    for (int i = 0; i < shown_sample_size * audio_stream->nb_channels; i++) {
+        last_samples[i] = uint8_sample_to_float(last_samples_compressed[i]);
+    }
+
     if (shown_sample_size < COLS) {
         expand_wave(wave, COLS, last_samples, shown_sample_size, audio_stream->nb_channels);
     } else if (shown_sample_size > COLS) {

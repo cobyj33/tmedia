@@ -64,7 +64,7 @@ typedef struct MediaDisplaySettings {
 } MediaDisplaySettings; 
 
 typedef struct AudioStream {
-    float* stream;
+    uint8_t* stream;
     float start_time;
     size_t nb_samples;
     size_t playhead;
@@ -72,6 +72,11 @@ typedef struct AudioStream {
     int nb_channels;
     int sample_rate;
 } AudioStream;
+
+typedef struct Sample {
+    float* data;
+    int channels;
+} Sample;
 
 typedef struct MediaDisplayCache {
     MediaDebugInfo* debug_info;

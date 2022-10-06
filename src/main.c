@@ -48,6 +48,7 @@ const char* help_text = "     ASCII_VIDEO         \n"
       "         UP-ARROW -> Volume Up 5%                   \n"
       "         DOWN-ARROW -> Volume Down 5%                   \n"
       "         SPACEBAR -> Pause / Play                   \n"
+      "         c or C -> Switch between video view and Audio View                   \n"
       "         d or D -> Debug Mode                   \n"
       "       ------------------                   \n"
       "  -info <file> => print file info                   \n";
