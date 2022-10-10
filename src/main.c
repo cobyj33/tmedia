@@ -33,6 +33,7 @@ struct ProgramCommands {
     PriorityType priority;
 };
 
+const char* get_input_type_string(InputType type);
 bool str_in_list(const char* search, const char** list, int list_len);
 bool is_valid_path(const char* path);
 void ncurses_init();
@@ -132,7 +133,7 @@ int use_program(ProgramCommands* commands) {
 
 bool str_in_list(const char* search, const char** list, int list_len) {
     for (int i = 0; i < list_len; i++) {
-        if (strcmp(list[i], search)) {
+        if (strcmp(list[i], search) == 0) {
             return true;
         }
     }
@@ -161,12 +162,21 @@ void ncurses_init() {
 }
 
 InputType flag_to_input_type(const char* flag) {
-    if (strcmp(flag, "-i") == 0 || strcmp(flag, "--input") == 0) {
+    if (strcmp(flag, "-i") == 0 || strcmp(flag, "--image") == 0) {
         return INPUT_TYPE_IMAGE;
-    } else if (strcmp(flag, "-i") == 0 || strcmp(flag, "--input") == 0) {
+    } else if (strcmp(flag, "-a") == 0 || strcmp(flag, "--audio") == 0) {
         return INPUT_TYPE_AUDIO;
     }
     return INPUT_TYPE_VIDEO;
+}
+
+const char* get_input_type_string(InputType type) {
+    switch (type) {
+        case INPUT_TYPE_VIDEO: return "Input Type Video";
+        case INPUT_TYPE_AUDIO: return "Input Type Audio";
+        case INPUT_TYPE_IMAGE: return "Input Type Image";
+        default: return "Unknown Input Type";
+    }
 }
 
 FormatType flag_to_format_type(const char* flag) {

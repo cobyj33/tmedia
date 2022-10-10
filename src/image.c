@@ -1,5 +1,7 @@
 #include <ascii.h>
+#include "color.h"
 #include "pixeldata.h"
+#include "wmath.h"
 #include <image.h>
 #include <libavutil/pixfmt.h>
 #include <media.h>
@@ -27,11 +29,22 @@ int imageProgram(const char* fileName, int use_colors) {
         fprintf(stderr, "%s %s\n", "Could not get image data from ", fileName);
         return EXIT_FAILURE;
     }
+    
 
     AsciiImage* textImage = get_ascii_image_bounded(pixelData, COLS, LINES);
     if (textImage == NULL) {
+        fprintf(stderr, "%s %s\n", "Could not create text image from ", fileName);
         pixel_data_free(pixelData);
         return EXIT_FAILURE;
+    }
+
+    if (use_colors && COLORS >= 16 && COLOR_PAIRS >= 16) {
+        const int palette_size = i32min(256, i32min(COLORS, COLOR_PAIRS));
+        int actual_output_size;
+        rgb trained_colors[palette_size];
+        get_most_common_colors(trained_colors, palette_size, textImage->color_data, textImage->width * textImage->height, &actual_output_size);
+        initialize_new_colors(trained_colors, actual_output_size);
+        initialize_color_pairs();
     }
 
     print_ascii_image_full(textImage);
@@ -95,9 +108,8 @@ PixelData* get_pixel_data_from_image(const char* fileName, PixelDataFormat forma
         }
     }
 
-    if (finalFrame != NULL) {
+    if (finalFrame == NULL) {
         av_packet_free((AVPacket**)&packet);
-        av_frame_free((AVFrame**)&finalFrame);
         free_video_converter(imageConverter);
         media_data_free(mediaData);
         return NULL;
