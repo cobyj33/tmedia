@@ -20,8 +20,42 @@ pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
     libavutil
 )
 
+add_subdirectory(lib/Catch2)
+
 include_directories( ${CURSES_INCLUDE_DIR} ./includes )
 
-aux_source_directory(./src SRC)
-add_executable(ascii_video  ${SRC})
+
+
+add_executable(ascii_video
+./src/ascii.cpp
+./src/alloc.cpp
+./src/selectionlist.cpp
+./src/decode.cpp
+./src/image.cpp
+./src/media.cpp
+./src/boiler.cpp
+./src/init.cpp
+./src/main.cpp
+./src/info.cpp
+./src/terminal.cpp
+./src/threads.cpp
+./src/video.cpp
+./src/kmeans.cpp
+./src/wmath.cpp
+./src/hardcode.cpp
+./src/miniaudio.c
+./src/renderer.cpp
+./src/dump.cpp
+./src/audio.cpp
+./src/loader.cpp
+./src/wtime.cpp
+./src/debug.cpp
+./src/color.cpp
+./src/icons.cpp
+)
+
 target_link_libraries( ascii_video ${CURSES_LIBRARIES} PkgConfig::LIBAV)
+
+add_executable(tests 
+./src/test_selectionlist.cpp)
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
