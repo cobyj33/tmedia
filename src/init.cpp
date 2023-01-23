@@ -1,9 +1,12 @@
 #include "loader.h"
-#include <stdio.h>
+#include <cstdio>
 #include <threads.h>
-#include <pthread.h>
 #include <media.h>
 #include <wtime.h>
+
+extern "C" {
+#include <pthread.h>
+}
 
 int start_media_player_from_filename(const char* fileName) {
     MediaPlayer* player = media_player_alloc(fileName);

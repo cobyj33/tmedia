@@ -1,10 +1,13 @@
-#include <curses.h>
-#include <libavutil/avutil.h>
-#include <pthread.h>
 #include <loader.h>
 #include <media.h>
 #include <macros.h>
 #include <threads.h>
+
+extern "C" {
+#include <curses.h>
+#include <libavutil/avutil.h>
+#include <pthread.h>
+}
 
 void* data_loading_thread(void* args) {
     MediaThreadData* thread_data = (MediaThreadData*)args;

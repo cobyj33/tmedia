@@ -1,7 +1,9 @@
 #include "decode.h"
+#include <cstdlib>
+#include <cstdio>
+
+extern "C" {
 #include <libavutil/error.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -13,6 +15,7 @@
 #include <libavutil/audio_fifo.h>
 #include <libavutil/samplefmt.h>
 #include <libavfilter/avfilter.h>
+}
 
 decoder_function get_stream_decoder(enum AVMediaType mediaType) {
     switch (mediaType) {

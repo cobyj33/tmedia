@@ -1,7 +1,9 @@
 #ifndef ASCII_VIDEO_ICONS
 #define ASCII_VIDEO_ICONS
+
 #include "image.h"
-#include <time.h>
+#include <ctime>
+
 
 #define ICONS_SPRITE_WIDTH 16
 #define ICONS_SPRITE_HEIGHT 16

@@ -1,9 +1,12 @@
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <info.h>
 #include <boiler.h>
+
+extern "C" {
 #include <libavutil/log.h>
 #include <libavformat/avformat.h>
+}
 
 int fileInfoProgram(const char* fileName) {
     av_log_set_level(AV_LOG_INFO);

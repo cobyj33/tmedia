@@ -1,28 +1,31 @@
+
 #include "boiler.h"
 #include "decode.h"
 #include "threads.h"
 #include "selectionlist.h"
 #include "icons.h"
 #include "renderer.h"
-#include <curses.h>
-#include <stdint.h>
-#include <libavutil/pixfmt.h>
-#include <stdio.h>
-#include <time.h>
+#include <cstdint>
+#include <cstdio>
+#include <ctime>
 #include <video.h>
 #include <macros.h>
 #include <media.h>
 #include <ascii.h>
 #include <loader.h>
 #include <wmath.h>
-
-#include <pthread.h>
 #include <wtime.h>
 
+extern "C" {
+#include <curses.h>
+#include <pthread.h>
+
+#include <libavutil/pixfmt.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 #include <libswscale/swscale.h>
+}
 
 const int MAX_FRAME_WIDTH = 16 * 16;
 const int MAX_FRAME_HEIGHT = 16 * 9; 
@@ -33,9 +36,6 @@ const char* debug_video_type = "debug";
 void load_image_buffer(MediaPlayer* player, VideoConverter* converter, int amount) {
     const MediaDisplayCache* cache = player->displayCache;
     for (int i = 0; i < amount; i++) {
-
-
-
 
     }
 }

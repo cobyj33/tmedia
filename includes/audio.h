@@ -2,11 +2,14 @@
 #define ASCII_VIDEO_AUDIO_IMPLEMENTATION
 
 #define MAX_AUDIO_ASYNC_TIME_SECONDS 0.15
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/avutil.h>
-#include <libswscale/swscale.h>
-#include <libswresample/swresample.h>
+
+extern "C" {
+    #include <libavcodec/avcodec.h>
+    #include <libavformat/avformat.h>
+    #include <libavutil/avutil.h>
+    #include <libswscale/swscale.h>
+    #include <libswresample/swresample.h>
+}
 
 float** alloc_samples(int linesize[8], int nb_channels, int nb_samples);
 float** copy_samples(float** src, int linesize[8], int nb_channels, int nb_samples);

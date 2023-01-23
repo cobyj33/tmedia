@@ -1,5 +1,6 @@
 #ifndef ASCII_VIDEO_DUMP
 #define ASCII_VIDEO_DUMP
+
 #include <media.h>
 
 int get_media_player_dump_size(MediaPlayer* player);

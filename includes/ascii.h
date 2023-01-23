@@ -1,10 +1,12 @@
 #ifndef ASCII_VIDEO_ASCII
 #define ASCII_VIDEO_ASCII
-#include <stdint.h>
+#include <cstdint>
 #include "macros.h"
 #include "image.h"
 
-#include <libavutil/frame.h>
+extern "C" {
+    #include <libavutil/frame.h>
+}
 
 // const std::string value_characters = "@MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry\%1v7l+it[]{}?j|()=~!-/<>\"^_';,:`.";
 // const std::string value_characters = "█▉▊▋▌▍▎▏";

@@ -2,6 +2,7 @@
 #define ASCII_VIDEO_DEBUG
 #include "boiler.h"
 
+
 #define MEDIA_DEBUG_MESSAGE_BUFFER_SIZE 1000
 
 

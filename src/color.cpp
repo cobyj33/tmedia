@@ -1,7 +1,10 @@
-#include "color.h"
-#include <ncurses.h>
 #include <wmath.h>
+#include "color.h"
+
+extern "C" {
+#include <ncurses.h>
 #include <malloc.h>
+}
 
 void init_color_rgb(rgb color, int init_index) {
     rgb_i32 output;

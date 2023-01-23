@@ -1,7 +1,10 @@
 #ifndef ASCII_VIDEO_THREADS
 #define ASCII_VIDEO_THREADS
 #include "media.h"
+
+extern "C" {
 #include <pthread.h>
+}
 
 void sleep_for(long nanoseconds);
 void sleep_for_sec(long secs);

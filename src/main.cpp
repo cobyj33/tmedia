@@ -1,16 +1,19 @@
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+
 #include "color.h"
 #include "icons.h"
 #include "pixeldata.h"
-#include <stdlib.h>
 #include <image.h>
 #include <video.h>
 #include <media.h>
 #include <info.h>
 
+extern "C" {
 #include <libavutil/log.h>
-#include <stdio.h>
-#include <string.h>
 #include <ncurses.h>
+}
 
 typedef struct ProgramCommands ProgramCommands;
 

@@ -1,5 +1,6 @@
+
 #include <selectionlist.h>
-#include <malloc.h>
+#include <cstdlib>
 
 typedef struct SelectionListNode {
     void* data;
@@ -15,7 +16,7 @@ struct SelectionList {
     int index;
 };
 
-SelectionList* selection_list_alloc(int elem_size) {
+SelectionList* selection_list_alloc() {
     SelectionList* list = (SelectionList*)malloc(sizeof(SelectionList));
     if (list == NULL) {
         return NULL;

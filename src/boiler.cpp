@@ -1,6 +1,9 @@
+
 #include "decode.h"
 #include <boiler.h>
-#include <stdio.h>
+#include <cstdio>
+
+extern "C" {
 #include <libavutil/error.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -12,6 +15,7 @@
 #include <libavutil/audio_fifo.h>
 #include <libavutil/samplefmt.h>
 #include <libavfilter/avfilter.h>
+}
 
 AVFrame** resample_audio_frames(AudioResampler* resampler, AVFrame** originals, int nb_frames) {
     int currently_allocated = 0;

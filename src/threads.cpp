@@ -1,6 +1,9 @@
 #include <threads.h>
 #include <macros.h>
+
+extern "C" {
 #include <pthread.h>
+}
 
 void sleep_for(long nanoseconds) {
     struct timespec sleep_time = { nanoseconds / (long)SECONDS_TO_NANOSECONDS, nanoseconds % SECONDS_TO_NANOSECONDS  };

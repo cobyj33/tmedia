@@ -1,19 +1,23 @@
+
 #include "boiler.h"
 #include "debug.h"
 #include "decode.h"
 #include "icons.h"
-#include "selectionlist.h"
-#include <stdint.h>
-#include <stdio.h>
+#include <selectionlist.h>
 #include <media.h>
 #include <info.h>
-#include <curses.h>
 
+#include <cstdint>
+#include <cstdio>
+
+extern "C" {
+#include <curses.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
+}
 
 MediaPlayer* media_player_alloc(const char* fileName) {
-    MediaPlayer* mediaPlayer = malloc(sizeof(MediaPlayer));
+    MediaPlayer* mediaPlayer = (MediaPlayer*)malloc(sizeof(MediaPlayer));
     if (mediaPlayer == NULL) {
         fprintf(stderr, "%s", "Could not allocate media player");
         return NULL;

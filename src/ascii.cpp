@@ -1,14 +1,18 @@
-#include <pixeldata.h>
+
 #include <image.h>
+#include <pixeldata.h>
 #include <ascii.h>
 #include <macros.h>
-#include <stdint.h>
+#include <cstdint>
 #include <wmath.h>
+
+extern "C" {
 #include <ncurses.h>
 #include <libavutil/avutil.h>
+}
 
-const int nb_val_chars = 11;
-const char val_chars[11] = "@\%#*+=-:._ ";
+const int nb_val_chars = 12;
+const char val_chars[12] = "@%#*+=-:._ ";
 
 AsciiImage* get_ascii_image_from_frame(AVFrame* videoFrame, int maxWidth, int maxHeight) {
     PixelData* data = pixel_data_alloc_from_frame(videoFrame);

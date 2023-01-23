@@ -1,6 +1,10 @@
 #ifndef SELECTION_LIST_IMPLEMENTATION
 #define SELECTION_LIST_IMPLEMENTATION
-#include <libavcodec/packet.h>
+
+extern "C" {
+    #include <libavcodec/packet.h>
+}
+
 
 typedef struct SelectionList SelectionList;
 

@@ -1,12 +1,15 @@
 #ifndef ASCII_VIDEO_BOILER
 #define ASCII_VIDEO_BOILER
-#include <libavutil/channel_layout.h>
-#include <libavutil/pixfmt.h>
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/avutil.h>
-#include <libswresample/swresample.h>
-#include <libswscale/swscale.h>
+
+extern "C" {
+    #include <libavutil/channel_layout.h>
+    #include <libavutil/pixfmt.h>
+    #include <libavcodec/avcodec.h>
+    #include <libavformat/avformat.h>
+    #include <libavutil/avutil.h>
+    #include <libswresample/swresample.h>
+    #include <libswscale/swscale.h>
+}
 
 typedef struct StreamData {
     AVFormatContext* formatContext;

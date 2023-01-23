@@ -1,3 +1,4 @@
+
 #include "macros.h"
 #include "pixeldata.h"
 #include "renderer.h"
@@ -5,11 +6,14 @@
 #include <icons.h>
 #include <image.h>
 #include <ascii.h>
-#include <ncurses.h>
 
-#include <pthread.h>
+
 #include <wtime.h>
 #include <wmath.h>
+
+extern "C" {
+#include <ncurses.h>
+#include <pthread.h>
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -19,6 +23,7 @@
 #include <libavdevice/avdevice.h>
 #include <libavutil/fifo.h>
 #include <libavutil/audio_fifo.h>
+}
 
 #define NUMBER_OF_VIDEO_ICONS 27
 #define NUMBER_OF_PLAYBACK_ICONS 12

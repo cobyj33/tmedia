@@ -1,11 +1,13 @@
+
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
 #include "icons.h"
 #include "selectionlist.h"
 #include "wtime.h"
-#include <stddef.h>
-#include <stdint.h>
 #include <media.h>
-#include <stdarg.h>
 #include <wmath.h>
+
 
 void video_symbol_stack_push(VideoSymbolStack* stack, VideoSymbol *symbol) {
     if (stack->top < VIDEO_SYMBOL_BUFFER_SIZE - 1) {

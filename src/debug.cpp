@@ -1,6 +1,7 @@
+#include "media.h"
 #include "debug.h"
-#include <string.h>
-#include <media.h>
+#include <cstring>
+
 
 void vadd_debug_message(MediaDebugInfo* debug_info, const char* message_source, const char* message_type, const char* message_desc, const char* format, va_list args);
 char* get_formatted_string(int* output_size, const char* format, ...);

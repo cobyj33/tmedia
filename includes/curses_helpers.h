@@ -1,8 +1,11 @@
 #ifndef ASCII_VIDEO_CURSES_HELPERS
 #define ASCII_VIDEO_CURSES_HELPERS
 
-#include <ncurses.h>
 #include "image.h"
+
+extern "C" {
+    #include <ncurses.h>
+}
 
 void wfill_box(WINDOW* window, int x, int y, int width, int height, char ch);
 void werasebox(WINDOW* window, int x, int y, int width, int height);

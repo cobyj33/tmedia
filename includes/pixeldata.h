@@ -1,8 +1,11 @@
 #ifndef ASCII_VIDEO_PIXEL_DATA
 #define ASCII_VIDEO_PIXEL_DATA
+
+extern "C" {
 #include <stdint.h>
 #include <libavutil/frame.h>
 #include <libavutil/pixfmt.h>
+}
 
 typedef enum PixelDataFormat {
     RGB24, GRAYSCALE8

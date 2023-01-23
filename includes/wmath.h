@@ -1,6 +1,7 @@
 #ifndef ASCII_VIDEO_WRAPPER_MATH
 #define ASCII_VIDEO_WRAPPER_MATH
-#include <math.h>
+
+#include <cmath>
 
 double dabs(double d);
 int i32min(int a, int b);

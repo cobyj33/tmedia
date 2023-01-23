@@ -1,5 +1,6 @@
 #ifndef ASCII_VIDEO_RENDERER
 #define ASCII_VIDEO_RENDERER
+
 #include <ascii.h>
 #include <media.h>
 

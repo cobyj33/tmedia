@@ -5,7 +5,9 @@
 #define __STDC_CONSTANT_MACROS
 #endif
 
+extern "C" {
 #include <libavutil/avutil.h>
+}
 
 typedef struct PacketData {
     enum AVMediaType mediaType;

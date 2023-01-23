@@ -1,6 +1,6 @@
 #ifndef ASCII_VIDEO_COLOR
 #define ASCII_VIDEO_COLOR
-#include <stdint.h>
+#include <cstdint>
 
 typedef uint8_t rgb[3];
 typedef int rgb_i32[3];

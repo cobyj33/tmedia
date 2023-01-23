@@ -1,9 +1,12 @@
 #ifndef ASCII_VIDEO_DECODE
 #define ASCII_VIDEO_DECODE
+
+extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/avutil.h>
 #include <libswscale/swscale.h>
 #include <libswresample/swresample.h>
+}
 
 typedef AVFrame** (*decoder_function)(AVCodecContext*, AVPacket*, int*, int*);
 decoder_function get_stream_decoder(enum AVMediaType mediaType);

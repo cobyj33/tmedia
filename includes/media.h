@@ -1,5 +1,6 @@
 #ifndef ASCII_VIDEO_MEDIA
 #define ASCII_VIDEO_MEDIA
+
 #include "decode.h"
 #include "boiler.h"
 #include "icons.h"
@@ -7,11 +8,13 @@
 #include "selectionlist.h"
 #include "color.h"
 
-#include <stdint.h>
+#include <cstdint>
 
+extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
+}
 
 typedef struct MediaStream {
     StreamData* info;

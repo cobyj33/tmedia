@@ -1,6 +1,10 @@
+
+#include <cstdarg>
 #include <curses_helpers.h>
-#include <stdarg.h>
+
+extern "C" {
 #include <ncurses.h>
+}
 
 #define CUSTOM_COLOR 16
 #define CUSTOM_COLOR_PAIR 1

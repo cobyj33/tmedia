@@ -1,7 +1,8 @@
-#include <stdint.h>
-#include <stdlib.h>
-#include <wmath.h>
 #include <color.h>
+#include <cstdint>
+#include <cstdlib>
+#include <wmath.h>
+
 
 int get_most_common_colors(rgb* output, int k, rgb* colors, int nb_colors, int* actual_output_size) {
     const int nb_tests_to_run = 5;

@@ -1,5 +1,6 @@
 #ifndef ASCII_VIDEO_IMAGE
 #define ASCII_VIDEO_IMAGE
+
 #include "pixeldata.h"
 #include "color.h"
 

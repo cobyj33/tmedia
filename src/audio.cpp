@@ -1,18 +1,20 @@
+
 #include "boiler.h"
 #include "debug.h"
 #include "decode.h"
 #include "media.h"
-#include <curses.h>
 #include <wtime.h>
 #include <selectionlist.h>
 #include <audio.h>
 #include <wmath.h>
-#include <stdlib.h>
-#include <pthread.h>
+#include <cstdlib>
 #include <threads.h>
 #include <macros.h>
 
-#define MINIAUDIO_IMPLEMENTATION
+extern "C" {
+#include <curses.h>
+#include <pthread.h>
+
 #include "miniaudio.h"
 
 #include <libavcodec/avcodec.h>
@@ -20,6 +22,7 @@
 #include <libavutil/avutil.h>
 #include <libswresample/swresample.h>
 #include <libavutil/audio_fifo.h>
+}
 
 const int AUDIO_BUFFER_SIZE = 8192;
 const int MAX_AUDIO_BUFFER_SIZE = 524288;

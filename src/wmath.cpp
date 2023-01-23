@@ -1,5 +1,6 @@
 #include <wmath.h>
-#include <stdlib.h>
+#include <cstdlib>
+
 
 double dabs(double d) {
 

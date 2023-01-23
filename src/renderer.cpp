@@ -1,27 +1,32 @@
+
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+
 #include "audio.h"
 #include "color.h"
 #include "debug.h"
 #include "macros.h"
 #include "pixeldata.h"
 #include "selectionlist.h"
-#include <libavutil/avutil.h>
-#include <math.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 #include <image.h>
 #include <video.h>
 #include <ascii.h>
 #include <renderer.h>
 #include <icons.h>
 #include <media.h>
-#include <pthread.h>
 #include <threads.h>
 #include <wmath.h>
 #include <wtime.h>
-
-#include <ncurses.h>
 #include <curses_helpers.h>
+
+extern "C" {
+#include <pthread.h>
+#include <ncurses.h>
+#include <libavutil/avutil.h>
+}
+
 #define KEY_ESCAPE 27
 
 void render_playbar(MediaPlayer* player, GuiData gui_data);

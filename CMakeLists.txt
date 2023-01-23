@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+set(CXX_STANDARD 11)
+set(CXX_STANDARD_REQUIRED 11)
 
-project( ascii_video C)
+project(ascii_video)
 
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 

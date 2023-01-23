@@ -1,26 +1,28 @@
+
+#include <cstdio>
+#include <cstdint>
+#include <cstring>
+#include <cstdlib>
 #include <ascii.h>
 #include "color.h"
 #include "pixeldata.h"
 #include "wmath.h"
 #include <image.h>
-#include <libavutil/pixfmt.h>
 #include <media.h>
 #include <renderer.h>
 #include <decode.h>
 #include <boiler.h>
 
+extern "C" {
 #include <ncurses.h>
-#include <stdio.h>
 
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-
+#include <libavutil/pixfmt.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 #include <libavutil/pixdesc.h>
 #include <libswscale/swscale.h>
+}
 
 int imageProgram(const char* fileName, int use_colors) {
     erase();

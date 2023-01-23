@@ -1,7 +1,10 @@
-#include "macros.h"
-#include <bits/time.h>
+#include <ctime>
 #include <wtime.h>
-#include <time.h>
+#include "macros.h"
+
+extern "C" {
+#include <bits/time.h>
+}
 
 double clock_sec() {
     struct timespec tp;
