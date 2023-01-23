@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include "icons.h"
-#include "selectionlist.h"
+#include "playheadlist.hpp"
 #include "wtime.h"
 #include <media.h>
 #include <wmath.h>
@@ -168,16 +168,3 @@ void move_frame_list_to_pts(PlayheadList<AVFrame*>* frames, int64_t targetPTS) {
     }
 }
 
-double audio_stream_time(AudioStream* stream) {
-    return stream->start_time + ((double)stream->playhead / stream->sample_rate);
-}
-
-double audio_stream_set_time(AudioStream* stream, double time) {
-    if (stream->nb_samples == 0) return 0.0;
-    stream->playhead = (size_t)(fmin(stream->nb_samples - 1, fmax( 0.0, (time - stream->start_time) * stream->sample_rate  )  )  );
-    return stream->playhead;
-}
-
-double audio_stream_end_time(AudioStream *stream) {
-    return stream->start_time + ((double)stream->nb_samples / stream->sample_rate);
-}

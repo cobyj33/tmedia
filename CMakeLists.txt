@@ -29,7 +29,7 @@ include_directories( ${CURSES_INCLUDE_DIR} ./includes )
 add_executable(ascii_video
 ./src/ascii.cpp
 ./src/alloc.cpp
-./src/selectionlist.cpp
+./src/audiostream.cpp
 ./src/decode.cpp
 ./src/image.cpp
 ./src/media.cpp
@@ -57,5 +57,5 @@ add_executable(ascii_video
 target_link_libraries( ascii_video ${CURSES_LIBRARIES} PkgConfig::LIBAV)
 
 add_executable(tests 
-./src/test_selectionlist.cpp)
+./src/tests/test_playheadlist.cpp)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)

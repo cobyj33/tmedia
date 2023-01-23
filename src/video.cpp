@@ -2,7 +2,7 @@
 #include "boiler.h"
 #include "decode.h"
 #include "threads.h"
-#include "selectionlist.h"
+#include "playheadlist.hpp"
 #include "icons.h"
 #include "renderer.h"
 #include <cstdint>

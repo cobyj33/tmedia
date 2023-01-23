@@ -9,7 +9,7 @@
 #include "debug.h"
 #include "macros.h"
 #include "pixeldata.h"
-#include "selectionlist.h"
+#include "playheadlist.hpp"
 #include <image.h>
 #include <video.h>
 #include <ascii.h>
@@ -93,11 +93,11 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
                 if (gui_data.audio.show_all_channels) {
                     gui_data.audio.channel_index = 0;
                     gui_data.audio.show_all_channels = 0;
-                } else if (gui_data.audio.channel_index == player->displayCache->audio_stream->nb_channels - 1) {
+                } else if (gui_data.audio.channel_index == player->displayCache->audio_stream->get_nb_channels() - 1) {
                     gui_data.audio.show_all_channels = 1;
                 } else {
                     gui_data.audio.channel_index++; 
-               }
+                }
             }
 
         } else if (ch == KEY_UP) {
@@ -126,9 +126,9 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
                 if (digit == 0) {
                     gui_data.audio.show_all_channels = 1;
                 } else {
-                    if (player->displayCache->audio_stream->nb_channels > 0) {
+                    if (player->displayCache->audio_stream->get_nb_channels() > 0) {
                         gui_data.audio.show_all_channels = 0;
-                        gui_data.audio.channel_index = (digit - 1) % player->displayCache->audio_stream->nb_channels;
+                        gui_data.audio.channel_index = (digit - 1) % player->displayCache->audio_stream->get_nb_channels();
                     }
                 }
 
@@ -273,51 +273,52 @@ void render_audio_screen(MediaPlayer *player, GuiData gui_data) {
     erase();
     const MediaDisplayCache* cache = player->displayCache;
     AudioStream* audio_stream = cache->audio_stream;
-    if (audio_stream->stream == NULL || audio_stream->nb_samples == 0 || audio_stream->nb_channels == 0) {
+    if (audio_stream->is_initialized()) {
         printw("%s\n", "CURRENTLY NO AUDIO DATA TO DISPLAY");
         return;
     }
 
     const int shown_sample_size = 8192 * 2;
-    if (audio_stream->playhead + shown_sample_size >= audio_stream->nb_samples) {
+    if (audio_stream->can_read(shown_sample_size)) {
         printw("%s\n", "CURRENTLY NOT ENOUGH AUDIO DATA TO DISPLAY");
         return;
     }
 
-    float wave[COLS * audio_stream->nb_channels];
-    for (int i = 0; i < COLS * audio_stream->nb_channels; i++) {
+
+    float last_samples[shown_sample_size * audio_stream->get_nb_channels()];
+    audio_stream->peek_into(shown_sample_size, last_samples);
+
+    float wave[COLS * audio_stream->get_nb_channels()];
+    for (int i = 0; i < COLS * audio_stream->get_nb_channels(); i++) {
         wave[i] = 0.0f;
     }
 
-    uint8_t* last_samples_compressed = audio_stream->stream + (audio_stream->playhead * audio_stream->nb_channels);
-    float last_samples[shown_sample_size * audio_stream->nb_channels];
-
-    for (int i = 0; i < shown_sample_size * audio_stream->nb_channels; i++) {
-        last_samples[i] = uint8_sample_to_float(last_samples_compressed[i]);
-    }
+    // for (int i = 0; i < shown_sample_size * audio_stream->get_nb_channels(); i++) {
+    //     last_samples[i] = uint8_sample_to_float(last_samples_compressed[i]);
+    // }
 
     if (shown_sample_size < COLS) {
-        expand_wave(wave, COLS, last_samples, shown_sample_size, audio_stream->nb_channels);
+        expand_wave(wave, COLS, last_samples, shown_sample_size, audio_stream->get_nb_channels());
     } else if (shown_sample_size > COLS) {
-        collapse_wave(wave, COLS, last_samples, shown_sample_size, audio_stream->nb_channels);
+        collapse_wave(wave, COLS, last_samples, shown_sample_size, audio_stream->get_nb_channels());
     } else {
-        for (int i = 0; i < COLS * audio_stream->nb_channels; i++) {
+        for (int i = 0; i < COLS * audio_stream->get_nb_channels(); i++) {
             wave[i] = last_samples[i];
         } 
     }
-    normalize_wave(wave, COLS, audio_stream->nb_channels);
+    normalize_wave(wave, COLS, audio_stream->get_nb_channels());
 
     if (gui_data.audio.show_all_channels) {
-        for (int i = 0; i < audio_stream->nb_channels; i++) {
-            print_wave(0, i * ( LINES / audio_stream->nb_channels), COLS, LINES / audio_stream->nb_channels, wave, COLS, i, audio_stream->nb_channels, player->displaySettings->use_colors);
+        for (int i = 0; i < audio_stream->get_nb_channels(); i++) {
+            print_wave(0, i * ( LINES / audio_stream->get_nb_channels()), COLS, LINES / audio_stream->get_nb_channels(), wave, COLS, i, audio_stream->get_nb_channels(), player->displaySettings->use_colors);
         }
     } else {
-        print_wave(0, 0, COLS, LINES, wave, COLS, gui_data.audio.channel_index, audio_stream->nb_channels, player->displaySettings->use_colors);
+        print_wave(0, 0, COLS, LINES, wave, COLS, gui_data.audio.channel_index, audio_stream->get_nb_channels(), player->displaySettings->use_colors);
     }
 
     const char* format = "Press 0 to see all Channels, Otherwise, press a number to see its specific channel: ";
-    mvprintw(0, (COLS / 2) - (strlen(format) + audio_stream->nb_channels * 3 + 6) / 2, "%s%s", format, gui_data.audio.show_all_channels == 1 ? "|All Channels (0)| " : "All Channels (0) ");
-    for (int i = 0; i < audio_stream->nb_channels; i++) {
+    mvprintw(0, (COLS / 2) - (strlen(format) + audio_stream->get_nb_channels() * 3 + 6) / 2, "%s%s", format, gui_data.audio.show_all_channels == 1 ? "|All Channels (0)| " : "All Channels (0) ");
+    for (int i = 0; i < audio_stream->get_nb_channels(); i++) {
         printw(gui_data.audio.channel_index == i && !gui_data.audio.show_all_channels ? "|%d| " : "%d ", i + 1);  
     }
 

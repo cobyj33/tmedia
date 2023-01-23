@@ -4,7 +4,7 @@
 #include "decode.h"
 #include "media.h"
 #include <wtime.h>
-#include <selectionlist.h>
+#include <playheadlist.hpp>
 #include <audio.h>
 #include <wmath.h>
 #include <cstdlib>
@@ -46,19 +46,13 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     pthread_mutex_lock(data->mutex);
     AudioStream* audioStream = data->player->displayCache->audio_stream;
 
-    if (audioStream == NULL) {
+    if (audioStream == nullptr) {
         pthread_mutex_unlock(data->mutex);
         return;
     }
 
-    if (audioStream->playhead + frameCount < audioStream->nb_samples) {
-        for (int i = 0; i < frameCount * audioStream->nb_channels; i++) {
-            /* ((float*)(pOutput))[i] = audioStream->stream[audioStream->playhead * audioStream->nb_channels + i]; */
-            /* ((float*)(pOutput))[i] = ((int)((255.0 / 2) * (audioStream->stream[audioStream->playhead * audioStream->nb_channels + i] + 1)) - 128) / 128.0  ; */
-            ((float*)(pOutput))[i] = uint8_sample_to_float(audioStream->stream[audioStream->playhead * audioStream->nb_channels + i]);
-        }
-
-        audioStream->playhead += frameCount;
+    if (audioStream->can_read(frameCount)) {
+        audioStream->read_into(frameCount, (float*)pOutput);
     }
 
     (void)pInput;
@@ -71,13 +65,13 @@ void* audio_playback_thread(void* args) {
     pthread_mutex_t* alterMutex = thread_data->alterMutex;
     MediaDebugInfo* debug_info = player->displayCache->debug_info;
     int result;
-    MediaStream* audio_stream = get_media_stream(player->timeline->mediaData, AVMEDIA_TYPE_AUDIO);
-    if (audio_stream == NULL) {
+    MediaStream* audio_media_stream = get_media_stream(player->timeline->mediaData, AVMEDIA_TYPE_AUDIO);
+    if (audio_media_stream == NULL) {
         return NULL;
     }
 
 
-    AVCodecContext* audioCodecContext = audio_stream->info->codecContext;
+    AVCodecContext* audioCodecContext = audio_media_stream->info->codecContext;
     const int nb_channels = audioCodecContext->ch_layout.nb_channels;
 
     AudioResampler* audioResampler = get_audio_resampler(&result,     
@@ -88,7 +82,7 @@ void* audio_playback_thread(void* args) {
         return NULL;
     }   
 
-    audio_stream_init(player->displayCache->audio_stream, nb_channels, AUDIO_BUFFER_SIZE, audioCodecContext->sample_rate);
+    player->displayCache->audio_stream->init(nb_channels, audioCodecContext->sample_rate);
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format  = ma_format_f32;
@@ -109,7 +103,7 @@ void* audio_playback_thread(void* args) {
 
     Playback* playback = player->timeline->playback;
 
-    sleep_for((long)(audio_stream->info->stream->start_time * audio_stream->timeBase * SECONDS_TO_NANOSECONDS));
+    sleep_for((long)(audio_media_stream->info->stream->start_time * audio_media_stream->timeBase * SECONDS_TO_NANOSECONDS));
     
     while (player->inUse) {
         pthread_mutex_lock(alterMutex);
@@ -135,32 +129,17 @@ void* audio_playback_thread(void* args) {
         }
 
         AudioStream* audioStream = player->displayCache->audio_stream;
-        if (audio_stream->packets->try_step_forward()) {
+        if (audio_media_stream->packets->try_step_forward()) {
             
-            AVPacket* packet = audio_stream->packets->get();
+            AVPacket* packet = audio_media_stream->packets->get();
             int result, nb_frames_decoded;
             AVFrame** audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, packet, &result, &nb_frames_decoded);
             if (audioFrames != NULL) {
                 if (result >= 0 && nb_frames_decoded > 0) {
                     for (int i = 0; i < nb_frames_decoded; i++) {
                         AVFrame* current_frame = audioFrames[i];
-
-                        if (current_frame->nb_samples + audioStream->nb_samples >= audioStream->sample_capacity) {
-                            uint8_t* tmp = (uint8_t*)realloc(audioStream->stream, sizeof(uint8_t) * audioStream->sample_capacity * audioStream->nb_channels * 2);
-
-                            if (tmp != NULL) {
-                                audioStream->stream = tmp;
-                                audioStream->sample_capacity *= 2;
-                            }
-                        }
-
-                        if (audioStream->nb_samples + current_frame->nb_samples < audioStream->sample_capacity) {
-                            float* frameData = (float*)(current_frame->data[0]);
-                            for (int i = 0; i < current_frame->nb_samples * current_frame->ch_layout.nb_channels; i++) {
-                                audioStream->stream[audioStream->nb_samples * audioStream->nb_channels + i] = float_sample_to_uint8(frameData[i]);
-                            }
-                            audioStream->nb_samples += current_frame->nb_samples;
-                        }
+                        float* frameData = (float*)(current_frame->data[0]);
+                        audioStream->write(frameData, current_frame->nb_samples);
                     }
                 }
                 free_frame_list(audioFrames, nb_frames_decoded);
@@ -170,18 +149,17 @@ void* audio_playback_thread(void* args) {
 
         audioDevice.sampleRate = audioCodecContext->sample_rate * playback->speed;
         double current_time = get_playback_current_time(playback);
-        double desync = dabs(audio_stream_time(audioStream) - current_time);
+        double desync = dabs(audioStream->get_time() - current_time);
         add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Audio Desync", "%s%.2f\n", "Audio Desync Amount: ", desync);
+
         if (desync > 0.15) {
-            if (current_time > audio_stream_end_time(audioStream) || current_time < audioStream->start_time) {
-                int success = audio_stream_clear(audioStream, AUDIO_BUFFER_SIZE);
-                if (success) {
-                    audioStream->start_time = current_time;
-                    move_packet_list_to_pts(audio_stream->packets, current_time / audio_stream->timeBase);
-                }
+            if (audioStream->is_time_in_bounds(current_time)) {
+                audioStream->set_time(current_time);
             } else {
-                audio_stream_set_time(audioStream, current_time);
+                audioStream->clear_and_restart_at(current_time);
             }
+            
+            move_packet_list_to_pts(audio_media_stream->packets, current_time / audio_media_stream->timeBase);
         }
 
         pthread_mutex_unlock(alterMutex);
