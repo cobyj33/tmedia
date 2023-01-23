@@ -77,23 +77,22 @@ void* video_playback_thread(void* args) {
         /* int64_t targetVideoPTS = get_playback_current_time(playback) * videoTimeBase; */
         /* move_frame_list_to_pts(cache->image_buffer, targetVideoPTS); */
 
-        if (get_playback_current_time(playback) >= media_data->duration) {
-            player->inUse = 0;
+        if (playback->get_time() >= media_data->duration) { // video finished
+            player->inUse = false;
             pthread_mutex_unlock(alterMutex);
             break;
-        } else if (playback->playing == 0) {
+        } else if (playback->is_playing() == false) { // paused
             pthread_mutex_unlock(alterMutex);
 
-            double pauseTime = clock_sec();
-            while (playback->playing == 0) {
+            while (playback->is_playing() == false) {
                 sleep_for_ms(1);
                 if (!player->inUse) {
-                    return NULL;
+                    return nullptr;
                 }
             }
 
             pthread_mutex_lock(alterMutex);
-            playback->paused_time += clock_sec() - pauseTime;
+            // playback->paused_time += clock_sec() - pauseTime;
         }
 
         if (videoPackets->can_move_index(10)) {
@@ -159,10 +158,10 @@ void* video_playback_thread(void* args) {
         player->displayCache->image = pixel_data_alloc_from_frame(readingFrame);
 
         double nextFrameTimeSinceStartInSeconds = (double)readingFrame->pts * videoTimeBase;
-        double frame_speed_skip_time_sec = ( (readingFrame->duration * videoTimeBase) - (readingFrame->duration * videoTimeBase) / playback->speed );
-        playback->skipped_time += frame_speed_skip_time_sec;
+        double frame_speed_skip_time_sec = ( (readingFrame->duration * videoTimeBase) - (readingFrame->duration * videoTimeBase) / playback->get_speed() );
+        playback->skip(frame_speed_skip_time_sec);
 
-        const double current_time = get_playback_current_time(playback);
+        const double current_time = playback->get_time();
         double waitDuration = nextFrameTimeSinceStartInSeconds - current_time + (double)(readingFrame->repeat_pict) / (2 * frameRate);
         waitDuration -= frame_speed_skip_time_sec;
         double continueTime = clock_sec() + waitDuration;
@@ -170,7 +169,7 @@ void* video_playback_thread(void* args) {
         add_debug_message(debug_info, debug_video_source, debug_video_type, "Video Timing Information", "  timeOfNextFrame: %.3f, waitDuration: %.3f\n \
             Speed Factor: %.3f, Time Skipped due to Speed on Current Frame: %.3f\n\n ",
            nextFrameTimeSinceStartInSeconds, waitDuration,
-            playback->speed, frame_speed_skip_time_sec);
+            playback->get_speed(), frame_speed_skip_time_sec);
 
 
         pthread_mutex_unlock(alterMutex);
@@ -192,7 +191,7 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
     targetTime = fmax(targetTime, 0.0);
     Playback* playback = timeline->playback;
     MediaData* media_data = timeline->mediaData;
-    const double originalTime = get_playback_current_time(timeline->playback);
+    const double originalTime = timeline->playback->get_time();
     MediaStream* video_stream = get_media_stream(media_data, AVMEDIA_TYPE_VIDEO);
     if (video_stream == NULL) {
         return;
@@ -269,6 +268,6 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
     packet_get = videoPackets->get();
     finalPTS = finalPTS == -1 && packet_get != NULL ? packet_get->pts : finalPTS;
     double timeMoved = (finalPTS * videoTimeBase) - originalTime;
-    playback->skipped_time += timeMoved;
+    playback->skip(timeMoved);
 }
 

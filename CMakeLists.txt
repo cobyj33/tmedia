@@ -52,6 +52,7 @@ add_executable(ascii_video
 ./src/debug.cpp
 ./src/color.cpp
 ./src/icons.cpp
+./src/playback.cpp
 )
 
 target_link_libraries( ascii_video ${CURSES_LIBRARIES} PkgConfig::LIBAV)

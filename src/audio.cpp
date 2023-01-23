@@ -108,7 +108,7 @@ void* audio_playback_thread(void* args) {
     while (player->inUse) {
         pthread_mutex_lock(alterMutex);
 
-        if (playback->playing == 0 && ma_device_get_state(&audioDevice) == ma_device_state_started) {
+        if (playback->is_playing() == false && ma_device_get_state(&audioDevice) == ma_device_state_started) {
             pthread_mutex_unlock(alterMutex);
             miniAudioLog = ma_device_stop(&audioDevice);
             if (miniAudioLog != MA_SUCCESS) {
@@ -117,7 +117,7 @@ void* audio_playback_thread(void* args) {
                 return NULL;
             };
             pthread_mutex_lock(alterMutex);
-        } else if (playback->playing && ma_device_get_state(&audioDevice) == ma_device_state_stopped) {
+        } else if (playback->is_playing() && ma_device_get_state(&audioDevice) == ma_device_state_stopped) {
             pthread_mutex_unlock(alterMutex);
             miniAudioLog = ma_device_start(&audioDevice);
             if (miniAudioLog != MA_SUCCESS) {
@@ -147,8 +147,8 @@ void* audio_playback_thread(void* args) {
         }
 
 
-        audioDevice.sampleRate = audioCodecContext->sample_rate * playback->speed;
-        double current_time = get_playback_current_time(playback);
+        audioDevice.sampleRate = audioCodecContext->sample_rate * playback->get_speed();
+        double current_time = playback->get_time();
         double desync = dabs(audioStream->get_time() - current_time);
         add_debug_message(debug_info, debug_audio_source, debug_audio_type, "Audio Desync", "%s%.2f\n", "Audio Desync Amount: ", desync);
 
@@ -158,7 +158,7 @@ void* audio_playback_thread(void* args) {
             } else {
                 audioStream->clear_and_restart_at(current_time);
             }
-            
+
             move_packet_list_to_pts(audio_media_stream->packets, current_time / audio_media_stream->timeBase);
         }
 

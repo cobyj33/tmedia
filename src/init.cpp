@@ -25,9 +25,8 @@ int start_media_player(MediaPlayer* player) {
         return 0;
     }
 
-    player->inUse = 1;
-    player->timeline->playback->playing = 1;
-    player->timeline->playback->start_time = clock_sec();
+    player->inUse = true;
+    player->timeline->playback->start();
     fetch_next(player->timeline->mediaData, 5000);
 
     pthread_mutex_t alterMutex;
@@ -42,21 +41,21 @@ int start_media_player(MediaPlayer* player) {
     if (error) {
         fprintf(stderr, "%s\n" ,"Failed to create video thread");
         success = 0;
-        player->inUse = 0;
+        player->inUse = false;
     }
 
     error = pthread_create(&audio_thread, NULL, audio_playback_thread, (void*)&data);
     if (error) {
         fprintf(stderr, "%s\n" ,"Failed to create audio thread");
         success = 0;
-        player->inUse = 0;
+        player->inUse = false;
     }
 
     error = pthread_create(&buffer_thread, NULL, data_loading_thread, (void*)&data);
     if (error) {
         fprintf(stderr, "%s\n" ,"Failed to create loading thread");
         success = 0;
-        player->inUse = 0;
+        player->inUse = false;
     }
     render_loop(player, &alterMutex);
 
@@ -64,24 +63,24 @@ int start_media_player(MediaPlayer* player) {
     if (error) {
         fprintf(stderr, "%s\n", "Failed to join video thread");
         success = 0;
-        player->inUse = 0;
+        player->inUse = false;
     }
 
     error = pthread_join(audio_thread, NULL);
     if (error) {
         fprintf(stderr, "%s\n", "Failed to join audio thread");
         success = 0;
-        player->inUse = 0;
+        player->inUse = false;
     }
 
     error = pthread_join(buffer_thread, NULL);
     if (error) {
         fprintf(stderr, "%s\n", "Failed to join loading thread");
         success = 0;
-        player->inUse = 0;
+        player->inUse = false;
     }
 
-    player->timeline->playback->playing = 0;
+    player->timeline->playback->stop();
     player->inUse = 0;
     pthread_mutex_destroy(&alterMutex);
     return success;

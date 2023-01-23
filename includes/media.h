@@ -25,14 +25,50 @@ typedef struct MediaStream {
 } MediaStream;
 
 
-typedef struct Playback {
-    int playing;
-    double speed;
-    double volume;
-    double start_time;
-    double paused_time;
-    double skipped_time;
-} Playback;
+
+class Playback {
+    private:
+        int m_playing;
+        double m_speed;
+        double m_volume;
+        double m_start_time;
+
+        double m_paused_time;
+        double m_skipped_time;
+
+        static constexpr double MAX_VOLUME = 2.0;
+        static constexpr double MIN_VOLUME = 0.0;
+
+        static constexpr double MAX_SPEED = 2;
+        static constexpr double MIN_SPEED = 0.5;
+
+        double m_last_pause_time;
+
+    public:
+        Playback();
+        void toggle();
+        void start();
+        void stop();
+        void resume();
+        void skip(double amount);
+
+        bool is_playing();
+        void set_playing(bool playing);
+        double get_speed();
+        double get_volume();
+
+        void change_speed(double offset);
+        void set_speed(double amount);
+
+        void change_volume(double amount);
+        void set_volume(double amount);
+
+        double get_time();
+};
+
+
+// typedef struct Playback {
+// } Playback;
 
 typedef struct MediaData {
     AVFormatContext* formatContext;
@@ -133,7 +169,7 @@ typedef struct MediaPlayer {
     MediaDisplaySettings* displaySettings;
     MediaDisplayCache* displayCache;
     const char* fileName;
-    int inUse;
+    bool inUse;
 } MediaPlayer;
 
 /* typedef struct ThreadPriveliges { */
@@ -161,9 +197,9 @@ void media_data_free(MediaData* mediaData);
 MediaStream* media_stream_alloc(StreamData* streamData);
 void media_stream_free(MediaStream* mediaStream);
 
-Playback* playback_alloc();
-void playback_free(Playback* playback);
-double get_playback_current_time(Playback* playback);
+// Playback* playback_alloc();
+// void playback_free(Playback* playback);
+// double get_playback_current_time(Playback* playback);
 
 // AudioStream* audio_stream_alloc();
 // void audio_stream_free(AudioStream* stream);
@@ -174,7 +210,7 @@ double get_playback_current_time(Playback* playback);
 // double audio_stream_set_time(AudioStream* stream, double time);
 
 MediaStream* get_media_stream(MediaData* media_data, enum AVMediaType media_type);
-int has_media_stream(MediaData* media_data, enum AVMediaType media_type);
+bool has_media_stream(MediaData* media_data, enum AVMediaType media_type);
 
 void move_packet_list_to_pts(PlayheadList<AVPacket*>* packets, int64_t targetPTS);
 void move_frame_list_to_pts(PlayheadList<AVFrame*>* frames, int64_t targetPTS);

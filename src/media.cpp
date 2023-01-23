@@ -61,12 +61,8 @@ MediaStream* get_media_stream(MediaData* media_data, enum AVMediaType media_type
     return NULL;
 }
 
-int has_media_stream(MediaData* media_data, enum AVMediaType media_type) {
-    return get_media_stream(media_data, media_type) == NULL ? 0 : 1;
-}
-
-double get_playback_current_time(Playback* playback) {
-    return clock_sec() - playback->start_time - playback->paused_time + playback->skipped_time; 
+bool has_media_stream(MediaData* media_data, enum AVMediaType media_type) {
+    return get_media_stream(media_data, media_type) != NULL;
 }
 
 

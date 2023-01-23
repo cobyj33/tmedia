@@ -64,7 +64,7 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
         }
 
         if (jump_time_requested != 0 && (ch != KEY_LEFT && ch != KEY_RIGHT)) {
-            double targetTime = get_playback_current_time(playback) + jump_time_requested;
+            double targetTime = playback->get_time() + jump_time_requested;
             if (targetTime >= player->timeline->mediaData->duration) {
                 player->inUse = 0;
                 pthread_mutex_unlock(alterMutex);
@@ -77,7 +77,7 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
         }
 
         if (ch == ' ') {
-            playback->playing = !playback->playing;
+            playback->toggle();
         } else if (ch == 'd' || ch == 'D') {
             gui_data.show_debug = !gui_data.show_debug;
         } else if (ch == 'c' || ch == 'C') {
@@ -101,19 +101,19 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
             }
 
         } else if (ch == KEY_UP) {
-            playback->volume = fmin(1.0, playback->volume + VOLUME_CHANGE_AMOUNT);
-            video_symbol_stack_push(player->displayCache->symbol_stack,get_symbol_from_volume(playback->volume));
+            playback->change_volume(VOLUME_CHANGE_AMOUNT);
+            video_symbol_stack_push(player->displayCache->symbol_stack,get_symbol_from_volume(playback->get_volume()));
         } else if (ch == KEY_DOWN) {
-            playback->volume = fmin(1.0, playback->volume - VOLUME_CHANGE_AMOUNT);
-            video_symbol_stack_push(player->displayCache->symbol_stack,get_symbol_from_volume(playback->volume));
+            playback->change_volume(-VOLUME_CHANGE_AMOUNT);
+            video_symbol_stack_push(player->displayCache->symbol_stack,get_symbol_from_volume(playback->get_volume()));
         } else if (ch == 'n' || ch == 'N') {
-            playback->speed = fmin(5.0, playback->speed + PLAYBACK_SPEED_CHANGE_INTERVAL);
+            playback->change_speed(PLAYBACK_SPEED_CHANGE_INTERVAL);
         } else if (ch == 'm' || ch == 'M') {
-            playback->speed = fmax(0.25, playback->speed - PLAYBACK_SPEED_CHANGE_INTERVAL);
+            playback->change_speed(-PLAYBACK_SPEED_CHANGE_INTERVAL);
         } else if (ch == 'x' || ch == 'X' || ch == KEY_ESCAPE) {
-            player->inUse = player->inUse == 1 ? 0 : 1;
+            player->inUse = !player->inUse;
         } else if (ch == 'f' || ch == 'F') {
-            gui_data.video.fullscreen = gui_data.video.fullscreen == 1 ? 0 : 1;
+            gui_data.video.fullscreen = !gui_data.video.fullscreen;
         } else if (ch == KEY_RESIZE) {
             endwin();
             refresh();
@@ -121,7 +121,7 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
             int digit = digit_to_int(ch);
             if (gui_data.mode == DISPLAY_MODE_VIDEO) {
                 double time = digit * player->timeline->mediaData->duration / 10;
-                jump_time_requested = time - get_playback_current_time(player->timeline->playback);
+                jump_time_requested = time - player->timeline->playback->get_time();
             } else if (gui_data.mode == DISPLAY_MODE_AUDIO) {
                 if (digit == 0) {
                     gui_data.audio.show_all_channels = 1;
@@ -139,10 +139,10 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
                     if (mouse_event.y >= LINES - 3) {
                         if (player->timeline->mediaData->duration > 0 && COLS > 0) {
                             double time = ((double)mouse_event.x / COLS) * player->timeline->mediaData->duration;
-                            jump_time_requested = time - get_playback_current_time(player->timeline->playback);
+                            jump_time_requested = time - player->timeline->playback->get_time();
                         }
                     } else {
-                        playback->playing = !playback->playing;
+                        playback->toggle();
                     }
                 }
             }
@@ -150,8 +150,8 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
         }
 
         render_screen(player, gui_data);
-        if (get_playback_current_time(player->timeline->playback) > player->timeline->mediaData->duration) {
-            player->inUse = 0;
+        if (player->timeline->playback->get_time() > player->timeline->mediaData->duration) {
+            player->inUse = false;
         }
 
         pthread_mutex_unlock(alterMutex);
@@ -377,7 +377,7 @@ AsciiImage* stitch_video(MediaPlayer* player, int width, int height) {
         }
     }
 
-    if (!player->timeline->playback->playing) {
+    if (!player->timeline->playback->is_playing()) {
         VideoSymbol* pauseSymbol = get_video_symbol(PAUSE_ICON);
         AsciiImage* symbolImage = get_ascii_image_bounded(pauseSymbol->frameData[0], textImage->width, textImage->height);
         if (symbolImage == NULL) {
@@ -534,8 +534,8 @@ void render_playbar(MediaPlayer* player, GuiData gui_data) {
     const double width = COLS;
     werasebox(stdscr, LINES - height, 0, width, height);
 
-    const char* status = player->timeline->playback->playing ? "Playing" : "Paused";
-    const double time = get_playback_current_time(player->timeline->playback);
+    const char* status = player->timeline->playback->is_playing() ? "Playing" : "Paused";
+    const double time = player->timeline->playback->get_time();
     const double duration = player->timeline->mediaData->duration;
 
     const int bar_start = strlen(status);

@@ -139,17 +139,12 @@ MediaTimeline* media_timeline_alloc(const char* fileName) {
         return NULL;
     }
 
-    timeline->playback = playback_alloc();
-    if (timeline->playback == NULL) {
-        fprintf(stderr, "%s %s %s\n", "Could not allocate media timeline of", fileName, "because of error while allocating media playback");
-        free(timeline);
-        return NULL;
-    }
+    timeline->playback = new Playback();
 
     timeline->mediaData = media_data_alloc(fileName);
     if (timeline->mediaData == NULL) {
         fprintf(stderr, "%s %s %s\n", "Could not allocate media timeline of", fileName, "because of error while fetching media data");
-        playback_free(timeline->playback);
+        delete timeline->playback;
         free(timeline);
         return NULL;
     }
@@ -262,7 +257,7 @@ void media_display_settings_free(MediaDisplaySettings *settings) {
 }
 
 void media_timeline_free(MediaTimeline *timeline) {
-    playback_free(timeline->playback);
+    delete timeline->playback;
     media_data_free(timeline->mediaData);
     free(timeline);
     timeline = NULL;
@@ -284,21 +279,4 @@ void media_stream_free(MediaStream* mediaStream) {
     free(mediaStream);
     mediaStream = NULL;
 }
-
-Playback* playback_alloc() {
-    Playback* playback = (Playback*)malloc(sizeof(Playback));
-    playback->start_time = 0.0;
-    playback->paused_time = 0.0;
-    playback->skipped_time = 0.0;
-    playback->speed = 1.0;
-    playback->volume = 1.0;
-    playback->playing = 0;
-    return playback; 
-}
-
-void playback_free(Playback* playback) {
-    free(playback);
-    playback = NULL;
-}
-
 

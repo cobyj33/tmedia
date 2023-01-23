@@ -102,19 +102,19 @@ void AudioStream::read_into(std::size_t nb_samples, float* target) {
 
 void AudioStream::advance(std::size_t nb_samples) {
     this->m_playhead += nb_samples;
-}
+};
 
 int AudioStream::get_nb_channels() {
     return this->m_nb_channels;
-}
+};
 
 int AudioStream::get_sample_rate() {
     return this->m_sample_rate;
-}
+};
 
 bool AudioStream::is_initialized() {
     return this->m_initialized;
-}
+};
 
 
 // AudioStream* audio_stream_alloc() {
