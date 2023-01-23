@@ -37,7 +37,7 @@ const char* debug_audio_source = "audio";
 const char* debug_audio_type = "debug";
 
 AVFrame** get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, AVPacket* packet, int* result, int* nb_frames_decoded);
-AVFrame** find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, SelectionList* packet_buffer, int* result, int* nb_frames_decoded);
+AVFrame** find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, PlayheadList<AVPacket*>* packet_buffer, int* result, int* nb_frames_decoded);
 AVAudioFifo* av_audio_fifo_combine(AVAudioFifo* first, AVAudioFifo* second);
 
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
@@ -135,8 +135,9 @@ void* audio_playback_thread(void* args) {
         }
 
         AudioStream* audioStream = player->displayCache->audio_stream;
-        if (selection_list_try_move_index(audio_stream->packets, 1)) {
-            AVPacket* packet = (AVPacket*)selection_list_get(audio_stream->packets);
+        if (audio_stream->packets->try_step_forward()) {
+            
+            AVPacket* packet = audio_stream->packets->get();
             int result, nb_frames_decoded;
             AVFrame** audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, packet, &result, &nb_frames_decoded);
             if (audioFrames != NULL) {
@@ -207,38 +208,38 @@ AVFrame** get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampl
     return audioFrames;
 }
 
-AVFrame** find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, SelectionList* audioPackets, int* result, int* nb_frames_decoded) {
+AVFrame** find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, PlayheadList<AVPacket*>* audioPackets, int* result, int* nb_frames_decoded) {
     *result = 0;
-    AVPacket* currentPacket = (AVPacket*)selection_list_get(audioPackets);
-    while (currentPacket == NULL && selection_list_can_move_index(audioPackets, 1)) {
-        selection_list_try_move_index(audioPackets, 1);
-        currentPacket = (AVPacket*)selection_list_get(audioPackets);
+    AVPacket* currentPacket = audioPackets->get();
+    while (currentPacket == nullptr && audioPackets->can_step_forward()) {
+        audioPackets->step_forward();
+        currentPacket = audioPackets->get();
     }
-    if (currentPacket == NULL) {
-        return NULL;
+    if (currentPacket == nullptr) {
+        return nullptr;
     }
 
 
     AVFrame** audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, currentPacket, result, nb_frames_decoded);
-    while (*result == AVERROR(EAGAIN) && selection_list_can_move_index(audioPackets, 1)) {
-        selection_list_try_move_index(audioPackets, 1);
-        if (audioFrames != NULL) {
+    while (*result == AVERROR(EAGAIN) && audioPackets->can_step_forward()) {
+        audioPackets->step_forward();
+        if (audioFrames != nullptr) {
             free_frame_list(audioFrames, *nb_frames_decoded);
         }
 
-        currentPacket = (AVPacket*)selection_list_get(audioPackets);
-        while (currentPacket == NULL && selection_list_can_move_index(audioPackets, 1)) {
-            selection_list_try_move_index(audioPackets, 1);
-            currentPacket = (AVPacket*)selection_list_get(audioPackets);
+        currentPacket = audioPackets->get();
+        while (currentPacket == nullptr && audioPackets->can_step_forward()) {
+            audioPackets->step_forward();
+            currentPacket = audioPackets->get();
         }
-        if (currentPacket == NULL) {
-            return NULL;
+        if (currentPacket == nullptr) {
+            return nullptr;
         }
         audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, currentPacket, result, nb_frames_decoded);
     }
 
     if (*result < 0 || *nb_frames_decoded == 0) {
-        if (audioFrames != NULL) {
+        if (audioFrames != nullptr) {
             free_frame_list(audioFrames, *nb_frames_decoded);
         }
         return NULL;

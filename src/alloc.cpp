@@ -75,7 +75,7 @@ MediaDisplayCache* media_display_cache_alloc() {
     }
 
     cache->image = NULL;
-    cache->image_buffer = selection_list_alloc();
+    cache->image_buffer = new PlayheadList<PixelData*>();
     if (cache->image_buffer == NULL) {
        fprintf(stderr, "%s", "Could not allocate Media Cache Image Buffer"); 
         media_debug_info_free(cache->debug_info);
@@ -230,7 +230,7 @@ MediaStream* media_stream_alloc(StreamData* streamData) {
     }
 
     mediaStream->info = streamData;
-    mediaStream->packets = selection_list_alloc();
+    mediaStream->packets = new PlayheadList<AVPacket*>();
     if (mediaStream->packets == NULL) {
         free(mediaStream);
         return NULL;
@@ -259,7 +259,7 @@ void video_symbol_stack_free(VideoSymbolStack *stack) {
 
 void media_display_cache_free(MediaDisplayCache* cache) {
     free(cache->debug_info);
-    free(cache->image_buffer);
+    delete cache->image_buffer;
     video_symbol_stack_free(cache->symbol_stack);
     if (cache->image != NULL) {
         free(cache->image);
@@ -299,7 +299,7 @@ void media_data_free(MediaData* mediaData) {
 }
 
 void media_stream_free(MediaStream* mediaStream) {
-    selection_list_free(mediaStream->packets);
+    delete mediaStream->packets;
     stream_data_free(mediaStream->info);
     free(mediaStream);
     mediaStream = NULL;

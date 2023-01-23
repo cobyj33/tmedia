@@ -22,7 +22,7 @@ void* data_loading_thread(void* args) {
         shouldFetch = 1;
 
         for (int i = 0; i < media_data->nb_streams; i++) {
-            if (selection_list_length(media_data->media_streams[i]->packets) > PACKET_RESERVE_SIZE) {
+            if (media_data->media_streams[i]->packets->get_length() > PACKET_RESERVE_SIZE) {
                 shouldFetch = 0;
                 break;
             }
@@ -54,9 +54,9 @@ void fetch_next(MediaData* media_data, int requestedPacketCount) {
             if (media_data->media_streams[i]->info->stream->index == readingPacket->stream_index) {
                 AVPacket* savedPacket = av_packet_alloc();
                 av_packet_ref(savedPacket, readingPacket);
-                selection_list_push_back(media_data->media_streams[i]->packets, savedPacket);
+                media_data->media_streams[i]->packets->push_back(savedPacket);
                 /* erase(); */
-                /* printw("Packet List For %s: %d", av_get_media_type_string(media_data->media_streams[i]->info->mediaType), selection_list_length(media_data->media_streams[i]->packets)); */
+                /* printw("Packet List For %s: %d", av_get_media_type_string(media_data->media_streams[i]->info->mediaType), media_data->media_streams[i]->packets->get_length()); */
                 /* refresh(); */
                 break;
             }

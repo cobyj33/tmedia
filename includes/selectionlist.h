@@ -1,3 +1,14 @@
+/**
+ * @file selectionlist.h
+ * @author Jacoby Johnson (jacobyajohnson@gmail.com)
+ * @brief A Doubly-Linked List that mimicks a playhead moving up and down a "timeline"
+ * @version 0.1
+ * @date 2023-01-23
+ * 
+ * NOTES:
+ * > clear method does not destruct items in the PlayheadList as of now.
+ */
+
 #ifndef SELECTION_LIST_IMPLEMENTATION
 #define SELECTION_LIST_IMPLEMENTATION
 
@@ -48,8 +59,16 @@ class PlayheadList {
         int get_length();
         
         bool is_empty();
+        bool at_end();
+        bool at_start();
+        bool at_edge();
 
-
+        void step_forward();
+        void step_backward();
+        bool try_step_forward();
+        bool try_step_backward();
+        bool can_step_forward();
+        bool can_step_backward();
 };
 
 template<typename T>
@@ -97,11 +116,11 @@ template<typename T>
 void PlayheadList<T>::push_back(T item) {
     std::shared_ptr<PlayheadListNode<T>> new_last = std::make_shared<PlayheadListNode<T>>(item);
 
-    if (this->m_last != NULL) {
+    if (this->m_last != nullptr) {
         this->m_last->next = new_last;
         new_last->prev = this->m_last;
         this->m_last = new_last;
-    } else if (this->m_last == NULL) {
+    } else if (this->m_last == nullptr) {
         this->m_first = new_last;
         this->m_last = new_last;
         this->m_current = new_last;
@@ -164,7 +183,8 @@ bool PlayheadList<T>::can_move_index(int offset) {
 template<typename T>
 bool PlayheadList<T>::try_move_index(int offset) {
     if (this->can_move_index(offset)) {
-        return this->move_index(offset);
+        this->move_index(offset);
+        return true;
     }
     return false;
 };
@@ -184,6 +204,50 @@ bool PlayheadList<T>::is_empty() {
     return this->m_length == 0;
 };  
 
+template<typename T>
+bool PlayheadList<T>::at_start() {
+    return this->m_index == 0;
+};
+
+template<typename T>
+bool PlayheadList<T>::at_end() {
+    return this->m_index == this->m_length - 1;
+};
+
+template<typename T>
+bool PlayheadList<T>::at_edge() {
+    return this->at_end() || this->at_start();
+};
+
+template<typename T>
+void PlayheadList<T>::step_forward() {
+    this->move_index(1);
+};
+
+template<typename T>
+void PlayheadList<T>::step_backward() {
+    this->move_index(-1);
+};
+
+template<typename T>
+bool PlayheadList<T>::can_step_forward() {
+    return this->can_move_index(1);
+};
+
+template<typename T>
+bool PlayheadList<T>::can_step_backward() {
+    return this->can_move_index(-1);
+};
+
+template<typename T>
+bool PlayheadList<T>::try_step_forward() {
+    return this->try_move_index(1);
+};
+
+template<typename T>
+bool PlayheadList<T>::try_step_backward() {
+    return this->try_move_index(-1);
+};
 
 typedef struct SelectionList SelectionList;
 

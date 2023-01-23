@@ -18,7 +18,7 @@ extern "C" {
 
 typedef struct MediaStream {
     StreamData* info;
-    SelectionList* packets;
+    PlayheadList<AVPacket*>* packets;
     double timeBase;
     decoder_function decodePacket;
 } MediaStream;
@@ -85,7 +85,7 @@ typedef struct MediaDisplayCache {
     MediaDebugInfo* debug_info;
     PixelData* image;
     PixelData* last_rendered_image;
-    SelectionList* image_buffer;
+    PlayheadList<PixelData*>* image_buffer;
 
     AudioStream* audio_stream;
 
@@ -140,8 +140,8 @@ double audio_stream_set_time(AudioStream* stream, double time);
 MediaStream* get_media_stream(MediaData* media_data, enum AVMediaType media_type);
 int has_media_stream(MediaData* media_data, enum AVMediaType media_type);
 
-void move_packet_list_to_pts(SelectionList* packets, int64_t targetPTS);
-void move_frame_list_to_pts(SelectionList* frames, int64_t targetPTS);
+void move_packet_list_to_pts(PlayheadList<AVPacket*>* packets, int64_t targetPTS);
+void move_frame_list_to_pts(PlayheadList<AVFrame*>* frames, int64_t targetPTS);
 
 
 int get_media_player_dump_size(MediaPlayer* player);

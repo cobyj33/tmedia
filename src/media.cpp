@@ -70,45 +70,45 @@ double get_playback_current_time(Playback* playback) {
 }
 
 
-void move_packet_list_to_pts(SelectionList* packets, int64_t targetPTS) {
+void move_packet_list_to_pts(PlayheadList<AVPacket*>* packets, int64_t targetPTS) {
     int result = 1;
-    if (selection_list_length(packets) == 0) {
+    if (packets->is_empty()) {
         return;
     }
 
-    AVPacket* current = (AVPacket*)selection_list_get(packets);
+    AVPacket* current = packets->get();
     int64_t lastPTS = current->pts;
 
     while (1) {
-        current = (AVPacket*)selection_list_get(packets);
-
+        current = packets->get();
         int64_t currentIndexPTS = current->pts;
-        if (selection_list_index(packets) == 0 || selection_list_index(packets) == selection_list_length(packets) - 1) {
+
+        if (packets->at_edge()) {
             break;
         } 
 
         if (currentIndexPTS > targetPTS) {
-            result = selection_list_try_move_index(packets, -1);
-            current = (AVPacket*)selection_list_get(packets);
+            packets->step_backward();
+            current = packets->get();
             if (current->pts < targetPTS) {
                 break;
             }
         } else if (currentIndexPTS < targetPTS) {
-            result = selection_list_try_move_index(packets, 1);
-            current = (AVPacket*)selection_list_get(packets);
+            packets->step_forward();
+            current = packets->get();
             if (current->pts > targetPTS) {
-                selection_list_try_move_index(packets, -1);
+                packets->step_backward();
                 break;
             }
         } else if (currentIndexPTS == targetPTS) {
             break;
         }
 
-        if (!result) {
-            break;
-        }
+        // if (!result) {
+        //     break;
+        // }
 
-        current = (AVPacket*)selection_list_get(packets);
+        current = packets->get();
         currentIndexPTS = current->pts;
 
         if (i64min(currentIndexPTS, lastPTS) <= targetPTS && i64max(currentIndexPTS, lastPTS) >= targetPTS) {
@@ -116,48 +116,48 @@ void move_packet_list_to_pts(SelectionList* packets, int64_t targetPTS) {
         }
 
         lastPTS = currentIndexPTS;
-    } 
+    }
 }
 
-void move_frame_list_to_pts(SelectionList* frames, int64_t targetPTS) {
+void move_frame_list_to_pts(PlayheadList<AVFrame*>* frames, int64_t targetPTS) {
     int result = 1;
-    if (selection_list_length(frames) == 0) {
+    if (frames->is_empty()) {
         return;
     }
 
-    AVFrame* current = (AVFrame*)selection_list_get(frames);
+    AVFrame* current = frames->get();
     int64_t lastPTS = current->pts;
 
     while (1) {
-        current = (AVFrame*)selection_list_get(frames);
-
+        current = frames->get();
         int64_t currentIndexPTS = current->pts;
-        if (selection_list_index(frames) == 0 || selection_list_index(frames) == selection_list_length(frames) - 1) {
+
+        if (frames->at_edge()) {
             break;
         } 
 
         if (currentIndexPTS > targetPTS) {
-            result = selection_list_try_move_index(frames, -1);
-            current = (AVFrame*)selection_list_get(frames);
+            frames->step_backward();
+            current = frames->get();
             if (current->pts < targetPTS) {
                 break;
             }
         } else if (currentIndexPTS < targetPTS) {
-            result = selection_list_try_move_index(frames, 1);
-            current = (AVFrame*)selection_list_get(frames);
+            frames->step_forward();
+            current = frames->get();
             if (current->pts > targetPTS) {
-                selection_list_try_move_index(frames, -1);
+                frames->step_backward();
                 break;
             }
         } else if (currentIndexPTS == targetPTS) {
             break;
         }
 
-        if (!result) {
-            break;
-        }
+        // if (!result) {
+        //     break;
+        // }
 
-        current = (AVFrame*)selection_list_get(frames);
+        current = frames->get();
         currentIndexPTS = current->pts;
 
         if (i64min(currentIndexPTS, lastPTS) <= targetPTS && i64max(currentIndexPTS, lastPTS) >= targetPTS) {
@@ -165,7 +165,7 @@ void move_frame_list_to_pts(SelectionList* frames, int64_t targetPTS) {
         }
 
         lastPTS = currentIndexPTS;
-    } 
+    }
 }
 
 double audio_stream_time(AudioStream* stream) {
