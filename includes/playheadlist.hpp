@@ -9,8 +9,8 @@
  * > clear method does not destruct items in the PlayheadList as of now.
  */
 
-#ifndef SELECTION_LIST_IMPLEMENTATION
-#define SELECTION_LIST_IMPLEMENTATION
+#ifndef PLAYHEAD_LIST_IMPLEMENTATION
+#define PLAYHEAD_LIST_IMPLEMENTATION
 
 #include <cstdlib>
 #include <memory>

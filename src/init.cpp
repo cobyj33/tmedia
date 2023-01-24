@@ -26,7 +26,7 @@ int start_media_player(MediaPlayer* player) {
     }
 
     player->inUse = true;
-    player->timeline->playback->start();
+    player->timeline->playback->start(clock_sec());
     fetch_next(player->timeline->mediaData, 5000);
 
     pthread_mutex_t alterMutex;
@@ -34,27 +34,27 @@ int start_media_player(MediaPlayer* player) {
 
     MediaThreadData data = { player, &alterMutex };
     pthread_t video_thread, audio_thread, buffer_thread;
-    int success = 1;
+    bool success = true;
     int error;
 
     error = pthread_create(&video_thread, NULL, video_playback_thread, (void*)&data);
     if (error) {
         fprintf(stderr, "%s\n" ,"Failed to create video thread");
-        success = 0;
+        success = false;
         player->inUse = false;
     }
 
     error = pthread_create(&audio_thread, NULL, audio_playback_thread, (void*)&data);
     if (error) {
         fprintf(stderr, "%s\n" ,"Failed to create audio thread");
-        success = 0;
+        success = false;
         player->inUse = false;
     }
 
     error = pthread_create(&buffer_thread, NULL, data_loading_thread, (void*)&data);
     if (error) {
         fprintf(stderr, "%s\n" ,"Failed to create loading thread");
-        success = 0;
+        success = false;
         player->inUse = false;
     }
     render_loop(player, &alterMutex);
@@ -62,26 +62,26 @@ int start_media_player(MediaPlayer* player) {
     error = pthread_join(video_thread, NULL);
     if (error) {
         fprintf(stderr, "%s\n", "Failed to join video thread");
-        success = 0;
+        success = false;
         player->inUse = false;
     }
 
     error = pthread_join(audio_thread, NULL);
     if (error) {
         fprintf(stderr, "%s\n", "Failed to join audio thread");
-        success = 0;
+        success = false;
         player->inUse = false;
     }
 
     error = pthread_join(buffer_thread, NULL);
     if (error) {
         fprintf(stderr, "%s\n", "Failed to join loading thread");
-        success = 0;
+        success = false;
         player->inUse = false;
     }
 
-    player->timeline->playback->stop();
-    player->inUse = 0;
+    player->timeline->playback->stop(clock_sec());
+    player->inUse = false;
     pthread_mutex_destroy(&alterMutex);
     return success;
 }

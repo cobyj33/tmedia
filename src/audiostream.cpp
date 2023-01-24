@@ -1,5 +1,7 @@
-#include <media.h>
 #include <cstdint>
+#include <stdexcept>
+#include <audiostream.h>
+#include <wmath.h>
 #include <audio.h>
 
 AudioStream::AudioStream() {
@@ -13,6 +15,10 @@ AudioStream::AudioStream() {
 };
 
 std::size_t AudioStream::get_nb_samples() {
+    if (this->m_nb_channels == 0) {
+        return 0;
+    }
+    
     return (std::size_t)this->m_stream.size() / this->m_nb_channels;
 };
 
@@ -45,7 +51,11 @@ void AudioStream::clear() { // Note: No longer takes in a clear capacity
 };
 
 double AudioStream::elapsed_time() {
-    return (double)this->m_playhead / this->m_sample_rate;
+    if (this->m_sample_rate == 0) {
+        return 0.0;
+    }
+
+    return (double)this->m_playhead / (double)this->m_sample_rate;
 };
 
 double AudioStream::get_time() {

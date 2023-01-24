@@ -1,12 +1,14 @@
 #ifndef ASCII_VIDEO_MEDIA
 #define ASCII_VIDEO_MEDIA
 
+#include "audiostream.h"
 #include "decode.h"
 #include "boiler.h"
 #include "icons.h"
 #include "debug.h"
 #include "playheadlist.hpp"
 #include "color.h"
+
 
 #include <cstdint>
 #include <vector>
@@ -28,7 +30,7 @@ typedef struct MediaStream {
 
 class Playback {
     private:
-        int m_playing;
+        bool m_playing;
         double m_speed;
         double m_volume;
         double m_start_time;
@@ -46,24 +48,35 @@ class Playback {
 
     public:
         Playback();
-        void toggle();
-        void start();
-        void stop();
-        void resume();
-        void skip(double amount);
+
+
+        /**
+         * @brief Get the current time (in seconds) of the playback. This time takes into account total time paused, skipped, and played
+         * @return double
+         */
+        double get_time(double current_system_time);
+
+
+        /**
+         * @brief Toggle in between resume and stop
+         */
+        void toggle(double current_system_time);
+        void start(double current_system_time);
+        void stop(double current_system_time);
+        void resume(double current_system_time);
+        void skip(double seconds_to_skip);
 
         bool is_playing();
-        void set_playing(bool playing);
         double get_speed();
         double get_volume();
 
-        void change_speed(double offset);
-        void set_speed(double amount);
 
-        void change_volume(double amount);
+        void set_playing(bool playing);
+        void set_speed(double amount);
         void set_volume(double amount);
 
-        double get_time();
+        void change_speed(double offset);
+        void change_volume(double amount);
 };
 
 
@@ -113,40 +126,6 @@ typedef struct MediaDisplaySettings {
 //     int sample_rate;
 // } AudioStream;
 
-class AudioStream {
-    private:
-        std::vector<uint8_t> m_stream;
-        float m_start_time;
-        // size_t m_nb_samples;
-        std::size_t m_playhead;
-        // size_t m_sample_capacity;
-        int m_nb_channels;
-        int m_sample_rate;
-        bool m_initialized;
-
-    public:
-        AudioStream();
-        std::size_t get_nb_samples();
-        void clear_and_restart_at(double time);
-        void clear();
-        void init(int nb_channels, int sample_rate);
-        double get_time();
-        double elapsed_time();
-        std::size_t set_time(double time); // returns new playhead position
-        double get_end_time();
-        void write(uint8_t sample_part);
-        void write(float sample_part);
-        void write(float* samples, int nb_samples);
-        bool is_time_in_bounds(double time);
-        bool can_read(std::size_t nb_samples);
-        void read_into(std::size_t nb_samples, float* target);
-        void peek_into(std::size_t nb_samples, float* target);
-        void advance(std::size_t nb_samples);
-
-        int get_nb_channels();
-        int get_sample_rate();
-        bool is_initialized();
-};
 
 typedef struct Sample {
     float* data;

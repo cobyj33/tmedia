@@ -24,9 +24,8 @@ add_subdirectory(lib/Catch2)
 
 include_directories( ${CURSES_INCLUDE_DIR} ./includes )
 
+set(PROJECT_SOURCE_FILES_NO_MAIN
 
-
-add_executable(ascii_video
 ./src/ascii.cpp
 ./src/alloc.cpp
 ./src/audiostream.cpp
@@ -35,7 +34,6 @@ add_executable(ascii_video
 ./src/media.cpp
 ./src/boiler.cpp
 ./src/init.cpp
-./src/main.cpp
 ./src/info.cpp
 ./src/terminal.cpp
 ./src/threads.cpp
@@ -55,8 +53,45 @@ add_executable(ascii_video
 ./src/playback.cpp
 )
 
+
+add_executable(ascii_video
+./src/main.cpp
+
+./src/ascii.cpp
+./src/alloc.cpp
+./src/audiostream.cpp
+./src/audio.cpp
+./src/audio_thread.cpp
+./src/decode.cpp
+./src/image.cpp
+./src/media.cpp
+./src/boiler.cpp
+./src/init.cpp
+./src/info.cpp
+./src/terminal.cpp
+./src/threads.cpp
+./src/video.cpp
+./src/kmeans.cpp
+./src/wmath.cpp
+./src/hardcode.cpp
+./src/miniaudio.c
+./src/renderer.cpp
+./src/dump.cpp
+./src/loader.cpp
+./src/wtime.cpp
+./src/debug.cpp
+./src/color.cpp
+./src/icons.cpp
+./src/playback.cpp
+)
+
 target_link_libraries( ascii_video ${CURSES_LIBRARIES} PkgConfig::LIBAV)
 
 add_executable(tests 
-./src/tests/test_playheadlist.cpp)
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+./src/tests/test_playheadlist.cpp
+./src/audio.cpp
+./src/audiostream.cpp
+./src/wmath.cpp
+./src/tests/test_audiostream.cpp
+)
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain PkgConfig::LIBAV)

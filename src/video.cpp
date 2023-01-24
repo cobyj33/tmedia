@@ -77,7 +77,7 @@ void* video_playback_thread(void* args) {
         /* int64_t targetVideoPTS = get_playback_current_time(playback) * videoTimeBase; */
         /* move_frame_list_to_pts(cache->image_buffer, targetVideoPTS); */
 
-        if (playback->get_time() >= media_data->duration) { // video finished
+        if (playback->get_time(clock_sec()) >= media_data->duration) { // video finished
             player->inUse = false;
             pthread_mutex_unlock(alterMutex);
             break;
@@ -161,7 +161,7 @@ void* video_playback_thread(void* args) {
         double frame_speed_skip_time_sec = ( (readingFrame->duration * videoTimeBase) - (readingFrame->duration * videoTimeBase) / playback->get_speed() );
         playback->skip(frame_speed_skip_time_sec);
 
-        const double current_time = playback->get_time();
+        const double current_time = playback->get_time(clock_sec());
         double waitDuration = nextFrameTimeSinceStartInSeconds - current_time + (double)(readingFrame->repeat_pict) / (2 * frameRate);
         waitDuration -= frame_speed_skip_time_sec;
         double continueTime = clock_sec() + waitDuration;
@@ -191,7 +191,7 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
     targetTime = fmax(targetTime, 0.0);
     Playback* playback = timeline->playback;
     MediaData* media_data = timeline->mediaData;
-    const double originalTime = timeline->playback->get_time();
+    const double originalTime = timeline->playback->get_time(clock_sec());
     MediaStream* video_stream = get_media_stream(media_data, AVMEDIA_TYPE_VIDEO);
     if (video_stream == NULL) {
         return;

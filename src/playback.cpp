@@ -15,32 +15,32 @@ Playback::Playback() {
     this->m_playing = false;
 };
 
-void Playback::toggle() {
+void Playback::toggle(double current_system_time) {
     if (this->m_playing) {
-        this->stop();
+        this->stop(current_system_time);
     } else {
-        this->resume();
+        this->resume(current_system_time);
     }
 };
 
-void Playback::skip(double amount) {
-    this->m_skipped_time += amount;
+void Playback::skip(double seconds_to_skip) {
+    this->m_skipped_time += seconds_to_skip;
 };
 
-void Playback::start() {
+void Playback::start(double current_system_time) {
     this->m_playing = true;
-    this->m_start_time = clock_sec();
+    this->m_start_time = current_system_time;
 };
 
-void Playback::resume() {
+void Playback::resume(double current_system_time) {
     this->m_playing = true;
-    this->m_paused_time += clock_sec() - this->m_last_pause_time;
+    this->m_paused_time += current_system_time - this->m_last_pause_time;
 };
 
 
-void Playback::stop() {
+void Playback::stop(double current_system_time) {
     this->m_playing = false;
-    this->m_last_pause_time = clock_sec();
+    this->m_last_pause_time = current_system_time;
 };
 
 bool Playback::is_playing() {
@@ -75,10 +75,8 @@ void Playback::change_volume(double offset) {
     this->set_volume(this->m_volume + offset);
 };
 
-
-
-double Playback::get_time() {
-    return clock_sec() - this->m_start_time - this->m_paused_time + this->m_skipped_time;
+double Playback::get_time(double current_system_time) {
+    return current_system_time - this->m_start_time - this->m_paused_time + this->m_skipped_time;
 };
 
 // double get_playback_current_time(Playback* playback) {
