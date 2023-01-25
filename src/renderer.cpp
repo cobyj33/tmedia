@@ -261,7 +261,7 @@ void print_wave(int x, int y, int width, int height, float* wave, int nb_samples
             continue;
         }
 
-        for (int top = midline - (int)((double)height / 2 * wave[i]); top != midline; top += fsignum(wave[i])) {
+        for (int top = midline - (int)((double)height / 2 * wave[i]); top != midline; top += signum(wave[i])) {
             mvaddch(top, x + i / nb_channels, '*');
             if (top < 0 || top > LINES) { break; }
         }

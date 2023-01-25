@@ -1,13 +1,12 @@
 #include <threads.h>
 #include <unitconvert.h>
+#include <thread>
 
-extern "C" {
-#include <pthread.h>
-}
 
 void sleep_for(long nanoseconds) {
-    struct timespec sleep_time = { nanoseconds / (long)SECONDS_TO_NANOSECONDS, nanoseconds % SECONDS_TO_NANOSECONDS  };
-    nanosleep(&sleep_time, NULL);
+    // struct timespec sleep_time = { nanoseconds / (long)SECONDS_TO_NANOSECONDS, nanoseconds % SECONDS_TO_NANOSECONDS  };
+    std::this_thread::sleep_for(std::chrono::nanoseconds(nanoseconds));
+    // nanosleep(&sleep_time, NULL);
 }
 
 void sleep_for_ms(long ms) {

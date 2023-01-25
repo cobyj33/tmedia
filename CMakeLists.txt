@@ -68,6 +68,8 @@ add_executable(tests
 ./src/tests/test_audiostream.cpp
 ./src/playback.cpp
 ./src/tests/test_playback.cpp
+./src/wmath.cpp
+./src/tests/test_wmath.cpp
 )
 
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain PkgConfig::LIBAV)

@@ -1,5 +1,6 @@
 #include <playback.h>
 #include <wtime.h>
+#include <wmath.h>
 
 #include <algorithm>
 
@@ -62,11 +63,11 @@ double Playback::get_volume() {
 };
 
 void Playback::set_speed(double amount) {
-    this->m_speed = std::max(Playback::MIN_SPEED, std::min(Playback::MAX_SPEED, amount));
-};
+    this->m_speed = clamp(amount, Playback::MIN_SPEED, Playback::MAX_SPEED);
+}
 
 void Playback::set_volume(double amount) {
-    this->m_volume = std::max(Playback::MIN_VOLUME, std::min(Playback::MAX_VOLUME, amount));
+    this->m_volume = clamp(amount, Playback::MIN_VOLUME, Playback::MAX_VOLUME);
 };
 
 void Playback::change_speed(double offset) {

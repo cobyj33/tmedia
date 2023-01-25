@@ -207,8 +207,8 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
         if (packet_get == NULL) { return; }
         double last_time = packet_get->pts * videoTimeBase;
         if (packet_get != NULL) {
-            while (videoPackets->can_move_index(fsignum(testTime - originalTime))) {
-                videoPackets->move_index(fsignum(testTime - originalTime));
+            while (videoPackets->can_move_index(signum(testTime - originalTime))) {
+                videoPackets->move_index(signum(testTime - originalTime));
                 packet_get = videoPackets->get();
                 if (packet_get == NULL) {
                     break;
