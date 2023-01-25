@@ -61,9 +61,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     pthread_mutex_unlock(data->mutex);
 }
 
-void* audio_playback_thread(MediaThreadData* thread_data) {
-    MediaPlayer* player = thread_data->player;
-    pthread_mutex_t* alterMutex = thread_data->alterMutex;
+void* audio_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
     MediaDebugInfo* debug_info = player->displayCache->debug_info;
     int result;
     MediaStream* audio_media_stream = get_media_stream(player->timeline->mediaData, AVMEDIA_TYPE_AUDIO);

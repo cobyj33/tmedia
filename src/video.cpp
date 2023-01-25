@@ -41,9 +41,7 @@ const char* debug_video_type = "debug";
 //     }
 // }
 
-void* video_playback_thread(MediaThreadData* thread_data) {
-    MediaPlayer* player = thread_data->player;
-    pthread_mutex_t* alterMutex = thread_data->alterMutex;
+void* video_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
 
     AVFrame* readingFrame = av_frame_alloc();
     Playback* playback = player->timeline->playback;

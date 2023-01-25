@@ -31,11 +31,9 @@ void start_media_player(MediaPlayer* player) {
     pthread_mutex_t alterMutex;
     pthread_mutex_init(&alterMutex, NULL);
 
-    MediaThreadData data = { player, &alterMutex };
-
-    std::thread video_thread = std::thread(video_playback_thread, &data);
-    std::thread audio_thread = std::thread(audio_playback_thread, &data);
-    std::thread data_thread = std::thread(data_loading_thread, &data);
+    std::thread video_thread = std::thread(video_playback_thread, player, &alterMutex);
+    std::thread audio_thread = std::thread(audio_playback_thread, player, &alterMutex);
+    std::thread data_thread = std::thread(data_loading_thread, player, &alterMutex);
     render_loop(player, &alterMutex);
 
     video_thread.join();

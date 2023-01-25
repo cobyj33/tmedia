@@ -9,9 +9,7 @@ extern "C" {
 
 
 
-void* data_loading_thread(MediaThreadData* thread_data) {
-    MediaPlayer* player = thread_data->player;
-    pthread_mutex_t* alterMutex = thread_data->alterMutex;
+void* data_loading_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
 
     const int PACKET_RESERVE_SIZE = 100000;
 
