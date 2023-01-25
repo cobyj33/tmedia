@@ -107,8 +107,8 @@ typedef struct MediaPlayer {
 MediaPlayer* media_player_alloc(const char* fileName);
 void media_player_free(MediaPlayer* player);
 
-int start_media_player(MediaPlayer* player);
-int start_media_player_from_filename(const char* fileName);
+void start_media_player(MediaPlayer* player);
+void start_media_player_from_filename(const char* fileName);
 
 MediaDisplayCache* media_display_cache_alloc();
 void media_display_cache_free(MediaDisplayCache* cache);

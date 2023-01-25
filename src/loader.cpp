@@ -9,8 +9,7 @@ extern "C" {
 
 
 
-void* data_loading_thread(void* args) {
-    MediaThreadData* thread_data = (MediaThreadData*)args;
+void* data_loading_thread(MediaThreadData* thread_data) {
     MediaPlayer* player = thread_data->player;
     pthread_mutex_t* alterMutex = thread_data->alterMutex;
 

@@ -15,6 +15,10 @@ namespace ascii {
     class not_found_error : public std::runtime_error {
         using std::runtime_error::runtime_error;
     };
+
+    class forbidden_action_error : public std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
 }
 
 #endif

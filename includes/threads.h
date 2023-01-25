@@ -17,9 +17,9 @@ typedef struct MediaThreadData {
 } MediaThreadData;
 
 /* void* video_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex); */
-void* video_playback_thread(void* args);
-void* audio_playback_thread(void* args);
-void* data_loading_thread(void* args);
+void* video_playback_thread(MediaThreadData* thread_data);
+void* audio_playback_thread(MediaThreadData* thread_data);
+void* data_loading_thread(MediaThreadData* thread_data);
 /* void input_thread(void* args); */
 void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex);
 #endif
