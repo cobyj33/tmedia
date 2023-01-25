@@ -13,6 +13,7 @@
 #include <ascii.h>
 #include <wmath.h>
 #include <wtime.h>
+#include <videoconverter.h>
 
 extern "C" {
 #include <curses.h>
@@ -31,12 +32,12 @@ const int MAX_FRAME_HEIGHT = 16 * 9;
 const char* debug_video_source = "video";
 const char* debug_video_type = "debug";
 
-void load_image_buffer(MediaPlayer* player, VideoConverter* converter, int amount) {
-    const MediaDisplayCache* cache = player->displayCache;
-    for (int i = 0; i < amount; i++) {
+// void load_image_buffer(MediaPlayer* player, VideoConverter* converter, int amount) {
+//     const MediaDisplayCache* cache = player->displayCache;
+//     for (int i = 0; i < amount; i++) {
 
-    }
-}
+//     }
+// }
 
 void* video_playback_thread(void* args) {
     MediaThreadData* thread_data = (MediaThreadData*)args;
@@ -62,12 +63,7 @@ void* video_playback_thread(void* args) {
     get_output_size(videoCodecContext->width, videoCodecContext->height, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, &output_frame_width, &output_frame_height);
 
     const int use_colors = player->displaySettings->use_colors;
-    VideoConverter* videoConverter = get_video_converter(output_frame_width, output_frame_height, use_colors == 1 ? AV_PIX_FMT_RGB24 : AV_PIX_FMT_GRAY8, videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt);
-
-    if (videoConverter == NULL) {
-        fprintf(stderr, "%s\n", "COULD NOT ALLOCATE VIDEO CONVERTER");
-        return NULL;
-    }
+    VideoConverter* videoConverter = new VideoConverter(output_frame_width, output_frame_height, use_colors == 1 ? AV_PIX_FMT_RGB24 : AV_PIX_FMT_GRAY8, videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt);
 
     PlayheadList<AVPacket*>* videoPackets = video_stream->packets;
     while (player->inUse && (!media_data->allPacketsRead || (media_data->allPacketsRead && videoPackets->can_step_forward() ) )) {
@@ -130,7 +126,7 @@ void* video_playback_thread(void* args) {
             if ((nb_decoded > 0 && decodeResult >= 0) || currentPacket == NULL) {
                 av_frame_free(&readingFrame);
                 add_debug_message(debug_info, debug_video_source, debug_video_type, "Time of decoded video packet","Decoded List Time: %.3f", decodedList[0]->pts * videoTimeBase );
-                readingFrame = convert_video_frame(videoConverter, decodedList[0]);
+                readingFrame = videoConverter->convert_video_frame(decodedList[0]);
                 free_frame_list(decodedList, nb_decoded);
             } else {
                 add_debug_message(debug_info, debug_video_source, debug_video_type, "Null video packet", "ERROR: NULL POINTED VIDEO PACKET: %d", decodeResult);

@@ -12,6 +12,7 @@
 #include <renderer.h>
 #include <decode.h>
 #include <boiler.h>
+#include <videoconverter.h>
 
 extern "C" {
 #include <ncurses.h>
@@ -72,7 +73,7 @@ PixelData* get_pixel_data_from_image(const char* fileName, PixelDataFormat forma
     }
 
     AVCodecContext* codecContext = imageStream->info->codecContext;
-    VideoConverter* imageConverter = get_video_converter(
+    VideoConverter* imageConverter = new VideoConverter(
             codecContext->width, codecContext->height, PixelDataFormat_to_AVPixelFormat(format),
             codecContext->width, codecContext->height, codecContext->pix_fmt
             );
@@ -99,12 +100,12 @@ PixelData* get_pixel_data_from_image(const char* fileName, PixelDataFormat forma
             fprintf(stderr, "%s %s\n", "ERROR WHILE READING PACKET DATA FROM IMAGE ", fileName);
             av_packet_free((AVPacket**)&packet);
             av_frame_free((AVFrame**)&finalFrame);
-            free_video_converter(imageConverter);
+            delete imageConverter;
             media_data_free(mediaData);
             free_frame_list(originalFrame, nb_out);
             return NULL;
         } else {
-            finalFrame = convert_video_frame(imageConverter, originalFrame[0]);
+            finalFrame = imageConverter->convert_video_frame(originalFrame[0]);
             free_frame_list(originalFrame, nb_out);
             break;
         }
@@ -112,7 +113,7 @@ PixelData* get_pixel_data_from_image(const char* fileName, PixelDataFormat forma
 
     if (finalFrame == NULL) {
         av_packet_free((AVPacket**)&packet);
-        free_video_converter(imageConverter);
+        delete imageConverter;
         media_data_free(mediaData);
         return NULL;
     }
@@ -120,7 +121,7 @@ PixelData* get_pixel_data_from_image(const char* fileName, PixelDataFormat forma
     PixelData* data = pixel_data_alloc_from_frame(finalFrame);
     av_packet_free((AVPacket**)&packet);
     av_frame_free((AVFrame**)&finalFrame);
-    free_video_converter(imageConverter);
+    delete imageConverter;
     media_data_free(mediaData);
     return data;
 }

@@ -26,6 +26,8 @@ include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio/extras/min
 
 set(PROJECT_SOURCE_FILES_NO_MAIN
 ./lib/miniaudio/extras/miniaudio_split/miniaudio.c
+./src/videoconverter.cpp
+./src/audioresampler.cpp
 ./src/except.cpp
 ./src/ascii.cpp
 ./src/alloc.cpp
@@ -57,6 +59,7 @@ set(PROJECT_SOURCE_FILES_NO_MAIN
 add_executable(ascii_video
 ./lib/miniaudio/extras/miniaudio_split/miniaudio.c
 ./src/audioresampler.cpp
+./src/videoconverter.cpp
 ./src/except.cpp
 ./src/main.cpp
 ./src/ascii.cpp

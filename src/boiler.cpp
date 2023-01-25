@@ -99,42 +99,6 @@ void stream_data_free (StreamData *streamData) {
     free(streamData);
 }
 
-VideoConverter* get_video_converter(int dst_width, int dst_height, enum AVPixelFormat dst_pix_fmt, int src_width, int src_height, enum AVPixelFormat src_pix_fmt) {
-    VideoConverter* converter = (VideoConverter*)malloc(sizeof(VideoConverter));
-    converter->context = sws_getContext(
-            src_width, src_height, src_pix_fmt, 
-            dst_width, dst_height, dst_pix_fmt, 
-            SWS_FAST_BILINEAR, NULL, NULL, NULL);
-    if (converter->context == NULL) {
-        return NULL;
-    }
-    
-    converter->dst_width = dst_width;
-    converter->dst_height = dst_height;
-    converter->dst_pix_fmt = dst_pix_fmt;
-    converter->src_width = src_width;
-    converter->src_height = src_height;
-    converter->src_pix_fmt = src_pix_fmt;
-    return converter;
-}
 
 
-void free_video_converter(VideoConverter *converter) {
-    sws_freeContext(converter->context);
-    free(converter);
-}
 
-
-AVFrame* convert_video_frame(VideoConverter* converter, AVFrame* original) {
-    AVFrame* resizedVideoFrame = av_frame_alloc();
-    resizedVideoFrame->format = converter->dst_pix_fmt;
-    resizedVideoFrame->width = converter->dst_width;
-    resizedVideoFrame->height = converter->dst_height;
-    resizedVideoFrame->pts = original->pts;
-    resizedVideoFrame->repeat_pict = original->repeat_pict;
-    resizedVideoFrame->duration = original->duration;
-    av_frame_get_buffer(resizedVideoFrame, 1); //watch this alignment
-    sws_scale(converter->context, (uint8_t const * const *)original->data, original->linesize, 0, original->height, resizedVideoFrame->data, resizedVideoFrame->linesize);
-
-    return resizedVideoFrame;
-}
