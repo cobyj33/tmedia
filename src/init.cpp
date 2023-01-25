@@ -1,4 +1,3 @@
-#include "loader.h"
 #include <cstdio>
 #include <threads.h>
 #include <media.h>

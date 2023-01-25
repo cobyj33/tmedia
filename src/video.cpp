@@ -11,7 +11,6 @@
 #include <video.h>
 #include <media.h>
 #include <ascii.h>
-#include <loader.h>
 #include <wmath.h>
 #include <wtime.h>
 

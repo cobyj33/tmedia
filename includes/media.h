@@ -163,4 +163,6 @@ void dump_stream_info(StreamData* stream_data, char* buffer);
 
 int get_playback_dump_size(Playback* playback);
 void dump_playback(Playback* playback, char* buffer);
+
+void fetch_next(MediaData* media_data, int requestedPacketCount);
 #endif
