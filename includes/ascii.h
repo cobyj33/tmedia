@@ -1,7 +1,6 @@
 #ifndef ASCII_VIDEO_ASCII
 #define ASCII_VIDEO_ASCII
 #include <cstdint>
-#include "macros.h"
 #include "image.h"
 
 extern "C" {

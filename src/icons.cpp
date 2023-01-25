@@ -1,5 +1,4 @@
 
-#include "macros.h"
 #include "pixeldata.h"
 #include "renderer.h"
 #include "threads.h"

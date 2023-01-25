@@ -9,7 +9,6 @@
 #include <cstdio>
 #include <ctime>
 #include <video.h>
-#include <macros.h>
 #include <media.h>
 #include <ascii.h>
 #include <loader.h>

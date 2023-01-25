@@ -1,6 +1,5 @@
 #include <loader.h>
 #include <media.h>
-#include <macros.h>
 #include <threads.h>
 
 extern "C" {
@@ -9,10 +8,14 @@ extern "C" {
 #include <pthread.h>
 }
 
+
+
 void* data_loading_thread(void* args) {
     MediaThreadData* thread_data = (MediaThreadData*)args;
     MediaPlayer* player = thread_data->player;
     pthread_mutex_t* alterMutex = thread_data->alterMutex;
+
+    const int PACKET_RESERVE_SIZE = 100000;
 
     int shouldFetch = 1;
     MediaData* media_data = player->timeline->mediaData;

@@ -9,7 +9,6 @@
 #include <wmath.h>
 #include <cstdlib>
 #include <threads.h>
-#include <macros.h>
 
 extern "C" {
 #include <curses.h>
@@ -104,7 +103,7 @@ void* audio_playback_thread(void* args) {
 
     Playback* playback = player->timeline->playback;
 
-    sleep_for((long)(audio_media_stream->info->stream->start_time * audio_media_stream->timeBase * SECONDS_TO_NANOSECONDS));
+    sleep_for_sec(audio_media_stream->info->stream->start_time * audio_media_stream->timeBase);
     
     while (player->inUse) {
         pthread_mutex_lock(alterMutex);

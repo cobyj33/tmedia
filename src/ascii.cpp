@@ -2,7 +2,6 @@
 #include <image.h>
 #include <pixeldata.h>
 #include <ascii.h>
-#include <macros.h>
 #include <cstdint>
 #include <wmath.h>
 

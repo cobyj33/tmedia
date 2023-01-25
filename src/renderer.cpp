@@ -7,7 +7,6 @@
 #include "audio.h"
 #include "color.h"
 #include "debug.h"
-#include "macros.h"
 #include "pixeldata.h"
 #include "playheadlist.hpp"
 #include <image.h>
@@ -27,7 +26,7 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-#define KEY_ESCAPE 27
+const int KEY_ESCAPE = 27;
 
 void render_playbar(MediaPlayer* player, GuiData gui_data);
 
@@ -52,6 +51,13 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
     keypad(inputWindow, true);
     double jump_time_requested = 0;
     GuiData gui_data = { DISPLAY_MODE_VIDEO, { 0, 1 }, { player->displaySettings->use_colors, 1 }, 0 };
+
+    const double TIME_CHANGE_AMOUNT = 10.0;
+    const double VOLUME_CHANGE_AMOUNT = 0.05;
+    const double TIME_CHANGE_WAIT_MILLISECONDS = 25;
+    const double PLAYBACK_SPEED_CHANGE_WAIT_MILLISECONDS = 250;
+    const double PLAYBACK_SPEED_CHANGE_INTERVAL = 0.25;
+
 
     while (player->inUse) {
         pthread_mutex_lock(alterMutex);
