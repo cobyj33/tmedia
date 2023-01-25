@@ -9,6 +9,7 @@
 #include "playheadlist.hpp"
 #include "color.h"
 #include "playback.h"
+#include <streamdata.h>
 
 
 #include <cstdint>
@@ -37,6 +38,7 @@ typedef struct MediaStream {
 typedef struct MediaData {
     AVFormatContext* formatContext;
     MediaStream** media_streams;
+    StreamDataGroup* stream_datas;
     int nb_streams;
     int allPacketsRead;
     int currentPacket;

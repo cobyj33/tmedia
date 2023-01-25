@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <info.h>
 #include <boiler.h>
+#include <streamdata.h>
 
 extern "C" {
 #include <libavutil/log.h>
@@ -46,16 +47,8 @@ int get_num_packets(const char* fileName) {
     }
     
     int streams_found;
-    /* AVMediaType mediaTypes[3] = { AVMEDIA_TYPE_AUDIO, AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_SUBTITLE }; */
-    /* StreamData** streamData = alloc_stream_datas(formatContext, mediaTypes, 3, &streams_found); */
     enum AVMediaType mediaTypes[2] = { AVMEDIA_TYPE_AUDIO, AVMEDIA_TYPE_VIDEO };
-    StreamData** streamData = alloc_stream_datas(formatContext, mediaTypes, 2, &streams_found);
-    if (streamData == NULL || streams_found == 0) {
-        fprintf(stderr, "%s %s\n" ,"Could not fetch packet stats: error while fetching stream data of ", fileName);
-        avformat_free_context(formatContext);
-        return 0;
-    }
-    
+    StreamDataGroup streamData(formatContext, mediaTypes, 2);
     AVPacket* readingPacket = av_packet_alloc();
 
     int count = 0;
@@ -66,7 +59,6 @@ int get_num_packets(const char* fileName) {
 
     avformat_free_context(formatContext);
     av_packet_free(&readingPacket);
-    stream_datas_free(streamData, streams_found);
     return count;
 }
 
@@ -81,27 +73,19 @@ PacketData* get_packet_stats(const char* fileName, int* streams_found) {
         return NULL;
     }
     
-    /* AVMediaType mediaTypes[3] = { AVMEDIA_TYPE_AUDIO, AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_SUBTITLE }; */
-    /* StreamData** streamData = alloc_stream_datas(formatContext, mediaTypes, 3, streams_found); */
-
     enum AVMediaType mediaTypes[2] = { AVMEDIA_TYPE_AUDIO, AVMEDIA_TYPE_VIDEO };
-    StreamData** streamData = alloc_stream_datas(formatContext, mediaTypes, 2, streams_found);
-
-    if (streamData == NULL) {
-        fprintf(stderr, "%s %s\n", "Could not fetch packet stats: error while fetching stream data of ", fileName);
-        avformat_free_context(formatContext);
-        return NULL;
-    }
+    StreamDataGroup streamDataGroup(formatContext, mediaTypes, 2);
+    *streams_found = streamDataGroup.get_nb_streams();
     
     AVPacket* readingPacket = av_packet_alloc();
     PacketData* packetData = (PacketData*)malloc(sizeof(PacketData) * *streams_found);
     for (int i = 0; i < *streams_found; i++) {
-        packetData[i] = (PacketData){ streamData[i]->mediaType, 0 };
+        packetData[i] = (PacketData){ streamDataGroup[i]->mediaType, 0 };
     }
 
     while (av_read_frame(formatContext, readingPacket) == 0) {
-        for (int i = 0; i < *streams_found; i++) {
-            if (packetData[i].mediaType == streamData[i]->mediaType) {
+        for (int i = 0; i < streamDataGroup.get_nb_streams(); i++) {
+            if (streamDataGroup.has_media_stream(packetData[i].mediaType)) {
                 packetData[i].packetCount++;
             }
         }
@@ -110,6 +94,5 @@ PacketData* get_packet_stats(const char* fileName, int* streams_found) {
 
     avformat_free_context(formatContext);
     av_packet_free(&readingPacket);
-    stream_datas_free(streamData, *streams_found);
     return packetData;
 }

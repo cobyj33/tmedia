@@ -15,6 +15,8 @@
 #include <wtime.h>
 #include <videoconverter.h>
 
+#include <stdexcept>
+
 extern "C" {
 #include <curses.h>
 #include <pthread.h>
@@ -51,8 +53,7 @@ void* video_playback_thread(void* args) {
     MediaDisplayCache* cache = player->displayCache;
     MediaStream* video_stream = get_media_stream(media_data, AVMEDIA_TYPE_VIDEO);
     if (video_stream == NULL) {
-        fprintf(stderr, "%s\n", "COULD NOT FIND VIDEO STREAM");
-        return NULL;
+        throw std::runtime_error("COULD NOT FIND VIDEO STREAM");
     }
 
     double frameRate = av_q2d(video_stream->info->stream->avg_frame_rate);

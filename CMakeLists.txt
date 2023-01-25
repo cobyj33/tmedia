@@ -60,6 +60,7 @@ add_executable(ascii_video
 ./lib/miniaudio/extras/miniaudio_split/miniaudio.c
 ./src/audioresampler.cpp
 ./src/videoconverter.cpp
+./src/streamdata.cpp
 ./src/except.cpp
 ./src/main.cpp
 ./src/ascii.cpp

@@ -6,9 +6,11 @@
 #include <playheadlist.hpp>
 #include <media.h>
 #include <info.h>
+#include <streamdata.h>
 
 #include <cstdint>
 #include <cstdio>
+#include <string>
 
 extern "C" {
 #include <curses.h>
@@ -167,34 +169,27 @@ MediaData* media_data_alloc(const char* fileName) {
         return NULL;
     }
 
-    //TODO: Add subtitle stream
     enum AVMediaType mediaTypes[2] = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-    int out_stream_count;
-    StreamData** streamData  = alloc_stream_datas(mediaData->formatContext, mediaTypes, 2, &out_stream_count);
-    if (streamData == NULL) {
-        fprintf(stderr,"%s %s %s", "Could not fetch allocate media data of", fileName, "because of error while reading stream data of file");
-        avformat_free_context(mediaData->formatContext);
-        free(mediaData);
-        return NULL;
-    }
+    StreamDataGroup* stream_data_group  = new StreamDataGroup(mediaData->formatContext, mediaTypes, 2);
 
     mediaData->allPacketsRead = false;
     mediaData->currentPacket = 0;
     mediaData->totalPackets = get_num_packets(fileName);
-    mediaData->nb_streams = out_stream_count;
-    mediaData->media_streams = (MediaStream**)malloc(sizeof(MediaStream*) * out_stream_count);
+    mediaData->nb_streams = stream_data_group->get_nb_streams();
+    mediaData->media_streams = (MediaStream**)malloc(sizeof(MediaStream*) * mediaData->nb_streams);
 
     if (mediaData->media_streams == NULL) {
         fprintf(stderr,"%s %s %s", "Could not fetch allocate media data of", fileName, "because of error while reading stream data of file");
         avformat_free_context(mediaData->formatContext);
-        stream_datas_free(streamData, out_stream_count);
         free(mediaData);
         return NULL;
     }
 
-    for (int i = 0; i < out_stream_count; i++) {
-        mediaData->media_streams[i] = media_stream_alloc(streamData[i]);
+
+    for (int i = 0; i < mediaData->nb_streams; i++) {
+        mediaData->media_streams[i] = media_stream_alloc((*stream_data_group)[i]);
     }
+    mediaData->stream_datas = stream_data_group;
 
     mediaData->duration = (double)mediaData->formatContext->duration / AV_TIME_BASE;
 
@@ -269,13 +264,14 @@ void media_data_free(MediaData* mediaData) {
     }
     avformat_close_input(&(mediaData->formatContext));
     avformat_free_context(mediaData->formatContext);
+    delete mediaData->stream_datas;
     free(mediaData);
     mediaData = NULL;
 }
 
 void media_stream_free(MediaStream* mediaStream) {
     delete mediaStream->packets;
-    stream_data_free(mediaStream->info);
+    delete mediaStream->info;
     free(mediaStream);
     mediaStream = NULL;
 }

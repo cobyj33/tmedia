@@ -2,11 +2,15 @@
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
+#include <string>
+
 #include "icons.h"
 #include "playheadlist.hpp"
 #include "wtime.h"
 #include <media.h>
 #include <wmath.h>
+#include <except.h>
+
 
 
 void video_symbol_stack_push(VideoSymbolStack* stack, VideoSymbol *symbol) {
@@ -58,7 +62,7 @@ MediaStream* get_media_stream(MediaData* media_data, enum AVMediaType media_type
             return media_data->media_streams[i];
         }
     }
-    return NULL;
+    throw ascii::not_found_error("Cannot get media stream " + std::string(av_get_media_type_string(media_type)) + " from media data, could not be found");
 }
 
 bool has_media_stream(MediaData* media_data, enum AVMediaType media_type) {
