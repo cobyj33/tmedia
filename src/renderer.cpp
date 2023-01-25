@@ -256,7 +256,7 @@ void print_wave(int x, int y, int width, int height, float* wave, int nb_samples
         attron(COLOR_PAIR(color_pair));
     }
 
-    for (int i = channel_index; i < i32min(nb_samples, width) * nb_channels; i += nb_channels) {
+    for (int i = channel_index; i < std::min(nb_samples, width) * nb_channels; i += nb_channels) {
         if (wave[i] == 0.0f) {
             continue;
         }
@@ -460,7 +460,7 @@ void print_ascii_image_full(AsciiImage* textImage) {
         printw("%s\n", lineAcross);
     }
 
-    const int max_color_pairs = i32min(COLORS - 8, COLOR_PAIRS);
+    const int max_color_pairs = std::min(COLORS - 8, COLOR_PAIRS);
 
     if (textImage->colored && max_color_pairs > 16) {
         ScreenChar* char_buckets[COLOR_PAIRS];
@@ -514,9 +514,9 @@ void print_ascii_image_full(AsciiImage* textImage) {
             attroff(COLOR_PAIR(b));
         }
     } else {
-        for (int row = 0; row < i32min(textImage->height, LINES); row++) {
+        for (int row = 0; row < std::min(textImage->height, LINES); row++) {
             printw("%s|", horizontalPadding);
-            for (int col = 0; col < i32min(textImage->width, COLS); col++) {
+            for (int col = 0; col < std::min(textImage->width, COLS); col++) {
                 addch(textImage->lines[row * textImage->width + col]);
             }
             addstr("|\n");

@@ -112,7 +112,7 @@ void init_default_color_palette() {
 
     available_colors = 8;
     int color_index = 8;
-    int colors_to_add = i32min(COLORS - 8, MAX_TERMINAL_COLORS - 8);
+    int colors_to_add = std::min(COLORS - 8, MAX_TERMINAL_COLORS - 8);
     double box_size = 255 / cbrt(colors_to_add);
     for (double r = 0; r < 255; r += box_size) {
         for (double g = 0; g < 255; g += box_size) {
@@ -132,7 +132,7 @@ void init_color_palette(rgb* input, int len) {
     }
 
     available_colors = 8;
-    int colors_to_add = i32min(len, i32min(COLORS - 8, MAX_TERMINAL_COLORS - 8));
+    int colors_to_add = std::min(len, std::min(COLORS - 8, MAX_TERMINAL_COLORS - 8));
     for (int i = 0; i < colors_to_add; i++) {
         init_color(i + 8, (short)input[i][0] * 1000 / 255, (short)input[i][1] * 1000 / 255, (short)input[i][2] * 1000 / 255);
     }

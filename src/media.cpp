@@ -111,7 +111,7 @@ void move_packet_list_to_pts(PlayheadList<AVPacket*>* packets, int64_t targetPTS
         current = packets->get();
         currentIndexPTS = current->pts;
 
-        if (i64min(currentIndexPTS, lastPTS) <= targetPTS && i64max(currentIndexPTS, lastPTS) >= targetPTS) {
+        if (std::min(currentIndexPTS, lastPTS) <= targetPTS && std::max(currentIndexPTS, lastPTS) >= targetPTS) {
             break;
         }
 
@@ -160,7 +160,7 @@ void move_frame_list_to_pts(PlayheadList<AVFrame*>* frames, int64_t targetPTS) {
         current = frames->get();
         currentIndexPTS = current->pts;
 
-        if (i64min(currentIndexPTS, lastPTS) <= targetPTS && i64max(currentIndexPTS, lastPTS) >= targetPTS) {
+        if (std::min(currentIndexPTS, lastPTS) <= targetPTS && std::max(currentIndexPTS, lastPTS) >= targetPTS) {
             break;
         }
 

@@ -42,7 +42,7 @@ int imageProgram(const char* fileName, int use_colors) {
     }
 
     if (use_colors && COLORS >= 16 && COLOR_PAIRS >= 16) {
-        const int palette_size = i32min(256, i32min(COLORS, COLOR_PAIRS));
+        const int palette_size = std::min(256, std::min(COLORS, COLOR_PAIRS));
         int actual_output_size;
         rgb trained_colors[palette_size];
         get_most_common_colors(trained_colors, palette_size, textImage->color_data, textImage->width * textImage->height, &actual_output_size);

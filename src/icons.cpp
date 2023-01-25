@@ -110,7 +110,7 @@ int testIconProgram() {
 
 int read_sprite_sheet(PixelData** buffer, int bufferSize, PixelData* iconData, int rows, int cols, int spriteWidth, int spriteHeight) {
 
-    for (int i = 0; i < i32min(bufferSize, rows * cols); i++) {
+    for (int i = 0; i < std::min(bufferSize, rows * cols); i++) {
         PixelData* icon = pixel_data_alloc(spriteWidth, spriteHeight, GRAYSCALE8);
         int currentSpriteY = i / cols * spriteHeight;
         int currentSpriteX = i % cols * spriteWidth;
