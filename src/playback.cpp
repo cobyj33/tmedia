@@ -82,5 +82,5 @@ double Playback::get_time(double current_system_time) {
 };
 
 // double get_playback_current_time(Playback* playback) {
-//     return clock_sec() - playback->start_time - playback->paused_time + playback->skipped_time; 
+//     return system_clock_sec() - playback->start_time - playback->paused_time + playback->skipped_time; 
 // }

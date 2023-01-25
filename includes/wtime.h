@@ -4,6 +4,6 @@
 /**
  * @return Return the current system time in seconds
  */
-double clock_sec();
+double system_clock_sec();
 
 #endif

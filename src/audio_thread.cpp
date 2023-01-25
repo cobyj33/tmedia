@@ -148,7 +148,7 @@ void* audio_playback_thread(void* args) {
 
 
         audioDevice.sampleRate = audioCodecContext->sample_rate * playback->get_speed();
-        double current_time = playback->get_time(clock_sec());
+        double current_time = playback->get_time(system_clock_sec());
         double desync = dabs(audioStream->get_time() - current_time);
         add_debug_message(debug_info, DEBUG_AUDIO_SOURCE, DEBUG_AUDIO_TYPE, "Audio Desync", "%s%.2f\n", "Audio Desync Amount: ", desync);
 

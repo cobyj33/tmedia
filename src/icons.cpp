@@ -210,7 +210,7 @@ PixelData* get_video_icon(VideoIcon iconEnum) {
 
 VideoSymbol* get_video_symbol(VideoIcon iconEnum) {
     VideoSymbol* symbol = (VideoSymbol*)malloc(sizeof(VideoSymbol));
-    symbol->startTime = clock_sec(); 
+    symbol->startTime = system_clock_sec(); 
     symbol->lifeTime = 1;
     symbol->frames = 1;
     symbol->frameData = (PixelData**)malloc(sizeof(PixelData*) * symbol->frames);
@@ -243,7 +243,7 @@ VideoSymbol* get_symbol_from_volume(double normalizedVolume) {
 
 
 int get_video_symbol_current_frame(VideoSymbol* symbol) {
-    return  ((clock_sec() - symbol->startTime) / symbol->lifeTime) * (double)symbol->frames; 
+    return  ((system_clock_sec() - symbol->startTime) / symbol->lifeTime) * (double)symbol->frames; 
 }
 
 
