@@ -3,7 +3,6 @@
 
 
 double dabs(double d) {
-
     return d > 0.0 ? d : -d;
 }
 

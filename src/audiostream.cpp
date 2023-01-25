@@ -4,14 +4,21 @@
 #include <wmath.h>
 #include <audio.h>
 
-AudioStream::AudioStream() {
+void AudioStream::construct() {
     this->m_playhead = 0;
     this->m_nb_channels = 0;
     this->m_start_time = 0.0;
-    // this->m_sample_capacity = 0;
-    // this->m_nb_samples = 0;
     this->m_sample_rate = 0;
     this->m_initialized = false;
+}
+
+AudioStream::AudioStream() {
+    this->construct();
+};
+
+AudioStream::AudioStream(int nb_channels, int sample_rate) {
+    this->construct();
+    this->init(nb_channels, sample_rate);
 };
 
 std::size_t AudioStream::get_nb_samples() {
@@ -23,8 +30,19 @@ std::size_t AudioStream::get_nb_samples() {
 };
 
 void AudioStream::init(int nb_channels, int sample_rate) {
+    if (nb_channels <= 0) {
+        std::invalid_argument("Attemped to initialize audio stream with " + std::to_string(nb_channels) + " channels. Number of channels must be an integer greater than 0");
+    }
+
+    if (sample_rate <= 0) {
+        throw std::invalid_argument("Attemped to initialize audio stream with a sample rate of " + std::to_string(sample_rate) + ". Sample rate must be an integer greater than 0");
+    }
+
     this->m_stream.clear();
     this->m_stream.shrink_to_fit();
+
+
+
     this->m_nb_channels = nb_channels;
     this->m_start_time = 0.0;
     this->m_sample_rate = sample_rate;
@@ -50,7 +68,7 @@ void AudioStream::clear() { // Note: No longer takes in a clear capacity
     this->m_playhead = 0;
 };
 
-double AudioStream::elapsed_time() {
+double AudioStream::get_elapsed_time() {
     if (this->m_sample_rate == 0) {
         return 0.0;
     }
@@ -59,7 +77,7 @@ double AudioStream::elapsed_time() {
 };
 
 double AudioStream::get_time() {
-    return this->m_start_time + this->elapsed_time();
+    return this->m_start_time + this->get_elapsed_time();
 };
 
 std::size_t AudioStream::set_time(double time) {
