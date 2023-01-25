@@ -26,6 +26,7 @@ include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio/extras/min
 
 set(PROJECT_SOURCE_FILES_NO_MAIN
 ./lib/miniaudio/extras/miniaudio_split/miniaudio.c
+./src/except.cpp
 ./src/ascii.cpp
 ./src/alloc.cpp
 ./src/audiostream.cpp
@@ -55,6 +56,8 @@ set(PROJECT_SOURCE_FILES_NO_MAIN
 
 add_executable(ascii_video
 ./lib/miniaudio/extras/miniaudio_split/miniaudio.c
+./src/audioresampler.cpp
+./src/except.cpp
 ./src/main.cpp
 ./src/ascii.cpp
 ./src/alloc.cpp
@@ -86,6 +89,7 @@ add_executable(ascii_video
 target_link_libraries( ascii_video ${CURSES_LIBRARIES} PkgConfig::LIBAV)
 
 add_executable(tests 
+./src/except.cpp
 ./src/tests/test_playheadlist.cpp
 ./src/audio.cpp
 ./src/audiostream.cpp

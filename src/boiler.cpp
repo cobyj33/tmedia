@@ -17,25 +17,6 @@ extern "C" {
 #include <libavfilter/avfilter.h>
 }
 
-AVFrame** resample_audio_frames(AudioResampler* resampler, AVFrame** originals, int nb_frames) {
-    int currently_allocated = 0;
-    AVFrame** resampled_frames = (AVFrame**)malloc(sizeof(AVFrame*) * nb_frames);
-    if (resampled_frames == NULL) {
-        return NULL;
-    }
-
-    for (int i = 0; i < nb_frames; i++) {
-        AVFrame* resampledFrame = resample_audio_frame(resampler, originals[i]);
-        if (resampledFrame == NULL) {
-            free_frame_list(resampled_frames, currently_allocated);
-            return NULL;
-        }
-        resampled_frames[i] = resampledFrame;
-        currently_allocated++;
-    }
-
-    return resampled_frames;
-}
 
 AVFormatContext* open_format_context(const char* fileName, int* result) {
     AVFormatContext* formatContext = NULL;
@@ -137,68 +118,10 @@ VideoConverter* get_video_converter(int dst_width, int dst_height, enum AVPixelF
     return converter;
 }
 
-AudioResampler* get_audio_resampler(int* result, AVChannelLayout* dst_ch_layout, enum AVSampleFormat dst_sample_fmt, int dst_sample_rate, AVChannelLayout* src_ch_layout, enum AVSampleFormat src_sample_fmt, int src_sample_rate) {
-    SwrContext* context = swr_alloc();
-    *result = swr_alloc_set_opts2(
-        &context, dst_ch_layout, dst_sample_fmt, 
-        dst_sample_rate, src_ch_layout, src_sample_fmt,
-        src_sample_rate, 0, NULL);
-
-    if (*result < 0) {
-        if (context == NULL) {
-            swr_free(&context);
-        }
-        return NULL;
-    } else {
-        *result = swr_init(context);
-        if (*result < 0) {
-            if (context == NULL) {
-                swr_free(&context);
-            }
-            return NULL;
-        }
-    }
-
-    AudioResampler* resampler = (AudioResampler*)malloc(sizeof(AudioResampler));
-    resampler->context = context;
-    resampler->src_sample_rate = src_sample_rate;
-    resampler->src_sample_fmt = src_sample_fmt;
-    resampler->src_ch_layout = src_ch_layout;
-    resampler->dst_sample_rate = dst_sample_rate;
-    resampler->dst_sample_fmt = dst_sample_fmt;
-    resampler->dst_ch_layout = dst_ch_layout;
-
-    return resampler;
-}
-
 
 void free_video_converter(VideoConverter *converter) {
     sws_freeContext(converter->context);
     free(converter);
-}
-
-void free_audio_resampler(AudioResampler *resampler) {
-    swr_free(&(resampler->context));
-    free(resampler);
-}
-
-AVFrame* resample_audio_frame(AudioResampler* resampler, AVFrame* original) {
-        int result;
-        AVFrame* resampledFrame = av_frame_alloc();
-        resampledFrame->sample_rate = resampler->dst_sample_rate;
-        resampledFrame->ch_layout = *(resampler->dst_ch_layout);
-        resampledFrame->format = resampler->dst_sample_fmt;
-        resampledFrame->pts = original->pts;
-        resampledFrame->duration = original->duration;
-
-        result = swr_convert_frame(resampler->context, resampledFrame, original);
-        if (result < 0) {
-            fprintf(stderr, "%s\n", "Unable to resample audio frame");
-            av_frame_free(&resampledFrame);
-            return NULL;
-        }
-
-        return resampledFrame;
 }
 
 

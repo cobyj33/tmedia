@@ -1,5 +1,15 @@
 #ifndef ASCII_VIDEO_IMAGE
 #define ASCII_VIDEO_IMAGE
+/**
+ * @file image.h
+ * @author Jacoby Johnson (jacobyajohnson@gmail.com)
+ * @brief Common functions for image manipulation in ascii_video
+ * @version 0.1
+ * @date 2023-01-24
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 
 #include "pixeldata.h"
 #include "color.h"

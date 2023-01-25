@@ -1,5 +1,14 @@
 #ifndef ASCII_VIDEO_AUDIO_IMPLEMENTATION
 #define ASCII_VIDEO_AUDIO_IMPLEMENTATION
+/**
+ * @file audio.h
+ * @author Jacoby Johnson (jacobyajohnson@gmail.com)
+ * @brief Common functions for audio manipulation in ascii_video
+ * @version 0.1
+ * @date 2023-01-24
+ * 
+ * @copyright Copyright (c) 2023
+ */
 
 #define MAX_AUDIO_ASYNC_TIME_SECONDS 0.15
 #include <cstdint>

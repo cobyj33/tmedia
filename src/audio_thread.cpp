@@ -9,6 +9,8 @@
 #include <wmath.h>
 #include <cstdlib>
 #include <threads.h>
+#include <audioresampler.h>
+#include <memory>
 
 extern "C" {
 #include <curses.h>
@@ -74,13 +76,9 @@ void* audio_playback_thread(void* args) {
     AVCodecContext* audioCodecContext = audio_media_stream->info->codecContext;
     const int nb_channels = audioCodecContext->ch_layout.nb_channels;
 
-    AudioResampler* audioResampler = get_audio_resampler(&result,     
+    AudioResampler* audioResampler = new AudioResampler(
             &(audioCodecContext->ch_layout), AV_SAMPLE_FMT_FLT, audioCodecContext->sample_rate,
             &(audioCodecContext->ch_layout), audioCodecContext->sample_fmt, audioCodecContext->sample_rate);
-    if (audioResampler == NULL) {
-        add_debug_message(player->displayCache->debug_info, DEBUG_AUDIO_SOURCE, DEBUG_AUDIO_TYPE, "Audio Resampler Allocation Error", "COULD NOT ALLOCATE TEMPORARY AUDIO RESAMPLER");
-        return NULL;
-    }   
 
     player->displayCache->audio_stream->init(nb_channels, audioCodecContext->sample_rate);
 
@@ -166,8 +164,7 @@ void* audio_playback_thread(void* args) {
         sleep_for_ms(3);
     }
 
-
-    free_audio_resampler(audioResampler);
+    delete audioResampler;
     return NULL;
 }
 
@@ -181,7 +178,7 @@ AVFrame** get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampl
         return NULL;
     }
 
-    AVFrame** audioFrames = resample_audio_frames(audioResampler, rawAudioFrames, *nb_frames_decoded);
+    AVFrame** audioFrames = audioResampler->resample_audio_frames(rawAudioFrames, *nb_frames_decoded);
     free_frame_list(rawAudioFrames, *nb_frames_decoded);
     return audioFrames;
 }
