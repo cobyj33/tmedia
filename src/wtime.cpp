@@ -1,13 +1,7 @@
-#include <ctime>
 #include <wtime.h>
 #include "macros.h"
-
-extern "C" {
-#include <bits/time.h>
-}
+#include <chrono>
 
 double clock_sec() {
-    struct timespec tp;
-    clock_gettime(CLOCK_MONOTONIC, &tp);
-    return (double)tp.tv_sec + (double)tp.tv_nsec / SECONDS_TO_NANOSECONDS;
+    return (double)(std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()).time_since_epoch().count()) * NANOSECONDS_TO_SECONDS;  
 }
