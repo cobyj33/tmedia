@@ -104,10 +104,6 @@ typedef struct MediaPlayer {
     bool inUse;
 } MediaPlayer;
 
-/* typedef struct ThreadPriveliges { */
-/*     int masterTimeThread; */
-/* } ThreadPriveliges; */
-
 MediaPlayer* media_player_alloc(const char* fileName);
 void media_player_free(MediaPlayer* player);
 
@@ -129,42 +125,12 @@ void media_data_free(MediaData* mediaData);
 MediaStream* media_stream_alloc(StreamData* streamData);
 void media_stream_free(MediaStream* mediaStream);
 
-// Playback* playback_alloc();
-// void playback_free(Playback* playback);
-// double get_playback_current_time(Playback* playback);
-
-// AudioStream* audio_stream_alloc();
-// void audio_stream_free(AudioStream* stream);
-// int audio_stream_init(AudioStream* stream, int nb_channels, int initial_size, int sample_rate);
-// int audio_stream_clear(AudioStream* stream, int cleared_capacity);
-// double audio_stream_time(AudioStream* stream);
-// double audio_stream_end_time(AudioStream* stream);
-// double audio_stream_set_time(AudioStream* stream, double time);
-
 MediaStream* get_media_stream(MediaData* media_data, enum AVMediaType media_type);
 bool has_media_stream(MediaData* media_data, enum AVMediaType media_type);
 
 void move_packet_list_to_pts(PlayheadList<AVPacket*>* packets, int64_t targetPTS);
 void move_frame_list_to_pts(PlayheadList<AVFrame*>* frames, int64_t targetPTS);
 
-
-int get_media_player_dump_size(MediaPlayer* player);
-void dump_media_player(MediaPlayer* player, char* buffer);
-
-int get_media_timeline_dump_size(MediaTimeline* timeline);
-void dump_media_timeline(MediaTimeline* timeline, char* buffer);
-
-int get_media_data_dump_size(MediaData* data);
-void dump_media_data(MediaData* data, char* buffer);
-
-int get_media_stream_dump_size(MediaStream* stream);
-void dump_media_stream(MediaStream* stream, char* buffer);
-
-int get_stream_info_dump_size(StreamData* stream_data);
-void dump_stream_info(StreamData* stream_data, char* buffer);
-
-int get_playback_dump_size(Playback* playback);
-void dump_playback(Playback* playback, char* buffer);
 
 void fetch_next(MediaData* media_data, int requestedPacketCount);
 #endif

@@ -1,7 +1,6 @@
 #include <wtime.h>
 
 #include <chrono>
-
 #include <unitconvert.h>
 
 double system_clock_sec() {

@@ -24,38 +24,6 @@ add_subdirectory(lib/Catch2)
 
 include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio/extras/miniaudio_split )
 
-set(PROJECT_SOURCE_FILES_NO_MAIN
-./lib/miniaudio/extras/miniaudio_split/miniaudio.c
-./src/videoconverter.cpp
-./src/audioresampler.cpp
-./src/except.cpp
-./src/ascii.cpp
-./src/alloc.cpp
-./src/audiostream.cpp
-./src/decode.cpp
-./src/image.cpp
-./src/media.cpp
-./src/boiler.cpp
-./src/init.cpp
-./src/info.cpp
-./src/terminal.cpp
-./src/threads.cpp
-./src/video.cpp
-./src/kmeans.cpp
-./src/wmath.cpp
-./src/hardcode.cpp
-./src/renderer.cpp
-./src/dump.cpp
-./src/audio.cpp
-./src/loader.cpp
-./src/wtime.cpp
-./src/debug.cpp
-./src/color.cpp
-./src/icons.cpp
-./src/playback.cpp
-)
-
-
 add_executable(ascii_video
 ./lib/miniaudio/extras/miniaudio_split/miniaudio.c
 ./src/audioresampler.cpp
@@ -81,7 +49,6 @@ add_executable(ascii_video
 ./src/wmath.cpp
 ./src/hardcode.cpp
 ./src/renderer.cpp
-./src/dump.cpp
 ./src/loader.cpp
 ./src/wtime.cpp
 ./src/debug.cpp
