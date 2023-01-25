@@ -22,10 +22,10 @@ pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
 
 add_subdirectory(lib/Catch2)
 
-include_directories( ${CURSES_INCLUDE_DIR} ./includes )
+include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio/extras/miniaudio_split )
 
 set(PROJECT_SOURCE_FILES_NO_MAIN
-
+./lib/miniaudio/extras/miniaudio_split/miniaudio.c
 ./src/ascii.cpp
 ./src/alloc.cpp
 ./src/audiostream.cpp
@@ -41,7 +41,6 @@ set(PROJECT_SOURCE_FILES_NO_MAIN
 ./src/kmeans.cpp
 ./src/wmath.cpp
 ./src/hardcode.cpp
-./src/miniaudio.c
 ./src/renderer.cpp
 ./src/dump.cpp
 ./src/audio.cpp
@@ -55,8 +54,8 @@ set(PROJECT_SOURCE_FILES_NO_MAIN
 
 
 add_executable(ascii_video
+./lib/miniaudio/extras/miniaudio_split/miniaudio.c
 ./src/main.cpp
-
 ./src/ascii.cpp
 ./src/alloc.cpp
 ./src/audiostream.cpp
@@ -74,7 +73,6 @@ add_executable(ascii_video
 ./src/kmeans.cpp
 ./src/wmath.cpp
 ./src/hardcode.cpp
-./src/miniaudio.c
 ./src/renderer.cpp
 ./src/dump.cpp
 ./src/loader.cpp

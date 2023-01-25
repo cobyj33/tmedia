@@ -14,7 +14,7 @@ extern "C" {
 #include <curses.h>
 #include <pthread.h>
 
-#include "miniaudio.h"
+#include <miniaudio.h>
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
