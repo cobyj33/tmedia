@@ -14,13 +14,12 @@
 #include <wmath.h>
 #include <wtime.h>
 #include <videoconverter.h>
+#include <mutex>
 
 #include <stdexcept>
 
 extern "C" {
 #include <curses.h>
-#include <pthread.h>
-
 #include <libavutil/pixfmt.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -41,9 +40,11 @@ const char* debug_video_type = "debug";
 //     }
 // }
 
-void* video_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
+void* video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
     AVFrame* readingFrame = av_frame_alloc();
+    std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
+
     Playback* playback = player->timeline->playback;
     MediaDebugInfo* debug_info = player->displayCache->debug_info;
     MediaData* media_data = player->timeline->mediaData;
@@ -65,16 +66,16 @@ void* video_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
 
     PlayheadList<AVPacket*>* videoPackets = video_stream->packets;
     while (player->inUse && (!media_data->allPacketsRead || (media_data->allPacketsRead && videoPackets->can_step_forward() ) )) {
-        pthread_mutex_lock(alterMutex);
+        mutex_lock.lock();
         /* int64_t targetVideoPTS = get_playback_current_time(playback) * videoTimeBase; */
         /* move_frame_list_to_pts(cache->image_buffer, targetVideoPTS); */
 
         if (playback->get_time(system_clock_sec()) >= media_data->duration) { // video finished
             player->inUse = false;
-            pthread_mutex_unlock(alterMutex);
+            mutex_lock.unlock();
             break;
         } else if (playback->is_playing() == false) { // paused
-            pthread_mutex_unlock(alterMutex);
+            mutex_lock.unlock();
 
             while (playback->is_playing() == false) {
                 sleep_for_ms(1);
@@ -83,7 +84,7 @@ void* video_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
                 }
             }
 
-            pthread_mutex_lock(alterMutex);
+            mutex_lock.lock();
             // playback->paused_time += system_clock_sec() - pauseTime;
         }
 
@@ -96,7 +97,7 @@ void* video_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
                 currentPacket = videoPackets->get();
             }
             if (currentPacket == NULL) {
-                pthread_mutex_unlock(alterMutex);
+                mutex_lock.unlock();
                 continue;
             }
 
@@ -130,7 +131,7 @@ void* video_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
                 add_debug_message(debug_info, debug_video_source, debug_video_type, "Null video packet", "ERROR: NULL POINTED VIDEO PACKET: %d", decodeResult);
                 videoPackets->try_step_forward();
 
-                pthread_mutex_unlock(alterMutex);
+                mutex_lock.unlock();
                 fsleep_for_sec(1.0 / frameRate);
                 continue;
             }
@@ -140,7 +141,7 @@ void* video_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
             while (!media_data->allPacketsRead && !videoPackets->can_move_index(20)) {
                 fetch_next(media_data, 20);
             }
-            pthread_mutex_unlock(alterMutex);
+            mutex_lock.unlock();
             continue;
         }
 
@@ -164,7 +165,7 @@ void* video_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
             playback->get_speed(), frame_speed_skip_time_sec);
 
 
-        pthread_mutex_unlock(alterMutex);
+        mutex_lock.unlock();
         av_frame_unref(readingFrame);
         if (waitDuration <= 0) {
             continue;

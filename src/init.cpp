@@ -4,11 +4,8 @@
 #include <wtime.h>
 
 #include <thread>
+#include <mutex>
 #include <except.h>
-
-extern "C" {
-#include <pthread.h>
-}
 
 void start_media_player_from_filename(const char* fileName) {
     MediaPlayer* player = media_player_alloc(fileName);
@@ -28,13 +25,12 @@ void start_media_player(MediaPlayer* player) {
     player->timeline->playback->start(system_clock_sec());
     fetch_next(player->timeline->mediaData, INITIAL_PLAYER_PACKET_BUFFER_SIZE);
 
-    pthread_mutex_t alterMutex;
-    pthread_mutex_init(&alterMutex, NULL);
+    std::mutex alter_mutex;
 
-    std::thread video_thread = std::thread(video_playback_thread, player, &alterMutex);
-    std::thread audio_thread = std::thread(audio_playback_thread, player, &alterMutex);
-    std::thread data_thread = std::thread(data_loading_thread, player, &alterMutex);
-    render_loop(player, &alterMutex);
+    std::thread video_thread(video_playback_thread, player, std::ref(alter_mutex));
+    std::thread audio_thread(audio_playback_thread, player, std::ref(alter_mutex));
+    std::thread data_thread(data_loading_thread, player, std::ref(alter_mutex));
+    render_loop(player, std::ref(alter_mutex));
 
     video_thread.join();
     audio_thread.join();
@@ -42,5 +38,4 @@ void start_media_player(MediaPlayer* player) {
 
     player->timeline->playback->stop(system_clock_sec());
     player->inUse = false;
-    pthread_mutex_destroy(&alterMutex);
 }

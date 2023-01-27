@@ -1,41 +1,46 @@
 #include <media.h>
 #include <threads.h>
+#include <mutex>
 
 extern "C" {
 #include <curses.h>
 #include <libavutil/avutil.h>
-#include <pthread.h>
 }
 
+bool data_loading_thread_loop(MediaPlayer* player, std::mutex& mutex);
 
 
-void* data_loading_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
-
-    const int PACKET_RESERVE_SIZE = 100000;
-
-    int shouldFetch = 1;
-    MediaData* media_data = player->timeline->mediaData;
-
-    while (!player->timeline->mediaData->allPacketsRead) {
-        pthread_mutex_lock(alterMutex);
-        shouldFetch = 1;
-
-        for (int i = 0; i < media_data->nb_streams; i++) {
-            if (media_data->media_streams[i]->packets->get_length() > PACKET_RESERVE_SIZE) {
-                shouldFetch = 0;
-                break;
-            }
-        }
-
-        if (shouldFetch) {
-            fetch_next(media_data, 20);
-        }
-
-        pthread_mutex_unlock(alterMutex);
+void* data_loading_thread(MediaPlayer* player, std::mutex& alter_mutex) {
+    while (data_loading_thread_loop(player, alter_mutex)) {
         sleep_for_ms(30);
     }
 
     return NULL;
+}
+
+bool data_loading_thread_loop(MediaPlayer* player, std::mutex& mutex) {
+    std::lock_guard<std::mutex> lock_guard(mutex);
+    MediaData* media_data = player->timeline->mediaData;
+    if (media_data->allPacketsRead || !player->inUse) {
+        return false;
+    }
+
+    const int PACKET_RESERVE_SIZE = 100000;
+
+    bool shouldFetch = true;
+
+    for (int i = 0; i < media_data->nb_streams; i++) {
+        if (media_data->media_streams[i]->packets->get_length() > PACKET_RESERVE_SIZE) {
+            shouldFetch = false;
+            break;
+        }
+    }
+
+    if (shouldFetch) {
+        fetch_next(media_data, 20);
+    }
+
+    return true;
 }
 
 

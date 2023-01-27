@@ -19,9 +19,9 @@
 #include <wmath.h>
 #include <wtime.h>
 #include <curses_helpers.h>
+#include <mutex>
 
 extern "C" {
-#include <pthread.h>
 #include <ncurses.h>
 #include <libavutil/avutil.h>
 }
@@ -42,8 +42,10 @@ int digit_to_int(char num) {
     return num - 48;
 }
 
-void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
+void* render_loop(MediaPlayer* player, std::mutex& alter_mutex) {
     WINDOW* inputWindow = newwin(0, 0, 1, 1);
+    std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
+
     MEVENT mouse_event;
     mousemask(BUTTON1_PRESSED, NULL);
 
@@ -60,12 +62,12 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
 
 
     while (player->inUse) {
-        pthread_mutex_lock(alterMutex);
+        mutex_lock.lock();
         int ch = wgetch(inputWindow);
         Playback* playback = player->timeline->playback;
 
         if (!player->inUse) {
-            pthread_mutex_unlock(alterMutex);
+            mutex_lock.unlock();
             break;
         }
 
@@ -73,7 +75,7 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
             double targetTime = playback->get_time(system_clock_sec()) + jump_time_requested;
             if (targetTime >= player->timeline->mediaData->duration) {
                 player->inUse = 0;
-                pthread_mutex_unlock(alterMutex);
+                mutex_lock.unlock();
                 break;
             }
 
@@ -160,12 +162,13 @@ void render_loop(MediaPlayer* player, pthread_mutex_t* alterMutex) {
             player->inUse = false;
         }
 
-        pthread_mutex_unlock(alterMutex);
+        mutex_lock.unlock();
         refresh();
         sleep_for_ms(5);
     }
 
     delwin(inputWindow);
+    return nullptr;
 }
 
 void render_screen(MediaPlayer* player, GuiData gui_data) {

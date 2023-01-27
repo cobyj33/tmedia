@@ -11,10 +11,10 @@
 #include <threads.h>
 #include <audioresampler.h>
 #include <memory>
+#include <mutex>
 
 extern "C" {
 #include <curses.h>
-#include <pthread.h>
 
 #include <miniaudio.h>
 
@@ -34,7 +34,7 @@ const char* DEBUG_AUDIO_TYPE = "debug";
 
 typedef struct CallbackData {
     MediaPlayer* player;
-    pthread_mutex_t* mutex;
+    std::reference_wrapper<std::mutex> mutex;
     AudioResampler* audioResampler;
 } CallbackData;
 
@@ -45,23 +45,18 @@ AVFrame** find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResamp
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
     CallbackData* data = (CallbackData*)(pDevice->pUserData);
-    pthread_mutex_lock(data->mutex);
+    std::lock_guard<std::mutex> mutex_lock_guard(data->mutex.get());
     AudioStream* audioStream = data->player->displayCache->audio_stream;
-
-    if (audioStream == nullptr) {
-        pthread_mutex_unlock(data->mutex);
-        return;
-    }
 
     if (audioStream->can_read(frameCount)) {
         audioStream->read_into(frameCount, (float*)pOutput);
     }
 
     (void)pInput;
-    pthread_mutex_unlock(data->mutex);
 }
 
-void* audio_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
+void* audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
+    std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
     MediaDebugInfo* debug_info = player->displayCache->debug_info;
     int result;
     MediaStream* audio_media_stream = get_media_stream(player->timeline->mediaData, AVMEDIA_TYPE_AUDIO);
@@ -85,7 +80,7 @@ void* audio_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
     config.sampleRate = audioCodecContext->sample_rate;           
     config.dataCallback = audioDataCallback;   
 
-    CallbackData userData = { player, alterMutex, audioResampler }; 
+    CallbackData userData = { player, std::ref(alter_mutex), audioResampler }; 
    config.pUserData = &userData;   
 
     ma_result miniAudioLog;
@@ -101,26 +96,26 @@ void* audio_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
     sleep_for_sec(audio_media_stream->info->stream->start_time * audio_media_stream->timeBase);
     
     while (player->inUse) {
-        pthread_mutex_lock(alterMutex);
+        mutex_lock.lock();
 
         if (playback->is_playing() == false && ma_device_get_state(&audioDevice) == ma_device_state_started) {
-            pthread_mutex_unlock(alterMutex);
+            mutex_lock.unlock();
             miniAudioLog = ma_device_stop(&audioDevice);
             if (miniAudioLog != MA_SUCCESS) {
                 fprintf(stderr, "%s %d\n", "Failed to stop playback: ", miniAudioLog);
                 ma_device_uninit(&audioDevice);
                 return NULL;
             };
-            pthread_mutex_lock(alterMutex);
+            mutex_lock.lock();
         } else if (playback->is_playing() && ma_device_get_state(&audioDevice) == ma_device_state_stopped) {
-            pthread_mutex_unlock(alterMutex);
+            mutex_lock.unlock();
             miniAudioLog = ma_device_start(&audioDevice);
             if (miniAudioLog != MA_SUCCESS) {
                 fprintf(stderr, "%s %d\n", "Failed to start playback: ", miniAudioLog);
                 ma_device_uninit(&audioDevice);
                 return NULL;
             };
-            pthread_mutex_lock(alterMutex);
+            mutex_lock.lock();
         }
 
         AudioStream* audioStream = player->displayCache->audio_stream;
@@ -157,12 +152,12 @@ void* audio_playback_thread(MediaPlayer* player, pthread_mutex_t* alterMutex) {
             move_packet_list_to_pts(audio_media_stream->packets, current_time / audio_media_stream->timeBase);
         }
 
-        pthread_mutex_unlock(alterMutex);
+        mutex_lock.unlock();
         sleep_for_ms(3);
     }
 
     delete audioResampler;
-    return NULL;
+    return nullptr;
 }
 
 AVFrame** get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler* audioResampler, AVPacket* packet, int* result, int* nb_frames_decoded) {

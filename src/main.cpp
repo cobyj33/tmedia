@@ -15,6 +15,8 @@ extern "C" {
 #include <ncurses.h>
 }
 
+bool ncurses_initialized = false;
+
 typedef struct ProgramCommands ProgramCommands;
 
 typedef enum PriorityType {
@@ -41,6 +43,14 @@ bool str_in_list(const char* search, const char** list, int list_len);
 bool is_valid_path(const char* path);
 void ncurses_init();
 int use_program(ProgramCommands* commands);
+
+void on_terminate() {
+    if (ncurses_initialized) {
+        endwin();
+    }
+
+    abort();
+}
 
 const char* help_text = "     ASCII_VIDEO         \n"
       "  -h => help                   \n"
@@ -96,6 +106,7 @@ int main(int argc, char** argv)
 
       use_program(&commands);
   }
+  std::set_terminate(on_terminate);
 
   endwin();
   free_icons();
@@ -154,6 +165,10 @@ bool is_valid_path(const char* path) {
 }
 
 void ncurses_init() {
+    if (ncurses_initialized) {
+        throw std::runtime_error("NCurses attempted to be initialized although it has already been initialized");
+    }
+    ncurses_initialized = true;
     initscr();
     start_color();
     initialize_colors();

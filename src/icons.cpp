@@ -12,7 +12,6 @@
 
 extern "C" {
 #include <ncurses.h>
-#include <pthread.h>
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
