@@ -29,16 +29,8 @@ extern "C" {
 
 const int MAX_FRAME_WIDTH = 16 * 16;
 const int MAX_FRAME_HEIGHT = 16 * 9; 
-
-const char* debug_video_source = "video";
-const char* debug_video_type = "debug";
-
-// void load_image_buffer(MediaPlayer* player, VideoConverter* converter, int amount) {
-//     const MediaDisplayCache* cache = player->displayCache;
-//     for (int i = 0; i < amount; i++) {
-
-//     }
-// }
+const char* DEBUG_VIDEO_SOURCE = "video";
+const char* DEBUG_VIDEO_TYPE = "debug";
 
 void* video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
@@ -120,19 +112,19 @@ void* video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
                 decodedList = decode_video_packet(videoCodecContext, currentPacket, &decodeResult, &nb_decoded);
             }
 
-            add_debug_message(debug_info, debug_video_source, debug_video_type, "Number of video packets sent to decoder","Fed %d packets to decode\n", repeats);
+            add_debug_message(debug_info, DEBUG_VIDEO_SOURCE, DEBUG_VIDEO_TYPE, "Number of video packets sent to decoder","Fed %d packets to decode\n", repeats);
 
             if ((nb_decoded > 0 && decodeResult >= 0) || currentPacket == NULL) {
                 av_frame_free(&readingFrame);
-                add_debug_message(debug_info, debug_video_source, debug_video_type, "Time of decoded video packet","Decoded List Time: %.3f", decodedList[0]->pts * videoTimeBase );
+                add_debug_message(debug_info, DEBUG_VIDEO_SOURCE, DEBUG_VIDEO_TYPE, "Time of decoded video packet","Decoded List Time: %.3f", decodedList[0]->pts * videoTimeBase );
                 readingFrame = videoConverter->convert_video_frame(decodedList[0]);
                 free_frame_list(decodedList, nb_decoded);
             } else {
-                add_debug_message(debug_info, debug_video_source, debug_video_type, "Null video packet", "ERROR: NULL POINTED VIDEO PACKET: %d", decodeResult);
+                add_debug_message(debug_info, DEBUG_VIDEO_SOURCE, DEBUG_VIDEO_TYPE, "Null video packet", "ERROR: NULL POINTED VIDEO PACKET: %d", decodeResult);
                 videoPackets->try_step_forward();
 
                 mutex_lock.unlock();
-                fsleep_for_sec(1.0 / frameRate);
+                sleep_for_sec(1.0 / frameRate);
                 continue;
             }
 
@@ -159,7 +151,7 @@ void* video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         waitDuration -= frame_speed_skip_time_sec;
         double continueTime = system_clock_sec() + waitDuration;
 
-        add_debug_message(debug_info, debug_video_source, debug_video_type, "Video Timing Information", "  timeOfNextFrame: %.3f, waitDuration: %.3f\n \
+        add_debug_message(debug_info, DEBUG_VIDEO_SOURCE, DEBUG_VIDEO_TYPE, "Video Timing Information", "  timeOfNextFrame: %.3f, waitDuration: %.3f\n \
             Speed Factor: %.3f, Time Skipped due to Speed on Current Frame: %.3f\n\n ",
            nextFrameTimeSinceStartInSeconds, waitDuration,
             playback->get_speed(), frame_speed_skip_time_sec);
@@ -170,10 +162,7 @@ void* video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         if (waitDuration <= 0) {
             continue;
         }
-        /* fsleep_for_sec(waitDuration); */
-        while (system_clock_sec() < continueTime) {
-
-        }
+        sleep_for_sec(waitDuration);
     }
 
     av_frame_free(&readingFrame);

@@ -541,7 +541,7 @@ int format_time(char* buffer, int buf_size, double time_in_seconds) {
 void render_playbar(MediaPlayer* player, GuiData gui_data) {
     const double height = fmin(3, fmax(1, LINES * 0.05));
     const double width = COLS;
-    werasebox(stdscr, LINES - height, 0, width, height);
+    ncurses::werasebox(stdscr, LINES - height, 0, width, height);
 
     const char* status = player->timeline->playback->is_playing() ? "Playing" : "Paused";
     const double time = player->timeline->playback->get_time(system_clock_sec());
@@ -550,9 +550,9 @@ void render_playbar(MediaPlayer* player, GuiData gui_data) {
     const int bar_start = strlen(status);
     const int bar_end = COLS;
     mvprintw(LINES - height / 2, 0, "%s", status);
-    wfill_box(stdscr, LINES - height / 2, bar_start, bar_end - bar_start, height, '-');
+    ncurses::wfill_box(stdscr, LINES - height / 2, bar_start, bar_end - bar_start, height, '-');
     if (duration != 0.0) {
-        wfill_box(stdscr, LINES - height, bar_start, (bar_end - bar_start) * (time / duration), height, '*');
+        ncurses::wfill_box(stdscr, LINES - height, bar_start, (bar_end - bar_start) * (time / duration), height, '*');
     }
     char playTime[15], durationTime[15];
     format_time(playTime, 15, time);

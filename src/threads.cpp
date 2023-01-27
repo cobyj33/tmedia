@@ -17,6 +17,6 @@ void sleep_for_sec(long secs) {
     sleep_for(secs * SECONDS_TO_NANOSECONDS);
 }
 
-void fsleep_for_sec(double secs) {
+void sleep_for_sec(double secs) {
     sleep_for((long)(secs * SECONDS_TO_NANOSECONDS));
 }

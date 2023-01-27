@@ -42,7 +42,6 @@ add_executable(ascii_video
 ./src/boiler.cpp
 ./src/init.cpp
 ./src/info.cpp
-./src/terminal.cpp
 ./src/threads.cpp
 ./src/video.cpp
 ./src/kmeans.cpp
@@ -55,6 +54,7 @@ add_executable(ascii_video
 ./src/color.cpp
 ./src/icons.cpp
 ./src/playback.cpp
+./src/curses_helpers.cpp
 )
 
 target_link_libraries( ascii_video ${CURSES_LIBRARIES} PkgConfig::LIBAV)

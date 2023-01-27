@@ -5,7 +5,7 @@
 
 void sleep_for(long nanoseconds);
 void sleep_for_sec(long secs);
-void fsleep_for_sec(double secs);
+void sleep_for_sec(double secs);
 void sleep_for_ms(long ms);
 
 /* void* video_playback_thread(MediaPlayer* player, std::mutex* alter_mutex); */
