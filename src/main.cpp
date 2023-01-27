@@ -10,9 +10,10 @@
 #include <media.h>
 #include <info.h>
 
+#include "ncursescpp.h"
+
 extern "C" {
 #include <libavutil/log.h>
-#include <ncurses.h>
 }
 
 bool ncurses_initialized = false;
@@ -46,7 +47,7 @@ int use_program(ProgramCommands* commands);
 
 void on_terminate() {
     if (ncurses_initialized) {
-        endwin();
+        ncurses::endwin();
     }
 
     abort();
@@ -169,14 +170,14 @@ void ncurses_init() {
         throw std::runtime_error("NCurses attempted to be initialized although it has already been initialized");
     }
     ncurses_initialized = true;
-    initscr();
-    start_color();
+    ncurses::initscr();
+    ncurses::start_color();
     initialize_colors();
     initialize_color_pairs();
-    cbreak();
-    noecho();
-    curs_set(0);
-    keypad(stdscr, true);
+    ncurses::cbreak();
+    ncurses::noecho();
+    ncurses::curs_set(0);
+    ncurses::keypad(stdscr, true);
 }
 
 InputType flag_to_input_type(const char* flag) {

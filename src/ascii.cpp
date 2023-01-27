@@ -6,7 +6,6 @@
 #include <wmath.h>
 
 extern "C" {
-#include <ncurses.h>
 #include <libavutil/avutil.h>
 }
 
