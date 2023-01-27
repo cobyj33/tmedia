@@ -3,7 +3,6 @@
 #include "debug.h"
 #include "decode.h"
 #include "icons.h"
-#include "ncursescpp.h"
 #include <playheadlist.hpp>
 #include <media.h>
 #include <info.h>
@@ -14,6 +13,7 @@
 #include <string>
 
 extern "C" {
+#include <ncurses.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 }
@@ -117,8 +117,8 @@ MediaDisplaySettings* media_display_settings_alloc() {
     }
 
     settings->subtitles = false;
-    settings->can_use_colors = ncurses::has_colors() == TRUE ? 1 : 0;
-    settings->can_change_colors = ncurses::can_change_color() == TRUE ? 1 : 0;
+    settings->can_use_colors = has_colors() == TRUE ? 1 : 0;
+    settings->can_change_colors = can_change_color() == TRUE ? 1 : 0;
     settings->use_colors = false;
 
     settings->train_palette = true;

@@ -1,25 +1,28 @@
 #include <wmath.h>
 #include "color.h"
 
-#include <ncursescpp.h>
 #include <cstdlib>
+
+extern "C" {
+#include <ncurses.h>
+}
 
 void init_color_rgb(rgb color, int init_index) {
     rgb_i32 output;
     rgb255_to_rgb1000(color, output);
-    ncurses::init_color(init_index, output[0], output[1], output[2]);
+    init_color(init_index, output[0], output[1], output[2]);
 }
 
 void get_color_content(int color, rgb output) {
     short r, g, b;
-    ncurses::color_content(color, &r, &g, &b);
+    color_content(color, &r, &g, &b);
     double conversion_factor = 255.0 / 1000;
     rgb_set(output, (uint8_t)(r * conversion_factor), (uint8_t)(g * conversion_factor), (uint8_t)(b * conversion_factor));
 }
 
 void get_pair_content(int pair, rgb fg, rgb bg) {
     short fgi, bgi;
-    ncurses::pair_content(pair, &fgi, &bgi);
+    pair_content(pair, &fgi, &bgi);
     get_color_content(fgi, fg);
     get_color_content(bgi, bg);
 }
@@ -104,7 +107,7 @@ int quantize_image(rgb* output, int output_len, rgb* colors, int nb_colors) {
 }
 
 void init_default_color_palette() {
-    if (!ncurses::has_colors() || !ncurses::can_change_color()) {
+    if (!has_colors() || !can_change_color()) {
         return;
     }
 
@@ -115,7 +118,7 @@ void init_default_color_palette() {
     for (double r = 0; r < 255; r += box_size) {
         for (double g = 0; g < 255; g += box_size) {
             for (double b = 0; b < 255; b += box_size) {
-                ncurses::init_color(color_index, r * 1000 / 255, g * 1000 / 255, b * 1000 / 255);
+                init_color(color_index, r * 1000 / 255, g * 1000 / 255, b * 1000 / 255);
                 color_index++;
             }
         }
@@ -125,14 +128,14 @@ void init_default_color_palette() {
 }
 
 void init_color_palette(rgb* input, int len) {
-    if (!ncurses::has_colors() || !ncurses::can_change_color()) {
+    if (!has_colors() || !can_change_color()) {
         return;
     }
 
     available_colors = 8;
     int colors_to_add = std::min(len, std::min(COLORS - 8, MAX_TERMINAL_COLORS - 8));
     for (int i = 0; i < colors_to_add; i++) {
-        ncurses::init_color(i + 8, (short)input[i][0] * 1000 / 255, (short)input[i][1] * 1000 / 255, (short)input[i][2] * 1000 / 255);
+        init_color(i + 8, (short)input[i][0] * 1000 / 255, (short)input[i][1] * 1000 / 255, (short)input[i][2] * 1000 / 255);
     }
 
     available_colors += colors_to_add;
@@ -164,9 +167,9 @@ void init_color_pairs_map() {
 }
 
 void initialize_colors() {
-    if (ncurses::has_colors()) {
+    if (has_colors()) {
         available_colors = 8;
-        if (ncurses::can_change_color()) {
+        if (can_change_color()) {
             init_default_color_palette();
         }
         init_color_map();
@@ -174,9 +177,9 @@ void initialize_colors() {
 }
 
 void initialize_new_colors(rgb* input, int len) {
-    if (ncurses::has_colors()) {
+    if (has_colors()) {
         available_colors = 8;
-        if (ncurses::can_change_color()) {
+        if (can_change_color()) {
             init_color_palette(input, len);
         }
         init_color_map();
@@ -184,18 +187,18 @@ void initialize_new_colors(rgb* input, int len) {
 }
 
 void initialize_color_pairs() {
-    if (!ncurses::has_colors()) {
+    if (!has_colors()) {
         return;
     }
 
     available_color_pairs = 0;
     for (int i = 0; i < available_colors; i++) {
-        ncurses::erase();
+        erase();
         rgb color;
         rgb complementary;
         get_color_content(i, color);
         rgb_complementary(complementary, color);
-        ncurses::init_pair(i, get_closest_color(complementary), i);
+        init_pair(i, get_closest_color(complementary), i);
         available_color_pairs++;
     }
 
@@ -231,7 +234,7 @@ int find_closest_color_index(rgb input, rgb* colors, int nb_colors) {
 }
 
 int find_best_initialized_color(rgb input) {
-    if (!ncurses::has_colors()) {
+    if (!has_colors()) {
         return -1;
     }
 
@@ -251,7 +254,7 @@ int find_best_initialized_color(rgb input) {
 }
 
 int get_closest_color(rgb input) {
-    if (!ncurses::has_colors()) {
+    if (!has_colors()) {
         return -1;
     }
 
@@ -260,7 +263,7 @@ int get_closest_color(rgb input) {
 }
 
 int get_closest_color_pair(rgb input) {
-    if (!ncurses::has_colors()) {
+    if (!has_colors()) {
         return -1;
     }
 
@@ -269,7 +272,7 @@ int get_closest_color_pair(rgb input) {
 
 
 int find_best_initialized_color_pair(rgb input) {
-    if (!ncurses::has_colors()) {
+    if (!has_colors()) {
         return -1;
     }
 

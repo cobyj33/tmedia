@@ -14,9 +14,8 @@
 #include <argparse.hpp>
 
 
-#include "ncursescpp.h"
-
 extern "C" {
+#include <ncurses.h>
 #include <libavutil/log.h>
 }
 
@@ -51,7 +50,7 @@ int use_program(ProgramCommands* commands);
 
 void on_terminate() {
     if (ncurses_initialized) {
-        ncurses::endwin();
+        endwin();
     }
 
     abort();
@@ -130,7 +129,7 @@ int use_program(ProgramCommands* commands) {
     } else if (commands->file != NULL) {
         if (commands->input == INPUT_TYPE_IMAGE) {
             ncurses_init();
-            return imageProgram(commands->file, ncurses::has_colors() && commands->format == FORMAT_TYPE_COLORED ? true : false);
+            return imageProgram(commands->file, has_colors() && commands->format == FORMAT_TYPE_COLORED ? true : false);
         } else if (commands->input == INPUT_TYPE_VIDEO) {
             ncurses_init();
             MediaPlayer* player = media_player_alloc(commands->file);
@@ -174,14 +173,14 @@ void ncurses_init() {
         throw std::runtime_error("NCurses attempted to be initialized although it has already been initialized");
     }
     ncurses_initialized = true;
-    ncurses::initscr();
-    ncurses::start_color();
+    initscr();
+    start_color();
     initialize_colors();
     initialize_color_pairs();
-    ncurses::cbreak();
-    ncurses::noecho();
-    ncurses::curs_set(0);
-    ncurses::keypad(stdscr, true);
+    cbreak();
+    noecho();
+    curs_set(0);
+    keypad(stdscr, true);
 }
 
 InputType flag_to_input_type(const char* flag) {

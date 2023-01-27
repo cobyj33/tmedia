@@ -6,10 +6,10 @@ extern "C" {
 #include <ncurses.h>
 }
 
-#define CUSTOM_COLOR 16
-#define CUSTOM_COLOR_PAIR 1
+const int CUSTOM_COLOR = 16;
+const int CUSTOM_COLOR_PAIR = 1;
 
-void ncurses::wfill_box(WINDOW* window, int y, int x, int width, int height, char ch) {
+void wfill_box(WINDOW* window, int y, int x, int width, int height, char ch) {
     for (int row = y; row <= y + height; row++) {
         for (int col = x; col <= x + width; col++) {
             mvwaddch(window, row, col, ch);
@@ -17,11 +17,11 @@ void ncurses::wfill_box(WINDOW* window, int y, int x, int width, int height, cha
     }
 }
 
-void ncurses::werasebox(WINDOW* window, int y, int x, int width, int height) {
-    ncurses::wfill_box(window, y, x, width, height, ' ');
+void werasebox(WINDOW* window, int y, int x, int width, int height) {
+    wfill_box(window, y, x, width, height, ' ');
 }
 
-void ncurses::printwrgb(char* line, rgb* colors, int len) {
+void printwrgb(char* line, rgb* colors, int len) {
     static int color_index = CUSTOM_COLOR;
     static int color_pair = CUSTOM_COLOR_PAIR;
 
@@ -39,7 +39,7 @@ void ncurses::printwrgb(char* line, rgb* colors, int len) {
     }
 }
 
-int ncurses::printwc(int color_pair, const char* format, ...) {
+int printwc(int color_pair, const char* format, ...) {
     va_list args;
     va_start(args, format);
     
@@ -51,7 +51,7 @@ int ncurses::printwc(int color_pair, const char* format, ...) {
     return result;
 }
 
-int ncurses::wprintwc(WINDOW* window, int color_pair, const char* format, ...) {
+int wprintwc(WINDOW* window, int color_pair, const char* format, ...) {
     va_list args;
     va_start(args, format);
     
