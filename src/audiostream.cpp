@@ -144,6 +144,10 @@ bool AudioStream::is_initialized() {
     return this->m_initialized;
 };
 
+std::size_t AudioStream::get_nb_can_read() {
+    return this->get_nb_samples() - this->m_playhead;
+}
+
 
 // AudioStream* audio_stream_alloc() {
 //     AudioStream* audio_stream = (AudioStream*)malloc(sizeof(AudioStream));

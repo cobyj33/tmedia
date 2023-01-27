@@ -21,8 +21,8 @@
 #include <curses_helpers.h>
 #include <mutex>
 
+#include <ncursescpp.h>
 extern "C" {
-#include <ncurses.h>
 #include <libavutil/avutil.h>
 }
 
@@ -43,14 +43,14 @@ int digit_to_int(char num) {
 }
 
 void* render_loop(MediaPlayer* player, std::mutex& alter_mutex) {
-    WINDOW* inputWindow = newwin(0, 0, 1, 1);
+    ncurses::WINDOW* inputWindow = ncurses::newwin(0, 0, 1, 1);
     std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
 
     MEVENT mouse_event;
-    mousemask(BUTTON1_PRESSED, NULL);
+    ncurses::mousemask(BUTTON1_PRESSED, NULL);
 
-    nodelay(inputWindow, true);
-    keypad(inputWindow, true);
+    ncurses::nodelay(inputWindow, true);
+    ncurses::keypad(inputWindow, true);
     double jump_time_requested = 0;
     GuiData gui_data = { DISPLAY_MODE_VIDEO, { 0, 1 }, { player->displaySettings->use_colors, 1 }, 0 };
 
@@ -123,8 +123,8 @@ void* render_loop(MediaPlayer* player, std::mutex& alter_mutex) {
         } else if (ch == 'f' || ch == 'F') {
             gui_data.video.fullscreen = !gui_data.video.fullscreen;
         } else if (ch == KEY_RESIZE) {
-            endwin();
-            refresh();
+            ncurses::endwin();
+            ncurses::refresh();
         } else if (ch >= '0' && ch <= '9') {
             int digit = digit_to_int(ch);
             if (gui_data.mode == DISPLAY_MODE_VIDEO) {
@@ -163,11 +163,11 @@ void* render_loop(MediaPlayer* player, std::mutex& alter_mutex) {
         }
 
         mutex_lock.unlock();
-        refresh();
+        ncurses::refresh();
         sleep_for_ms(5);
     }
 
-    delwin(inputWindow);
+    ncurses::delwin(inputWindow);
     return nullptr;
 }
 
@@ -271,7 +271,7 @@ void print_wave(int x, int y, int width, int height, float* wave, int nb_samples
         mvaddch(midline, x + i / nb_channels, '*');
     }
 
-    mvprintw(midline, (COLS / 2) - 6, "Channel #%d", channel_index);
+    ncurses::mvprintw(midline, (COLS / 2) - 6, "Channel #%d", channel_index);
 
     if (use_color) {
         attroff(COLOR_PAIR(color_pair));
@@ -279,17 +279,17 @@ void print_wave(int x, int y, int width, int height, float* wave, int nb_samples
 } 
 
 void render_audio_screen(MediaPlayer *player, GuiData gui_data) {
-    erase();
+    ncurses::erase();
     const MediaDisplayCache* cache = player->displayCache;
     AudioStream* audio_stream = cache->audio_stream;
-    if (audio_stream->is_initialized()) {
-        printw("%s\n", "CURRENTLY NO AUDIO DATA TO DISPLAY");
+    if (!audio_stream->is_initialized()) {
+        printw("%s\n", "CURRENTLY NO AUDIO DATA TO DISPLAY: AUDIO STREAM IS NOT INITIALIZED");
         return;
     }
 
-    const int shown_sample_size = 8192 * 2;
+    const std::size_t shown_sample_size = 8192 * 2;
     if (audio_stream->can_read(shown_sample_size)) {
-        printw("%s\n", "CURRENTLY NOT ENOUGH AUDIO DATA TO DISPLAY");
+        ncurses::printw("%s %ld %s\n", "CURRENTLY NOT ENOUGH AUDIO DATA TO DISPLAY: FOUND ", audio_stream->get_nb_can_read(), " SAMPLES");
         return;
     }
 
@@ -326,9 +326,9 @@ void render_audio_screen(MediaPlayer *player, GuiData gui_data) {
     }
 
     const char* format = "Press 0 to see all Channels, Otherwise, press a number to see its specific channel: ";
-    mvprintw(0, (COLS / 2) - (strlen(format) + audio_stream->get_nb_channels() * 3 + 6) / 2, "%s%s", format, gui_data.audio.show_all_channels == 1 ? "|All Channels (0)| " : "All Channels (0) ");
+    ncurses::mvprintw(0, (COLS / 2) - (strlen(format) + audio_stream->get_nb_channels() * 3 + 6) / 2, "%s%s", format, gui_data.audio.show_all_channels == 1 ? "|All Channels (0)| " : "All Channels (0) ");
     for (int i = 0; i < audio_stream->get_nb_channels(); i++) {
-        printw(gui_data.audio.channel_index == i && !gui_data.audio.show_all_channels ? "|%d| " : "%d ", i + 1);  
+        ncurses::printw(gui_data.audio.channel_index == i && !gui_data.audio.show_all_channels ? "|%d| " : "%d ", i + 1);  
     }
 
 }
@@ -336,7 +336,7 @@ void render_audio_screen(MediaPlayer *player, GuiData gui_data) {
 void print_debug(MediaDebugInfo* debug_info, const char* source, const char* type) {
     for (int i = 0; i < debug_info->nb_messages; i++) {
         if (strcmp(source, debug_info->messages[i]->source) == 0 && strcmp(type, debug_info->messages[i]->type) == 0) {
-            printw("%s", debug_info->messages[i]->message);
+            ncurses::printw("%s", debug_info->messages[i]->message);
         }
     }
 }
@@ -407,7 +407,7 @@ AsciiImage* stitch_video(MediaPlayer* player, int width, int height) {
 }
 
 void render_movie_screen(MediaPlayer* player, GuiData gui_data) {
-    erase();
+    ncurses::erase();
     if (player->displayCache->image == NULL) {
         return;
     }
@@ -518,7 +518,7 @@ void print_ascii_image_full(AsciiImage* textImage) {
         }
     } else {
         for (int row = 0; row < std::min(textImage->height, LINES); row++) {
-            printw("%s|", horizontalPadding);
+            ncurses::printw("%s|", horizontalPadding);
             for (int col = 0; col < std::min(textImage->width, COLS); col++) {
                 addch(textImage->lines[row * textImage->width + col]);
             }
@@ -549,7 +549,7 @@ void render_playbar(MediaPlayer* player, GuiData gui_data) {
 
     const int bar_start = strlen(status);
     const int bar_end = COLS;
-    mvprintw(LINES - height / 2, 0, "%s", status);
+    ncurses::mvprintw(LINES - height / 2, 0, "%s", status);
     ncurses::wfill_box(stdscr, LINES - height / 2, bar_start, bar_end - bar_start, height, '-');
     if (duration != 0.0) {
         ncurses::wfill_box(stdscr, LINES - height, bar_start, (bar_end - bar_start) * (time / duration), height, '*');
@@ -557,5 +557,5 @@ void render_playbar(MediaPlayer* player, GuiData gui_data) {
     char playTime[15], durationTime[15];
     format_time(playTime, 15, time);
     format_time(durationTime, 15, duration);
-    mvprintw(LINES - height / 2, COLS - (strlen(playTime) + strlen(durationTime) + 1 ), "%s/%s", playTime, durationTime );
+    ncurses::mvprintw(LINES - height / 2, COLS - (strlen(playTime) + strlen(durationTime) + 1 ), "%s/%s", playTime, durationTime );
 }

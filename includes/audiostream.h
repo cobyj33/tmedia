@@ -141,6 +141,8 @@ class AudioStream {
          */
         bool can_read(std::size_t nb_samples);
 
+        std::size_t get_nb_can_read();
+
         /**
          * @brief Reads nb_samples samples into the float buffer and advanced the audio stream by nb_samples. The data returned is interleaved
          * The float buffer should be of the size (nb_samples * nb_channels), where nb_samples is the number of samples wanted to be read and nb_channels is the number of channels in the audio stream. This can be easily found by multiplying the nb_samples to be read by the number of channels in the audio stream through get_nb_channels()

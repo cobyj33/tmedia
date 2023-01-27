@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <iostream>
 
 #include "color.h"
 #include "icons.h"
@@ -9,6 +10,9 @@
 #include <video.h>
 #include <media.h>
 #include <info.h>
+
+#include <argparse.hpp>
+
 
 #include "ncursescpp.h"
 
@@ -126,7 +130,7 @@ int use_program(ProgramCommands* commands) {
     } else if (commands->file != NULL) {
         if (commands->input == INPUT_TYPE_IMAGE) {
             ncurses_init();
-            return imageProgram(commands->file, has_colors() && commands->format == FORMAT_TYPE_COLORED ? true : false);
+            return imageProgram(commands->file, ncurses::has_colors() && commands->format == FORMAT_TYPE_COLORED ? true : false);
         } else if (commands->input == INPUT_TYPE_VIDEO) {
             ncurses_init();
             MediaPlayer* player = media_player_alloc(commands->file);
@@ -138,7 +142,7 @@ int use_program(ProgramCommands* commands) {
             }
             return EXIT_FAILURE;
         } else if (commands->input == INPUT_TYPE_AUDIO) {
-            printf("%s", "Audio Only Currently Unimplemented");
+            std::cout << "Audio Only Currently Unimplemented" << std::endl;
             return EXIT_SUCCESS;
         }
     }

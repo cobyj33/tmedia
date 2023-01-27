@@ -13,8 +13,8 @@
 #include <memory>
 #include <mutex>
 
+
 extern "C" {
-#include <curses.h>
 
 #include <miniaudio.h>
 

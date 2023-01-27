@@ -22,7 +22,7 @@ pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
 
 add_subdirectory(lib/Catch2)
 
-include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio/extras/miniaudio_split )
+include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio/extras/miniaudio_split ./lib/argparse/include/argparse )
 
 add_executable(ascii_video
 ./lib/miniaudio/extras/miniaudio_split/miniaudio.c

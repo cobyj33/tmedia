@@ -20,8 +20,9 @@ namespace ncurses {
     //functions
     using ::move;
     using ::endwin;
+    using ::newwin;
+    using ::refresh;
     using ::initscr;
-    using ::mvaddch;
     using ::WINDOW;
     using ::keypad;
     using ::nodelay;
@@ -41,6 +42,12 @@ namespace ncurses {
     using ::init_pair;
     using ::init_color;
     
+    using ::mvaddch;
+    using ::erase;
+    using ::delwin;
+    using ::mvprintw;
+    using ::printw;
+
 
 
 
