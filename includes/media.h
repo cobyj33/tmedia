@@ -28,22 +28,26 @@ extern "C" {
 
 
 class MediaStream {
-    public:
+    private:
         StreamData& info;
+
+    public:
         PlayheadList<AVPacket*> packets;
-        double timeBase;
-        double average_frame_rate;
-        double start_time;
-        int stream_index;
-        enum AVMediaType media_type;
+        // double timeBase;
+        // double average_frame_rate;
+        // double start_time;
+        // int stream_index;
+        // enum AVMediaType media_type;
 
         MediaStream(StreamData& streamData);
         ~MediaStream();
 
-        double get_average_frame_rate();
-        double get_start_time();
-        int get_stream_index();
-        enum AVMediaType get_media_type();
+        double get_time_base() const;
+        double get_average_frame_rate() const;
+        double get_start_time() const;
+        int get_stream_index() const;
+        enum AVMediaType get_media_type() const;
+        AVCodecContext* get_codec_context() const;
 };
 
 class MediaData {

@@ -33,7 +33,7 @@ PixelData::PixelData(const char* fileName) {
     }
     MediaStream& imageStream = media_data.get_media_stream(AVMEDIA_TYPE_VIDEO);
 
-    AVCodecContext* codecContext = imageStream.info.codecContext;
+    AVCodecContext* codecContext = imageStream.get_codec_context();
     VideoConverter imageConverter(
             codecContext->width, codecContext->height, AV_PIX_FMT_RGB24,
             codecContext->width, codecContext->height, codecContext->pix_fmt
@@ -45,7 +45,7 @@ PixelData::PixelData(const char* fileName) {
     std::vector<AVFrame*> originalFrameContainer;
 
     while (av_read_frame(media_data.formatContext, packet) == 0) {
-        if (packet->stream_index != imageStream.info.stream->index)
+        if (packet->stream_index != imageStream.get_stream_index())
             continue;
 
         try {

@@ -49,13 +49,14 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
     MediaStream& video_stream = media_data->get_media_stream(AVMEDIA_TYPE_VIDEO);
 
-    double frameRate = av_q2d(video_stream.info.stream->avg_frame_rate);
-    double videoTimeBase = video_stream.timeBase;
+    double frameRate = video_stream.get_average_frame_rate();
+    double videoTimeBase = video_stream.get_time_base();
+    AVCodecContext* videoCodecContext = video_stream.get_codec_context();
 
-    AVCodecContext* videoCodecContext = video_stream.info.codecContext;
     std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(videoCodecContext->width, videoCodecContext->height, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
     int output_frame_width = bounded_video_frame_dimensions.first;
     int output_frame_height = bounded_video_frame_dimensions.second;
+
     const bool use_colors = player->displaySettings.use_colors;
     VideoConverter videoConverter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt);
 
@@ -134,9 +135,9 @@ void jump_to_time(MediaTimeline* timeline, double targetTime) {
     }
 
     MediaStream& video_stream = timeline->mediaData->get_media_stream(AVMEDIA_TYPE_VIDEO);
-    AVCodecContext* videoCodecContext = video_stream.info.codecContext;
+    AVCodecContext* videoCodecContext = video_stream.get_codec_context();
     PlayheadList<AVPacket*>& videoPackets = video_stream.packets;
-    double videoTimeBase = video_stream.timeBase;
+    double videoTimeBase = video_stream.get_time_base();
     const int64_t targetVideoPTS = targetTime / videoTimeBase;
     AVPacket* packet_get;
 

@@ -22,7 +22,7 @@ extern "C" {
 
 MediaStream& MediaData::get_media_stream(enum AVMediaType media_type) {
     for (int i = 0; i < this->nb_streams; i++) {
-        if (this->media_streams[i]->media_type == media_type) {
+        if (this->media_streams[i]->get_media_type() == media_type) {
             return *this->media_streams[i];
         }
     }
@@ -188,27 +188,31 @@ MediaData::MediaData(const char* fileName) {
     this->duration = (double)this->formatContext->duration / AV_TIME_BASE;
 }
 
-double MediaStream::get_average_frame_rate() {
+double MediaStream::get_average_frame_rate() const {
     return av_q2d(this->info.stream->avg_frame_rate);
 }
 
-double MediaStream::get_start_time() {
-    return this->info.stream->start_time * this->timeBase;
+double MediaStream::get_start_time() const {
+    return this->info.stream->start_time * this->get_time_base();
 }
 
-int MediaStream::get_stream_index() {
+int MediaStream::get_stream_index() const {
     return this->info.stream->index;
 }
 
-enum AVMediaType MediaStream::get_media_type() {
+enum AVMediaType MediaStream::get_media_type() const {
     return this->info.mediaType;
 }
 
-MediaStream::MediaStream(StreamData& streamData) : info(streamData) {
-    this->timeBase = av_q2d(streamData.stream->time_base);
+double MediaStream::get_time_base() const {
+    return av_q2d(this->info.stream->time_base);
 }
 
+AVCodecContext* MediaStream::get_codec_context() const {
+    return this->info.codecContext;
+}
 
+MediaStream::MediaStream(StreamData& streamData) : info(streamData) { }
 
 MediaData::~MediaData() {
     avformat_close_input(&(this->formatContext));
