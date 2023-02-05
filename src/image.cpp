@@ -75,27 +75,3 @@ PixelData::PixelData(const char* fileName) {
     av_frame_free((AVFrame**)&finalFrame);
 }
 
-double get_scale_factor(int srcWidth, int srcHeight, int targetWidth, int targetHeight) {
-    if (srcWidth == targetWidth && srcHeight == targetHeight) {
-        return 1;
-    }
-
-    bool shouldShrink = srcWidth > targetWidth || srcHeight > targetHeight;
-    double scaleFactor = shouldShrink ? std::min((double)targetWidth / srcWidth, (double)targetHeight / srcHeight) : std::max((double)targetWidth / srcWidth, (double)targetHeight / srcHeight);
-    return scaleFactor;
-}
-
-std::pair<int, int> get_scale_size(int srcWidth, int srcHeight, int targetWidth, int targetHeight) { 
-    double scale_factor = get_scale_factor(srcWidth, srcHeight, targetWidth, targetHeight);
-    int width = (int)(srcWidth * scale_factor);
-    int height = (int)(srcHeight * scale_factor);
-    return std::make_pair(width, height);
-}
-
-std::pair<int, int> get_bounded_dimensions(int srcWidth, int srcHeight, int maxWidth, int maxHeight) {
-  if (srcWidth <= maxWidth && srcHeight <= maxHeight) {
-    return std::make_pair(srcWidth, srcHeight);
-  } else {
-    return get_scale_size(srcWidth, srcHeight, maxWidth, maxHeight);
-  }
-}
