@@ -1,4 +1,5 @@
 #include <streamdata.h>
+#include <memory>
 #include <stdexcept>
 #include <except.h>
 
@@ -47,7 +48,8 @@ StreamData::~StreamData() {
  */
 StreamDataGroup::StreamDataGroup(AVFormatContext* formatContext, const enum AVMediaType* mediaTypes, int nb_target_streams) {
     for (int i = 0; i < nb_target_streams; i++) {
-        this->m_datas.push_back(StreamData(formatContext, mediaTypes[i]));
+        std::shared_ptr<StreamData> stream_data_ptr = std::make_shared<StreamData>(formatContext, mediaTypes[i]);
+        this->m_datas.push_back(stream_data_ptr);
     }
 
     this->m_formatContext = formatContext;
@@ -57,18 +59,19 @@ int StreamDataGroup::get_nb_streams() {
     return this->m_datas.size();
 };
 
-StreamData& StreamDataGroup::get_media_stream(enum AVMediaType media_type) {
+StreamData& StreamDataGroup::get_av_media_stream(enum AVMediaType media_type) {
     for (int i = 0; i < this->m_datas.size(); i++) {
-        if (this->m_datas[i].mediaType == media_type) {
-            return this->m_datas[i];
+        if (this->m_datas[i]->mediaType == media_type) {
+            return *this->m_datas[i];
         }
     }
+
     throw ascii::not_found_error("Could not find stream data for media type " + std::string(av_get_media_type_string(media_type)));
 };
 
-bool StreamDataGroup::has_media_stream(enum AVMediaType media_type) {
+bool StreamDataGroup::has_av_media_stream(enum AVMediaType media_type) {
     for (int i = 0; i < this->m_datas.size(); i++) {
-        if (this->m_datas[i].mediaType == media_type) {
+        if (this->m_datas[i]->mediaType == media_type) {
             return true;
         }
     }
@@ -81,5 +84,5 @@ StreamData& StreamDataGroup::operator[](int index)
         throw std::out_of_range("Attempted to access StreamData in StreamDataGroup from out of bounds index: " + std::to_string(index) + " ( length: " + std::to_string(this->m_datas.size())  + " )");
     }
 
-    return this->m_datas[index];
+    return *this->m_datas[index];
 }

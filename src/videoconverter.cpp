@@ -10,9 +10,9 @@ VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat
     this->m_context = sws_getContext(
             src_width, src_height, src_pix_fmt, 
             dst_width, dst_height, dst_pix_fmt, 
-            SWS_FAST_BILINEAR, NULL, NULL, NULL);
+            SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
 
-    if (this->m_context == NULL) {
+    if (this->m_context == nullptr) {
         throw ascii::bad_alloc("Allocation of internal SwsContext of AudioResampler failed. Aborting...");
     }
     
@@ -30,7 +30,7 @@ VideoConverter::~VideoConverter() {
 
 AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
     AVFrame* resizedVideoFrame = av_frame_alloc();
-    if (resizedVideoFrame == NULL) {
+    if (resizedVideoFrame == nullptr) {
         throw ascii::bad_alloc("Could not allocate resized frame for VideoConverter");
     }
 

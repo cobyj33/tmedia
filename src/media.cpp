@@ -22,8 +22,8 @@ extern "C" {
 
 MediaStream& MediaData::get_media_stream(enum AVMediaType media_type) {
     for (int i = 0; i < this->nb_streams; i++) {
-        if (this->media_streams[i].media_type == media_type) {
-            return this->media_streams[i];
+        if (this->media_streams[i]->media_type == media_type) {
+            return *this->media_streams[i];
         }
     }
     throw ascii::not_found_error("Cannot get media stream " + std::string(av_get_media_type_string(media_type)) + " from media data, could not be found");
@@ -32,7 +32,7 @@ MediaStream& MediaData::get_media_stream(enum AVMediaType media_type) {
 bool MediaData::has_media_stream(enum AVMediaType media_type) {
     try {
         this->get_media_stream(media_type);
-        return false;
+        return true;
     } catch (ascii::not_found_error not_found_error) {
         return false;
     }
@@ -181,7 +181,8 @@ MediaData::MediaData(const char* fileName) {
     this->nb_streams = this->stream_datas->get_nb_streams();
 
     for (int i = 0; i < this->nb_streams; i++) {
-        this->media_streams.push_back(MediaStream(  (*this->stream_datas)[i] ));
+        std::unique_ptr<MediaStream> media_stream_ptr = std::make_unique<MediaStream>( (*this->stream_datas)[i] );
+        this->media_streams.push_back(std::move(media_stream_ptr));
     }
 
     this->duration = (double)this->formatContext->duration / AV_TIME_BASE;

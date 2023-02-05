@@ -29,7 +29,7 @@ extern "C" {
 
 class MediaStream {
     public:
-        StreamData info;
+        StreamData& info;
         PlayheadList<AVPacket*> packets;
         double timeBase;
         double average_frame_rate;
@@ -49,7 +49,7 @@ class MediaStream {
 class MediaData {
     public:
         AVFormatContext* formatContext;
-        std::vector<MediaStream> media_streams;
+        std::vector<std::unique_ptr<MediaStream>> media_streams;
         std::unique_ptr<StreamDataGroup> stream_datas;
         int nb_streams;
         bool allPacketsRead;

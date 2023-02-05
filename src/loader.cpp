@@ -27,7 +27,7 @@ bool data_loading_thread_loop(MediaPlayer* player, std::mutex& mutex) {
     bool shouldFetch = true;
 
     for (int i = 0; i < media_data.nb_streams; i++) {
-        if (media_data.media_streams[i].packets.get_length() > PACKET_RESERVE_SIZE) {
+        if (media_data.media_streams[i]->packets.get_length() > PACKET_RESERVE_SIZE) {
             shouldFetch = false;
             break;
         }
@@ -51,10 +51,10 @@ void MediaData::fetch_next(int requestedPacketCount) {
         }
 
         for (int i = 0; i < this->nb_streams; i++) {
-            if (this->media_streams[i].info.stream->index == readingPacket->stream_index) {
+            if (this->media_streams[i]->info.stream->index == readingPacket->stream_index) {
                 AVPacket* savedPacket = av_packet_alloc();
                 av_packet_ref(savedPacket, readingPacket);
-                this->media_streams[i].packets.push_back(savedPacket);
+                this->media_streams[i]->packets.push_back(savedPacket);
                 break;
             }
         }

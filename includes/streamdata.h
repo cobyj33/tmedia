@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <memory>
 
 extern "C" {
     #include <libavcodec/avcodec.h>
@@ -26,14 +27,14 @@ class StreamData {
 class StreamDataGroup {
     private:
         AVFormatContext* m_formatContext;
-        std::vector<StreamData> m_datas;
+        std::vector<std::shared_ptr<StreamData>> m_datas;
 
     public:
         StreamDataGroup(AVFormatContext* formatContext, const enum AVMediaType* mediaTypes, int nb_target_streams);
 
         int get_nb_streams();
-        StreamData& get_media_stream(AVMediaType media_type);
-        bool has_media_stream(AVMediaType media_type);
+        StreamData& get_av_media_stream(AVMediaType media_type);
+        bool has_av_media_stream(AVMediaType media_type);
 
         StreamData& operator[](int);
 };
