@@ -57,7 +57,6 @@ class MediaData {
         std::unique_ptr<StreamDataGroup> stream_datas;
         int nb_streams;
         bool allPacketsRead;
-        int currentPacket;
         double duration;
 
         MediaData(const char* fileName);

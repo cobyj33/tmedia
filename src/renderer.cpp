@@ -8,6 +8,7 @@
 
 #include "audio.h"
 #include "color.h"
+#include "termcolor.h"
 #include "debug.h"
 #include "pixeldata.h"
 #include "playheadlist.hpp"
@@ -108,10 +109,20 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex) {
     keypad(inputWindow, true);
     double jump_time_requested = 0;
     GuiData gui_data = { MediaDisplayMode::VIDEO, { false, true }, { player->displaySettings.use_colors, true }, false };
+    int count = 0;
 
+    std::unique_lock<std::mutex> lock(alter_mutex, std::defer_lock);
     while (player->inUse) {
+        lock.lock();
         int input = wgetch(inputWindow);
-        process_render(player, alter_mutex, gui_data, input);
+        PixelData& image = player->displayCache.image;
+
+        // render_movie_screen(player, gui_data);
+        erase();
+        printw("Welcome to ASCII VIDEO %d %d x %d", count++, image.get_width(), image.get_height());
+        refresh();
+        lock.unlock();
+        // process_render(player, alter_mutex, gui_data, input);
         sleep_for_ms(5);
     }
 
@@ -374,6 +385,7 @@ void render_screen(MediaPlayer* player, GuiData& gui_data) {
 void render_movie_screen(MediaPlayer* player, GuiData& gui_data) {
     erase();
     print_pixel_data(player->displayCache.image, 0, 0, COLS, LINES);
+    refresh();
 }
 
 typedef struct ScreenChar {

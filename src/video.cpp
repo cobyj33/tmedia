@@ -101,25 +101,36 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
         videoPackets.try_step_forward();
 
-        PixelData image(readingFrame);
+        std::vector<std::vector<uint8_t>> test{
+            { 255, 255, 120, 120, 255, 255 },
+            { 255, 255, 120, 120, 255, 255 },
+            { 255, 255, 120, 120, 255, 255 },
+            { 255, 255, 120, 120, 255, 255 },
+            { 255, 255, 120, 120, 255, 255 },
+            { 255, 255, 120, 120, 255, 255 },
+            { 255, 255, 120, 120, 255, 255 },
+            { 255, 255, 120, 120, 255, 255 }
+        };
+        PixelData image(test);
         player->set_current_image(image);
+        sleep_for_sec(frameRate);
 
-        double next_frame_time_since_start_sec = (double)readingFrame->pts * videoTimeBase;
-        double frame_speed_skip_time_sec = ( (readingFrame->duration * videoTimeBase) - ( (readingFrame->duration * videoTimeBase) / playback.get_speed() ) );
-        playback.skip(frame_speed_skip_time_sec);
+        // double next_frame_time_since_start_sec = (double)readingFrame->pts * videoTimeBase;
+        // double frame_speed_skip_time_sec = ( (readingFrame->duration * videoTimeBase) - ( (readingFrame->duration * videoTimeBase) / playback.get_speed() ) );
+        // playback.skip(frame_speed_skip_time_sec);
 
-        const double current_time = playback.get_time(system_clock_sec());
-        double extra_delay = (double)(readingFrame->repeat_pict) / (2 * frameRate);
-        double waitDuration = next_frame_time_since_start_sec - current_time + extra_delay - frame_speed_skip_time_sec;
-        waitDuration -= frame_speed_skip_time_sec;
-        mutex_lock.unlock();
+        // const double current_time = playback.get_time(system_clock_sec());
+        // double extra_delay = (double)(readingFrame->repeat_pict) / (2 * frameRate);
+        // double waitDuration = next_frame_time_since_start_sec - current_time + extra_delay - frame_speed_skip_time_sec;
+        // waitDuration -= frame_speed_skip_time_sec;
+        // mutex_lock.unlock();
 
-        av_frame_unref(readingFrame);
-        if (waitDuration <= 0) {
-            continue;
-        } else {
-            sleep_for_sec(waitDuration);
-        }
+        // av_frame_unref(readingFrame);
+        // if (waitDuration <= 0) {
+        //     continue;
+        // } else {
+        //     sleep_for_sec(waitDuration);
+        // }
     }
 
     av_frame_free(&readingFrame);

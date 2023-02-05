@@ -176,7 +176,6 @@ MediaData::MediaData(const char* fileName) {
     this->stream_datas = std::make_unique<StreamDataGroup>(this->formatContext, mediaTypes, 2);
 
     this->allPacketsRead = false;
-    this->currentPacket = 0;
     this->nb_streams = this->stream_datas->get_nb_streams();
 
     for (int i = 0; i < this->nb_streams; i++) {

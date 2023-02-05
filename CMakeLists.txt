@@ -55,6 +55,7 @@ add_executable(ascii_video
 ./src/pixeldata.cpp
 ./src/aabb.cpp
 ./src/scale.cpp
+./src/termcolor.cpp
 )
 
 target_link_libraries( ascii_video ${CURSES_LIBRARIES} PkgConfig::LIBAV)
@@ -73,4 +74,4 @@ add_executable(tests
 ./src/tests/test_scale.cpp
 )
 
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain PkgConfig::LIBAV)
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain ${CURSES_LIBRARIES} PkgConfig::LIBAV)

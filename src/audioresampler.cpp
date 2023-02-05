@@ -47,13 +47,8 @@ AudioResampler::~AudioResampler() {
 
 std::vector<AVFrame*> AudioResampler::resample_audio_frames(std::vector<AVFrame*>& originals) {
     std::vector<AVFrame*> resampled_frames;
-
     for (int i = 0; i < originals.size(); i++) {
         AVFrame* resampledFrame = this->resample_audio_frame(originals[i]);
-        if (resampledFrame == NULL) {
-            clear_av_frame_list(resampled_frames);
-            throw std::runtime_error("Unable to resample audio frame " + std::to_string(i) + " in frame list.");
-        }
         resampled_frames.push_back(resampledFrame);
     }
 
@@ -75,9 +70,11 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
         resampledFrame->duration = original->duration;
 
         result = swr_convert_frame(this->m_context, resampledFrame, original);
-        if (result < 0) {
-            av_frame_free(&resampledFrame);
-            throw std::runtime_error("Unable to resample audio frame");
+        if (result != 0) {
+            if (resampledFrame != nullptr) {
+                av_frame_free(&resampledFrame);
+            }
+            throw ascii::ffmpeg_error("Unable to resample audio frame ", result);
         }
 
         return resampledFrame;

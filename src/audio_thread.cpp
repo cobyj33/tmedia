@@ -59,7 +59,6 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
 void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
-    // MediaDebugInfo debug_info = player->displayCache.debug_info;
     int result;
     if (!player->timeline->mediaData->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
         throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
@@ -117,19 +116,16 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         AudioStream& audioStream = player->displayCache.audio_stream;
         if (audio_media_stream.packets.can_step_forward()) {
             audio_media_stream.packets.step_forward();
-            try {
-                std::vector<AVFrame*> audioFrames = find_final_audio_frames(audioCodecContext, audioResampler, audio_media_stream.packets);
-                for (int i = 0; i < audioFrames.size(); i++) {
-                    AVFrame* current_frame = audioFrames[i];
-                    float* frameData = (float*)(current_frame->data[0]);
-                    audioStream.write(frameData, current_frame->nb_samples);
-                }
-                clear_av_frame_list(audioFrames);
-            } catch (std::runtime_error e) {
-
-            }
+            // std::vector<AVFrame*> audioFrames = find_final_audio_frames(audioCodecContext, audioResampler, audio_media_stream.packets);
+            // for (int i = 0; i < audioFrames.size(); i++) {
+                // AVFrame* current_frame = audioFrames[i];
+                // float* frameData = (float*)(current_frame->data[0]);
+                float frameData[14] = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0, 0.0};
+                audioStream.write(frameData, 14);
+                // audioStream.write(frameData, current_frame->nb_samples);
+            // }
+            // clear_av_frame_list(audioFrames);
         }
-
 
         audioDevice.sampleRate = audioCodecContext->sample_rate * playback.get_speed();
 

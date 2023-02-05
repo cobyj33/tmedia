@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "color.h"
+#include "termcolor.h"
 #include "icons.h"
 #include "pixeldata.h"
 #include "image.h"

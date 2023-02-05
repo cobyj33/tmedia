@@ -12,7 +12,7 @@ void MediaPlayer::start() {
         throw std::runtime_error("CANNOT USE MEDIA PLAYER THAT IS ALREADY IN USE");
     }
 
-    const int INITIAL_PLAYER_PACKET_BUFFER_SIZE = 5000;
+    const int INITIAL_PLAYER_PACKET_BUFFER_SIZE = 10000;
     this->inUse = true;
     this->timeline->playback.start(system_clock_sec());
     this->timeline->mediaData->fetch_next(INITIAL_PLAYER_PACKET_BUFFER_SIZE);

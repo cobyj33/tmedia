@@ -36,36 +36,29 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* videoCodecContext, AVP
 
     result = avcodec_send_packet(videoCodecContext, videoPacket);
     if (result < 0) {
-        if (result == AVERROR(EAGAIN) ) {
-            throw ascii::ffmpeg_error(" EAGAIN error while sending video packet, send more data on consecutive calls ", result);
-        } else if (result != AVERROR(EAGAIN) ) {
-            throw ascii::ffmpeg_error("Error while sending video packet: ", result);
-        }
+        throw ascii::ffmpeg_error("Error while sending video packet: ", result);
     }
 
     AVFrame* videoFrame = av_frame_alloc();
-    result = avcodec_receive_frame(videoCodecContext, videoFrame);
-    if (result < 0) {
-        av_frame_free(&videoFrame);
-        if (result != AVERROR(EAGAIN)) {
-            throw ascii::ffmpeg_error("FATAL ERROR WHILE RECEIVING VIDEO FRAME:", result);
-        }
-    }
-
 
     while (result == 0) {
+        result = avcodec_receive_frame(videoCodecContext, videoFrame);
         AVFrame* savedFrame = av_frame_alloc();
         result = av_frame_ref(savedFrame, videoFrame);
+        
         if (result < 0) {
-            clear_av_frame_list(videoFrames);
             av_frame_free(&savedFrame);
-            av_frame_free(&videoFrame);
-            throw ascii::ffmpeg_error("ERROR WHILE REFERENCING VIDEO FRAMES DURING DECODING:", result);
+            if (result == AVERROR(EAGAIN)) {
+                break;
+            } else {
+                av_frame_free(&videoFrame);
+                clear_av_frame_list(videoFrames);
+                throw ascii::ffmpeg_error("ERROR WHILE REFERENCING VIDEO FRAMES DURING DECODING:", result);
+            }
         }
 
         videoFrames.push_back(savedFrame);
         av_frame_unref(videoFrame);
-        result = avcodec_receive_frame(videoCodecContext, videoFrame);
     }
     
     av_frame_free(&videoFrame);
