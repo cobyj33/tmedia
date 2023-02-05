@@ -17,17 +17,17 @@ AudioResampler::AudioResampler(AVChannelLayout* dst_ch_layout, enum AVSampleForm
     src_sample_rate, 0, nullptr);
 
     if (result < 0) {
-        if (context != NULL) {
+        if (context != nullptr) {
             swr_free(&context);
         }
         throw ascii::bad_alloc("Allocation of internal SwrContext of AudioResampler failed. Aborting...");
     } else {
         result = swr_init(context);
         if (result < 0) {
-            if (context != NULL) {
+            if (context != nullptr) {
                 swr_free(&context);
             }
-            throw "Initialization of internal SwrContext of AudioResampler failed. Aborting...";
+            throw std::runtime_error("Initialization of internal SwrContext of AudioResampler failed. Aborting...");
         }
     }
 
@@ -44,21 +44,16 @@ AudioResampler::~AudioResampler() {
     swr_free(&(this->m_context));
 }
 
-AVFrame** AudioResampler::resample_audio_frames(AVFrame** originals, int nb_frames) {
-    int currently_allocated = 0;
-    AVFrame** resampled_frames = (AVFrame**)malloc(sizeof(AVFrame*) * nb_frames);
-    if (resampled_frames == NULL) {
-        throw ascii::bad_alloc("Could not create AVFrame audio frame list for resampling");
-    }
+std::vector<AVFrame*> AudioResampler::resample_audio_frames(std::vector<AVFrame*>& originals) {
+    std::vector<AVFrame*> resampled_frames;
 
-    for (int i = 0; i < nb_frames; i++) {
+    for (int i = 0; i < originals.size(); i++) {
         AVFrame* resampledFrame = this->resample_audio_frame(originals[i]);
         if (resampledFrame == NULL) {
-            free_frame_list(resampled_frames, currently_allocated);
-            throw "Unable to resample audio frame " + std::to_string(i) + " in frame list.";
+            clear_av_frame_list(resampled_frames);
+            throw std::runtime_error("Unable to resample audio frame " + std::to_string(i) + " in frame list.");
         }
-        resampled_frames[i] = resampledFrame;
-        currently_allocated++;
+        resampled_frames.push_back(resampledFrame);
     }
 
     return resampled_frames;
@@ -81,7 +76,7 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
         result = swr_convert_frame(this->m_context, resampledFrame, original);
         if (result < 0) {
             av_frame_free(&resampledFrame);
-            throw "Unable to resample audio frame";
+            throw std::runtime_error("Unable to resample audio frame");
         }
 
         return resampledFrame;

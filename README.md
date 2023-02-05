@@ -1,6 +1,7 @@
-@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._
 
 # ASCII Video by Jacoby Johnson
+
+**@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._@\%#*+=-:.**
 
 A terminal video player and image display with a pure ASCII character display
 
@@ -21,25 +22,26 @@ A terminal video player and image display with a pure ASCII character display
 * miniaudio (included in project already, no need to download)
 * cmake
 
-
 ## Installing
 
 ### Windows
+
   Sorry, might be out of luck
   The Windows Subsystem for Linux may be your best bet though, in order to create a Linux environment on a Windows Computer
 
 ### Linux
 
 #### Docker
-+ This git repo ships with a Dockerfile which can be built with  
+
+* This git repo ships with a Dockerfile which can be built with  
   ``` docker build -t ascii_video ```  
   
   Then, after the image is built, the program can be run with  
-  ``` docker run --rm -it --device=/dev/snd -v=<PATH TO VIDEO>:/video.mp4 ascii_video -v /video.mp4```  
+  ```docker run --rm -it --device=/dev/snd -v=<PATH TO VIDEO>:/video.mp4 ascii_video -v /video.mp4```  
   Where ```<PATH TO VIDEO>``` is an actual file path to a video on your local machine  
   * Note: /dev/snd is used on here as it is the path for the standard sound device files on linux devices  
   * Working on a shorter command soon, as this is somewhat a lot to handle  
-  * May need to grant admin privileges to docker commands using ```sudo ``` before all commands, or ```sudo ```'s alternative on your distro
+  * May need to grant admin privileges to docker commands using ```sudo``` before all commands, or ```sudo```'s alternative on your distro
 
 #### Native Install
 
@@ -57,18 +59,20 @@ A terminal video player and image display with a pure ASCII character display
   * also, software like gcc, g++, and make are needed to build software
     * Ex: On Ubuntu, simply run ```sudo apt-get install build-essential``` to get packages necessary for building C and C++ software
 
-* Clone this repository into a folder (Will refer to this folder as <PROJECT> from now on)
-  ``` git clone https://github.com/cobyj33/ascii_video.git <PROJECT>```
+* Clone this repository into a folder (Will refer to this folder as ```<PROJECT>``` from now on)
+  ```git clone https://github.com/cobyj33/ascii_video.git <PROJECT>```
   * You can also download straight from github if you'd rather do that
   * \*Replace Project with your actual project folder location
-* open your <PROJECT> folder in the terminal
+* open your ```<PROJECT>``` folder in the terminal
 * execute this code block
-```
+  
+```bash
 mkdir build && 
 cd build && 
 cmake ../ &&
 make -j2
 ```
+
 * Finished, the program should now work.
   * if you would like to add the directory directly to your path, run
 ``` cp -R ./ascii_video ~/.local/bin ```
@@ -82,20 +86,23 @@ make -j2
 ## Executing program
 
 * use -h when executing in order to see commands
-```
-<executable> -v <path-to-file>: Play a video File
-<executable> -v -c <path-to-file>: Play a video File with color (works if supported in the current terminal)
-<executable> -i <path-to-file>: display image file
-<executable> -info <path-to-file>: Get stream info about a multimedia file
+
+```bash
+<path-to-executable> -v <path-to-file>: Play a video File
+<path-to-executable> -v -c <path-to-file>: Play a video File with color (works if supported in the current terminal)
+<path-to-executable> -i <path-to-file>: display image file
+<path-to-executable> -info <path-to-file>: Get stream info about a multimedia file
 code blocks for commands
 ```
 
 ## Help
 
 * Open an issue or run
+  
+```bash
+<path-to-executable> -h
 ```
-<executable> -h
-```
+
 * Will be glad to help anything that is not working
 
 ## Authors
@@ -103,6 +110,7 @@ code blocks for commands
 Jacoby Johnson: [@cobyj33](https://www.github.com/cobyj33)
 
 ## Version History
+
 * 1.3
   * Migration from C++ to fully C
   * Cleaner audio output, all media streams now share one single time state
@@ -111,18 +119,18 @@ Jacoby Johnson: [@cobyj33](https://www.github.com/cobyj33)
   * Added support for colored output with the -c flag before entering the file path
     * At most, uses 256 unique colors
 * 1.1
-    * Current Release, Mostly personal refactoring of the code to be more readable by separating the VideoState class into multiple Media classes
-    * Removed Delay on changing video time
-    * Fixed (although not in the best way) ending of the video files
-    * Goals
-      * Add Subtitle Support, where they will be printed in their own section at the bottom of the screen
-      * If you look at the code, it is very C-ish, so I plan to turn it into a fully C program soon
-      * Improve Debugging by adding different screen views to see the current program data, similar to the the "Stats for Nerds" section on Youtube
-      * Make audio more smooth, as it sometimes crackles and is more apparent with higher volume
-      * A way to jump to a specific time in the video, as well as a playback bar to see the current time of the video relative to the video's duration
+  * Current Release, Mostly personal refactoring of the code to be more readable by separating the VideoState class into multiple Media classes
+  * Removed Delay on changing video time
+  * Fixed (although not in the best way) ending of the video files
+  * Goals
+    * Add Subtitle Support, where they will be printed in their own section at the bottom of the screen
+    * If you look at the code, it is very C-ish, so I plan to turn it into a fully C program soon
+    * Improve Debugging by adding different screen views to see the current program data, similar to the the "Stats for Nerds" section on Youtube
+    * Make audio more smooth, as it sometimes crackles and is more apparent with higher volume
+    * A way to jump to a specific time in the video, as well as a playback bar to see the current time of the video relative to the video's duration
 * 1.0
-    * Initial Release, Experimenting with speeding up and slowing down video, as well as changing video time dynamically. Video and image displays great and audio and video are synced, although audio may be a little scratchy from time to time
-    * Plans for change: Moving all code out of a single monolithic, concrete class. Currently, the structure of the code makes it difficult to create new features as everything is so tightly coupled
+  * Initial Release, Experimenting with speeding up and slowing down video, as well as changing video time dynamically. Video and image displays great and audio and video are synced, although audio may be a little scratchy from time to time
+  * Plans for change: Moving all code out of a single monolithic, concrete class. Currently, the structure of the code makes it difficult to create new features as everything is so tightly coupled
 
 ## License
 
@@ -131,6 +139,7 @@ This project isn't licensed, do anything at all with it :) it was just for fun, 
 ## Acknowledgments
 
 Inspiration, code snippets, etc.
+
 * [ncurses 3D renderer](https://github.com/youngbrycecode/RenderEngine)
   * [video-series](https://www.youtube.com/playlist?list=PLg4mWef4l7Qzxs_Fa2DrgZeJKAbG3b7ue)
   * created by [youngbrycecode](https://github.com/youngbrycecode)
@@ -140,8 +149,8 @@ Inspiration, code snippets, etc.
   * \*Somewhat outdated but still a great resource for understanding the workings of a video decoding program
 
 ## Example Output
+
 ![example created in tmux](assets/example.gif)
 ![example colored output](assets/colored_music_record.gif)
 
-<hr>
-@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._
+**@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._@\%#*+=-:._**

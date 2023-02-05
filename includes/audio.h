@@ -13,8 +13,8 @@
 #define MAX_AUDIO_ASYNC_TIME_SECONDS 0.15
 #include <cstdint>
 
-uint8_t float_sample_to_uint8(float num);
-float uint8_sample_to_float(uint8_t sample);
+uint8_t normalized_float_sample_to_uint8(float num);
+float uint8_sample_to_normalized_float(uint8_t sample);
 
 float** alloc_samples(int linesize[8], int nb_channels, int nb_samples);
 float** copy_samples(float** src, int linesize[8], int nb_channels, int nb_samples);

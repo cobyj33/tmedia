@@ -2,6 +2,8 @@
 #define ASCII_VIDEO_ICONS
 
 #include "image.h"
+#include "pixeldata.h"
+#include <string>
 #include <ctime>
 
 
@@ -28,43 +30,48 @@
 
 #define VIDEO_SYMBOL_BUFFER_SIZE 10
 
-typedef enum VideoIcon {
-    STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LOW_VOLUME_ICON, MEDIUM_VOLUME_ICON, HIGH_VOLUME_ICON, MAXIMIZED_ICON, MINIMIZED_ICON, ZERO_ICON, ONE_ICON, TWO_ICON, THREE_ICON, FOUR_ICON, FIVE_ICON, SIX_ICON, SEVEN_ICON, EIGHT_ICON, NINE_ICON, POINT_ICON, TIMES_ICON, DIVIDE_ICON, PLUS_ICON, MINUS_ICON
-} VideoIcon;
+// enum class VideoIconType {
+//     PLAYBACK,
+//     VOLUME,
+//     DIGIT
+// };
 
-typedef struct VideoSymbol {
-    double startTime;
-    double lifeTime;
-    int frames;
-    PixelData** frameData;
-} VideoSymbol;
+class VideoIcon {
+    public:
+        const PixelData pixelData;
 
-int testIconProgram();
-int init_icons();
-int free_icons();
-int read_sprite_sheet(PixelData** buffer, int bufferSize, PixelData* iconData, int rows, int cols, int spriteWidth, int spriteHeight);
-PixelData* get_video_icon(VideoIcon iconEnum);
-VideoSymbol* get_video_symbol(VideoIcon iconEnum);
-VideoSymbol* get_symbol_from_volume(double normalizedVolume);
-VideoSymbol* copy_video_symbol(VideoSymbol* original);
-int get_video_symbol_current_frame(VideoSymbol* symbol);
-void free_video_symbol(VideoSymbol* symbol);
+        static const VideoIcon STOP_ICON;
+        static const VideoIcon PLAY_ICON;
+        static const VideoIcon PAUSE_ICON;
+        static const VideoIcon FORWARD_ICON;
+        static const VideoIcon BACKWARD_ICON;
+        static const VideoIcon MUTE_ICON;
+        static const VideoIcon NO_VOLUME_ICON;
+        static const VideoIcon LOW_VOLUME_ICON;
+        static const VideoIcon MEDIUM_VOLUME_ICON;
+        static const VideoIcon HIGH_VOLUME_ICON;
+        static const VideoIcon MAXIMIZED_ICON;
+        static const VideoIcon MINIMIZED_ICON;
+        static const VideoIcon ZERO_ICON;
+        static const VideoIcon ONE_ICON;
+        static const VideoIcon TWO_ICON;
+        static const VideoIcon THREE_ICON;
+        static const VideoIcon FOUR_ICON;
+        static const VideoIcon FIVE_ICON;
+        static const VideoIcon SIX_ICON;
+        static const VideoIcon SEVEN_ICON;
+        static const VideoIcon EIGHT_ICON;
+        static const VideoIcon NINE_ICON;
+        static const VideoIcon POINT_ICON;
+        static const VideoIcon TIMES_ICON;
+        static const VideoIcon DIVIDE_ICON;
+        static const VideoIcon PLUS_ICON;
+        static const VideoIcon MINUS_ICON;
 
-typedef struct VideoSymbolStack {
-    VideoSymbol* symbols[VIDEO_SYMBOL_BUFFER_SIZE];
-    int top;
-} VideoSymbolStack;
+        static const VideoIcon get_digit_icon(int digit);
+        static const VideoIcon get_volume_icon(double percentage);
 
-VideoSymbolStack* video_symbol_stack_alloc();
-void video_symbol_stack_free(VideoSymbolStack* stack);
-void video_symbol_stack_push(VideoSymbolStack* stack, VideoSymbol* symbol);
-VideoSymbol* video_symbol_stack_pop(VideoSymbolStack* stack);
-void video_symbol_stack_erase_pop(VideoSymbolStack* stack);
-VideoSymbol* video_symbol_stack_peek(VideoSymbolStack* stack);
-void video_symbol_stack_clear(VideoSymbolStack* stack);
+        VideoIcon(PixelData pixelData) : pixelData(pixelData) {}
+};
 
-PixelData* get_playback_icons_pixel_data();
-PixelData* get_number_icons_pixel_data(); 
-PixelData* get_number_symbols_icons_pixel_data(); 
-PixelData* get_numbers_image(int* digits, int count);
 #endif

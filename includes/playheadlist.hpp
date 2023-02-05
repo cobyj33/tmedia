@@ -46,6 +46,13 @@ class PlayheadList {
 
     public:
         PlayheadList(); 
+
+        /**
+         * @brief 
+         * Guaranteed to not return NULL or nullptr (unless you yourself append NULL or nullptr to the list)
+         * 
+         * @return T 
+         */
         T get();
         void clear();
         void push_back(T item);

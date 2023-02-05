@@ -5,6 +5,8 @@
 #define __STDC_CONSTANT_MACROS
 #endif
 
+#include <vector>
+
 extern "C" {
 #include <libavutil/avutil.h>
 }
@@ -16,6 +18,6 @@ typedef struct PacketData {
 
 int fileInfoProgram(const char* fileName);
 
-PacketData* get_packet_stats(const char* fileName, int* out_data_length);
+std::vector<PacketData> get_packet_stats(const char* fileName, int* out_data_length);
 int get_num_packets(const char* fileName);
 #endif

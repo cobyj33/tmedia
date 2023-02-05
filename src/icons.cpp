@@ -1,259 +1,521 @@
-
+/**
+ * @file icons.cpp
+ * @author your name (you@domain.com)
+ * @brief Hardcoded Icon Image Data into Ascii_Video
+ * @version 0.1
+ * @date 2023-01-29
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include "pixeldata.h"
-#include "renderer.h"
-#include "threads.h"
 #include <icons.h>
-#include <image.h>
-#include <ascii.h>
-
-
-#include <wtime.h>
+#include <stdexcept>
 #include <wmath.h>
 
-extern "C" {
-#include <ncurses.h>
+// #define NUMBER_OF_VIDEO_ICONS 27
+// #define NUMBER_OF_PLAYBACK_ICONS 12
+// #define NUMBER_OF_NUMBER_ICONS 10
+// #define NUMBER_OF_NUMBER_SYMBOL_ICONS 5
 
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/avutil.h>
-#include <libswscale/swscale.h>
-#include <libswresample/swresample.h>
-#include <libavdevice/avdevice.h>
-#include <libavutil/fifo.h>
-#include <libavutil/audio_fifo.h>
-}
+// #define NUMBER_OF_VOLUME_ICONS 4
 
-#define NUMBER_OF_VIDEO_ICONS 27
-#define NUMBER_OF_PLAYBACK_ICONS 12
-#define NUMBER_OF_NUMBER_ICONS 10
-#define NUMBER_OF_NUMBER_SYMBOL_ICONS 5
+std::vector<std::vector<uint8_t>> testMatrix{ std::vector<uint8_t>{0, 0, 0} };
+PixelData test = PixelData(testMatrix);
 
-#define NUMBER_OF_VOLUME_ICONS 4
 
-const VideoIcon videoIcons[NUMBER_OF_VIDEO_ICONS] = { STOP_ICON, PLAY_ICON, PAUSE_ICON, FORWARD_ICON, BACKWARD_ICON, MUTE_ICON, NO_VOLUME_ICON, LOW_VOLUME_ICON, MEDIUM_VOLUME_ICON, HIGH_VOLUME_ICON, MAXIMIZED_ICON, MINIMIZED_ICON, ZERO_ICON, ONE_ICON, TWO_ICON, THREE_ICON, FOUR_ICON, FIVE_ICON, SIX_ICON, SEVEN_ICON, EIGHT_ICON, NINE_ICON, POINT_ICON, TIMES_ICON, DIVIDE_ICON, PLUS_ICON, MINUS_ICON };
-
-const VideoIcon playbackIconOrder[NUMBER_OF_PLAYBACK_ICONS] = { 
-    STOP_ICON,
-    PLAY_ICON,
-    FORWARD_ICON,
-    BACKWARD_ICON,
-    PAUSE_ICON,
-    NO_VOLUME_ICON,
-    LOW_VOLUME_ICON,
-    MEDIUM_VOLUME_ICON,
-    HIGH_VOLUME_ICON,
-    MUTE_ICON,
-    MAXIMIZED_ICON,
-    MINIMIZED_ICON,
+std::vector<std::vector<uint8_t>> STOP_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
 };
+const VideoIcon VideoIcon::STOP_ICON = VideoIcon(PixelData(STOP_ICON_PIXEL_DATA));
 
-const VideoIcon numberIconOrder[NUMBER_OF_NUMBER_ICONS] = {
-   ONE_ICON,
-   TWO_ICON,
-   THREE_ICON,
-   FOUR_ICON,
-   FIVE_ICON,
-   SIX_ICON,
-   SEVEN_ICON,
-   EIGHT_ICON,
-   NINE_ICON
+std::vector<std::vector<uint8_t>> PLAY_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
 };
+const VideoIcon VideoIcon::PLAY_ICON = VideoIcon(PixelData(PLAY_ICON_PIXEL_DATA));
 
-const VideoIcon numberSymbolIconOrder[NUMBER_OF_NUMBER_SYMBOL_ICONS] = {
-    POINT_ICON,
-    TIMES_ICON,
-    PLUS_ICON,
-    DIVIDE_ICON,
-    MINUS_ICON
+std::vector<std::vector<uint8_t>> PAUSE_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
 };
-
-const VideoIcon volumeIcons[NUMBER_OF_VOLUME_ICONS] = { NO_VOLUME_ICON, LOW_VOLUME_ICON, MEDIUM_VOLUME_ICON, HIGH_VOLUME_ICON };
-
-PixelData* icons[NUMBER_OF_VIDEO_ICONS] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+const VideoIcon VideoIcon::PAUSE_ICON = VideoIcon(PixelData(PAUSE_ICON_PIXEL_DATA));
 
 
-VideoIcon iconFromDigit(int digit) {
+std::vector<std::vector<uint8_t>> FORWARD_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 255, 0, 0, 0, 0, 0, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 255, 0, 0, 0, 0, 0, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 0, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255 },
+    {255, 255, 0, 0, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::FORWARD_ICON = VideoIcon(PixelData(FORWARD_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> BACKWARD_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 0, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 0, 0, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 0, 0, 0, 255, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 255, 0, 0, 0, 0, 0, 255, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 255, 0, 0, 0, 0, 0, 255, 0, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 0, 0, 0, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 0, 0, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::BACKWARD_ICON = VideoIcon(PixelData(BACKWARD_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> MUTE_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 0, 255, 0, 255, 255, 255, 0, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 255, 0, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 255, 0, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 0, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 255, 0, 255, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 0, 255, 255, 0, 255, 0, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 0, 255, 0, 255, 255, 255, 0, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::MUTE_ICON = VideoIcon(PixelData(MUTE_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> NO_VOLUME_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::NO_VOLUME_ICON = VideoIcon(PixelData(NO_VOLUME_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> LOW_VOLUME_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::LOW_VOLUME_ICON = VideoIcon(PixelData(LOW_VOLUME_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> MEDIUM_VOLUME_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 0, 255, 255, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 0, 255, 255, 255, 0, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 0, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 0, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 0, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 0, 255, 255, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 0, 255, 255, 255, 0, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 0, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::MEDIUM_VOLUME_ICON = VideoIcon(PixelData(MEDIUM_VOLUME_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> HIGH_VOLUME_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 0, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 0, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 0, 255, 0, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 0, 255, 255, 255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 255, 0, 255, 0, 255 },
+    {255, 255, 255, 255, 0, 0, 0, 0, 0, 255, 255, 255, 0, 255, 0, 255 },
+    {255, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 0, 255, 0, 255 },
+    {255, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 0, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 0, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::HIGH_VOLUME_ICON = VideoIcon(PixelData(HIGH_VOLUME_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> MAXIMIZED_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 255 },
+    {255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255 },
+    {255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255 },
+    {255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255 },
+    {255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255 },
+    {255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255 },
+    {255, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::MAXIMIZED_ICON = VideoIcon(PixelData(MAXIMIZED_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> MINIMIZED_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::MINIMIZED_ICON = VideoIcon(PixelData(MINIMIZED_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> ZERO_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::ZERO_ICON = VideoIcon(PixelData(ZERO_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> ONE_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::ONE_ICON = VideoIcon(PixelData(ONE_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> TWO_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 255, 255, 255 },
+    {255, 0, 255, 255, 255 },
+    {255, 0, 255, 255, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::TWO_ICON = VideoIcon(PixelData(TWO_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> THREE_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::THREE_ICON = VideoIcon(PixelData(THREE_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> FOUR_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::FOUR_ICON = VideoIcon(PixelData(FOUR_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> FIVE_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 255, 255 },
+    {255, 0, 255, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::FIVE_ICON = VideoIcon(PixelData(FIVE_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> SIX_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 255, 255 },
+    {255, 0, 255, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::SIX_ICON = VideoIcon(PixelData(SIX_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> SEVEN_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::SEVEN_ICON = VideoIcon(PixelData(SEVEN_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> EIGHT_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::EIGHT_ICON = VideoIcon(PixelData(EIGHT_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> NINE_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::NINE_ICON = VideoIcon(PixelData(NINE_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> POINT_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::POINT_ICON = VideoIcon(PixelData(POINT_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> TIMES_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 0, 255, 0, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::TIMES_ICON = VideoIcon(PixelData(TIMES_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> DIVIDE_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 255, 255, 0, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 0, 255, 255, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::DIVIDE_ICON = VideoIcon(PixelData(DIVIDE_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> PLUS_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 0, 255, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::PLUS_ICON = VideoIcon(PixelData(PLUS_ICON_PIXEL_DATA));
+
+std::vector<std::vector<uint8_t>> MINUS_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
+    {255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255 },
+    {255, 0, 0, 0, 255 },
+    {255, 255, 255, 255, 255 },
+    {255, 255, 255, 255, 255 }
+};
+const VideoIcon VideoIcon::MINUS_ICON = VideoIcon(PixelData(MINUS_ICON_PIXEL_DATA));
+
+const VideoIcon VideoIcon::get_digit_icon(int digit) {
     switch (digit % 10) {
-        case 0: return ZERO_ICON;
-        case 1: return ONE_ICON;
-        case 2: return TWO_ICON;
-        case 3: return THREE_ICON;
-        case 4: return FOUR_ICON;
-        case 5: return FIVE_ICON;
-        case 6: return SIX_ICON;
-        case 7: return SEVEN_ICON;
-        case 8: return EIGHT_ICON;
-        case 9: return NINE_ICON;
-        default: return ZERO_ICON;
+        case 0: return VideoIcon::ZERO_ICON;
+        case 1: return VideoIcon::ONE_ICON;
+        case 2: return VideoIcon::TWO_ICON;
+        case 3: return VideoIcon::THREE_ICON;
+        case 4: return VideoIcon::FOUR_ICON;
+        case 5: return VideoIcon::FIVE_ICON;
+        case 6: return VideoIcon::SIX_ICON;
+        case 7: return VideoIcon::SEVEN_ICON;
+        case 8: return VideoIcon::EIGHT_ICON;
+        case 9: return VideoIcon::NINE_ICON;
     }
+    throw std::runtime_error("Cannot get icon from \"digit\" " + std::to_string(digit) + ". passed in digit value must be a digit (0, 1, 2, 3, 4, 5, 6, 7, 8, or 9)");
 }
 
-
-int initialized = 0;
-int testIconProgram() {
-    for (int i = 0; i < 12; i++) {
-        erase();
-        PixelData* iconData = icons[i];
-        AsciiImage* image = get_ascii_image_bounded(iconData, COLS, LINES);
-        if (image != NULL) {
-            print_ascii_image_full(image);
-            refresh();
-            ascii_image_free(image);
-        }
-                
-        sleep_for_ms(500);
-    }
-
-    return EXIT_SUCCESS;
-}
-
-int read_sprite_sheet(PixelData** buffer, int bufferSize, PixelData* iconData, int rows, int cols, int spriteWidth, int spriteHeight) {
-
-    for (int i = 0; i < std::min(bufferSize, rows * cols); i++) {
-        PixelData* icon = pixel_data_alloc(spriteWidth, spriteHeight, GRAYSCALE8);
-        int currentSpriteY = i / cols * spriteHeight;
-        int currentSpriteX = i % cols * spriteWidth;
-        for (int row = 0; row < spriteHeight; row++) {
-            for (int col = 0; col < spriteWidth; col++) {
-                icon->pixels[row * spriteWidth + col] = iconData->pixels[(currentSpriteY + row) * (spriteWidth * cols) + (currentSpriteX + col)];
-            }
-        }
-        buffer[i] = icon;
-    }
-
-    return 1;
-}
-
-int init_icons() {
-    if (!initialized) {
-        bool success;
-        PixelData* playbackIconBuffer[NUMBER_OF_PLAYBACK_ICONS];
-        PixelData* numberIconBuffer[NUMBER_OF_NUMBER_ICONS];
-        PixelData* numberSymbolBuffer[NUMBER_OF_NUMBER_SYMBOL_ICONS];
-
-        PixelData* playbackIcons = get_playback_icons_pixel_data();
-        PixelData* numberIcons = get_number_icons_pixel_data();
-        PixelData* numberSymbolIcons = get_number_symbols_icons_pixel_data();
-
-        success = read_sprite_sheet(playbackIconBuffer, NUMBER_OF_PLAYBACK_ICONS, playbackIcons, ICONS_SPRITE_ROWS, ICONS_SPRITE_COLUMNS, ICONS_SPRITE_WIDTH, ICONS_SPRITE_HEIGHT);
-        if (!success) {
-            fprintf(stderr, "%s\n", "Could Not initialize playback icons");
-            pixel_data_free(playbackIcons);
-            pixel_data_free(numberIcons);
-            pixel_data_free(numberSymbolIcons);
-            return 0;
-        }
-
-        for (int i = 0; i < NUMBER_OF_PLAYBACK_ICONS; i++) {
-            icons[playbackIconOrder[i]] = playbackIconBuffer[i];
-        }
-
-        success = read_sprite_sheet(numberIconBuffer, NUMBER_OF_NUMBER_ICONS, numberIcons, NUMBERS_SPRITE_ROWS, NUMBERS_SPRITE_COLUMNS, NUMBERS_SPRITE_WIDTH, NUMBERS_SPRITE_HEIGHT);
-        if (!success) {
-            fprintf(stderr, "%s\n", "Could Not initialize number icons");
-            pixel_data_free(playbackIcons);
-            pixel_data_free(numberIcons);
-            pixel_data_free(numberSymbolIcons);
-            return 0;
-        }
-
-        for (int i = 0; i < NUMBER_OF_NUMBER_ICONS; i++) {
-            icons[numberIconOrder[i]] = numberIconBuffer[i];
-        }
-
-        success = read_sprite_sheet(numberSymbolBuffer, NUMBER_OF_NUMBER_SYMBOL_ICONS, numberSymbolIcons, NUMBER_SYMBOLS_SPRITE_ROWS, NUMBER_SYMBOLS_SPRITE_COLUMNS, NUMBER_SYMBOLS_SPRITE_WIDTH, NUMBER_SYMBOLS_SPRITE_HEIGHT);
-        if (!success) {
-            fprintf(stderr, "%s\n", "Could Not initialize number symbol icons");
-            pixel_data_free(playbackIcons);
-            pixel_data_free(numberIcons);
-            pixel_data_free(numberSymbolIcons);
-            return 0;
-        }
-
-        for (int i = 0; i < NUMBER_OF_NUMBER_SYMBOL_ICONS; i++) {
-            icons[numberSymbolIconOrder[i]] = numberSymbolBuffer[i];
-        }
-
-        initialized = 1;
-    }
-
-    printf("%s\n", "All Icons Initialized");
-    return initialized;
-}
-
-int free_icons() {
-    if (initialized) {
-        for (int i = 0; i < NUMBER_OF_VIDEO_ICONS; i++) {
-            if (icons[i] != NULL) {
-                pixel_data_free(icons[i]);
-            }
-        }
-        initialized = 0;
-    }
-    return !initialized;
-}
-
-PixelData* get_video_icon(VideoIcon iconEnum) {
-    if (icons[iconEnum] != NULL) {
-        return icons[iconEnum];
+const VideoIcon VideoIcon::get_volume_icon(double percentage) {
+    double normalizedVolume = clamp(percentage, 0.0, 1.0);
+    
+    if (percentage <= 0.0) {
+        return VideoIcon::NO_VOLUME_ICON;
+    } else if (percentage < 0.40) {
+        return VideoIcon::LOW_VOLUME_ICON;
+    } else if (percentage < 0.80) {
+        return VideoIcon::MEDIUM_VOLUME_ICON;
     } else {
-        if (initialized) {
-            fprintf(stderr, "%s %d %s\n", "ERROR: ICON ENUM ", iconEnum, " NOT INITIALIZED ");
-        } else {
-            fprintf(stderr, "%s\n", "ICONS NOT INITIALIZED");
-        }
-
-        return NULL;
+        return VideoIcon::HIGH_VOLUME_ICON;
     }
 }
-
-VideoSymbol* get_video_symbol(VideoIcon iconEnum) {
-    VideoSymbol* symbol = (VideoSymbol*)malloc(sizeof(VideoSymbol));
-    symbol->startTime = system_clock_sec(); 
-    symbol->lifeTime = 1;
-    symbol->frames = 1;
-    symbol->frameData = (PixelData**)malloc(sizeof(PixelData*) * symbol->frames);
-    symbol->frameData[0] = get_video_icon(iconEnum);
-    return symbol;
-}
-
-VideoSymbol* copy_video_symbol(VideoSymbol* original) {
-    VideoSymbol* copiedSymbol = (VideoSymbol*)malloc(sizeof(VideoSymbol));
-    copiedSymbol->startTime = original->startTime;
-    copiedSymbol->lifeTime = original->lifeTime;
-    copiedSymbol->frames = original->frames;
-    copiedSymbol->frameData = (PixelData**)malloc(sizeof(PixelData*) * original->frames);
-    
-    for (int i = 0; i < original->frames; i++) {
-        copiedSymbol->frameData[i] = original->frameData[i];
-    }
-    return copiedSymbol;
-}
-
-void free_video_symbol(VideoSymbol* symbol) {
-    free(symbol->frameData);
-    free(symbol);
-}
-
-VideoSymbol* get_symbol_from_volume(double normalizedVolume) {
-    normalizedVolume = fmin(1.0, fmax(0.0, normalizedVolume));
-    return get_video_symbol(volumeIcons[(int)((NUMBER_OF_VOLUME_ICONS - 0.01) * normalizedVolume)]);
-}
-
-
-int get_video_symbol_current_frame(VideoSymbol* symbol) {
-    return  ((system_clock_sec() - symbol->startTime) / symbol->lifeTime) * (double)symbol->frames; 
-}
-
-
-/* PixelData* get_stitched_image(PixelData** images) { */
-/*     PixelData* pixelData = (PixelData*)malloc(sizeof(PixelData)); */
-/*     int width; */
-/*     int height; */
-    
-
-/*     return pixelData; */
-/* } */
-
-
-

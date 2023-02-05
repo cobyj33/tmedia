@@ -1,6 +1,8 @@
 #ifndef ASCII_VIDEO_AUDIO_RESAMPLER_INCLUDE
 #define ASCII_VIDEO_AUDIO_RESAMPLER_INCLUDE
 
+#include <vector>
+
 extern "C" {
     #include <libavutil/frame.h>
     #include <libswresample/swresample.h>
@@ -34,7 +36,7 @@ class AudioResampler {
 
 
         AVFrame* resample_audio_frame(AVFrame* original);
-        AVFrame** resample_audio_frames(AVFrame** originals, int nb_frames);
+        std::vector<AVFrame*> resample_audio_frames(std::vector<AVFrame*>& originals);
 
         ~AudioResampler();
 };

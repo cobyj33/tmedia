@@ -1,31 +1,42 @@
 #ifndef ASCII_VIDEO_PIXEL_DATA
 #define ASCII_VIDEO_PIXEL_DATA
 
+#include <cstdint>
+#include <vector>
+#include "color.h"
+
 extern "C" {
-#include <stdint.h>
 #include <libavutil/frame.h>
 #include <libavutil/pixfmt.h>
 }
 
-typedef enum PixelDataFormat {
-    RGB24, GRAYSCALE8
-} PixelDataFormat;
+class PixelData {
+    private:
+        std::vector< std::vector<RGBColor> > pixels;
+    public:
 
-typedef struct PixelData {
-    uint8_t* pixels;
-    int width;
-    int height;
-    PixelDataFormat format;
-} PixelData;
+        PixelData() : pixels(std::vector< std::vector<RGBColor> >()) {}
+        PixelData(std::vector< std::vector<RGBColor> >& rawData);
+        PixelData(std::vector< std::vector<uint8_t> >& rawGrayscaleData);
+        PixelData(int width, int height);
+        PixelData(AVFrame* videoFrame);
+        PixelData(const PixelData& other);
+        PixelData(const char* fileName);
 
-enum AVPixelFormat PixelDataFormat_to_AVPixelFormat(PixelDataFormat format);
-PixelDataFormat AVPixelFormat_to_PixelDataFormat(enum AVPixelFormat format);
-PixelData* copy_pixel_data(PixelData* original);
-PixelData* pixel_data_alloc(int width, int height, PixelDataFormat);
-PixelData* pixel_data_alloc_from_frame(AVFrame* videoFrame);
-int get_pixel_data_buffer_size(PixelData* data);
-void pixel_data_free(PixelData* PixelData);
-PixelData* get_pixel_data_from_image(const char* fileName, PixelDataFormat format);
-const char* pixel_data_format_string(PixelDataFormat format);
-int pixel_data_equals(PixelData* first, PixelData* second);
+        bool equals(const PixelData& other) const;
+
+        int get_width() const;
+        int get_height() const;
+
+        PixelData scale(double amount) const;
+        PixelData bound(int width, int height) const;
+
+        RGBColor at(int row, int column) const;
+        bool in_bounds(int row, int column) const;
+        RGBColor atArea(int row, int column, int width, int height) const;
+        RGBColor get_avg_color_from_area(int x, int y, int width, int height) const;
+        RGBColor get_avg_color_from_area(double x, double y, double width, double height) const;
+        
+};
+
 #endif

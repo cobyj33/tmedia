@@ -82,7 +82,7 @@ double AudioStream::get_time() {
 
 std::size_t AudioStream::set_time(double time) {
     if (this->get_nb_samples() == 0) return 0.0;
-    this->m_playhead = (size_t)(fmin(this->get_nb_samples() - 1, fmax( 0.0, (time - this->m_start_time) * this->m_sample_rate  )  )  );
+    this->m_playhead = (std::size_t)(std::min(this->get_nb_samples() - 1, std::max( (std::size_t)0, (std::size_t)(time - this->m_start_time) * this->m_sample_rate  )  )  );
     return this->m_playhead;
 };
 
@@ -95,12 +95,12 @@ void AudioStream::write(uint8_t sample_part) {
 };
 
 void AudioStream::write(float sample_part) {
-    this->m_stream.push_back(float_sample_to_uint8(sample_part));
+    this->m_stream.push_back(normalized_float_sample_to_uint8(sample_part));
 };
 
 void AudioStream::write(float* samples, int nb_samples) {
     for (int i = 0; i < nb_samples * this->get_nb_channels(); i++) {
-        this->write(float_sample_to_uint8(samples[i]));
+        this->write(normalized_float_sample_to_uint8(samples[i]));
     }
 };
 
@@ -119,7 +119,7 @@ bool AudioStream::can_read(std::size_t nb_samples) {
 
 void AudioStream::peek_into(std::size_t nb_samples, float* target) {
     for (int i = 0; i < nb_samples * this->m_nb_channels; i++) {
-        target[i] = uint8_sample_to_float(this->m_stream[this->m_playhead * this->m_nb_channels + i]);
+        target[i] = uint8_sample_to_normalized_float(this->m_stream[this->m_playhead * this->m_nb_channels + i]);
     }
 };
 
@@ -207,7 +207,7 @@ std::size_t AudioStream::get_nb_can_read() {
 
 // double audio_stream_set_time(AudioStream* stream, double time) {
 //     if (stream->nb_samples == 0) return 0.0;
-//     stream->playhead = (size_t)(fmin(stream->nb_samples - 1, fmax( 0.0, (time - stream->start_time) * stream->sample_rate  )  )  );
+//     stream->playhead = (size_t)(std::min(stream->nb_samples - 1, std::max( 0.0, (time - stream->start_time) * stream->sample_rate  )  )  );
 //     return stream->playhead;
 // }
 

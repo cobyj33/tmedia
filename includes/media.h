@@ -9,11 +9,14 @@
 #include "playheadlist.hpp"
 #include "color.h"
 #include "playback.h"
+#include "pixeldata.h"
 #include <streamdata.h>
 
 
 #include <cstdint>
 #include <vector>
+#include <stack>
+#include <memory>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -21,116 +24,112 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-typedef struct MediaStream {
-    StreamData* info;
-    PlayheadList<AVPacket*>* packets;
-    double timeBase;
-    decoder_function decodePacket;
-} MediaStream;
 
 
 
+class MediaStream {
+    public:
+        StreamData info;
+        PlayheadList<AVPacket*> packets;
+        double timeBase;
+        double average_frame_rate;
+        double start_time;
+        int stream_index;
+        enum AVMediaType media_type;
+
+        MediaStream(StreamData& streamData);
+        ~MediaStream();
+
+        double get_average_frame_rate();
+        double get_start_time();
+        int get_stream_index();
+        enum AVMediaType get_media_type();
+};
+
+class MediaData {
+    public:
+        AVFormatContext* formatContext;
+        std::vector<MediaStream> media_streams;
+        std::unique_ptr<StreamDataGroup> stream_datas;
+        int nb_streams;
+        bool allPacketsRead;
+        int currentPacket;
+        double duration;
+
+        MediaData(const char* fileName);
+        ~MediaData();
+
+        MediaStream& get_media_stream(enum AVMediaType media_type);
+        bool has_media_stream(enum AVMediaType media_type);
+        void fetch_next(int requestedPacketCount);
+};
 
 
-// typedef struct Playback {
-// } Playback;
 
-typedef struct MediaData {
-    AVFormatContext* formatContext;
-    MediaStream** media_streams;
-    StreamDataGroup* stream_datas;
-    int nb_streams;
-    int allPacketsRead;
-    int currentPacket;
-    int totalPackets;
-    double duration;
-} MediaData;
-
-typedef struct MediaTimeline {
-    MediaData* mediaData;
-    Playback* playback;
-} MediaTimeline;
-
-#define NUMBER_OF_DISPLAY_MODES 2
-typedef enum MediaDisplayMode {
-    DISPLAY_MODE_VIDEO, DISPLAY_MODE_AUDIO
-} MediaDisplayMode;
-MediaDisplayMode get_next_display_mode(MediaDisplayMode currentMode);
-
-typedef struct MediaDisplaySettings {
-    int subtitles;
-
-    int use_colors;
-    int can_use_colors;
-    int can_change_colors;
-
-    int train_palette;
-    int palette_size;
-    rgb* best_palette;
-} MediaDisplaySettings; 
-
-// typedef struct AudioStream {
-//     uint8_t* stream;
-//     float start_time;
-//     size_t nb_samples;
-//     size_t playhead;
-//     size_t sample_capacity;
-//     int nb_channels;
-//     int sample_rate;
-// } AudioStream;
+class MediaTimeline {
+    public:
+        std::unique_ptr<MediaData> mediaData;
+        Playback playback;
+        MediaTimeline(const char* fileName);
+};
 
 
-typedef struct Sample {
-    float* data;
-    int channels;
-} Sample;
+class MediaDisplaySettings {
+    public:
+        bool use_colors;
 
-typedef struct MediaDisplayCache {
-    MediaDebugInfo* debug_info;
-    PixelData* image;
-    PixelData* last_rendered_image;
-    PlayheadList<PixelData*>* image_buffer;
+        MediaDisplaySettings();
+};
 
-    AudioStream* audio_stream;
+class Sample {
+    public:
+        float* data;
+        int channels;
 
-    VideoSymbolStack* symbol_stack;
-} MediaDisplayCache;
-
-typedef struct MediaPlayer {
-    MediaTimeline* timeline;
-    MediaDisplaySettings* displaySettings;
-    MediaDisplayCache* displayCache;
-    const char* fileName;
-    bool inUse;
-} MediaPlayer;
-
-MediaPlayer* media_player_alloc(const char* fileName);
-void media_player_free(MediaPlayer* player);
-
-void start_media_player(MediaPlayer* player);
-void start_media_player_from_filename(const char* fileName);
-
-MediaDisplayCache* media_display_cache_alloc();
-void media_display_cache_free(MediaDisplayCache* cache);
-
-MediaDisplaySettings* media_display_settings_alloc();
-void media_display_settings_free(MediaDisplaySettings* settings);
-
-MediaTimeline* media_timeline_alloc(const char* fileName);
-void media_timeline_free(MediaTimeline* timeline);
-
-MediaData* media_data_alloc(const char* fileName);
-void media_data_free(MediaData* mediaData);
-
-MediaStream* media_stream_alloc(StreamData* streamData);
-void media_stream_free(MediaStream* mediaStream);
-
-MediaStream* get_media_stream(MediaData* media_data, enum AVMediaType media_type);
-bool has_media_stream(MediaData* media_data, enum AVMediaType media_type);
-
-void move_packet_list_to_pts(PlayheadList<AVPacket*>* packets, int64_t targetPTS);
-void move_frame_list_to_pts(PlayheadList<AVFrame*>* frames, int64_t targetPTS);
+        Sample();
+        ~Sample();
+};
 
 
-void fetch_next(MediaData* media_data, int requestedPacketCount);
+class MediaDisplayCache {
+    public:
+        // MediaDebugInfo debug_info;
+        PixelData image;
+        PixelData last_rendered_image;
+        PlayheadList<PixelData> image_buffer;
+        AudioStream audio_stream;
+
+        /**
+         * @brief A stack of the current video symbol and the time it was added to the stack
+         */
+        std::stack<std::tuple<VideoIcon, double>> symbol_stack;
+
+        MediaDisplayCache() {}
+};
+
+
+class MediaPlayer {
+    public:
+        std::unique_ptr<MediaTimeline> timeline;
+        MediaDisplaySettings displaySettings;
+        MediaDisplayCache displayCache;
+        const char* fileName;
+        bool inUse;
+
+        MediaPlayer(const char* fileName) : inUse(false), fileName(fileName) {
+            this->timeline = std::make_unique<MediaTimeline>(fileName);
+        }
+
+        void start();
+        double get_desync_time(double current_system_time);
+        void resync(double current_system_time);
+        void set_current_image(PixelData& data);
+        PixelData& get_current_image();
+};
+
+void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS);
+void move_packet_list_to_time_sec(PlayheadList<AVPacket*>& packets, double time);
+void move_frame_list_to_pts(PlayheadList<AVFrame*>& frames, int64_t targetPTS);
+void move_frame_list_to_time_sec(PlayheadList<AVFrame*>& frames, double time);
+
 #endif

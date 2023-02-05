@@ -11,11 +11,18 @@
  * 
  */
 
-#include "pixeldata.h"
-#include "color.h"
+#include <utility>
 
-void get_output_size(int srcWidth, int srcHeight, int maxWidth, int maxHeight, int* width, int* height);
-void get_scale_size(int srcWidth, int srcHeight, int targetWidth, int targetHeight, int* width, int* height);
-void pixel_data_to_rgb(PixelData* data, rgb* output);
-int imageProgram(const char* fileName, int use_colors);
+/**
+ * @brief Returns a <width, height> pair representing the <srcWidth, srcHeight> bounded into the <maxWidth, maxHeight> dimensions while preserving aspect ratio
+ * 
+ * @param srcWidth 
+ * @param srcHeight 
+ * @param maxWidth 
+ * @param maxHeight 
+ * @return std::pair<int, int> 
+ */
+std::pair<int, int> get_bounded_dimensions(int srcWidth, int srcHeight, int maxWidth, int maxHeight);
+std::pair<int, int> get_scale_size(int srcWidth, int srcHeight, int targetWidth, int targetHeight);
+double get_scale_factor(int srcWidth, int srcHeight, int targetWidth, int targetHeight);
 #endif

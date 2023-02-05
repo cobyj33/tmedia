@@ -29,10 +29,8 @@ add_executable(ascii_video
 ./src/audioresampler.cpp
 ./src/videoconverter.cpp
 ./src/streamdata.cpp
-./src/except.cpp
 ./src/main.cpp
 ./src/ascii.cpp
-./src/alloc.cpp
 ./src/audiostream.cpp
 ./src/audio.cpp
 ./src/audio_thread.cpp
@@ -44,9 +42,8 @@ add_executable(ascii_video
 ./src/info.cpp
 ./src/threads.cpp
 ./src/video.cpp
-./src/kmeans.cpp
+./src/formatting.cpp
 ./src/wmath.cpp
-./src/hardcode.cpp
 ./src/renderer.cpp
 ./src/loader.cpp
 ./src/wtime.cpp
@@ -55,12 +52,13 @@ add_executable(ascii_video
 ./src/icons.cpp
 ./src/playback.cpp
 ./src/curses_helpers.cpp
+./src/pixeldata.cpp
+./src/aabb.cpp
 )
 
 target_link_libraries( ascii_video ${CURSES_LIBRARIES} PkgConfig::LIBAV)
 
 add_executable(tests 
-./src/except.cpp
 ./src/tests/test_playheadlist.cpp
 ./src/audio.cpp
 ./src/audiostream.cpp
