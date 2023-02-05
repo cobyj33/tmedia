@@ -1,8 +1,9 @@
+#include <algorithm>
+
 #include <playback.h>
 #include <wtime.h>
 #include <wmath.h>
 
-#include <algorithm>
 
 const double Playback::MAX_VOLUME;
 const double Playback::MAX_SPEED;

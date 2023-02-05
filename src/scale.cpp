@@ -1,6 +1,7 @@
-#include "image.h"
 #include <utility>
 #include <algorithm>
+
+#include "image.h"
 
 double get_scale_factor(int srcWidth, int srcHeight, int targetWidth, int targetHeight) {
     double width_scaler = (double)targetWidth / srcWidth; // > 1 if growing, < 1 if shrinking, ==1 if same

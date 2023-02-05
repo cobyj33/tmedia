@@ -1,9 +1,10 @@
-#include "decode.h"
 #include <cstdlib>
 #include <cstdio>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include "decode.h"
 #include "except.h"
 
 extern "C" {

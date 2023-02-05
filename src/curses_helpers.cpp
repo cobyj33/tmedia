@@ -1,6 +1,7 @@
 
 #include <cstdarg>
-#include <curses_helpers.h>
+
+#include "curses_helpers.h"
 #include "color.h"
 
 extern "C" {

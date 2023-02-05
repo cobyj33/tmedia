@@ -3,17 +3,18 @@
 #include "debug.h"
 #include "decode.h"
 #include "media.h"
-#include <wtime.h>
-#include <playheadlist.hpp>
-#include <audio.h>
-#include <wmath.h>
-#include <cstdlib>
-#include <threads.h>
-#include <audioresampler.h>
-#include <memory>
-#include <mutex>
+#include "playheadlist.hpp"
+#include "wtime.h"
+#include "audio.h"
+#include "wmath.h"
 #include "except.h"
 #include "pixeldata.h"
+#include "threads.h"
+#include "audioresampler.h"
+
+#include <cstdlib>
+#include <memory>
+#include <mutex>
 
 
 extern "C" {

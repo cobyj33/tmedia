@@ -1,6 +1,7 @@
-#include <wmath.h>
 #include <cstdlib>
 #include <stdexcept>
+
+#include "wmath.h"
 
 double frand() {
     return rand() / (double)RAND_MAX;

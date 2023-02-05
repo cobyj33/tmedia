@@ -3,15 +3,17 @@
 #include <cstdint>
 #include <cstring>
 #include <cstdlib>
-#include <ascii.h>
+
+
+#include "ascii.h"
 #include "color.h"
 #include "pixeldata.h"
 #include "wmath.h"
-#include <image.h>
-#include <media.h>
-#include <decode.h>
-#include <boiler.h>
-#include <videoconverter.h>
+#include "image.h"
+#include "media.h"
+#include "decode.h"
+#include "boiler.h"
+#include "videoconverter.h"
 #include "except.h"
 
 extern "C" {

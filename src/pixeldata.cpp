@@ -1,7 +1,8 @@
+#include <stdexcept>
+
 #include "pixeldata.h"
 #include "image.h"
 #include "color.h"
-#include <stdexcept>
 
 // Accepts empty matrices
 template <typename T>

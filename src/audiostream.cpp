@@ -1,8 +1,9 @@
 #include <cstdint>
 #include <stdexcept>
-#include <audiostream.h>
-#include <wmath.h>
-#include <audio.h>
+
+#include "audiostream.h"
+#include "wmath.h"
+#include "audio.h"
 
 void AudioStream::construct() {
     this->m_playhead = 0;

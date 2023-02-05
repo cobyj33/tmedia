@@ -9,7 +9,6 @@
 #include "boiler.h"
 #include "playheadlist.hpp"
 #include "media.h"
-
 #include "wtime.h"
 #include "wmath.h"
 #include "except.h"

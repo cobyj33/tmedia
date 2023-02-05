@@ -1,11 +1,11 @@
 #include <cstdio>
-#include <threads.h>
-#include <media.h>
-#include <wtime.h>
-
 #include <thread>
 #include <mutex>
-#include <except.h>
+
+#include "threads.h"
+#include "media.h"
+#include "wtime.h"
+#include "except.h"
 
 void MediaPlayer::start() {
     if (this->inUse) {

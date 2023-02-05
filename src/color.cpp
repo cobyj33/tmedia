@@ -1,9 +1,9 @@
-#include <wmath.h>
-#include "color.h"
-
 #include <cstdlib>
 #include <vector>
 #include <stdexcept>
+
+#include "wmath.h"
+#include "color.h"
 
 extern "C" {
 #include <ncurses.h>

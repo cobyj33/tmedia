@@ -1,11 +1,12 @@
 
-#include <image.h>
-#include <pixeldata.h>
-#include <ascii.h>
 #include <cstdint>
-#include <wmath.h>
 #include <vector>
 #include <stdexcept>
+
+#include "image.h"
+#include "pixeldata.h"
+#include "ascii.h"
+#include "wmath.h"
 
 extern "C" {
 #include <libavutil/avutil.h>

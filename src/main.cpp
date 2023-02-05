@@ -6,10 +6,10 @@
 #include "color.h"
 #include "icons.h"
 #include "pixeldata.h"
-#include <image.h>
-#include <video.h>
-#include <media.h>
-#include <info.h>
+#include "image.h"
+#include "video.h"
+#include "media.h"
+#include "info.h"
 
 #include <argparse.hpp>
 

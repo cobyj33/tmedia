@@ -3,24 +3,24 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <mutex>
+#include <map>
 
 #include "audio.h"
 #include "color.h"
 #include "debug.h"
 #include "pixeldata.h"
 #include "playheadlist.hpp"
-#include <image.h>
-#include <video.h>
-#include <ascii.h>
-#include <icons.h>
-#include <media.h>
-#include <threads.h>
-#include <wmath.h>
-#include <wtime.h>
-#include <mutex>
-#include <map>
+#include "image.h"
+#include "video.h"
+#include "ascii.h"
+#include "icons.h"
+#include "media.h"
+#include "threads.h"
+#include "wmath.h"
+#include "wtime.h"
+#include "curses_helpers.h"
 
-#include <curses_helpers.h>
 
 extern "C" {
 #include <ncurses.h>

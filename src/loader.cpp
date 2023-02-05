@@ -1,6 +1,7 @@
-#include <media.h>
-#include <threads.h>
 #include <mutex>
+
+#include "media.h"
+#include "threads.h"
 
 extern "C" {
 #include <curses.h>

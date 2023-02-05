@@ -1,7 +1,8 @@
-#include <streamdata.h>
 #include <memory>
 #include <stdexcept>
-#include <except.h>
+
+#include "streamdata.h"
+#include "except.h"
 
 extern "C" {
     #include <libavcodec/avcodec.h>

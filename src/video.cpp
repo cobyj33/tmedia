@@ -1,22 +1,22 @@
 
-#include "boiler.h"
-#include "decode.h"
-#include "threads.h"
-#include "playheadlist.hpp"
-#include "icons.h"
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
-#include <video.h>
-#include <media.h>
-#include <ascii.h>
-#include <wmath.h>
-#include <wtime.h>
-#include <videoconverter.h>
 #include <mutex>
 #include <memory>
-
 #include <stdexcept>
+
+#include "media.h"
+#include "video.h"
+#include "boiler.h"
+#include "decode.h"
+#include "threads.h"
+#include "icons.h"
+#include "ascii.h"
+#include "wmath.h"
+#include "wtime.h"
+#include "playheadlist.hpp"
+#include "videoconverter.h"
 #include "except.h"
 
 extern "C" {

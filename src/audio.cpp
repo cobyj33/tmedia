@@ -1,8 +1,8 @@
 
-#include "audio.h"
-#include <wmath.h>
 #include <cstdlib>
 
+#include "audio.h"
+#include "wmath.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>

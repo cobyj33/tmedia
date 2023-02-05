@@ -8,17 +8,12 @@
  * @copyright Copyright (c) 2023
  * 
  */
-#include "pixeldata.h"
-#include <icons.h>
+
 #include <stdexcept>
-#include <wmath.h>
 
-// #define NUMBER_OF_VIDEO_ICONS 27
-// #define NUMBER_OF_PLAYBACK_ICONS 12
-// #define NUMBER_OF_NUMBER_ICONS 10
-// #define NUMBER_OF_NUMBER_SYMBOL_ICONS 5
-
-// #define NUMBER_OF_VOLUME_ICONS 4
+#include "pixeldata.h"
+#include "icons.h"
+#include "wmath.h"
 
 std::vector<std::vector<uint8_t>> testMatrix{ std::vector<uint8_t>{0, 0, 0} };
 PixelData test = PixelData(testMatrix);

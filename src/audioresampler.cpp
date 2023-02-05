@@ -1,7 +1,8 @@
-#include <audioresampler.h>
 #include <stdexcept>
-#include <except.h>
-#include <decode.h>
+
+#include "audioresampler.h"
+#include "except.h"
+#include "decode.h"
 
 extern "C" {
     #include <libswresample/swresample.h>
