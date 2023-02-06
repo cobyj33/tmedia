@@ -74,6 +74,8 @@ class MediaTimeline {
         std::unique_ptr<MediaData> mediaData;
         Playback playback;
         MediaTimeline(const char* fileName);
+
+        void jump_to_time(double targetTime);
 };
 
 

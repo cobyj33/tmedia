@@ -7,7 +7,6 @@
 
 extern "C" {
 #include <libavutil/frame.h>
-#include <libavutil/pixfmt.h>
 }
 
 class PixelData {

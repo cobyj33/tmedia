@@ -13,7 +13,6 @@
 #include "pixeldata.h"
 #include "playheadlist.hpp"
 #include "image.h"
-#include "video.h"
 #include "ascii.h"
 #include "icons.h"
 #include "media.h"
@@ -144,7 +143,7 @@ void process_render(MediaPlayer* player, std::mutex& alter_mutex, GuiData& gui_d
     //         break;
     //     }
 
-    //     jump_to_time(player->timeline, targetTime);
+    //     player->timeline.jump_to_time(targetTime);
     //     // video_symbol_stack_push(player->displayCache->symbol_stack, jump_time_requested < 0 ? get_video_symbol(BACKWARD_ICON) : get_video_symbol(FORWARD_ICON));
     //     jump_time_requested = 0;
     // }

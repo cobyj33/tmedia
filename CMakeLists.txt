@@ -61,17 +61,43 @@ add_executable(ascii_video
 target_link_libraries( ascii_video ${CURSES_LIBRARIES} PkgConfig::LIBAV)
 
 add_executable(tests 
-./src/tests/test_playheadlist.cpp
-./src/audio.cpp
+./lib/miniaudio/extras/miniaudio_split/miniaudio.c
+./src/audioresampler.cpp
+./src/videoconverter.cpp
+./src/streamdata.cpp
+./src/ascii.cpp
 ./src/audiostream.cpp
+./src/audio.cpp
+./src/audio_thread.cpp
+./src/decode.cpp
+./src/image.cpp
+./src/media.cpp
+./src/boiler.cpp
+./src/init.cpp
+./src/info.cpp
+./src/threads.cpp
+./src/video.cpp
+./src/formatting.cpp
 ./src/wmath.cpp
-./src/tests/test_audiostream.cpp
+./src/renderer.cpp
+./src/loader.cpp
+./src/wtime.cpp
+./src/debug.cpp
+./src/color.cpp
+./src/icons.cpp
 ./src/playback.cpp
-./src/tests/test_playback.cpp
-./src/wmath.cpp
-./src/tests/test_wmath.cpp
+./src/curses_helpers.cpp
+./src/pixeldata.cpp
+./src/aabb.cpp
 ./src/scale.cpp
+./src/termcolor.cpp
+
+./src/tests/test_audiostream.cpp
+./src/tests/test_playback.cpp
+./src/tests/test_wmath.cpp
 ./src/tests/test_scale.cpp
+./src/tests/test_playheadlist.cpp
+./src/tests/test_pixeldata.cpp
 )
 
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain ${CURSES_LIBRARIES} PkgConfig::LIBAV)

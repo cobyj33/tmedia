@@ -223,3 +223,63 @@ MediaStream::~MediaStream() {
     // delete this->info;
 }
 
+void MediaTimeline::jump_to_time(double targetTime) {
+    targetTime = std::max(targetTime, 0.0);
+    Playback& playback = this->playback;
+    const double originalTime = this->playback.get_time(system_clock_sec());
+
+    if (!this->mediaData->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
+        throw std::runtime_error("Could not jump to time " + std::to_string( std::round(targetTime * 100) / 100) + " seconds with MediaTimeline, no video stream could be found");
+    }
+
+    MediaStream& video_stream = this->mediaData->get_media_stream(AVMEDIA_TYPE_VIDEO);
+    AVCodecContext* videoCodecContext = video_stream.get_codec_context();
+    PlayheadList<AVPacket*>& videoPackets = video_stream.packets;
+    double videoTimeBase = video_stream.get_time_base();
+    const int64_t targetVideoPTS = targetTime / videoTimeBase;
+    AVPacket* packet_get;
+
+    if (targetTime == originalTime) {
+        return;
+     } else if (targetTime < originalTime || targetTime > originalTime + 60) { // If the skipped time is behind the player, begins moving backward step by step until sufficiently behind the requested time
+        avcodec_flush_buffers(videoCodecContext);
+        double testTime = std::max(0.0, targetTime - 30);
+        double last_time = videoPackets.get()->pts * videoTimeBase;
+        int step_direction = signum(testTime - originalTime);
+
+        while (videoPackets.can_move_index(step_direction)) {
+            videoPackets.move_index(step_direction);
+            if (in_range(testTime, last_time, videoPackets.get()->pts * videoTimeBase)) {
+                break;
+            }
+            last_time = packet_get->pts * videoTimeBase;
+        }
+     }
+
+    int64_t finalPTS = -1;
+    std::vector<AVFrame*> decodedFrames;
+
+    //starts decoding forward again until it gets to the targeted time
+    while (finalPTS < targetVideoPTS || videoPackets.can_step_forward()) {
+        try {
+            decodedFrames = decode_video_packet(videoCodecContext, videoPackets.get());
+            videoPackets.step_forward();
+        } catch (ascii::ffmpeg_error e) {
+            if (e.is_eagain()) {
+                clear_av_frame_list(decodedFrames);
+                videoPackets.step_forward();
+            } else {
+                throw e;
+            }
+        }
+
+        if (decodedFrames.size() > 0) {
+            finalPTS = decodedFrames[0]->pts;
+        }
+        clear_av_frame_list(decodedFrames);
+    }
+
+    finalPTS = std::max(finalPTS, videoPackets.get()->pts);
+    double timeMoved = (finalPTS * videoTimeBase) - originalTime;
+    playback.skip(timeMoved);
+}

@@ -53,6 +53,10 @@ RGBColor RGBColor::get_complementary() const {
     return RGBColor(255 - this->red, 255 - this->green, 255 - this->blue );
 } 
 
+bool RGBColor::is_grayscale() const {
+    return this->red == this->green && this->green == this->blue;
+}
+
 
 RGBColor RGBColor::create_grayscale() const {
     int value = get_grayscale(this->red, this->green, this->blue);
