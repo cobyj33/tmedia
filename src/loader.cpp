@@ -19,25 +19,10 @@ void data_loading_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 bool data_loading_thread_loop(MediaPlayer* player, std::mutex& mutex) {
     std::lock_guard<std::mutex> lock_guard(mutex);
     MediaData& media_data = *player->timeline->mediaData;
-    if (media_data.allPacketsRead || !player->inUse) {
+    if (!player->inUse) {
         return false;
     }
-
-    // const int PACKET_RESERVE_SIZE = 10000;
-
-    // bool shouldFetch = true;
-
-    // for (int i = 0; i < media_data.nb_streams; i++) {
-    //     if (media_data.media_streams[i]->packets.get_length() > PACKET_RESERVE_SIZE) {
-    //         shouldFetch = false;
-    //         break;
-    //     }
-    // }
-
-    // if (shouldFetch) {
-    media_data.fetch_next(200);
-    // }
-
+    media_data.fetch_next(40);
     return true;
 }
 
@@ -60,10 +45,10 @@ void MediaData::fetch_next(int requestedPacketCount) {
         av_packet_unref(readingPacket);
 
          if (packetsRead >= requestedPacketCount) {
+            av_packet_free(&readingPacket);
             return;
         }
     }
 
-    this->allPacketsRead = true;
     av_packet_free(&readingPacket);
 }

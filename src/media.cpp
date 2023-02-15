@@ -112,7 +112,7 @@ double MediaPlayer::get_desync_time(double current_system_time) {
     AudioStream& audioStream = this->displayCache.audio_stream;
     Playback& playback = this->timeline->playback;
 
-    double current_time = playback.get_time(system_clock_sec());
+    double current_time = playback.get_time(current_system_time);
     double desync = std::abs(audioStream.get_time() - current_time);
     return desync;
 }
@@ -125,7 +125,7 @@ void MediaPlayer::resync(double current_system_time) {
         MediaStream& audio_media_stream = this->timeline->mediaData->get_media_stream(AVMEDIA_TYPE_AUDIO);
 
 
-        double current_time = playback.get_time(system_clock_sec());
+        double current_time = playback.get_time(current_system_time);
         if (audioStream.is_time_in_bounds(current_time)) {
             audioStream.set_time(current_time);
         } else {
@@ -137,7 +137,7 @@ void MediaPlayer::resync(double current_system_time) {
 }
 
 void MediaPlayer::set_current_image(PixelData& data) {
-    this->displayCache.image = data;
+    this->displayCache.image = PixelData(data);
 }
 
 PixelData& MediaPlayer::get_current_image() {
@@ -186,8 +186,12 @@ MediaData::MediaData(const char* fileName) {
     this->duration = (double)this->formatContext->duration / AV_TIME_BASE;
 }
 
-double MediaStream::get_average_frame_rate() const {
+double MediaStream::get_average_frame_rate_sec() const {
     return av_q2d(this->info.stream->avg_frame_rate);
+}
+
+double MediaStream::get_average_frame_time_sec() const {
+    return 1 / av_q2d(this->info.stream->avg_frame_rate);
 }
 
 double MediaStream::get_start_time() const {

@@ -8,16 +8,16 @@ extern "C" {
 #include <ncurses.h>
 }
 
-void wfill_box(WINDOW* window, int y, int x, int width, int height, char ch) {
-    for (int row = y; row <= y + height; row++) {
-        for (int col = x; col <= x + width; col++) {
-            mvwaddch(window, row, col, ch);
+void wfill_box(WINDOW* window, int row, int col, int width, int height, char ch) {
+    for (int curr_row = row; curr_row <= row + height; row++) {
+        for (int curr_col = col; curr_col <= col + width; col++) {
+            mvwaddch(window, curr_row, curr_col, ch);
         }
     }
 }
 
-void werasebox(WINDOW* window, int y, int x, int width, int height) {
-    wfill_box(window, y, x, width, height, ' ');
+void werasebox(WINDOW* window, int row, int col, int width, int height) {
+    wfill_box(window, row, col, width, height, ' ');
 }
 
 int printwc(int color_pair, const char* format, ...) {

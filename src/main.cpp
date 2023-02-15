@@ -103,8 +103,8 @@ void ncurses_init() {
     ncurses_initialized = true;
     initscr();
     start_color();
-    initialize_colors();
-    initialize_color_pairs();
+    ncurses_initialize_colors();
+    ncurses_initialize_color_pairs();
     cbreak();
     noecho();
     curs_set(0);

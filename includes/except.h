@@ -50,6 +50,15 @@ namespace ascii {
                 return this->averror;
             }
 
+            std::string get_message() const {
+                return this->message;
+            }
+
+            std::string get_averror_string() const {
+                return this->error_string;
+            }
+
+
             bool is_eagain() const {
                 return this->averror == AVERROR(EAGAIN);
             }

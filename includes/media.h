@@ -17,6 +17,7 @@
 #include <vector>
 #include <stack>
 #include <memory>
+#include <string>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -43,7 +44,8 @@ class MediaStream {
         ~MediaStream();
 
         double get_time_base() const;
-        double get_average_frame_rate() const;
+        double get_average_frame_rate_sec() const;
+        double get_average_frame_time_sec() const;
         double get_start_time() const;
         int get_stream_index() const;
         enum AVMediaType get_media_type() const;
@@ -103,6 +105,7 @@ class MediaDisplayCache {
         PixelData last_rendered_image;
         PlayheadList<PixelData> image_buffer;
         AudioStream audio_stream;
+        std::string message;
 
         /**
          * @brief A stack of the current video symbol and the time it was added to the stack

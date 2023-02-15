@@ -37,7 +37,7 @@ RGBColor get_average_color(std::vector<RGBColor>& colors) {
         sums[2] += (double)colors[i].blue * colors[i].blue;
     }
 
-    return RGBColor(std::sqrt(sums[0]/colors.size()), std::sqrt(sums[1]/colors.size()), std::sqrt(sums[2]/colors.size()));
+    return RGBColor((int)std::sqrt(sums[0]/colors.size()), (int)std::sqrt(sums[1]/colors.size()), (int)std::sqrt(sums[2]/colors.size()));
 }
 
 int RGBColor::get_grayscale_value() const {

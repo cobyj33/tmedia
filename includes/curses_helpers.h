@@ -8,8 +8,8 @@ extern "C" {
     #include <ncurses.h>
 }
 
-void wfill_box(WINDOW* window, int x, int y, int width, int height, char ch);
-void werasebox(WINDOW* window, int x, int y, int width, int height);
+void wfill_box(WINDOW* window, int row, int col, int width, int height, char ch);
+void werasebox(WINDOW* window, int row, int col, int width, int height);
 
 // void printwrgb(char* line, std::vector<RGBColor>& colors);
 int printwc(int color_pair, const char* format, ...);

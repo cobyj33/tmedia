@@ -6,6 +6,7 @@
 
 #include "decode.h"
 #include "except.h"
+#include "audioresampler.h"
 
 extern "C" {
 #include <libavutil/error.h>
@@ -35,26 +36,37 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* videoCodecContext, AVP
     int result;
 
     result = avcodec_send_packet(videoCodecContext, videoPacket);
-    if (result < 0) {
-        throw ascii::ffmpeg_error("Error while sending video packet: ", result);
+    if (result < 0 && result != AVERROR(EAGAIN)) {
+        return videoFrames;
+        // throw ascii::ffmpeg_error("Error while sending video packet: ", result);
     }
 
     AVFrame* videoFrame = av_frame_alloc();
 
     while (result == 0) {
         result = avcodec_receive_frame(videoCodecContext, videoFrame);
-        AVFrame* savedFrame = av_frame_alloc();
-        result = av_frame_ref(savedFrame, videoFrame);
-        
+
         if (result < 0) {
-            av_frame_free(&savedFrame);
             if (result == AVERROR(EAGAIN)) {
                 break;
             } else {
                 av_frame_free(&videoFrame);
                 clear_av_frame_list(videoFrames);
-                throw ascii::ffmpeg_error("ERROR WHILE REFERENCING VIDEO FRAMES DURING DECODING:", result);
+                return videoFrames;
+                // throw ascii::ffmpeg_error("Error while receiving video frames during decoding:", result);
             }
+        }
+
+        AVFrame* savedFrame = av_frame_alloc();
+        result = av_frame_ref(savedFrame, videoFrame);
+        
+        if (result < 0) {
+            av_frame_free(&savedFrame);
+            av_frame_free(&videoFrame);
+            clear_av_frame_list(videoFrames);
+            return videoFrames;
+
+            // throw ascii::ffmpeg_error("ERROR while referencing video frames during decoding:", result);
         }
 
         videoFrames.push_back(savedFrame);
@@ -103,3 +115,72 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audioCodecContext, AVP
     return audioFrames;
 }
 
+std::vector<AVFrame*> decode_video_packet(AVCodecContext* videoCodecContext, PlayheadList<AVPacket*>& videoPacketList) {
+    std::vector<AVFrame*> decodedFrames;
+
+    while (videoPacketList.can_step_forward()) {
+        try {
+            decodedFrames = decode_video_packet(videoCodecContext, videoPacketList.get());
+            return decodedFrames;
+        } catch (ascii::ffmpeg_error e) {
+            if (e.is_eagain() && videoPacketList.can_step_forward()) {
+                videoPacketList.step_forward();
+            } else {
+                throw e;
+            }
+        }
+    }
+    
+    return decodedFrames;
+}
+
+std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audioCodecContext, PlayheadList<AVPacket*>& audioPacketList) {
+    std::vector<AVFrame*> decodedFrames;
+
+    while (audioPacketList.can_step_forward()) {
+        try {
+            decodedFrames = decode_audio_packet(audioCodecContext, audioPacketList.get());
+            return decodedFrames;
+        } catch (ascii::ffmpeg_error e) {
+            if (e.is_eagain() && audioPacketList.can_step_forward()) {
+                audioPacketList.step_forward();
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    return decodedFrames;
+}
+
+std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler& audioResampler, AVPacket* packet) {
+    std::vector<AVFrame*> rawAudioFrames = decode_audio_packet(audioCodecContext, packet);
+    std::vector<AVFrame*> audioFrames = audioResampler.resample_audio_frames(rawAudioFrames);
+    clear_av_frame_list(rawAudioFrames);
+    return audioFrames;
+}
+
+std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler& audioResampler, PlayheadList<AVPacket*>& packet_buffer) {
+    std::vector<AVFrame*> rawAudioFrames = decode_audio_packet(audioCodecContext, packet_buffer);
+    std::vector<AVFrame*> audioFrames = audioResampler.resample_audio_frames(rawAudioFrames);
+    clear_av_frame_list(rawAudioFrames);
+    return audioFrames;
+    // AVPacket* currentPacket = audioPackets.get();
+    // std::vector<AVFrame*> audioFrames;
+    // bool reading = true;
+
+    // while (audioPackets.can_step_forward()) {
+    //     try {
+    //         audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audioPackets.get());
+    //         return audioFrames;
+    //     } catch (ascii::ffmpeg_error e) {
+    //         if (e.is_eagain() && audioPackets.can_step_forward()) {
+    //             audioPackets.step_forward();
+    //             continue;
+    //         }
+    //         throw e;
+    //     }
+    // }
+
+    // return audioFrames;
+}

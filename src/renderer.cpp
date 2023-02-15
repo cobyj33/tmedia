@@ -78,9 +78,9 @@ void render_video_debug(MediaPlayer* player, GuiData& gui_data);
 void render_audio_debug(MediaPlayer* player, GuiData& gui_data);
 void render_audio_screen(MediaPlayer* player, GuiData& gui_data);
 
-void print_pixel_data(PixelData& pixelData, int boundsRow, int boundsCol, int boundsWidth, int boundsHeight);
-void print_pixel_data_grayscale(PixelData& pixelData, int boundsRow, int boundsCol, int boundsWidth, int boundsHeight);
-void print_pixel_data_colored(PixelData& pixelData, int boundsRow, int boundsCol, int boundsWidth, int boundsHeight);
+void print_pixel_data(PixelData& pixelData, int bounds_row, int bounds_col, int bounds_width, int bounds_height);
+void print_pixel_data_grayscale(PixelData& pixelData, int bounds_row, int bounds_col, int bounds_width, int bounds_height);
+void print_pixel_data_colored(PixelData& pixelData, int bounds_row, int bounds_col, int bounds_width, int bounds_height);
 
 RGBColor get_index_display_color(int index, int length) {
     const double step = (255.0 / 2.0) / length;
@@ -114,12 +114,15 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex) {
     while (player->inUse) {
         lock.lock();
         int input = wgetch(inputWindow);
-        PixelData& image = player->displayCache.image;
+        // PixelData& image = player->displayCache.image;
 
-        // render_movie_screen(player, gui_data);
-        erase();
-        printw("Welcome to ASCII VIDEO %d %d x %d", count++, image.get_width(), image.get_height());
-        refresh();
+        // erase();
+        // MediaStream& video_stream = player->timeline->mediaData->get_media_stream(AVMEDIA_TYPE_VIDEO);
+        // printw("%s\n", player->displayCache.message.c_str());
+        // printw("Please fr: %.2f,  %d %d", video_stream.get_average_frame_time_sec(), video_stream.packets.get_index(), video_stream.packets.get_length());
+        // refresh();
+
+        render_movie_screen(player, gui_data);
         lock.unlock();
         // process_render(player, alter_mutex, gui_data, input);
         sleep_for_ms(5);
@@ -383,6 +386,7 @@ void render_screen(MediaPlayer* player, GuiData& gui_data) {
 
 void render_movie_screen(MediaPlayer* player, GuiData& gui_data) {
     erase();
+    printw("Rows %d x Cols %d", LINES, COLS);
     print_pixel_data(player->displayCache.image, 0, 0, COLS, LINES);
     refresh();
 }
@@ -393,19 +397,19 @@ typedef struct ScreenChar {
     int col;
 } ScreenChar;
 
-void print_pixel_data(PixelData& pixelData, int boundsRow, int boundsCol, int boundsWidth, int boundsHeight) {
+void print_pixel_data(PixelData& pixelData, int bounds_row, int bounds_col, int bounds_width, int bounds_height) {
     if (has_colors()) {
-        print_pixel_data_colored(pixelData, boundsRow, boundsCol, boundsWidth, boundsHeight);
+        print_pixel_data_colored(pixelData, bounds_row, bounds_col, bounds_width, bounds_height);
     } else {
-        print_pixel_data_grayscale(pixelData, boundsRow, boundsCol, boundsWidth, boundsHeight);
+        print_pixel_data_grayscale(pixelData, bounds_row, bounds_col, bounds_width, bounds_height);
     }
 }
 
-void print_pixel_data_grayscale(PixelData& pixelData, int boundsRow, int boundsCol, int boundsWidth, int boundsHeight) {
-    PixelData bounded = pixelData.bound(boundsWidth, boundsHeight);
+void print_pixel_data_grayscale(PixelData& pixelData, int bounds_row, int bounds_col, int bounds_width, int bounds_height) {
+    PixelData bounded = pixelData.bound(bounds_width, bounds_height);
     const AsciiImage image(bounded, AsciiImage::ASCII_STANDARD_CHAR_MAP);
-    int image_start_row = (image.get_height() - boundsHeight) / 2;
-    int image_start_col = (image.get_width() - boundsWidth) / 2; 
+    int image_start_row = bounds_row + std::abs(image.get_height() - bounds_height) / 2;
+    int image_start_col = bounds_col + std::abs(image.get_width() - bounds_width) / 2; 
 
     for (int row = 0; row < image.get_height(); row++) {
         for (int col = 0; col < image.get_width(); col++) {
@@ -414,15 +418,15 @@ void print_pixel_data_grayscale(PixelData& pixelData, int boundsRow, int boundsC
     }
 }
 
-void print_pixel_data_colored(PixelData& pixelData, int boundsRow, int boundsCol, int boundsWidth, int boundsHeight) {
+void print_pixel_data_colored(PixelData& pixelData, int bounds_row, int bounds_col, int bounds_width, int bounds_height) {
     if (!has_colors()) {
         throw std::runtime_error("Attempted to print colored text in terminal that does not support color");
     }
 
-    PixelData bounded = pixelData.bound(boundsWidth, boundsHeight);
+    PixelData bounded = pixelData.bound(bounds_width, bounds_height);
     const AsciiImage image(bounded, AsciiImage::ASCII_STANDARD_CHAR_MAP);
-    int image_start_row = (image.get_height() - boundsHeight) / 2;
-    int image_start_col = (image.get_width() - boundsWidth) / 2; 
+    int image_start_row = bounds_row + std::abs(image.get_height() - bounds_height) / 2;
+    int image_start_col = bounds_col + std::abs(image.get_width() - bounds_width) / 2; 
 
     std::map<int, std::vector<ScreenChar>> colors;
     std::vector<int> color_pairs;

@@ -68,6 +68,8 @@ class VideoIcon {
         static const VideoIcon PLUS_ICON;
         static const VideoIcon MINUS_ICON;
 
+        static const VideoIcon ERROR_ICON;
+
         static const VideoIcon get_digit_icon(int digit);
         static const VideoIcon get_volume_icon(double percentage);
 

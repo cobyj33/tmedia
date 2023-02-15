@@ -35,14 +35,8 @@ const char* DEBUG_AUDIO_TYPE = "Debug";
 typedef struct CallbackData {
     MediaPlayer* player;
     std::reference_wrapper<std::mutex> mutex;
-
     CallbackData(MediaPlayer* player, std::reference_wrapper<std::mutex> mutex) : player(player), mutex(mutex) {}
-    
 } CallbackData;
-
-
-std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler& audioResampler, AVPacket* packet);
-std::vector<AVFrame*> find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler& audioResampler, PlayheadList<AVPacket*>& packet_buffer);
 
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
@@ -53,8 +47,6 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     if (audioStream.can_read(frameCount)) {
         audioStream.read_into(frameCount, (float*)pOutput);
     }
-
-    (void)pInput;
 }
 
 void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
@@ -63,9 +55,12 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     if (!player->timeline->mediaData->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
         throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
     }
+
     MediaStream& audio_media_stream = player->timeline->mediaData->get_media_stream(AVMEDIA_TYPE_AUDIO);
     AVCodecContext* audioCodecContext = audio_media_stream.get_codec_context();
     const int nb_channels = audioCodecContext->ch_layout.nb_channels;
+
+
     AudioResampler audioResampler(
             &(audioCodecContext->ch_layout), AV_SAMPLE_FMT_FLT, audioCodecContext->sample_rate,
             &(audioCodecContext->ch_layout), audioCodecContext->sample_fmt, audioCodecContext->sample_rate);
@@ -114,55 +109,26 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         }
 
         AudioStream& audioStream = player->displayCache.audio_stream;
-        if (audio_media_stream.packets.can_step_forward()) {
-            audio_media_stream.packets.step_forward();
-            // std::vector<AVFrame*> audioFrames = find_final_audio_frames(audioCodecContext, audioResampler, audio_media_stream.packets);
-            // for (int i = 0; i < audioFrames.size(); i++) {
-                // AVFrame* current_frame = audioFrames[i];
-                // float* frameData = (float*)(current_frame->data[0]);
-                float frameData[14] = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0, 0.0};
-                audioStream.write(frameData, 14);
-                // audioStream.write(frameData, current_frame->nb_samples);
-            // }
-            // clear_av_frame_list(audioFrames);
+        std::vector<AVFrame*> audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audio_media_stream.packets);
+        for (int i = 0; i < audioFrames.size(); i++) {
+            AVFrame* current_frame = audioFrames[i];
+            float* frameData = (float*)(current_frame->data[0]);
+            audioStream.write(frameData, current_frame->nb_samples);
         }
+        clear_av_frame_list(audioFrames);
+
+        audio_media_stream.packets.try_step_forward();
 
         audioDevice.sampleRate = audioCodecContext->sample_rate * playback.get_speed();
 
         const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
-        if (player->get_desync_time(system_clock_sec()) > MAX_AUDIO_ASYNC_TIME_SECONDS) {
+        if (player->get_desync_time(system_clock_sec()) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
             player->resync(system_clock_sec());
         }
 
         mutex_lock.unlock();
-        sleep_for_ms(2);
+        sleep_for_ms(1);
     }
 
 }
 
-std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler& audioResampler, AVPacket* packet) {
-    std::vector<AVFrame*> rawAudioFrames = decode_audio_packet(audioCodecContext, packet);
-    std::vector<AVFrame*> audioFrames = audioResampler.resample_audio_frames(rawAudioFrames);
-    clear_av_frame_list(rawAudioFrames);
-    return audioFrames;
-}
-
-std::vector<AVFrame*> find_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler& audioResampler, PlayheadList<AVPacket*>& audioPackets) {
-    AVPacket* currentPacket = audioPackets.get();
-    std::vector<AVFrame*> audioFrames;
-    bool reading = true;
-
-    while (reading) {
-        try {
-            audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audioPackets.get());
-        } catch (ascii::ffmpeg_error e) {
-            if (e.is_eagain()) {
-                audioPackets.step_forward();
-                continue;
-            }
-            throw e;
-        }
-    }
-
-    return audioFrames;
-}

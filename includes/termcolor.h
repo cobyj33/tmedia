@@ -7,14 +7,14 @@
 int get_closest_ncurses_color_pair(RGBColor& input);
 int get_closest_ncurses_color(RGBColor& input);
 
-int find_best_initialized_color_pair(RGBColor& input);
+int ncurses_find_best_initialized_color_pair(RGBColor& input);
 int ncurses_find_best_initialized_color_number(RGBColor& input);
 
 
 
-void initialize_color_pairs();
-void initialize_colors();
-void initialize_new_colors(std::vector<RGBColor>& input);
+void ncurses_initialize_color_pairs();
+void ncurses_initialize_colors();
+void ncurses_initialize_new_colors(std::vector<RGBColor>& input);
 std::pair<RGBColor, RGBColor> ncurses_get_pair_number_content(int pair);
 RGBColor ncurses_get_color_number_content(int color);
 

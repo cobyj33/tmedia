@@ -179,11 +179,13 @@ void PlayheadList<T>::set_index(int index) {
 
 template<typename T>
 void PlayheadList<T>::move_index(int offset) {
+    if (offset == 0) { return; }
     this->set_index(this->m_index + offset);
 };
 
 template<typename T>
 bool PlayheadList<T>::can_move_index(int offset) {
+    if (offset == 0) { return true; }
     return this->m_index + offset >= 0 && this->m_index + offset < this->m_length;
 };
 

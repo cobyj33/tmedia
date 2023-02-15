@@ -10,7 +10,6 @@
  * @copyright Copyright (c) 2023
  */
 
-#define MAX_AUDIO_ASYNC_TIME_SECONDS 0.15
 #include <cstdint>
 
 uint8_t normalized_float_sample_to_uint8(float num);

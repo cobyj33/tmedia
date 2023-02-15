@@ -8,10 +8,7 @@
 #include "pixeldata.h"
 
 
-const std::string ASCII_STANDARD_CHAR_MAP = "@%#*+=-:._ ";
-const std::string ASCII_EXTENDED_CHAR_MAP = "@MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry\%1v7l+it[]{}?j|()=~!-/<>\"^_';,:`.";
-const std::string UNICODE_BOX_CHAR_MAP = "█▉▊▋▌▍▎▏";
-const std::string UNICODE_STIPPLE_CHAR_MAP = "░▒▓";
+
 
 
 class ColorChar {
@@ -51,7 +48,7 @@ class AsciiImage {
 
 char get_char_from_value(std::string& characters, uint8_t value);
 char get_char_from_rgb(std::string& characters, RGBColor& color);
-char get_char_from_area_rgb(std::string& characters, uint8_t* pixels, int x, int y, int width, int height, int pixelWidth, int pixelHeight);
+char get_char_from_area_rgb(std::string& characters, uint8_t* pixels, int row, int col, int width, int height, int pixelWidth, int pixelHeight);
 
 RGBColor get_rgb_from_char(std::string& characters, char ch);
 #endif

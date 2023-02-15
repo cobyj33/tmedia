@@ -2,6 +2,9 @@
 #define ASCII_VIDEO_DECODE
 
 #include <vector>
+#include "playheadlist.hpp"
+#include "audioresampler.h"
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/avutil.h>
@@ -9,8 +12,6 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-typedef std::vector<AVFrame*> (*decoder_function)(AVCodecContext*, AVPacket*, int*, int*);
-decoder_function get_stream_decoder(enum AVMediaType mediaType);
 
 // void free_frame_list(std::vector<AVFrame*> frameList, int count);
 /**
@@ -18,6 +19,12 @@ decoder_function get_stream_decoder(enum AVMediaType mediaType);
  * @param frameList 
  */
 void clear_av_frame_list(std::vector<AVFrame*>& frameList);
+
 std::vector<AVFrame*> decode_video_packet(AVCodecContext* videoCodecContext, AVPacket* videoPacket);
 std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audioCodecContext, AVPacket* audioPacket);
+std::vector<AVFrame*> decode_video_packet(AVCodecContext* videoCodecContext, PlayheadList<AVPacket*>& videoPacketList);
+std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audioCodecContext, PlayheadList<AVPacket*>& audioPacketList);
+
+std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler& audioResampler, AVPacket* packet);
+std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler& audioResampler, PlayheadList<AVPacket*>& packet_buffer);
 #endif

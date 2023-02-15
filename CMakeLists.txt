@@ -41,7 +41,7 @@ add_executable(ascii_video
 ./src/init.cpp
 ./src/info.cpp
 ./src/threads.cpp
-./src/video.cpp
+./src/video_thread.cpp
 ./src/formatting.cpp
 ./src/wmath.cpp
 ./src/renderer.cpp
@@ -76,7 +76,7 @@ add_executable(tests
 ./src/init.cpp
 ./src/info.cpp
 ./src/threads.cpp
-./src/video.cpp
+./src/video_thread.cpp
 ./src/formatting.cpp
 ./src/wmath.cpp
 ./src/renderer.cpp
@@ -98,6 +98,7 @@ add_executable(tests
 ./src/tests/test_scale.cpp
 ./src/tests/test_playheadlist.cpp
 ./src/tests/test_pixeldata.cpp
+./src/tests/test_color.cpp
 )
 
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain ${CURSES_LIBRARIES} PkgConfig::LIBAV)

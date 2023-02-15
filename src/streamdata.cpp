@@ -19,7 +19,12 @@ StreamData::StreamData(AVFormatContext* formatContext, enum AVMediaType mediaTyp
 
     this->decoder = decoder;
     this->stream = formatContext->streams[streamIndex];
-    this->codecContext = avcodec_alloc_context3(decoder);
+    this->codecContext = avcodec_alloc_context3(this->decoder);
+
+    if (this->codecContext == nullptr) {
+        throw std::invalid_argument("Could not create codec context from decoder: " + std::string(decoder->long_name));
+    }
+
     this->mediaType = mediaType;
 
     int result = avcodec_parameters_to_context(this->codecContext, this->stream->codecpar);

@@ -57,7 +57,6 @@ PixelData::PixelData(AVFrame* videoFrame) {
     for (int row = 0; row < videoFrame->height; row++) {
         this->pixels.push_back(std::vector<RGBColor>());
         for (int col = 0; col < videoFrame->width; col++) {
-
             if ((AVPixelFormat)videoFrame->format == AV_PIX_FMT_GRAY8) {
                 this->pixels[row].push_back(RGBColor(videoFrame->data[0][row * videoFrame->width + col]));
             } else if ((AVPixelFormat)videoFrame->format == AV_PIX_FMT_RGB24) {
@@ -73,7 +72,7 @@ PixelData::PixelData(AVFrame* videoFrame) {
 }
 
 
-RGBColor PixelData::get_avg_color_from_area(int x, int y, int width, int height) const {
+RGBColor PixelData::get_avg_color_from_area(int row, int col, int width, int height) const {
     if (width * height <= 0) {
         throw std::runtime_error("Cannot get average color from an area with negative dimensions: " + std::to_string(width) + " x " + std::to_string(height));
     }
@@ -82,10 +81,10 @@ RGBColor PixelData::get_avg_color_from_area(int x, int y, int width, int height)
     }
 
     std::vector<RGBColor> colors;
-    for (int row = y; row < y + height; row++) {
-        for (int col = x; col < x + width; col++) {
-            if (this->in_bounds(row, col)) {
-                colors.push_back(this->at(row, col));
+    for (int curr_row = row; curr_row < row + height; curr_row++) {
+        for (int curr_col = col; curr_col < col + width; curr_col++) {
+            if (this->in_bounds(curr_row, curr_col)) {
+                colors.push_back(this->at(curr_row, curr_col));
             }
         }
     }
@@ -93,12 +92,12 @@ RGBColor PixelData::get_avg_color_from_area(int x, int y, int width, int height)
     if (colors.size() > 0) {
         return get_average_color(colors);
     }
-    throw std::runtime_error("Cannot get average color of out of bounds area");
+    return RGBColor::WHITE;
+    // throw std::runtime_error("Cannot get average color of out of bounds area");
 }
 
-RGBColor PixelData::get_avg_color_from_area(double x, double y, double width, double height) const {
-    return this->get_avg_color_from_area(std::floor(x), std::floor(y), std::ceil(width), std::ceil(height));
-
+RGBColor PixelData::get_avg_color_from_area(double row, double col, double width, double height) const {
+    return this->get_avg_color_from_area((int)std::floor(row), (int)std::floor(col), (int)std::ceil(width), (int)std::ceil(height));
 }
 
 PixelData::PixelData(const PixelData& other) {
@@ -123,24 +122,34 @@ int PixelData::get_height() const {
 }
 
 PixelData PixelData::scale(double amount) const {
+    if (amount == 0) {
+        return PixelData();
+    } else if (amount < 0) {
+        throw std::runtime_error("Scaling Pixel data by negative amount is currently not supported");
+    }
+
     int new_width = this->get_width() * amount;
     int new_height = this->get_height() * amount;
     std::vector<std::vector<RGBColor>> new_pixels;
 
-    for (double row = 0; row < new_height; row++) {
+    double box_width = 1 / amount;
+    double box_height = 1 / amount;
+
+    for (double new_row = 0; new_row < new_height; new_row++) {
         new_pixels.push_back(std::vector<RGBColor>());
-        for (double col = 0; col < new_width; col++) {
-            new_pixels[row].push_back( this->get_avg_color_from_area( row / amount, col / amount, amount, amount ) );
+        for (double new_col = 0; new_col < new_width; new_col++) {
+            RGBColor color = this->get_avg_color_from_area( new_row * box_height, new_col * box_width, box_width, box_height );
+            new_pixels[new_row].push_back(color);
         }
     }
     return PixelData(new_pixels);
 }
 
 PixelData PixelData::bound(int width, int height) const {
-    if (width < this->get_width() && height < this->get_height()) {
+    if (this->get_width() <= width && this->get_height() <= height) {
         return PixelData(*this);
     }
-    int scale_factor = get_scale_factor(this->get_width(), this->get_height(), width, height);
+    double scale_factor = get_scale_factor(this->get_width(), this->get_height(), width, height);
     return this->scale(scale_factor);
 }
 
@@ -149,8 +158,8 @@ bool PixelData::equals(const PixelData& other) const {
         return false;
     }
 
-    for (int row = 0; row < this->get_width(); row++) {
-        for (int col = 0; col < this->get_height(); col++) {
+    for (int row = 0; row < this->get_height(); row++) {
+        for (int col = 0; col < this->get_width(); col++) {
             RGBColor other_color = other.at(row, col);
             if (!this->at(row, col).equals(other_color)) {
                 return false;
