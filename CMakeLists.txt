@@ -47,7 +47,6 @@ add_executable(ascii_video
 ./src/renderer.cpp
 ./src/loader.cpp
 ./src/wtime.cpp
-./src/debug.cpp
 ./src/color.cpp
 ./src/icons.cpp
 ./src/playback.cpp
@@ -56,6 +55,7 @@ add_executable(ascii_video
 ./src/aabb.cpp
 ./src/scale.cpp
 ./src/termcolor.cpp
+./src/ui/gui.cpp
 )
 
 target_link_libraries( ascii_video ${CURSES_LIBRARIES} PkgConfig::LIBAV)
@@ -82,7 +82,6 @@ add_executable(tests
 ./src/renderer.cpp
 ./src/loader.cpp
 ./src/wtime.cpp
-./src/debug.cpp
 ./src/color.cpp
 ./src/icons.cpp
 ./src/playback.cpp
@@ -91,6 +90,8 @@ add_executable(tests
 ./src/aabb.cpp
 ./src/scale.cpp
 ./src/termcolor.cpp
+./src/ui/gui.cpp
+
 
 ./src/tests/test_audiostream.cpp
 ./src/tests/test_playback.cpp

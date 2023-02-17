@@ -57,7 +57,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
     while (player->inUse && playback.get_time(system_clock_sec()) < media_data->duration) {
         if (!playback.is_playing() || !video_stream.packets.can_move_index(10)) { // paused or not enough data
-            sleep_for_ms(1);
+            sleep_quick();
             continue;
         }
         mutex_lock.lock();

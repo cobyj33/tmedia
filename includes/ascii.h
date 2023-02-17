@@ -7,14 +7,10 @@
 #include "color.h"
 #include "pixeldata.h"
 
-
-
-
-
 class ColorChar {
     public:
         static const ColorChar EMPTY;
-        const char ch;
+        char ch;
         RGBColor color;
         ColorChar(char ch, RGBColor color) : ch(ch), color(color) {}
         ColorChar(const ColorChar& color_char) : ch(color_char.ch), color(color_char.color) {}

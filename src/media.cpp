@@ -112,8 +112,8 @@ double MediaPlayer::get_desync_time(double current_system_time) {
     AudioStream& audioStream = this->displayCache.audio_stream;
     Playback& playback = this->timeline->playback;
 
-    double current_time = playback.get_time(current_system_time);
-    double desync = std::abs(audioStream.get_time() - current_time);
+    double current_playback_time = playback.get_time(current_system_time);
+    double desync = std::abs(audioStream.get_time() - current_playback_time);
     return desync;
 }
 
@@ -125,14 +125,14 @@ void MediaPlayer::resync(double current_system_time) {
         MediaStream& audio_media_stream = this->timeline->mediaData->get_media_stream(AVMEDIA_TYPE_AUDIO);
 
 
-        double current_time = playback.get_time(current_system_time);
-        if (audioStream.is_time_in_bounds(current_time)) {
-            audioStream.set_time(current_time);
+        double current_playback_time = playback.get_time(current_system_time);
+        if (audioStream.is_time_in_bounds(current_playback_time)) {
+            audioStream.set_time(current_playback_time);
         } else {
-            audioStream.clear_and_restart_at(current_time);
+            audioStream.clear_and_restart_at(current_playback_time);
         }
 
-        move_packet_list_to_time_sec(audio_media_stream.packets, current_time);
+        move_packet_list_to_time_sec(audio_media_stream.packets, current_playback_time);
     }
 }
 
@@ -143,15 +143,6 @@ void MediaPlayer::set_current_image(PixelData& data) {
 PixelData& MediaPlayer::get_current_image() {
     return this->displayCache.image;
 }
-
-// MediaDisplayCache::MediaDisplayCache() {
-    // const int MAX_UNIQUE_MEDIA_DEBUG_MESSAGES = 10000;
-    // this->debug_info = MediaDebugInfo(MAX_UNIQUE_MEDIA_DEBUG_MESSAGES);
-// }
-
-// MediaDebugInfo::MediaDebugInfo(int max_unique_messages) {
-//     this->max_unique_messages = max_unique_messages;
-// }
 
 MediaDisplaySettings::MediaDisplaySettings() {
     this->use_colors = false;

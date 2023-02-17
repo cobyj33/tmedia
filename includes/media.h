@@ -5,13 +5,13 @@
 #include "decode.h"
 #include "boiler.h"
 #include "icons.h"
-#include "debug.h"
 #include "playheadlist.hpp"
 #include "color.h"
 #include "playback.h"
 #include "pixeldata.h"
 #include <streamdata.h>
 
+#include "gui.h"
 
 #include <cstdint>
 #include <vector>
@@ -100,7 +100,6 @@ class Sample {
 
 class MediaDisplayCache {
     public:
-        // MediaDebugInfo debug_info;
         PixelData image;
         PixelData last_rendered_image;
         PlayheadList<PixelData> image_buffer;
@@ -128,7 +127,7 @@ class MediaPlayer {
             this->timeline = std::make_unique<MediaTimeline>(fileName);
         }
 
-        void start();
+        void start(GUIState gui_state);
         double get_desync_time(double current_system_time);
         void resync(double current_system_time);
         void set_current_image(PixelData& data);

@@ -1,6 +1,5 @@
 
 #include "boiler.h"
-#include "debug.h"
 #include "decode.h"
 #include "media.h"
 #include "playheadlist.hpp"
@@ -122,12 +121,12 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         audioDevice.sampleRate = audioCodecContext->sample_rate * playback.get_speed();
 
         const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
-        if (player->get_desync_time(system_clock_sec()) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
-            player->resync(system_clock_sec());
-        }
+        // if (player->get_desync_time(system_clock_sec()) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
+        //     player->resync(system_clock_sec());
+        // }
 
         mutex_lock.unlock();
-        sleep_for_ms(1);
+        sleep_quick();
     }
 
 }

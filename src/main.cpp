@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <stdexcept>
 
 #include "color.h"
 #include "termcolor.h"
@@ -10,6 +11,8 @@
 #include "image.h"
 #include "media.h"
 #include "info.h"
+
+#include "gui.h"
 
 #include <argparse.hpp>
 
@@ -33,52 +36,104 @@ void on_terminate() {
     abort();
 }
 
-// const char* help_text = "     ASCII_VIDEO         \n"
-//       "  -h => help                   \n"
-//       "  -i <file> => show image file                   \n"
-//       "  -v <file> => play video file                   \n"
-//       "       --VIDEO CONTROLS--                   \n"
-//       "         RIGHT-ARROW -> Forward 10 seconds                   \n"
-//       "         LEFT-ARROW -> Backward 10 seconds                   \n"
-//       "         UP-ARROW -> Volume Up 5%                   \n"
-//       "         DOWN-ARROW -> Volume Down 5%                   \n"
-//       "         SPACEBAR -> Pause / Play                   \n"
-//       "         c or C -> Switch between video view and Audio View                   \n"
-//       "         d or D -> Debug Mode                   \n"
-//       "       ------------------                   \n"
-//       "  -info <file> => print file info                   \n";
-      
-const char* help_text = "     ASCII_VIDEO         \n"
-    "  -h => help                   \n"
-    "  file - play file                   \n"
-    "   --VIDEO CONTROLS--                   \n"
-    "         UP-ARROW -> Volume Up 5%                   \n"
-    "         DOWN-ARROW -> Volume Down 5%                   \n"
-    "         SPACEBAR -> Pause / Play                   \n"
-    "       ------------------                   \n"
-    "  -info <file> => print file info                   \n";
 
 int main(int argc, char** argv)
 {
-    if (argc == 1) {
-        std::cout << help_text << std::endl;
-        return EXIT_SUCCESS;
-    }
-    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
-        std::cout << help_text << std::endl;
-        return EXIT_SUCCESS;
-    }
-
     srand(time(nullptr));
     av_log_set_level(AV_LOG_QUIET);
     std::set_terminate(on_terminate);
 
-    if (is_valid_path(argv[1])) {
-        ncurses_init();
-        MediaPlayer player(argv[1]);
-        player.start();
+    argparse::ArgumentParser parser("ascii_video", "1.1");
+
+    parser.add_argument("-v", "--video")
+        .default_value(true)
+        .implicit_value(true)
+        .help("Play a video file");
+    
+    parser.add_argument("-c", "--color")
+        .default_value(false)
+        .implicit_value(true)
+        .help("Play the video with color");
+
+    parser.add_argument("-g", "--grayscale", "--gray")
+        .default_value(false)
+        .implicit_value(true)
+        .help("Play the video in grayscale");
+
+    parser.add_argument("-b", "--background")
+        .default_value(false)
+        .implicit_value(true)
+        .help("Do not show characters, only the background");
+
+    parser.add_argument("file")
+        .help("The file to be played");
+
+    try {
+        parser.parse_args(argc, argv);
+    }
+        catch (const std::runtime_error& err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << parser;
+        std::exit(1);
     }
 
+    std::string file = parser.get<std::string>("file");
+
+    if (is_valid_path(file.c_str())) {
+        ncurses_init();
+        bool colors = parser.get<bool>("-c");
+        bool grayscale = !colors && parser.get<bool>("-g");
+        bool background = parser.get<bool>("-b");
+
+
+        std::string warnings;
+        erase();
+
+        if ( (colors || grayscale) && !has_colors()) {
+            warnings += "WARNING: Terminal does not support colored output\n";
+            colors = false;
+            grayscale = false;
+        }
+
+        if (background && !(colors || grayscale) ) {
+            if (!has_colors()) {
+                warnings += "WARNING: Cannot use background option as colors are not available in this terminal\n";
+            } else {
+                warnings += "WARNING: Cannot only show background without either color (-c, --color) or grayscale(-g, --gray, --grayscale) options selected\n";
+            }
+
+            background = false;
+        }
+
+        if ( (grayscale || colors) && has_colors() && !can_change_color()) {
+            warnings += "WARNING: Terminal does not support changing colored output data, colors may not be as accurate as expected\n";
+        }
+
+        if (warnings.length() > 0) {
+            printw("%s", warnings.c_str());
+            printw("%s\n", "Press any key to continue");
+            refresh();
+            getch();
+        }
+        erase();
+
+        VideoOutputMode mode = get_video_output_mode_from_params(colors, grayscale, background);
+
+        if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
+            ncurses_initialize_grayscale_colors();
+        }
+
+        GUIState gui_state;
+        gui_state.set_video_output_mode(mode);
+
+        bool video = parser.get<bool>("-v");
+        MediaPlayer player(file.c_str());
+        player.start(gui_state);
+        ncurses_uninit();
+    } else {
+        throw std::runtime_error("Cannot open invalid path: " + file);
+        std::exit(EXIT_FAILURE);
+    }
 
     ncurses_uninit();
     return EXIT_SUCCESS;
@@ -104,7 +159,6 @@ void ncurses_init() {
     initscr();
     start_color();
     ncurses_initialize_colors();
-    ncurses_initialize_color_pairs();
     cbreak();
     noecho();
     curs_set(0);
