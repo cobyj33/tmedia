@@ -18,7 +18,7 @@ void data_loading_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
 bool data_loading_thread_loop(MediaPlayer* player, std::mutex& mutex) {
     std::lock_guard<std::mutex> lock_guard(mutex);
-    MediaData& media_data = *player->timeline->mediaData;
+    MediaData& media_data = *player->mediaData;
     if (!player->inUse) {
         return false;
     }

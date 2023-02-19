@@ -16,8 +16,8 @@ void MediaPlayer::start(GUIState gui_state) {
 
     const int INITIAL_PLAYER_PACKET_BUFFER_SIZE = 10000;
     this->inUse = true;
-    this->timeline->playback.start(system_clock_sec());
-    this->timeline->mediaData->fetch_next(INITIAL_PLAYER_PACKET_BUFFER_SIZE);
+    this->playback.start(system_clock_sec());
+    this->mediaData->fetch_next(INITIAL_PLAYER_PACKET_BUFFER_SIZE);
 
 
     std::mutex alter_mutex;
@@ -30,6 +30,6 @@ void MediaPlayer::start(GUIState gui_state) {
     audio_thread.join();
     data_thread.join();
 
-    this->timeline->playback.stop(system_clock_sec());
+    this->playback.stop(system_clock_sec());
     this->inUse = false;
 }

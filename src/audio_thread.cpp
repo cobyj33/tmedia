@@ -83,13 +83,12 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         throw std::runtime_error("FAILED TO INITIALIZE AUDIO DEVICE: " + std::to_string(miniAudioLog));
     }
 
-    Playback& playback = player->timeline->playback;
     sleep_for_sec(audio_media_stream.get_start_time());
     
     while (player->inUse) {
         mutex_lock.lock();
 
-        if (playback.is_playing() == false && ma_device_get_state(&audioDevice) == ma_device_state_started) {
+        if (player->playback.is_playing() == false && ma_device_get_state(&audioDevice) == ma_device_state_started) {
             mutex_lock.unlock();
             miniAudioLog = ma_device_stop(&audioDevice);
             if (miniAudioLog != MA_SUCCESS) {
@@ -97,7 +96,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
                 throw std::runtime_error("Failed to stop playback: Miniaudio Error " + std::to_string(miniAudioLog));
             }
             mutex_lock.lock();
-        } else if (playback.is_playing() && ma_device_get_state(&audioDevice) == ma_device_state_stopped) {
+        } else if (player->playback.is_playing() && ma_device_get_state(&audioDevice) == ma_device_state_stopped) {
             mutex_lock.unlock();
             miniAudioLog = ma_device_start(&audioDevice);
             if (miniAudioLog != MA_SUCCESS) {
@@ -118,7 +117,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
         audio_media_stream.packets.try_step_forward();
 
-        audioDevice.sampleRate = audioCodecContext->sample_rate * playback.get_speed();
+        audioDevice.sampleRate = audioCodecContext->sample_rate * player->playback.get_speed();
 
         // const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
         // if (player->get_desync_time(system_clock_sec()) > MAX_AUDIO_DESYNC_TIME_SECONDS) {

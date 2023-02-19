@@ -63,14 +63,14 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
 
         lock.lock();
         erase();
-        double current_playback_time = player->timeline->playback.get_time(system_clock_sec());
+        double current_playback_time = player->playback.get_time(system_clock_sec());
         printw("%f", current_playback_time);
 
         if (input == KEY_LEFT) {
-            player->timeline->jump_to_time(current_playback_time - 10);
+            player->jump_to_time(current_playback_time - 10);
         }
         if (input == KEY_RIGHT) {
-            player->timeline->jump_to_time(current_playback_time + 10);
+            player->jump_to_time(current_playback_time + 10);
         }
 
         PixelData& image = player->displayCache.image;

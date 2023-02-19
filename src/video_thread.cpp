@@ -37,8 +37,7 @@ const char* DEBUG_VIDEO_TYPE = "debug";
 void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
 
-    Playback& playback = player->timeline->playback;
-    // std::unique_ptr<MediaData>& media_data = player->timeline->mediaData;
+    // std::unique_ptr<MediaData>& media_data = player->mediaData;
     MediaDisplayCache& cache = player->displayCache;
 
     if (!player->has_video()) {
@@ -55,15 +54,15 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
     VideoConverter videoConverter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt);
 
-    while (player->inUse && playback.get_time(system_clock_sec()) < player->get_duration()) {
-        if (!playback.is_playing() || !video_stream.packets.can_move_index(10)) { // paused or not enough data
+    while (player->inUse && player->playback.get_time(system_clock_sec()) < player->get_duration()) {
+        if (!player->playback.is_playing() || !video_stream.packets.can_move_index(10)) { // paused or not enough data
             sleep_quick();
             continue;
         }
-        
+
         mutex_lock.lock();
         double frame_duration = frame_time_sec;
-        double frame_pts_time_sec = playback.get_time(system_clock_sec()) + frame_duration;
+        double frame_pts_time_sec = player->playback.get_time(system_clock_sec()) + frame_duration;
         double extra_delay = 0.0;
 
         try {
@@ -85,10 +84,10 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             player->set_current_image(error_image);
         }
 
-        double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / playback.get_speed() ) );
-        playback.skip(frame_speed_skip_time_sec);
+        double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / player->playback.get_speed() ) );
+        player->playback.skip(frame_speed_skip_time_sec);
 
-        const double current_time = playback.get_time(system_clock_sec());
+        const double current_time = player->playback.get_time(system_clock_sec());
         double waitDuration = frame_pts_time_sec - current_time + extra_delay - frame_speed_skip_time_sec;
 
         video_stream.packets.try_step_forward();

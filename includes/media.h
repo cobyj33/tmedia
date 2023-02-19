@@ -71,16 +71,6 @@ class MediaData {
 
 
 
-class MediaTimeline {
-    public:
-        std::unique_ptr<MediaData> mediaData;
-        Playback playback;
-        MediaTimeline(const char* fileName);
-
-        void jump_to_time(double targetTime);
-};
-
-
 class MediaDisplaySettings {
     public:
         bool use_colors;
@@ -117,14 +107,15 @@ class MediaDisplayCache {
 
 class MediaPlayer {
     public:
-        std::unique_ptr<MediaTimeline> timeline;
         MediaDisplaySettings displaySettings;
         MediaDisplayCache displayCache;
+        std::unique_ptr<MediaData> mediaData;
+        Playback playback;
         const char* fileName;
         bool inUse;
 
         MediaPlayer(const char* fileName) : inUse(false), fileName(fileName) {
-            this->timeline = std::make_unique<MediaTimeline>(fileName);
+            this->mediaData = std::make_unique<MediaData>(fileName);
         }
 
         void start(GUIState gui_state);
@@ -134,6 +125,7 @@ class MediaPlayer {
         PixelData& get_current_image();
 
         double get_duration();
+        void jump_to_time(double targetTime);
 
         bool has_video();
         bool has_audio();
