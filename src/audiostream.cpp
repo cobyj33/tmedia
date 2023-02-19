@@ -114,8 +114,13 @@ void AudioStream::clear_and_restart_at(double time) {
     this->m_start_time = time;
 };
 
+
 bool AudioStream::can_read(std::size_t nb_samples) {
-    return this->m_playhead + nb_samples < this->get_nb_samples();
+    return this->m_playhead + nb_samples <= this->get_nb_samples();
+};
+
+bool AudioStream::can_read() {
+    return this->can_read(1);
 };
 
 void AudioStream::peek_into(std::size_t nb_samples, float* target) {

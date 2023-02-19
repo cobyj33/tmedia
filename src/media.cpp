@@ -44,21 +44,29 @@ void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS
     }
 
     int64_t lastPTS = packets.get()->pts;
-    while (!packets.at_edge()) {
+    while (true) {
 
         if (packets.get()->pts == targetPTS) {
             break;
         } else if  (std::min(packets.get()->pts, lastPTS) <= targetPTS && std::max(packets.get()->pts, lastPTS) >= targetPTS) {
             break;
         } else if (packets.get()->pts > targetPTS) {
-            packets.step_backward();
-            if (packets.get()->pts < targetPTS) {
+            if (packets.can_step_backward()) {
+                packets.step_backward();
+                if (packets.get()->pts < targetPTS) {
+                    break;
+                }
+            } else {
                 break;
             }
         } else if (packets.get()->pts < targetPTS) {
-            packets.step_forward();
-            if (packets.get()->pts > targetPTS) {
-                packets.step_backward();
+            if (packets.can_step_forward()) {
+                packets.step_forward();
+                if (packets.get()->pts > targetPTS) {
+                    packets.step_backward();
+                    break;
+                }
+            } else {
                 break;
             }
         }
@@ -80,22 +88,33 @@ void move_frame_list_to_pts(PlayheadList<AVFrame*>& frames, int64_t targetPTS) {
     }
 
     int64_t lastPTS = frames.get()->pts;
-    while (!frames.at_edge() && !(frames.get()->pts == targetPTS)  ) {
-        if (std::min(frames.get()->pts, lastPTS) <= targetPTS && std::max(frames.get()->pts, lastPTS) >= targetPTS) {
+    while (true) {
+
+        if (frames.get()->pts == targetPTS) {
+            break;
+        } else if  (std::min(frames.get()->pts, lastPTS) <= targetPTS && std::max(frames.get()->pts, lastPTS) >= targetPTS) {
             break;
         } else if (frames.get()->pts > targetPTS) {
-            frames.step_backward();
-            if (frames.get()->pts < targetPTS) {
+            if (frames.can_step_backward()) {
+                frames.step_backward();
+                if (frames.get()->pts < targetPTS) {
+                    break;
+                }
+            } else {
                 break;
             }
         } else if (frames.get()->pts < targetPTS) {
-            frames.step_forward();
-            if (frames.get()->pts > targetPTS) {
-                frames.step_backward();
+            if (frames.can_step_forward()) {
+                frames.step_forward();
+                if (frames.get()->pts > targetPTS) {
+                    frames.step_backward();
+                    break;
+                }
+            } else {
                 break;
             }
         }
-
+        
         lastPTS = frames.get()->pts;
     }
 }
@@ -106,23 +125,50 @@ void move_frame_list_to_time_sec(PlayheadList<AVFrame*>& frames, double time) {
     move_frame_list_to_pts(frames, pts);
 }
 
+double MediaPlayer::get_duration() {
+    return this->timeline->mediaData->duration;
+}
 
+bool MediaPlayer::has_video() {
+    return this->timeline->mediaData->has_media_stream(AVMEDIA_TYPE_VIDEO);
+}
+bool MediaPlayer::has_audio() {
+    return this->timeline->mediaData->has_media_stream(AVMEDIA_TYPE_AUDIO);
+}
+
+MediaStream& MediaPlayer::get_video_stream() {
+    if (this->has_video()) {
+        return this->timeline->mediaData->get_media_stream(AVMEDIA_TYPE_VIDEO);
+    }
+    throw std::runtime_error("Cannot get video stream from MediaPlayer, no video is available to retrieve");
+}
+
+MediaStream& MediaPlayer::get_audio_stream() {
+    if (this->has_audio()) {
+        return this->timeline->mediaData->get_media_stream(AVMEDIA_TYPE_AUDIO);
+    }
+    throw std::runtime_error("Cannot get audio stream from MediaPlayer, no audio is available to retrieve");
+}
 
 double MediaPlayer::get_desync_time(double current_system_time) {
-    AudioStream& audioStream = this->displayCache.audio_stream;
-    Playback& playback = this->timeline->playback;
+    if (this->has_audio() && this->has_video()) {
+        AudioStream& audioStream = this->displayCache.audio_stream;
+        Playback& playback = this->timeline->playback;
 
-    double current_playback_time = playback.get_time(current_system_time);
-    double desync = std::abs(audioStream.get_time() - current_playback_time);
-    return desync;
+        double current_playback_time = playback.get_time(current_system_time);
+        double desync = std::abs(audioStream.get_time() - current_playback_time);
+        return desync;
+    } else {
+        return 0.0;
+    }
 }
 
 void MediaPlayer::resync(double current_system_time) {
 
-    if (this->timeline->mediaData->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    if (this->has_audio()) {
         Playback& playback = this->timeline->playback;
         AudioStream& audioStream = this->displayCache.audio_stream;
-        MediaStream& audio_media_stream = this->timeline->mediaData->get_media_stream(AVMEDIA_TYPE_AUDIO);
+        MediaStream& audio_media_stream = this->get_audio_stream();
 
 
         double current_playback_time = playback.get_time(current_system_time);
@@ -219,7 +265,7 @@ MediaStream::~MediaStream() {
 }
 
 void MediaTimeline::jump_to_time(double targetTime) {
-    targetTime = std::max(targetTime, 0.0);
+    targetTime = clamp(targetTime, 0.0, this->mediaData->duration);
     Playback& playback = this->playback;
     const double originalTime = this->playback.get_time(system_clock_sec());
 
@@ -232,22 +278,21 @@ void MediaTimeline::jump_to_time(double targetTime) {
     PlayheadList<AVPacket*>& videoPackets = video_stream.packets;
     double videoTimeBase = video_stream.get_time_base();
     const int64_t targetVideoPTS = targetTime / videoTimeBase;
-    AVPacket* packet_get;
 
     if (targetTime == originalTime) {
         return;
-     } else if (targetTime < originalTime || targetTime > originalTime + 60) { // If the skipped time is behind the player, begins moving backward step by step until sufficiently behind the requested time
+     } else if (targetTime < originalTime) { // If the skipped time is behind the player, begins moving backward step by step until sufficiently behind the requested time
         avcodec_flush_buffers(videoCodecContext);
         double testTime = std::max(0.0, targetTime - 30);
         double last_time = videoPackets.get()->pts * videoTimeBase;
-        int step_direction = signum(testTime - originalTime);
+        int step_direction = testTime < originalTime ? -1 : 1;
 
         while (videoPackets.can_move_index(step_direction)) {
             videoPackets.move_index(step_direction);
             if (in_range(testTime, last_time, videoPackets.get()->pts * videoTimeBase)) {
                 break;
             }
-            last_time = packet_get->pts * videoTimeBase;
+            last_time = videoPackets.get()->pts * videoTimeBase;
         }
      }
 
@@ -256,13 +301,14 @@ void MediaTimeline::jump_to_time(double targetTime) {
 
     //starts decoding forward again until it gets to the targeted time
     while (finalPTS < targetVideoPTS || videoPackets.can_step_forward()) {
+        videoPackets.step_forward();
         try {
             decodedFrames = decode_video_packet(videoCodecContext, videoPackets.get());
-            videoPackets.step_forward();
         } catch (ascii::ffmpeg_error e) {
             if (e.is_eagain()) {
                 clear_av_frame_list(decodedFrames);
                 videoPackets.step_forward();
+                continue;
             } else {
                 throw e;
             }
@@ -277,4 +323,30 @@ void MediaTimeline::jump_to_time(double targetTime) {
     finalPTS = std::max(finalPTS, videoPackets.get()->pts);
     double timeMoved = (finalPTS * videoTimeBase) - originalTime;
     playback.skip(timeMoved);
+}
+
+void clear_playhead_packet_list(PlayheadList<AVPacket*>& packets) {
+    while (packets.can_step_forward()) {
+        AVPacket* packet = packets.get();
+        av_packet_free(&packet);
+        packets.step_forward();
+    }
+
+    AVPacket* packet = packets.get();
+    av_packet_free(&packet);
+
+    packets.clear();
+}
+
+void clear_playhead_frame_list(PlayheadList<AVFrame*>& frames) {
+    while (frames.can_step_forward()) {
+        AVFrame* frame = frames.get();
+        av_frame_free(&frame);
+        frames.step_forward();
+    }
+
+    AVFrame* frame = frames.get();
+    av_frame_free(&frame);
+
+    frames.clear();
 }

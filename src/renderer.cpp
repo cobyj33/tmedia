@@ -62,6 +62,17 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
         }
 
         lock.lock();
+        erase();
+        double current_playback_time = player->timeline->playback.get_time(system_clock_sec());
+        printw("%f", current_playback_time);
+
+        if (input == KEY_LEFT) {
+            player->timeline->jump_to_time(current_playback_time - 10);
+        }
+        if (input == KEY_RIGHT) {
+            player->timeline->jump_to_time(current_playback_time + 10);
+        }
+
         PixelData& image = player->displayCache.image;
         lock.unlock();
 
@@ -91,12 +102,6 @@ void print_pixel_data_text(PixelData& pixelData, int bounds_row, int bounds_col,
     }
 }
 
-typedef struct ScreenChar {
-    ColorChar character;
-    int row;
-    int col;
-} ScreenChar;
-
 
 void print_pixel_data(PixelData& pixelData, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode) {
     if (output_mode == VideoOutputMode::TEXT_ONLY) {
@@ -116,29 +121,13 @@ void print_pixel_data(PixelData& pixelData, int bounds_row, int bounds_col, int 
     bool grayscale = output_mode == VideoOutputMode::GRAYSCALE || output_mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY;
     bool background_only = output_mode == VideoOutputMode::COLORED_BACKGROUND_ONLY || output_mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY;
 
-    std::map<int, std::vector<ScreenChar>> colors;
-    std::vector<int> color_pairs;
     for (int row = 0; row < image.get_height(); row++) {
         for (int col = 0; col < image.get_width(); col++) {
             ColorChar color_char = image.at(row, col);
             color_char = ColorChar(background_only ? ' ' : color_char.ch, color_char.color);
             int color_pair = grayscale ? get_closest_ncurses_grayscale_color_pair(color_char.color) : get_closest_ncurses_color_pair(color_char.color);
-            if (colors.count(color_pair) == 0) {
-                colors.emplace(color_pair, std::vector<ScreenChar>());
-                color_pairs.push_back(color_pair);
-            }
-            colors.at(color_pair).push_back({color_char, image_start_row + row, image_start_col + col });
+            mvaddch(image_start_row + row, image_start_col + col, color_char.ch | COLOR_PAIR(color_pair));
         }
-    }
-
-    for (int p = 0; p < color_pairs.size(); p++) {
-        int pair = color_pairs[p];
-        attron(COLOR_PAIR(pair));
-        for (int i = 0; i < colors.at(pair).size(); i++) {
-            ScreenChar screen_char = colors.at(pair)[i];
-            mvaddch(screen_char.row, screen_char.col, screen_char.character.ch);
-        }
-        attroff(COLOR_PAIR(pair));
     }
 }
 

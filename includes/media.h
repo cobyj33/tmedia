@@ -132,11 +132,21 @@ class MediaPlayer {
         void resync(double current_system_time);
         void set_current_image(PixelData& data);
         PixelData& get_current_image();
+
+        double get_duration();
+
+        bool has_video();
+        bool has_audio();
+        MediaStream& get_video_stream();
+        MediaStream& get_audio_stream();
 };
 
 void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS);
 void move_packet_list_to_time_sec(PlayheadList<AVPacket*>& packets, double time);
 void move_frame_list_to_pts(PlayheadList<AVFrame*>& frames, int64_t targetPTS);
 void move_frame_list_to_time_sec(PlayheadList<AVFrame*>& frames, double time);
+
+void clear_playhead_packet_list(PlayheadList<AVPacket*>& packets);
+void clear_playhead_frame_list(PlayheadList<AVFrame*>& packets);
 
 #endif

@@ -46,6 +46,15 @@ class PlayheadList {
 
     public:
         PlayheadList(); 
+        // PlayheadList(const PlayheadList<T>& other) {
+        //     const int OTHER_STARTING_INDEX = other.get_index();
+        //     other.set_index(0);
+        //     for (int i = 0; i < other.get_length(); i++) {
+        //         this->push_back(other.get())
+        //         other.step_forward();
+        //     }
+        //     other.set_index(OTHER_STARTING_INDEX);
+        // } 
 
         /**
          * @brief 
@@ -59,23 +68,24 @@ class PlayheadList {
         void push_front(T item);
         void set_index(int index);
         void move_index(int offset);
-        bool can_move_index(int offset);
+        bool can_move_index(int offset) const;
         bool try_move_index(int offset);
 
-        int get_index();
-        int get_length();
+        int get_index() const;
+        int get_length() const;
         
-        bool is_empty();
-        bool at_end();
-        bool at_start();
-        bool at_edge();
+        bool is_empty() const;
+        bool at_end() const;
+        bool at_start() const;
+        bool at_edge() const;
+        bool in_bounds(int index) const;
 
         void step_forward();
         void step_backward();
         bool try_step_forward();
         bool try_step_backward();
-        bool can_step_forward();
-        bool can_step_backward();
+        bool can_step_forward() const;
+        bool can_step_backward() const;
 };
 
 template<typename T>
@@ -105,12 +115,17 @@ void PlayheadList<T>::clear() {
     while (currentNode->next != nullptr) {
         std::shared_ptr<PlayheadListNode<T>> temp = currentNode;
         currentNode = currentNode->next;
+
+        currentNode->prev->next = nullptr;
+        currentNode->prev->prev = nullptr;
         currentNode->prev = nullptr;
-        delete temp;
+        // delete temp;
         this->m_length--;
     }
+    currentNode->prev = nullptr;
+    currentNode->next = nullptr;
 
-    delete currentNode;
+    // delete currentNode;
 
     this->m_length--;
     this->m_first = nullptr;
@@ -159,7 +174,7 @@ void PlayheadList<T>::push_front(T item) {
 
 template<typename T>
 void PlayheadList<T>::set_index(int index) {
-    if (index >= 0 && index < this->m_length) {
+    if (this->in_bounds(index)) {
 
         if (index < this->m_index) {
             for (int i = 0; i < this->m_index - index; i++) {
@@ -173,18 +188,23 @@ void PlayheadList<T>::set_index(int index) {
 
         this->m_index = index;
     } else {
-        throw std::out_of_range("Attempted to access out of bounds index " + std::to_string(index) + " on PlayheadList of length " + std::to_string(this->m_length));
+        throw std::out_of_range("(PlayheadList<T>::set_index(int index: " + std::to_string(index) + " ))  Attempted to set out of bounds index " + std::to_string(index) + " on PlayheadList of length " + std::to_string(this->m_length));
     }
 };
 
 template<typename T>
 void PlayheadList<T>::move_index(int offset) {
     if (offset == 0) { return; }
-    this->set_index(this->m_index + offset);
+    int target_index = this->m_index + offset;
+    if (this->in_bounds(target_index)) {
+        this->set_index(this->m_index + offset);
+    } else {
+        throw std::out_of_range("(PlayheadList<T>::move_index(int offset: " + std::to_string(offset) + " )) Attempted to set out of bounds index " + std::to_string(target_index) + " on PlayheadList of length " + std::to_string(this->m_length));
+    }
 };
 
 template<typename T>
-bool PlayheadList<T>::can_move_index(int offset) {
+bool PlayheadList<T>::can_move_index(int offset) const {
     if (offset == 0) { return true; }
     return this->m_index + offset >= 0 && this->m_index + offset < this->m_length;
 };
@@ -199,32 +219,37 @@ bool PlayheadList<T>::try_move_index(int offset) {
 };
 
 template<typename T>
-int PlayheadList<T>::get_index() {
+bool PlayheadList<T>::in_bounds(int index) const {
+    return index >= 0 && index < this->m_length;
+};
+
+template<typename T>
+int PlayheadList<T>::get_index() const {
     return this->m_index;
 };
 
 template<typename T>
-int PlayheadList<T>::get_length() {
+int PlayheadList<T>::get_length() const {
     return this->m_length;
 };
 
 template<typename T>
-bool PlayheadList<T>::is_empty() {
+bool PlayheadList<T>::is_empty() const {
     return this->m_length == 0;
 };  
 
 template<typename T>
-bool PlayheadList<T>::at_start() {
+bool PlayheadList<T>::at_start() const {
     return this->m_index == 0;
 };
 
 template<typename T>
-bool PlayheadList<T>::at_end() {
+bool PlayheadList<T>::at_end() const {
     return this->m_index == this->m_length - 1;
 };
 
 template<typename T>
-bool PlayheadList<T>::at_edge() {
+bool PlayheadList<T>::at_edge() const {
     return this->at_end() || this->at_start();
 };
 
@@ -239,12 +264,12 @@ void PlayheadList<T>::step_backward() {
 };
 
 template<typename T>
-bool PlayheadList<T>::can_step_forward() {
+bool PlayheadList<T>::can_step_forward() const {
     return this->can_move_index(1);
 };
 
 template<typename T>
-bool PlayheadList<T>::can_step_backward() {
+bool PlayheadList<T>::can_step_backward() const {
     return this->can_move_index(-1);
 };
 

@@ -51,11 +51,11 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
     int result;
-    if (!player->timeline->mediaData->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    if (!player->has_audio()) {
         throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
     }
 
-    MediaStream& audio_media_stream = player->timeline->mediaData->get_media_stream(AVMEDIA_TYPE_AUDIO);
+    MediaStream& audio_media_stream = player->get_audio_stream();
     AVCodecContext* audioCodecContext = audio_media_stream.get_codec_context();
     const int nb_channels = audioCodecContext->ch_layout.nb_channels;
 
@@ -120,7 +120,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
         audioDevice.sampleRate = audioCodecContext->sample_rate * playback.get_speed();
 
-        const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
+        // const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
         // if (player->get_desync_time(system_clock_sec()) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
         //     player->resync(system_clock_sec());
         // }

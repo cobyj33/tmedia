@@ -13,6 +13,7 @@ TEST_CASE("PlaylistHead", "[structure]") {
         REQUIRE( list.can_move_index(-1) == false ); 
         REQUIRE( list.can_step_forward() == false);
         REQUIRE( list.can_step_backward() == false);
+        REQUIRE( list.get_length() == 0 );
     }
 
     SECTION("Initial Push Back") {
@@ -28,6 +29,18 @@ TEST_CASE("PlaylistHead", "[structure]") {
         REQUIRE( list.get() == 5 );
         REQUIRE(list.get_index() == 1);
         REQUIRE( list.get_length() == 3 );
+
+        SECTION("Clear") {
+            list.clear();
+            REQUIRE( list.get_index() == -1 );
+            REQUIRE( list.is_empty() == true );
+            REQUIRE( list.can_move_index(0));
+            REQUIRE( list.can_move_index(1) == false );
+            REQUIRE( list.can_move_index(-1) == false ); 
+            REQUIRE( list.can_step_forward() == false);
+            REQUIRE( list.can_step_backward() == false);
+            REQUIRE( list.get_length() == 0 );
+        }
     }
 
     SECTION("Initial Push Front") {
@@ -70,7 +83,7 @@ TEST_CASE("PlaylistHead", "[structure]") {
                     REQUIRE( list.get_index() == 1 );
 
                 }
-            }
+            } // SECTION "Setting index"
 
             SECTION("Stepping Forward") {
                 REQUIRE(list.can_step_forward());
@@ -90,8 +103,8 @@ TEST_CASE("PlaylistHead", "[structure]") {
                     REQUIRE(list.get() == 1);
                     REQUIRE(list.get_index() == 1);
                 }
-            }
-        }
+            } // SECTION "Stepping Forward"
+        } // SECTION "Pushing To Back"
 
 
         SECTION("Pushing To Front") {
@@ -114,10 +127,10 @@ TEST_CASE("PlaylistHead", "[structure]") {
                 REQUIRE( list.get() == 1 );
                 REQUIRE( list.get_index() == 8 );
             }
-        }
+        } // SECTION "Pushing To Front"
 
-    }
+        
 
-
+    } // SECTION "Data"
 
 }

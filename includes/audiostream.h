@@ -133,11 +133,20 @@ class AudioStream {
         bool is_time_in_bounds(double time);
 
         /**
+         * @brief Determine if the audio stream has any sample data to read
+         * 
+         * @return true: There is any samples available to be read
+         * @return false: There is not samples available to read
+         */
+        bool can_read();
+
+        /**
          * @brief Determine if the audio stream has enough data to be able to read nb_samples number of samples
+         * This does not necessarily mean that the stream is empty, only that there is no further data to be found or all data has previously been read.
          * 
          * @param nb_samples The number of samples to test if able to be read
-         * @return true There is enough samples to be able to read
-         * @return false There is not enough samples able to be read
+         * @return true: There is enough samples to be able to read
+         * @return false: There is not enough samples able to be read
          */
         bool can_read(std::size_t nb_samples);
 

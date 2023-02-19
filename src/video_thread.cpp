@@ -38,14 +38,14 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
 
     Playback& playback = player->timeline->playback;
-    std::unique_ptr<MediaData>& media_data = player->timeline->mediaData;
+    // std::unique_ptr<MediaData>& media_data = player->timeline->mediaData;
     MediaDisplayCache& cache = player->displayCache;
 
-    if (!media_data->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
+    if (!player->has_video()) {
         throw std::runtime_error("Could not playback video data: Could not find video stream in media player");
     }
 
-    MediaStream& video_stream = media_data->get_media_stream(AVMEDIA_TYPE_VIDEO);
+    MediaStream& video_stream = player->get_video_stream();
     double frame_time_sec = video_stream.get_average_frame_time_sec();
     AVCodecContext* videoCodecContext = video_stream.get_codec_context();
 
@@ -55,11 +55,12 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
     VideoConverter videoConverter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt);
 
-    while (player->inUse && playback.get_time(system_clock_sec()) < media_data->duration) {
+    while (player->inUse && playback.get_time(system_clock_sec()) < player->get_duration()) {
         if (!playback.is_playing() || !video_stream.packets.can_move_index(10)) { // paused or not enough data
             sleep_quick();
             continue;
         }
+        
         mutex_lock.lock();
         double frame_duration = frame_time_sec;
         double frame_pts_time_sec = playback.get_time(system_clock_sec()) + frame_duration;

@@ -100,6 +100,9 @@ add_executable(tests
 ./src/tests/test_playheadlist.cpp
 ./src/tests/test_pixeldata.cpp
 ./src/tests/test_color.cpp
+./src/tests/test_formatting.cpp
+./src/tests/test_cmdparse.cpp
+./src/tests/test_media.cpp
 )
 
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain ${CURSES_LIBRARIES} PkgConfig::LIBAV)
