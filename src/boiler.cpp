@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <stdexcept>
 #include <string>
+#include <iostream>
 
 #include "decode.h"
 #include "boiler.h"
@@ -9,8 +10,8 @@
 
 extern "C" {
 #include <libavformat/avformat.h>
+#include <libavutil/log.h>
 }
-
 
 AVFormatContext* open_format_context(std::string file_name) {
     AVFormatContext* format_context = nullptr;
@@ -36,6 +37,16 @@ AVFormatContext* open_format_context(std::string file_name) {
     throw std::runtime_error("Failed to open format context input, unknown error occured");
 }
 
+int dump_file_info(const char* file_name) {
+    av_log_set_level(AV_LOG_INFO);
 
-
-
+    try {
+        AVFormatContext* format_context = open_format_context(file_name);
+        av_dump_format(format_context, 0, file_name, 0);
+        avformat_close_input(&format_context);
+    } catch (std::exception e) {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}

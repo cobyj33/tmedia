@@ -10,7 +10,6 @@
 #include "pixeldata.h"
 #include "scale.h"
 #include "media.h"
-#include "info.h"
 
 #include "gui.h"
 
@@ -68,6 +67,11 @@ int main(int argc, char** argv)
     parser.add_argument("file")
         .help("The file to be played");
 
+    parser.add_argument("-d", "--dump")
+        .help("Print metadata about the file")
+        .default_value(false)
+        .implicit_value(true);
+
     try {
         parser.parse_args(argc, argv);
     }
@@ -80,14 +84,18 @@ int main(int argc, char** argv)
     std::string file = parser.get<std::string>("file");
 
     if (is_valid_path(file.c_str())) {
-        ncurses_init();
         bool colors = parser.get<bool>("-c");
         bool grayscale = !colors && parser.get<bool>("-g");
         bool background = parser.get<bool>("-b");
+        bool dump = parser.get<bool>("-d");
 
-
+        if (dump) {
+            dump_file_info(file.c_str());
+            return EXIT_SUCCESS;
+        }
+        
+        ncurses_init();
         std::string warnings;
-        erase();
 
         if ( (colors || grayscale) && !has_colors()) {
             warnings += "WARNING: Terminal does not support colored output\n";

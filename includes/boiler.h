@@ -16,5 +16,6 @@ extern "C" {
  * @return AVFormatContext* 
  */
 AVFormatContext* open_format_context(std::string file_name);
+int dump_file_info(const char* file_name);
 
 #endif
