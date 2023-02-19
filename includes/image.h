@@ -14,15 +14,15 @@
 #include <utility>
 
 /**
- * @brief Returns a <width, height> pair representing the <srcWidth, srcHeight> bounded into the <maxWidth, maxHeight> dimensions while preserving aspect ratio
+ * @brief Returns a <width, height> pair representing the <src_width, src_height> bounded into the <max_width, max_height> dimensions while preserving aspect ratio
  * 
- * @param srcWidth 
- * @param srcHeight 
- * @param maxWidth 
- * @param maxHeight 
+ * @param src_width 
+ * @param src_height 
+ * @param max_width 
+ * @param max_height 
  * @return std::pair<int, int> 
  */
-std::pair<int, int> get_bounded_dimensions(int srcWidth, int srcHeight, int maxWidth, int maxHeight);
-std::pair<int, int> get_scale_size(int srcWidth, int srcHeight, int targetWidth, int targetHeight);
-double get_scale_factor(int srcWidth, int srcHeight, int targetWidth, int targetHeight);
+std::pair<int, int> get_bounded_dimensions(int src_width, int src_height, int max_width, int max_height);
+std::pair<int, int> get_scale_size(int src_width, int src_height, int target_width, int target_height);
+double get_scale_factor(int src_width, int src_height, int target_width, int target_height);
 #endif

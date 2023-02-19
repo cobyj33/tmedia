@@ -12,26 +12,26 @@ extern "C" {
 }
 
 
-AVFormatContext* open_format_context(std::string fileName) {
-    AVFormatContext* formatContext = nullptr;
-    int result = avformat_open_input(&formatContext, fileName.c_str(), nullptr, nullptr);
+AVFormatContext* open_format_context(std::string file_name) {
+    AVFormatContext* format_context = nullptr;
+    int result = avformat_open_input(&format_context, file_name.c_str(), nullptr, nullptr);
     if (result < 0) {
-        if (formatContext != nullptr) {
-            avformat_free_context(formatContext);
+        if (format_context != nullptr) {
+            avformat_free_context(format_context);
         }
-        throw ascii::ffmpeg_error("Failed to open format context input for " + fileName, result);
+        throw ascii::ffmpeg_error("Failed to open format context input for " + file_name, result);
     }
 
-    result = avformat_find_stream_info(formatContext, NULL);
+    result = avformat_find_stream_info(format_context, NULL);
     if (result < 0) {
-        if (formatContext != nullptr) {
-            avformat_free_context(formatContext);
+        if (format_context != nullptr) {
+            avformat_free_context(format_context);
         }
-        throw std::runtime_error("Failed to find stream info for " + fileName);
+        throw std::runtime_error("Failed to find stream info for " + file_name);
     }
 
-    if (formatContext != nullptr) {
-        return formatContext;
+    if (format_context != nullptr) {
+        return format_context;
     }
     throw std::runtime_error("Failed to open format context input, unknown error occured");
 }

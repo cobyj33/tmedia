@@ -12,9 +12,9 @@ extern "C" {
  * 
  * Note that it is guaranteed to not be NULL or nullptr
  * 
- * @param fileName 
+ * @param file_name 
  * @return AVFormatContext* 
  */
-AVFormatContext* open_format_context(std::string fileName);
+AVFormatContext* open_format_context(std::string file_name);
 
 #endif

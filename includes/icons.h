@@ -38,7 +38,7 @@
 
 class VideoIcon {
     public:
-        const PixelData pixelData;
+        const PixelData pixel_data;
 
         static const VideoIcon STOP_ICON;
         static const VideoIcon PLAY_ICON;
@@ -73,7 +73,7 @@ class VideoIcon {
         static const VideoIcon get_digit_icon(int digit);
         static const VideoIcon get_volume_icon(double percentage);
 
-        VideoIcon(PixelData pixelData) : pixelData(pixelData) {}
+        VideoIcon(PixelData pixel_data) : pixel_data(pixel_data) {}
 };
 
 #endif

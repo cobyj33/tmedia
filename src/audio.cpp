@@ -38,88 +38,88 @@ void free_samples(float** samples) {
     av_free(&samples[0]);
 }
 
-float** alterAudioSampleLength(float** originalSamples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples) {
+float** alter_audio_sample_length(float** original_samples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples) {
     if (nb_samples < target_nb_samples) {
-        return stretchAudioSamples(originalSamples, linesize, nb_samples, nb_channels, target_nb_samples);
+        return stretch_audio_samples(original_samples, linesize, nb_samples, nb_channels, target_nb_samples);
     } else if (nb_samples > target_nb_samples) {
-        return shrinkAudioSamples(originalSamples, linesize, nb_samples, nb_channels, target_nb_samples);
+        return shrink_audio_samples(original_samples, linesize, nb_samples, nb_channels, target_nb_samples);
     } else {
-        return copy_samples(originalSamples, linesize, nb_channels, nb_samples);
+        return copy_samples(original_samples, linesize, nb_channels, nb_samples);
     }
 }
 
-float** stretchAudioSamples(float** originalSamples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples) {
-    float** finalValues = alloc_samples(linesize, target_nb_samples, nb_channels);
-    double stretchAmount = (double)target_nb_samples / nb_samples;
-    float orignalSampleBlocks[nb_samples][nb_channels];
-    float finalSampleBlocks[target_nb_samples][nb_channels];
+float** stretch_audio_samples(float** original_samples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples) {
+    float** final_values = alloc_samples(linesize, target_nb_samples, nb_channels);
+    double stretch_amount = (double)target_nb_samples / nb_samples;
+    float original_sample_blocks[nb_samples][nb_channels];
+    float final_sample_blocks[target_nb_samples][nb_channels];
     for (int i = 0; i < nb_samples * nb_channels; i++) {
-        orignalSampleBlocks[i / nb_channels][i % nb_channels] = originalSamples[0][i];
+        original_sample_blocks[i / nb_channels][i % nb_channels] = original_samples[0][i];
     }
 
-    float currentSampleBlock[nb_channels];
-    float lastSampleBlock[nb_channels];
-    float currentFinalSampleBlockIndex = 0;
+    float current_sample_block[nb_channels];
+    float last_sample_block[nb_channels];
+    float current_final_sample_block_index = 0;
 
     for (int i = 0; i < nb_samples; i++) {
         for (int cpy = 0; cpy < nb_channels; cpy++) {
-            currentSampleBlock[cpy] = orignalSampleBlocks[i][cpy];
+            current_sample_block[cpy] = original_sample_blocks[i][cpy];
         }
 
         if (i != 0) {
-            for (int currentChannel = 0; currentChannel < nb_channels; currentChannel++) {
-                float sampleStep = (currentSampleBlock[currentChannel] - lastSampleBlock[currentChannel]) / stretchAmount; 
-                float currentSampleValue = lastSampleBlock[currentChannel];
+            for (int current_channel = 0; current_channel < nb_channels; current_channel++) {
+                float sampleStep = (current_sample_block[current_channel] - last_sample_block[current_channel]) / stretch_amount; 
+                float current_sample_value = last_sample_block[current_channel];
 
-                for (int finalSampleBlockIndex = (int)(currentFinalSampleBlockIndex); finalSampleBlockIndex < (int)(currentFinalSampleBlockIndex + stretchAmount); finalSampleBlockIndex++) {
-                    finalSampleBlocks[finalSampleBlockIndex][currentChannel] = currentSampleValue;
-                    currentSampleValue += sampleStep;
+                for (int final_sample_block_index = (int)(current_final_sample_block_index); final_sample_block_index < (int)(current_final_sample_block_index + stretch_amount); final_sample_block_index++) {
+                    final_sample_blocks[final_sample_block_index][current_channel] = current_sample_value;
+                    current_sample_value += sampleStep;
                 }
 
             }
         }
 
-        currentFinalSampleBlockIndex += stretchAmount;
+        current_final_sample_block_index += stretch_amount;
         for (int cpy = 0; cpy < nb_channels; cpy++) {
-            lastSampleBlock[cpy] = currentSampleBlock[cpy];
+            last_sample_block[cpy] = current_sample_block[cpy];
         }
     }
 
     for (int i = 0; i < target_nb_samples * nb_channels; i++) {
-        finalValues[0][i] = finalSampleBlocks[i / nb_channels][i % nb_channels];
+        final_values[0][i] = final_sample_blocks[i / nb_channels][i % nb_channels];
     }
-    return finalValues;
+    return final_values;
 }
 
-float** shrinkAudioSamples(float** originalSamples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples) {
-    float** finalValues = alloc_samples(linesize, target_nb_samples, nb_channels);
-    double stretchAmount = (double)target_nb_samples / nb_samples;
-    float stretchStep = 1 / stretchAmount;
-    float orignalSampleBlocks[nb_samples][nb_channels];
-    float finalSampleBlocks[target_nb_samples][nb_channels];
+float** shrink_audio_samples(float** original_samples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples) {
+    float** final_values = alloc_samples(linesize, target_nb_samples, nb_channels);
+    double stretch_amount = (double)target_nb_samples / nb_samples;
+    float stretch_step = 1 / stretch_amount;
+    float original_sample_blocks[nb_samples][nb_channels];
+    float final_sample_blocks[target_nb_samples][nb_channels];
     for (int i = 0; i < nb_samples * nb_channels; i++) {
-        orignalSampleBlocks[i / nb_channels][i % nb_channels] = originalSamples[0][i];
+        original_sample_blocks[i / nb_channels][i % nb_channels] = original_samples[0][i];
     }
 
-    float currentOriginalSampleBlockIndex = 0;
+    float current_original_sample_block_index = 0;
 
     for (int i = 0; i < target_nb_samples; i++) {
         float average = 0.0;
         for (int ichannel = 0; ichannel < nb_channels; ichannel++) {
            average = 0.0;
-           for (int origi = (int)(currentOriginalSampleBlockIndex); origi < (int)(currentOriginalSampleBlockIndex + stretchStep); origi++) {
-               average += orignalSampleBlocks[origi][ichannel];
+           for (int origi = (int)(current_original_sample_block_index); origi < (int)(current_original_sample_block_index + stretch_step); origi++) {
+               average += original_sample_blocks[origi][ichannel];
            }
-           average /= stretchStep;
-           finalSampleBlocks[i][ichannel] = average;
+           average /= stretch_step;
+           final_sample_blocks[i][ichannel] = average;
         }
 
-        currentOriginalSampleBlockIndex += stretchStep;
+        current_original_sample_block_index += stretch_step;
     }
 
     for (int i = 0; i < target_nb_samples * nb_channels; i++) {
-        finalValues[0][i] = finalSampleBlocks[i / nb_channels][i % nb_channels];
+        final_values[0][i] = final_sample_blocks[i / nb_channels][i % nb_channels];
     }
-    return finalValues;
+    return final_values;
 }
 

@@ -48,8 +48,8 @@ AudioResampler::~AudioResampler() {
 std::vector<AVFrame*> AudioResampler::resample_audio_frames(std::vector<AVFrame*>& originals) {
     std::vector<AVFrame*> resampled_frames;
     for (int i = 0; i < originals.size(); i++) {
-        AVFrame* resampledFrame = this->resample_audio_frame(originals[i]);
-        resampled_frames.push_back(resampledFrame);
+        AVFrame* resampled_frame = this->resample_audio_frame(originals[i]);
+        resampled_frames.push_back(resampled_frame);
     }
 
     return resampled_frames;
@@ -58,26 +58,26 @@ std::vector<AVFrame*> AudioResampler::resample_audio_frames(std::vector<AVFrame*
 
 AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
         int result;
-        AVFrame* resampledFrame = av_frame_alloc();
-        if (resampledFrame == NULL) {
+        AVFrame* resampled_frame = av_frame_alloc();
+        if (resampled_frame == NULL) {
             throw ascii::bad_alloc("Could not create AVFrame audio frame for resampling");
         }
 
-        resampledFrame->sample_rate = this->m_dst_sample_rate;
-        resampledFrame->ch_layout = *(this->m_dst_ch_layout);
-        resampledFrame->format = this->m_dst_sample_fmt;
-        resampledFrame->pts = original->pts;
-        resampledFrame->duration = original->duration;
+        resampled_frame->sample_rate = this->m_dst_sample_rate;
+        resampled_frame->ch_layout = *(this->m_dst_ch_layout);
+        resampled_frame->format = this->m_dst_sample_fmt;
+        resampled_frame->pts = original->pts;
+        resampled_frame->duration = original->duration;
 
-        result = swr_convert_frame(this->m_context, resampledFrame, original);
+        result = swr_convert_frame(this->m_context, resampled_frame, original);
         if (result != 0) {
-            if (resampledFrame != nullptr) {
-                av_frame_free(&resampledFrame);
+            if (resampled_frame != nullptr) {
+                av_frame_free(&resampled_frame);
             }
             throw ascii::ffmpeg_error("Unable to resample audio frame ", result);
         }
 
-        return resampledFrame;
+        return resampled_frame;
 }
 
 int AudioResampler::get_src_sample_rate() {

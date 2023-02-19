@@ -44,13 +44,13 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
     MediaStream& video_stream = player->get_video_stream();
     double frame_time_sec = video_stream.get_average_frame_time_sec();
-    AVCodecContext* videoCodecContext = video_stream.get_codec_context();
+    AVCodecContext* video_codec_context = video_stream.get_codec_context();
 
-    std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(videoCodecContext->width, videoCodecContext->height, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+    std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(video_codec_context->width, video_codec_context->height, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
     int output_frame_width = bounded_video_frame_dimensions.first;
     int output_frame_height = bounded_video_frame_dimensions.second;
 
-    VideoConverter videoConverter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt);
+    VideoConverter videoConverter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt);
 
     while (player->in_use && player->playback.get_time(system_clock_sec()) < player->get_duration()) {
         if (!player->playback.is_playing() || !video_stream.packets.can_move_index(10)) { // paused or not enough data
@@ -64,10 +64,10 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         double extra_delay = 0.0;
 
         try {
-            std::vector<AVFrame*> decodedList = decode_video_packet(videoCodecContext, video_stream.packets);
+            std::vector<AVFrame*> decoded_frames = decode_video_packet(video_codec_context, video_stream.packets);
 
-            if (decodedList.size() > 0) {
-                AVFrame* frame_image = videoConverter.convert_video_frame(decodedList[0]);
+            if (decoded_frames.size() > 0) {
+                AVFrame* frame_image = videoConverter.convert_video_frame(decoded_frames[0]);
                 frame_duration = (double)frame_image->duration * video_stream.get_time_base();
                 frame_pts_time_sec = (double)frame_image->pts * video_stream.get_time_base();
                 extra_delay = (double)(frame_image->repeat_pict) / (2 * frame_time_sec);
@@ -76,9 +76,9 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
                 av_frame_free(&frame_image);
             }
 
-            clear_av_frame_list(decodedList);
+            clear_av_frame_list(decoded_frames);
         } catch (std::exception e) {
-            PixelData error_image = VideoIcon::ERROR_ICON.pixelData;
+            PixelData error_image = VideoIcon::ERROR_ICON.pixel_data;
             player->set_current_image(error_image);
         }
 

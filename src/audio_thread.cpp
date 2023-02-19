@@ -41,10 +41,10 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 {
     CallbackData* data = (CallbackData*)(pDevice->pUserData);
     std::lock_guard<std::mutex> mutex_lock_guard(data->mutex.get());
-    AudioStream& audioStream = data->player->cache.audio_stream;
+    AudioStream& audio_stream = data->player->cache.audio_stream;
 
-    if (audioStream.can_read(frameCount)) {
-        audioStream.read_into(frameCount, (float*)pOutput);
+    if (audio_stream.can_read(frameCount)) {
+        audio_stream.read_into(frameCount, (float*)pOutput);
     }
 }
 
@@ -56,31 +56,31 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     }
 
     MediaStream& audio_media_stream = player->get_audio_stream();
-    AVCodecContext* audioCodecContext = audio_media_stream.get_codec_context();
-    const int nb_channels = audioCodecContext->ch_layout.nb_channels;
+    AVCodecContext* audio_codec_context = audio_media_stream.get_codec_context();
+    const int nb_channels = audio_codec_context->ch_layout.nb_channels;
 
 
-    AudioResampler audioResampler(
-            &(audioCodecContext->ch_layout), AV_SAMPLE_FMT_FLT, audioCodecContext->sample_rate,
-            &(audioCodecContext->ch_layout), audioCodecContext->sample_fmt, audioCodecContext->sample_rate);
+    AudioResampler audio_resampler(
+            &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
+            &(audio_codec_context->ch_layout), audio_codec_context->sample_fmt, audio_codec_context->sample_rate);
 
-    player->cache.audio_stream.init(nb_channels, audioCodecContext->sample_rate);
+    player->cache.audio_stream.init(nb_channels, audio_codec_context->sample_rate);
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format  = ma_format_f32;
     config.playback.channels = nb_channels;              
-    config.sampleRate = audioCodecContext->sample_rate;           
+    config.sampleRate = audio_codec_context->sample_rate;           
     config.dataCallback = audioDataCallback;   
 
     CallbackData userData(player, std::ref(alter_mutex)); 
     config.pUserData = &userData;   
 
-    ma_result miniAudioLog;
-    ma_device audioDevice;
-    miniAudioLog = ma_device_init(NULL, &config, &audioDevice);
+    ma_result miniaudio_log;
+    ma_device audio_device;
+    miniaudio_log = ma_device_init(NULL, &config, &audio_device);
 
-    if (miniAudioLog != MA_SUCCESS) {
-        throw std::runtime_error("FAILED TO INITIALIZE AUDIO DEVICE: " + std::to_string(miniAudioLog));
+    if (miniaudio_log != MA_SUCCESS) {
+        throw std::runtime_error("FAILED TO INITIALIZE AUDIO DEVICE: " + std::to_string(miniaudio_log));
     }
 
     sleep_for_sec(audio_media_stream.get_start_time());
@@ -88,36 +88,36 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     while (player->in_use) {
         mutex_lock.lock();
 
-        if (player->playback.is_playing() == false && ma_device_get_state(&audioDevice) == ma_device_state_started) {
+        if (player->playback.is_playing() == false && ma_device_get_state(&audio_device) == ma_device_state_started) {
             mutex_lock.unlock();
-            miniAudioLog = ma_device_stop(&audioDevice);
-            if (miniAudioLog != MA_SUCCESS) {
-                ma_device_uninit(&audioDevice);
-                throw std::runtime_error("Failed to stop playback: Miniaudio Error " + std::to_string(miniAudioLog));
+            miniaudio_log = ma_device_stop(&audio_device);
+            if (miniaudio_log != MA_SUCCESS) {
+                ma_device_uninit(&audio_device);
+                throw std::runtime_error("Failed to stop playback: Miniaudio Error " + std::to_string(miniaudio_log));
             }
             mutex_lock.lock();
-        } else if (player->playback.is_playing() && ma_device_get_state(&audioDevice) == ma_device_state_stopped) {
+        } else if (player->playback.is_playing() && ma_device_get_state(&audio_device) == ma_device_state_stopped) {
             mutex_lock.unlock();
-            miniAudioLog = ma_device_start(&audioDevice);
-            if (miniAudioLog != MA_SUCCESS) {
-                ma_device_uninit(&audioDevice);
-                throw std::runtime_error("Failed to start playback: Miniaudio Error " + std::to_string(miniAudioLog));
+            miniaudio_log = ma_device_start(&audio_device);
+            if (miniaudio_log != MA_SUCCESS) {
+                ma_device_uninit(&audio_device);
+                throw std::runtime_error("Failed to start playback: Miniaudio Error " + std::to_string(miniaudio_log));
             }
             mutex_lock.lock();
         }
 
-        AudioStream& audioStream = player->cache.audio_stream;
-        std::vector<AVFrame*> audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audio_media_stream.packets);
-        for (int i = 0; i < audioFrames.size(); i++) {
-            AVFrame* current_frame = audioFrames[i];
+        AudioStream& audio_stream = player->cache.audio_stream;
+        std::vector<AVFrame*> audio_frames = get_final_audio_frames(audio_codec_context, audio_resampler, audio_media_stream.packets);
+        for (int i = 0; i < audio_frames.size(); i++) {
+            AVFrame* current_frame = audio_frames[i];
             float* frameData = (float*)(current_frame->data[0]);
-            audioStream.write(frameData, current_frame->nb_samples);
+            audio_stream.write(frameData, current_frame->nb_samples);
         }
-        clear_av_frame_list(audioFrames);
+        clear_av_frame_list(audio_frames);
 
         audio_media_stream.packets.try_step_forward();
 
-        audioDevice.sampleRate = audioCodecContext->sample_rate * player->playback.get_speed();
+        audio_device.sampleRate = audio_codec_context->sample_rate * player->playback.get_speed();
 
         // const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
         // if (player->get_desync_time(system_clock_sec()) > MAX_AUDIO_DESYNC_TIME_SECONDS) {

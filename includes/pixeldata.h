@@ -15,12 +15,12 @@ class PixelData {
     public:
 
         PixelData() : pixels(std::vector< std::vector<RGBColor> >()) {}
-        PixelData(std::vector< std::vector<RGBColor> >& rawData);
-        PixelData(std::vector< std::vector<uint8_t> >& rawGrayscaleData);
+        PixelData(std::vector< std::vector<RGBColor> >& raw_rgb_data);
+        PixelData(std::vector< std::vector<uint8_t> >& raw_grayscale_data);
         PixelData(int width, int height);
-        PixelData(AVFrame* videoFrame);
+        PixelData(AVFrame* video_frame);
         PixelData(const PixelData& other);
-        PixelData(const char* fileName);
+        PixelData(const char* file_name);
 
         bool equals(const PixelData& other) const;
 

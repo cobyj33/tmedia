@@ -38,11 +38,11 @@ double frand();
  * @example clamp(4, 3, 5) == 4
  * 
  * @param value The value to be clamped
- * @param bounds1 A bound to clamp the value by
- * @param bounds2 A bound to clamp the value by
+ * @param bounds_1 A bound to clamp the value by
+ * @param bounds_2 A bound to clamp the value by
  * @return The number clamped between the two values
  */
-int clamp(int value, int bounds1, int bounds2);
+int clamp(int value, int bounds_1, int bounds_2);
 
 
 /**
@@ -58,11 +58,11 @@ int clamp(int value, int bounds1, int bounds2);
  * @example clamp(4, 3, 5) == 4
  * 
  * @param value The value to be clamped
- * @param bounds1 A bound to clamp the value by
- * @param bounds2 A bound to clamp the value by
+ * @param bounds_1 A bound to clamp the value by
+ * @param bounds_2 A bound to clamp the value by
  * @return The number clamped between the two values
  */
-double clamp(double value, double bounds1, double bounds2);
+double clamp(double value, double bounds_1, double bounds_2);
 
 
 /**
@@ -78,15 +78,15 @@ double clamp(double value, double bounds1, double bounds2);
  * @example clamp(4, 3, 5) == 4
  * 
  * @param value The value to be clamped
- * @param bounds1 A bound to clamp the value by
- * @param bounds2 A bound to clamp the value by
+ * @param bounds_1 A bound to clamp the value by
+ * @param bounds_2 A bound to clamp the value by
  * @return The number clamped between the two values
  */
-long clamp(long value, long bounds1, long bounds2);
+long clamp(long value, long bounds_1, long bounds_2);
 
-bool in_range(int value, int bounds1, int bounds2);
-bool in_range(double value, double bounds1, double bounds2);
-bool in_range(long value, long bounds1, long bounds2);
+bool in_range(int value, int bounds_1, int bounds_2);
+bool in_range(double value, double bounds_1, double bounds_2);
+bool in_range(long value, long bounds_1, long bounds_2);
 
 int get_next_nearest_perfect_square(double num);
 int get_next_nearest_perfect_square(int num);

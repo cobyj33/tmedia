@@ -13,18 +13,18 @@ extern "C" {
 }
 
 
-// void free_frame_list(std::vector<AVFrame*> frameList, int count);
+// void free_frame_list(std::vector<AVFrame*> frame_list, int count);
 /**
  * @brief clears the AVFrame vector of all it's contents **AND FREES ALL AVFRAME's CONTAINED WITHIN**
- * @param frameList 
+ * @param frame_list 
  */
-void clear_av_frame_list(std::vector<AVFrame*>& frameList);
+void clear_av_frame_list(std::vector<AVFrame*>& frame_list);
 
-std::vector<AVFrame*> decode_video_packet(AVCodecContext* videoCodecContext, AVPacket* videoPacket);
-std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audioCodecContext, AVPacket* audioPacket);
-std::vector<AVFrame*> decode_video_packet(AVCodecContext* videoCodecContext, PlayheadList<AVPacket*>& videoPacketList);
-std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audioCodecContext, PlayheadList<AVPacket*>& audioPacketList);
+std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet);
+std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet);
+std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, PlayheadList<AVPacket*>& videoPacketList);
+std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, PlayheadList<AVPacket*>& audio_packet_list);
 
-std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler& audioResampler, AVPacket* packet);
-std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audioCodecContext, AudioResampler& audioResampler, PlayheadList<AVPacket*>& packet_buffer);
+std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audio_codec_context, AudioResampler& audio_resampler, AVPacket* packet);
+std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audio_codec_context, AudioResampler& audio_resampler, PlayheadList<AVPacket*>& packet_buffer);
 #endif

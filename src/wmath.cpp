@@ -19,34 +19,34 @@ int signum(double num) {
     return 0;
 }
 
-int clamp(int value, int bounds1, int bounds2) {
-    int lower = std::min(bounds1, bounds2);
-    int upper = std::max(bounds1, bounds2);
+int clamp(int value, int bounds_1, int bounds_2) {
+    int lower = std::min(bounds_1, bounds_2);
+    int upper = std::max(bounds_1, bounds_2);
     return std::max(lower, std::min(upper, value));
 }
 
-double clamp(double value, double bounds1, double bounds2) {
-    double lower = std::min(bounds1, bounds2);
-    double upper = std::max(bounds1, bounds2);
+double clamp(double value, double bounds_1, double bounds_2) {
+    double lower = std::min(bounds_1, bounds_2);
+    double upper = std::max(bounds_1, bounds_2);
     return std::max(lower, std::min(upper, value));
 }
 
-long clamp(long value, long bounds1, long bounds2) {
-    long lower = std::min(bounds1, bounds2);
-    long upper = std::max(bounds1, bounds2);
+long clamp(long value, long bounds_1, long bounds_2) {
+    long lower = std::min(bounds_1, bounds_2);
+    long upper = std::max(bounds_1, bounds_2);
     return std::max(lower, std::min(upper, value));
 }
 
-bool in_range(int value, int bounds1, int bounds2) {
-    return std::min(bounds1, bounds2) <= value && std::max(bounds1, bounds2) >= value;
+bool in_range(int value, int bounds_1, int bounds_2) {
+    return std::min(bounds_1, bounds_2) <= value && std::max(bounds_1, bounds_2) >= value;
 }
 
-bool in_range(double value, double bounds1, double bounds2) {
-    return std::min(bounds1, bounds2) <= value && std::max(bounds1, bounds2) >= value;
+bool in_range(double value, double bounds_1, double bounds_2) {
+    return std::min(bounds_1, bounds_2) <= value && std::max(bounds_1, bounds_2) >= value;
 }
 
-bool in_range(long value, long bounds1, long bounds2) {
-    return std::min(bounds1, bounds2) <= value && std::max(bounds1, bounds2) >= value;
+bool in_range(long value, long bounds_1, long bounds_2) {
+    return std::min(bounds_1, bounds_2) <= value && std::max(bounds_1, bounds_2) >= value;
 }
 
 int get_next_nearest_perfect_square(double num) {

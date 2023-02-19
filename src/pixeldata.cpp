@@ -6,14 +6,14 @@
 
 // Accepts empty matrices
 template <typename T>
-bool is_rectangular_vector_matrix(std::vector<std::vector<T>> vector2D) {
-    if (vector2D.size() == 0) {
+bool is_rectangular_vector_matrix(std::vector<std::vector<T>> vector_2d) {
+    if (vector_2d.size() == 0) {
         return true;
     }
-    int width = vector2D[0].size();
+    int width = vector_2d[0].size();
 
-    for (int row = 0; row < vector2D.size(); row++) {
-        if (vector2D[row].size() != width) {
+    for (int row = 0; row < vector_2d.size(); row++) {
+        if (vector_2d[row].size() != width) {
             return false;
         }
     }
@@ -22,15 +22,15 @@ bool is_rectangular_vector_matrix(std::vector<std::vector<T>> vector2D) {
 }
 
 
-PixelData::PixelData(std::vector<std::vector<RGBColor> >& rawData) {
-    if (!is_rectangular_vector_matrix(rawData)) {
+PixelData::PixelData(std::vector<std::vector<RGBColor> >& raw_rgb_data) {
+    if (!is_rectangular_vector_matrix(raw_rgb_data)) {
         throw std::runtime_error("Cannot initialize pixel data with non-rectangular matrix");
     }
 
-    for (int row = 0; row < rawData.size(); row++) {
+    for (int row = 0; row < raw_rgb_data.size(); row++) {
         this->pixels.push_back(std::vector<RGBColor>());
-        for (int col = 0; col < rawData[row].size(); col++) {
-            this->pixels[row].push_back(rawData[row][col]);
+        for (int col = 0; col < raw_rgb_data[row].size(); col++) {
+            this->pixels[row].push_back(raw_rgb_data[row][col]);
         }
     }
 }
@@ -39,29 +39,29 @@ bool PixelData::in_bounds(int row, int col) const {
     return row >= 0 && col >= 0 && row < this->get_height() && col < this->get_width();
 }
 
-PixelData::PixelData(std::vector<std::vector<uint8_t> >& rawGrayscaleData) {
-    if (!is_rectangular_vector_matrix(rawGrayscaleData)) {
+PixelData::PixelData(std::vector<std::vector<uint8_t> >& raw_grayscale_data) {
+    if (!is_rectangular_vector_matrix(raw_grayscale_data)) {
         throw std::runtime_error("Cannot initialize pixel data with non-rectangular matrix");
     }
 
-    for (int row = 0; row < rawGrayscaleData.size(); row++) {
+    for (int row = 0; row < raw_grayscale_data.size(); row++) {
         this->pixels.push_back(std::vector<RGBColor>());
-        for (int col = 0; col < rawGrayscaleData[row].size(); col++) {
-            this->pixels[row].push_back(RGBColor(rawGrayscaleData[row][col]));
+        for (int col = 0; col < raw_grayscale_data[row].size(); col++) {
+            this->pixels[row].push_back(RGBColor(raw_grayscale_data[row][col]));
         }
     }
 }
 
-PixelData::PixelData(AVFrame* videoFrame) {
+PixelData::PixelData(AVFrame* video_frame) {
         
-    for (int row = 0; row < videoFrame->height; row++) {
+    for (int row = 0; row < video_frame->height; row++) {
         this->pixels.push_back(std::vector<RGBColor>());
-        for (int col = 0; col < videoFrame->width; col++) {
-            if ((AVPixelFormat)videoFrame->format == AV_PIX_FMT_GRAY8) {
-                this->pixels[row].push_back(RGBColor(videoFrame->data[0][row * videoFrame->width + col]));
-            } else if ((AVPixelFormat)videoFrame->format == AV_PIX_FMT_RGB24) {
-                int data_start = row * videoFrame->width * 3 + col * 3;
-                this->pixels[row].push_back(RGBColor( videoFrame->data[0][data_start], videoFrame->data[0][data_start + 1], videoFrame->data[0][data_start + 2] ));
+        for (int col = 0; col < video_frame->width; col++) {
+            if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_GRAY8) {
+                this->pixels[row].push_back(RGBColor(video_frame->data[0][row * video_frame->width + col]));
+            } else if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_RGB24) {
+                int data_start = row * video_frame->width * 3 + col * 3;
+                this->pixels[row].push_back(RGBColor( video_frame->data[0][data_start], video_frame->data[0][data_start + 1], video_frame->data[0][data_start + 2] ));
             } else {
                 throw std::runtime_error("Passed in AVFrame with unimplemeted format, only supported formats for initializing from AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24");
             }

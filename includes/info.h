@@ -12,12 +12,12 @@ extern "C" {
 }
 
 typedef struct PacketData {
-    enum AVMediaType mediaType;
+    enum AVMediaType media_type;
     int packetCount;
 } PacketData;
 
-int fileInfoProgram(const char* fileName);
+int fileInfoProgram(const char* file_name);
 
-std::vector<PacketData> get_packet_stats(const char* fileName, int* out_data_length);
-int get_num_packets(const char* fileName);
+std::vector<PacketData> get_packet_stats(const char* file_name, int* out_data_length);
+int get_num_packets(const char* file_name);
 #endif

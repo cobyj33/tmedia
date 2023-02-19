@@ -15,8 +15,8 @@
 #include "icons.h"
 #include "wmath.h"
 
-std::vector<std::vector<uint8_t>> testMatrix{ std::vector<uint8_t>{0, 0, 0} };
-PixelData test = PixelData(testMatrix);
+std::vector<std::vector<uint8_t>> test_matrix{ std::vector<uint8_t>{0, 0, 0} };
+PixelData test = PixelData(test_matrix);
 
 
 std::vector<std::vector<uint8_t>> STOP_ICON_PIXEL_DATA = std::vector<std::vector<uint8_t>>{
@@ -517,7 +517,7 @@ const VideoIcon VideoIcon::get_digit_icon(int digit) {
 }
 
 const VideoIcon VideoIcon::get_volume_icon(double percentage) {
-    double normalizedVolume = clamp(percentage, 0.0, 1.0);
+    double normalized_volume = clamp(percentage, 0.0, 1.0);
     
     if (percentage <= 0.0) {
         return VideoIcon::NO_VOLUME_ICON;

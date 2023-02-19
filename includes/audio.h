@@ -19,7 +19,7 @@ float** alloc_samples(int linesize[8], int nb_channels, int nb_samples);
 float** copy_samples(float** src, int linesize[8], int nb_channels, int nb_samples);
 void free_samples(float** samples);
 
-float** alterAudioSampleLength(float** originalSamples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples);
-float** stretchAudioSamples(float** originalSamples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples);
-float** shrinkAudioSamples(float** originalSamples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples);
+float** alter_audio_sample_length(float** original_samples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples);
+float** stretch_audio_samples(float** original_samples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples);
+float** shrink_audio_samples(float** original_samples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples);
 #endif

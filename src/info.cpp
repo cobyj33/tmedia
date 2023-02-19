@@ -14,67 +14,67 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
-// int fileInfoProgram(const char* fileName) {
+// int fileInfoProgram(const char* file_name) {
 //     av_log_set_level(AV_LOG_INFO);
 
 //     int result;
-//     AVFormatContext* formatContext = open_format_context(fileName, &result);
+//     AVFormatContext* format_context = open_format_context(file_name, &result);
 
-//     av_dump_format(formatContext, 0, fileName, 0);
-//     std::vector<PacketData> packetData = get_packet_stats(fileName);
+//     av_dump_format(format_context, 0, file_name, 0);
+//     std::vector<PacketData> packetData = get_packet_stats(file_name);
 //     for (int i = 0; i < packetData.size(); i++) {
-//         std::cout << av_get_media_type_string(packetData[i].mediaType) << " Stream Packet Count: " << packetData[i].packetCount << std::endl;
+//         std::cout << av_get_media_type_string(packetData[i].media_type) << " Stream Packet Count: " << packetData[i].packetCount << std::endl;
 //     }
 
-//     avformat_close_input(&formatContext);
+//     avformat_close_input(&format_context);
 //     return EXIT_SUCCESS;
 // }
 
 
-// int get_num_packets(const char* fileName) {
+// int get_num_packets(const char* file_name) {
 //     int result;
-//     AVFormatContext* formatContext = open_format_context(fileName, &result);
+//     AVFormatContext* format_context = open_format_context(file_name, &result);
     
 //     int streams_found;
-//     enum AVMediaType mediaTypes[2] = { AVMEDIA_TYPE_AUDIO, AVMEDIA_TYPE_VIDEO };
-//     StreamDataGroup streamData(formatContext, mediaTypes, 2);
-//     AVPacket* readingPacket = av_packet_alloc();
+//     enum AVMediaType media_types[2] = { AVMEDIA_TYPE_AUDIO, AVMEDIA_TYPE_VIDEO };
+//     StreamDataGroup streamData(format_context, media_types, 2);
+//     AVPacket* reading_packet = av_packet_alloc();
 
 //     int count = 0;
-//     while (av_read_frame(formatContext, readingPacket) == 0) {
+//     while (av_read_frame(format_context, reading_packet) == 0) {
 //         count++;
-//         av_packet_unref(readingPacket);
+//         av_packet_unref(reading_packet);
 //     }
 
-//     avformat_free_context(formatContext);
-//     av_packet_free(&readingPacket);
+//     avformat_free_context(format_context);
+//     av_packet_free(&reading_packet);
 //     return count;
 // }
 
-// std::vector<PacketData> get_packet_stats(const char* fileName) {
+// std::vector<PacketData> get_packet_stats(const char* file_name) {
 //     int result;
-//     AVFormatContext* formatContext = open_format_context(fileName, &result);
+//     AVFormatContext* format_context = open_format_context(file_name, &result);
     
-//     enum AVMediaType mediaTypes[2] = { AVMEDIA_TYPE_AUDIO, AVMEDIA_TYPE_VIDEO };
-//     StreamDataGroup streamDataGroup(formatContext, mediaTypes, 2);
+//     enum AVMediaType media_types[2] = { AVMEDIA_TYPE_AUDIO, AVMEDIA_TYPE_VIDEO };
+//     StreamDataGroup streamDataGroup(format_context, media_types, 2);
     
-//     AVPacket* readingPacket = av_packet_alloc();
+//     AVPacket* reading_packet = av_packet_alloc();
 //     std::vector<PacketData> packetData;
 //     for (int i = 0; i < streamDataGroup.get_nb_streams(); i++) {
-//         packetData.push_back({ streamDataGroup[i].mediaType, 0 });
+//         packetData.push_back({ streamDataGroup[i].media_type, 0 });
 //     }
 
-//     while (av_read_frame(formatContext, readingPacket) == 0) {
+//     while (av_read_frame(format_context, reading_packet) == 0) {
 //         for (int i = 0; i < packetData.size(); i++) {
-//             if (packetData[i].mediaType == readingPacket->)
-//             if (streamDataGroup.has_media_stream(packetData[i].mediaType)) {
+//             if (packetData[i].media_type == reading_packet->)
+//             if (streamDataGroup.has_media_stream(packetData[i].media_type)) {
 //                 packetData[i].packetCount++;
 //             }
 //         }
-//         av_packet_unref(readingPacket);
+//         av_packet_unref(reading_packet);
 //     }
 
-//     avformat_free_context(formatContext);
-//     av_packet_free(&readingPacket);
+//     avformat_free_context(format_context);
+//     av_packet_free(&reading_packet);
 //     return packetData;
 // }

@@ -30,9 +30,9 @@ extern "C" {
 
 const int KEY_ESCAPE = 27;
 
-void render_movie_screen(PixelData& pixelData, VideoOutputMode gui_state);
-void print_pixel_data(PixelData& pixelData, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
-void print_pixel_data_text(PixelData& pixelData, int bounds_row, int bounds_col, int bounds_width, int bounds_height);
+void render_movie_screen(PixelData& pixel_data, VideoOutputMode gui_state);
+void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
+void print_pixel_data_text(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height);
 
 RGBColor get_index_display_color(int index, int length) {
     const double step = (255.0 / 2.0) / length;
@@ -84,13 +84,13 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
 }
 
 
-void render_movie_screen(PixelData& pixelData, VideoOutputMode output_mode) {
-    print_pixel_data(pixelData, 0, 0, COLS, LINES, output_mode);
+void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode) {
+    print_pixel_data(pixel_data, 0, 0, COLS, LINES, output_mode);
     refresh();
 }
 
-void print_pixel_data_text(PixelData& pixelData, int bounds_row, int bounds_col, int bounds_width, int bounds_height) {
-    PixelData bounded = pixelData.bound(bounds_width, bounds_height);
+void print_pixel_data_text(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height) {
+    PixelData bounded = pixel_data.bound(bounds_width, bounds_height);
     const AsciiImage image(bounded, AsciiImage::ASCII_STANDARD_CHAR_MAP);
     int image_start_row = bounds_row + std::abs(image.get_height() - bounds_height) / 2;
     int image_start_col = bounds_col + std::abs(image.get_width() - bounds_width) / 2; 
@@ -103,9 +103,9 @@ void print_pixel_data_text(PixelData& pixelData, int bounds_row, int bounds_col,
 }
 
 
-void print_pixel_data(PixelData& pixelData, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode) {
+void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode) {
     if (output_mode == VideoOutputMode::TEXT_ONLY) {
-        print_pixel_data_text(pixelData, bounds_row, bounds_col, bounds_width, bounds_height);
+        print_pixel_data_text(pixel_data, bounds_row, bounds_col, bounds_width, bounds_height);
         return;
     }
     
@@ -113,7 +113,7 @@ void print_pixel_data(PixelData& pixelData, int bounds_row, int bounds_col, int 
         throw std::runtime_error("Attempted to print colored text in terminal that does not support color");
     }
 
-    PixelData bounded = pixelData.bound(bounds_width, bounds_height);
+    PixelData bounded = pixel_data.bound(bounds_width, bounds_height);
     const AsciiImage image(bounded, AsciiImage::ASCII_STANDARD_CHAR_MAP);
     int image_start_row = bounds_row + std::abs(image.get_height() - bounds_height) / 2;
     int image_start_col = bounds_col + std::abs(image.get_width() - bounds_width) / 2; 

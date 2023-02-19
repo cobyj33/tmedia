@@ -34,7 +34,7 @@ class MediaStream {
 
     public:
         PlayheadList<AVPacket*> packets;
-        // double timeBase;
+        // double time_base;
         // double average_frame_rate;
         // double start_time;
         // int stream_index;
@@ -54,14 +54,14 @@ class MediaStream {
 
 class MediaData {
     public:
-        AVFormatContext* formatContext;
+        AVFormatContext* format_context;
         std::vector<std::unique_ptr<MediaStream>> media_streams;
         std::unique_ptr<StreamDataGroup> stream_datas;
         int nb_streams;
         bool allPacketsRead;
         double duration;
 
-        MediaData(const char* fileName);
+        MediaData(const char* file_name);
         ~MediaData();
 
         MediaStream& get_media_stream(enum AVMediaType media_type);
@@ -101,11 +101,11 @@ class MediaPlayer {
         MediaCache cache;
         std::unique_ptr<MediaData> media_data;
         Playback playback;
-        const char* fileName;
+        const char* file_name;
         bool in_use;
 
-        MediaPlayer(const char* fileName) : in_use(false), fileName(fileName) {
-            this->media_data = std::make_unique<MediaData>(fileName);
+        MediaPlayer(const char* file_name) : in_use(false), file_name(file_name) {
+            this->media_data = std::make_unique<MediaData>(file_name);
         }
 
         void start(GUIState gui_state);
@@ -115,7 +115,7 @@ class MediaPlayer {
         PixelData& get_current_image();
 
         double get_duration();
-        void jump_to_time(double targetTime);
+        void jump_to_time(double target_time);
 
         bool has_video();
         bool has_audio();

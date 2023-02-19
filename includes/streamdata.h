@@ -13,24 +13,24 @@ extern "C" {
 
 class StreamData {
     public:
-        AVFormatContext* formatContext;
-        enum AVMediaType mediaType;
+        AVFormatContext* format_context;
+        enum AVMediaType media_type;
         AVStream* stream;
         const AVCodec* decoder;
-        AVCodecContext* codecContext;
+        AVCodecContext* codec_context;
 
-        StreamData(AVFormatContext* formatContext, enum AVMediaType mediaType);
+        StreamData(AVFormatContext* format_context, enum AVMediaType media_type);
 
         ~StreamData();
 };
 
 class StreamDataGroup {
     private:
-        AVFormatContext* m_formatContext;
+        AVFormatContext* m_format_context;
         std::vector<std::shared_ptr<StreamData>> m_datas;
 
     public:
-        StreamDataGroup(AVFormatContext* formatContext, const enum AVMediaType* mediaTypes, int nb_target_streams);
+        StreamDataGroup(AVFormatContext* format_context, const enum AVMediaType* media_types, int nb_target_streams);
 
         int get_nb_streams();
         StreamData& get_av_media_stream(AVMediaType media_type);

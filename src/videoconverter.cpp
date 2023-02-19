@@ -29,21 +29,21 @@ VideoConverter::~VideoConverter() {
 }
 
 AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
-    AVFrame* resizedVideoFrame = av_frame_alloc();
-    if (resizedVideoFrame == nullptr) {
+    AVFrame* resized_video_frame = av_frame_alloc();
+    if (resized_video_frame == nullptr) {
         throw ascii::bad_alloc("Could not allocate resized frame for VideoConverter");
     }
 
-    resizedVideoFrame->format = this->m_dst_pix_fmt;
-    resizedVideoFrame->width = this->m_dst_width;
-    resizedVideoFrame->height = this->m_dst_height;
-    resizedVideoFrame->pts = original->pts;
-    resizedVideoFrame->repeat_pict = original->repeat_pict;
-    resizedVideoFrame->duration = original->duration;
-    av_frame_get_buffer(resizedVideoFrame, 1); //watch this alignment
-    sws_scale(this->m_context, (uint8_t const * const *)original->data, original->linesize, 0, original->height, resizedVideoFrame->data, resizedVideoFrame->linesize);
+    resized_video_frame->format = this->m_dst_pix_fmt;
+    resized_video_frame->width = this->m_dst_width;
+    resized_video_frame->height = this->m_dst_height;
+    resized_video_frame->pts = original->pts;
+    resized_video_frame->repeat_pict = original->repeat_pict;
+    resized_video_frame->duration = original->duration;
+    av_frame_get_buffer(resized_video_frame, 1); //watch this alignment
+    sws_scale(this->m_context, (uint8_t const * const *)original->data, original->linesize, 0, original->height, resized_video_frame->data, resized_video_frame->linesize);
 
-    return resizedVideoFrame;
+    return resized_video_frame;
 }
 
 int VideoConverter::get_src_width() {
