@@ -37,7 +37,7 @@ AVFormatContext* open_format_context(std::string file_name) {
     throw std::runtime_error("Failed to open format context input, unknown error occured");
 }
 
-int dump_file_info(const char* file_name) {
+void dump_file_info(const char* file_name) {
     av_log_set_level(AV_LOG_INFO);
 
     try {
@@ -46,7 +46,5 @@ int dump_file_info(const char* file_name) {
         avformat_close_input(&format_context);
     } catch (std::exception e) {
         std::cerr << e.what() << std::endl;
-        return EXIT_FAILURE;
     }
-    return EXIT_SUCCESS;
 }
