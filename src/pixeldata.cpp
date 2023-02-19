@@ -1,7 +1,7 @@
 #include <stdexcept>
 
 #include "pixeldata.h"
-#include "image.h"
+#include "scale.h"
 #include "color.h"
 
 // Accepts empty matrices

@@ -1,7 +1,7 @@
 #ifndef ASCII_VIDEO_IMAGE
 #define ASCII_VIDEO_IMAGE
 /**
- * @file image.h
+ * @file scale.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
  * @brief Common functions for image manipulation in ascii_video
  * @version 0.1

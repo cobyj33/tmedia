@@ -8,7 +8,7 @@
 #include "termcolor.h"
 #include "icons.h"
 #include "pixeldata.h"
-#include "image.h"
+#include "scale.h"
 #include "media.h"
 #include "info.h"
 

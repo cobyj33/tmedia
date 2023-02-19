@@ -9,7 +9,7 @@
 #include "color.h"
 #include "pixeldata.h"
 #include "wmath.h"
-#include "image.h"
+#include "scale.h"
 #include "media.h"
 #include "decode.h"
 #include "boiler.h"

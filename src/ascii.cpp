@@ -3,7 +3,7 @@
 #include <vector>
 #include <stdexcept>
 
-#include "image.h"
+#include "scale.h"
 #include "pixeldata.h"
 #include "ascii.h"
 #include "wmath.h"

@@ -11,7 +11,7 @@
 #include "termcolor.h"
 #include "pixeldata.h"
 #include "playheadlist.hpp"
-#include "image.h"
+#include "scale.h"
 #include "ascii.h"
 #include "icons.h"
 #include "media.h"

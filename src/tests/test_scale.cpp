@@ -1,6 +1,6 @@
 #include <utility>
 
-#include "image.h"
+#include "scale.h"
 
 #include <catch2/catch_test_macros.hpp>
 

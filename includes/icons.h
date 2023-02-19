@@ -1,7 +1,7 @@
 #ifndef ASCII_VIDEO_ICONS
 #define ASCII_VIDEO_ICONS
 
-#include "image.h"
+#include "scale.h"
 #include "pixeldata.h"
 #include <string>
 #include <ctime>
