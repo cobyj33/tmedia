@@ -41,7 +41,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 {
     CallbackData* data = (CallbackData*)(pDevice->pUserData);
     std::lock_guard<std::mutex> mutex_lock_guard(data->mutex.get());
-    AudioStream& audioStream = data->player->displayCache.audio_stream;
+    AudioStream& audioStream = data->player->cache.audio_stream;
 
     if (audioStream.can_read(frameCount)) {
         audioStream.read_into(frameCount, (float*)pOutput);
@@ -64,7 +64,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             &(audioCodecContext->ch_layout), AV_SAMPLE_FMT_FLT, audioCodecContext->sample_rate,
             &(audioCodecContext->ch_layout), audioCodecContext->sample_fmt, audioCodecContext->sample_rate);
 
-    player->displayCache.audio_stream.init(nb_channels, audioCodecContext->sample_rate);
+    player->cache.audio_stream.init(nb_channels, audioCodecContext->sample_rate);
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format  = ma_format_f32;
@@ -85,7 +85,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
     sleep_for_sec(audio_media_stream.get_start_time());
     
-    while (player->inUse) {
+    while (player->in_use) {
         mutex_lock.lock();
 
         if (player->playback.is_playing() == false && ma_device_get_state(&audioDevice) == ma_device_state_started) {
@@ -106,7 +106,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             mutex_lock.lock();
         }
 
-        AudioStream& audioStream = player->displayCache.audio_stream;
+        AudioStream& audioStream = player->cache.audio_stream;
         std::vector<AVFrame*> audioFrames = get_final_audio_frames(audioCodecContext, audioResampler, audio_media_stream.packets);
         for (int i = 0; i < audioFrames.size(); i++) {
             AVFrame* current_frame = audioFrames[i];

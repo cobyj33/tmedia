@@ -126,26 +126,26 @@ void move_frame_list_to_time_sec(PlayheadList<AVFrame*>& frames, double time) {
 }
 
 double MediaPlayer::get_duration() {
-    return this->mediaData->duration;
+    return this->media_data->duration;
 }
 
 bool MediaPlayer::has_video() {
-    return this->mediaData->has_media_stream(AVMEDIA_TYPE_VIDEO);
+    return this->media_data->has_media_stream(AVMEDIA_TYPE_VIDEO);
 }
 bool MediaPlayer::has_audio() {
-    return this->mediaData->has_media_stream(AVMEDIA_TYPE_AUDIO);
+    return this->media_data->has_media_stream(AVMEDIA_TYPE_AUDIO);
 }
 
 MediaStream& MediaPlayer::get_video_stream() {
     if (this->has_video()) {
-        return this->mediaData->get_media_stream(AVMEDIA_TYPE_VIDEO);
+        return this->media_data->get_media_stream(AVMEDIA_TYPE_VIDEO);
     }
     throw std::runtime_error("Cannot get video stream from MediaPlayer, no video is available to retrieve");
 }
 
 MediaStream& MediaPlayer::get_audio_stream() {
     if (this->has_audio()) {
-        return this->mediaData->get_media_stream(AVMEDIA_TYPE_AUDIO);
+        return this->media_data->get_media_stream(AVMEDIA_TYPE_AUDIO);
     }
     throw std::runtime_error("Cannot get audio stream from MediaPlayer, no audio is available to retrieve");
 }
@@ -153,7 +153,7 @@ MediaStream& MediaPlayer::get_audio_stream() {
 double MediaPlayer::get_desync_time(double current_system_time) {
     if (this->has_audio() && this->has_video()) {
         double current_playback_time = this->playback.get_time(current_system_time);
-        double desync = std::abs(this->displayCache.audio_stream.get_time() - current_playback_time);
+        double desync = std::abs(this->cache.audio_stream.get_time() - current_playback_time);
         return desync;
     } else {
         return 0.0;
@@ -163,7 +163,7 @@ double MediaPlayer::get_desync_time(double current_system_time) {
 void MediaPlayer::resync(double current_system_time) {
 
     if (this->has_audio()) {
-        AudioStream& audioStream = this->displayCache.audio_stream;
+        AudioStream& audioStream = this->cache.audio_stream;
         MediaStream& audio_media_stream = this->get_audio_stream();
 
 
@@ -179,15 +179,11 @@ void MediaPlayer::resync(double current_system_time) {
 }
 
 void MediaPlayer::set_current_image(PixelData& data) {
-    this->displayCache.image = PixelData(data);
+    this->cache.image = PixelData(data);
 }
 
 PixelData& MediaPlayer::get_current_image() {
-    return this->displayCache.image;
-}
-
-MediaDisplaySettings::MediaDisplaySettings() {
-    this->use_colors = false;
+    return this->cache.image;
 }
 
 MediaData::MediaData(const char* fileName) {
@@ -255,14 +251,14 @@ MediaStream::~MediaStream() {
 }
 
 void MediaPlayer::jump_to_time(double targetTime) {
-    targetTime = clamp(targetTime, 0.0, this->mediaData->duration);
+    targetTime = clamp(targetTime, 0.0, this->media_data->duration);
     const double originalTime = this->playback.get_time(system_clock_sec());
 
-    if (!this->mediaData->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
+    if (!this->media_data->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
         throw std::runtime_error("Could not jump to time " + std::to_string( std::round(targetTime * 100) / 100) + " seconds with MediaPlayer, no video stream could be found");
     }
 
-    MediaStream& video_stream = this->mediaData->get_media_stream(AVMEDIA_TYPE_VIDEO);
+    MediaStream& video_stream = this->media_data->get_media_stream(AVMEDIA_TYPE_VIDEO);
     AVCodecContext* videoCodecContext = video_stream.get_codec_context();
     PlayheadList<AVPacket*>& videoPackets = video_stream.packets;
     double videoTimeBase = video_stream.get_time_base();

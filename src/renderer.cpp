@@ -52,7 +52,7 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
 
     std::unique_lock<std::mutex> lock(alter_mutex, std::defer_lock);
     erase();
-    while (player->inUse) {
+    while (player->in_use) {
         
         int input = wgetch(inputWindow);
         if (input == KEY_RESIZE) {
@@ -73,7 +73,7 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
             player->jump_to_time(current_playback_time + 10);
         }
 
-        PixelData& image = player->displayCache.image;
+        PixelData& image = player->cache.image;
         lock.unlock();
 
         render_movie_screen(image, gui_state.get_video_output_mode());

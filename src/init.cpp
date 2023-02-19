@@ -10,14 +10,14 @@
 #include "gui.h"
 
 void MediaPlayer::start(GUIState gui_state) {
-    if (this->inUse) {
+    if (this->in_use) {
         throw std::runtime_error("CANNOT USE MEDIA PLAYER THAT IS ALREADY IN USE");
     }
 
     const int INITIAL_PLAYER_PACKET_BUFFER_SIZE = 10000;
-    this->inUse = true;
+    this->in_use = true;
     this->playback.start(system_clock_sec());
-    this->mediaData->fetch_next(INITIAL_PLAYER_PACKET_BUFFER_SIZE);
+    this->media_data->fetch_next(INITIAL_PLAYER_PACKET_BUFFER_SIZE);
 
 
     std::mutex alter_mutex;
@@ -31,5 +31,5 @@ void MediaPlayer::start(GUIState gui_state) {
     data_thread.join();
 
     this->playback.stop(system_clock_sec());
-    this->inUse = false;
+    this->in_use = false;
 }

@@ -37,8 +37,6 @@ const char* DEBUG_VIDEO_TYPE = "debug";
 void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
 
-    // std::unique_ptr<MediaData>& media_data = player->mediaData;
-    MediaDisplayCache& cache = player->displayCache;
 
     if (!player->has_video()) {
         throw std::runtime_error("Could not playback video data: Could not find video stream in media player");
@@ -54,7 +52,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
     VideoConverter videoConverter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt);
 
-    while (player->inUse && player->playback.get_time(system_clock_sec()) < player->get_duration()) {
+    while (player->in_use && player->playback.get_time(system_clock_sec()) < player->get_duration()) {
         if (!player->playback.is_playing() || !video_stream.packets.can_move_index(10)) { // paused or not enough data
             sleep_quick();
             continue;

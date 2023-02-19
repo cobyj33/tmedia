@@ -69,15 +69,6 @@ class MediaData {
         void fetch_next(int requestedPacketCount);
 };
 
-
-
-class MediaDisplaySettings {
-    public:
-        bool use_colors;
-
-        MediaDisplaySettings();
-};
-
 class Sample {
     public:
         float* data;
@@ -88,7 +79,7 @@ class Sample {
 };
 
 
-class MediaDisplayCache {
+class MediaCache {
     public:
         PixelData image;
         PixelData last_rendered_image;
@@ -101,21 +92,20 @@ class MediaDisplayCache {
          */
         std::stack<std::tuple<VideoIcon, double>> symbol_stack;
 
-        MediaDisplayCache() {}
+        MediaCache() {}
 };
 
 
 class MediaPlayer {
     public:
-        MediaDisplaySettings displaySettings;
-        MediaDisplayCache displayCache;
-        std::unique_ptr<MediaData> mediaData;
+        MediaCache cache;
+        std::unique_ptr<MediaData> media_data;
         Playback playback;
         const char* fileName;
-        bool inUse;
+        bool in_use;
 
-        MediaPlayer(const char* fileName) : inUse(false), fileName(fileName) {
-            this->mediaData = std::make_unique<MediaData>(fileName);
+        MediaPlayer(const char* fileName) : in_use(false), fileName(fileName) {
+            this->media_data = std::make_unique<MediaData>(fileName);
         }
 
         void start(GUIState gui_state);
