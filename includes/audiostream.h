@@ -56,11 +56,11 @@ class AudioStream {
         AudioStream(int nb_channels, int sample_rate);
 
         /** gets the number of audio samples stored in the audio stream */
-        std::size_t get_nb_samples();
+        std::size_t get_nb_samples() const;
         /** gets the number of audio channels represented by the audio stream */
-        int get_nb_channels();
+        int get_nb_channels() const;
         /** gets the sample rate per second of the data stored by the audio stream*/
-        int get_sample_rate();
+        int get_sample_rate() const;
 
         /**
          * @brief Clears the audio stream data and offsets the data to represent it's beginning at a certain "time". This "time" can be something like the time of the start of the stream in audio or video data.
@@ -90,20 +90,20 @@ class AudioStream {
          * @brief Get the current time that the audio stream is on
          * @return The current time of the audio stream in seconds 
          */
-        double get_time();
+        double get_time() const;
 
         /**
          * @brief Get the current time that the audio stream is on
          * @return The current time of the audio stream in seconds 
          */
-        double get_elapsed_time();
+        double get_elapsed_time() const;
         std::size_t set_time(double time); // returns new playhead position
 
         /**
          * @brief Gets the ending time of the stream. The ending time is determined by the amount of samples inputted into the stream and the sample rate of the stream
          * @return The time in seconds that the final sample in the stream represents 
          */
-        double get_end_time();
+        double get_end_time() const;
 
         /**
          * @brief Writes a part of a sample into the audio data
@@ -130,7 +130,7 @@ class AudioStream {
          * @return true 
          * @return false 
          */
-        bool is_time_in_bounds(double time);
+        bool is_time_in_bounds(double time) const;
 
         /**
          * @brief Determine if the audio stream has any sample data to read
@@ -138,7 +138,7 @@ class AudioStream {
          * @return true: There is any samples available to be read
          * @return false: There is not samples available to read
          */
-        bool can_read();
+        bool can_read() const;
 
         /**
          * @brief Determine if the audio stream has enough data to be able to read nb_samples number of samples
@@ -148,9 +148,9 @@ class AudioStream {
          * @return true: There is enough samples to be able to read
          * @return false: There is not enough samples able to be read
          */
-        bool can_read(std::size_t nb_samples);
+        bool can_read(std::size_t nb_samples) const;
 
-        std::size_t get_nb_can_read();
+        std::size_t get_nb_can_read() const;
 
         /**
          * @brief Reads nb_samples samples into the float buffer and advanced the audio stream by nb_samples. The data returned is interleaved
@@ -170,7 +170,7 @@ class AudioStream {
          * @param nb_samples The number of samples to be read into the buffer
          * @param target The float buffer to read the data into. The buffer should be of a length of at least (nb_samples * nb_channels) where nb_samples is the number of samples wanted to be read and nb_channels is the number of channels in the audio stream. This can be easily found by multiplying the nb_samples to be read by the number of channels in the audio stream through get_nb_channels()
          */
-        void peek_into(std::size_t nb_samples, float* target);
+        void peek_into(std::size_t nb_samples, float* target) const;
 
         /**
          * @brief Moves the audio stream forward by nb_samples amount
@@ -184,7 +184,7 @@ class AudioStream {
          * @return true The audio stream has been initialized and is ready to store data
          * @return false The audio stream has not been initialized and data cannot yet be written to it
          */
-        bool is_initialized();
+        bool is_initialized() const;
 };
 
 #endif

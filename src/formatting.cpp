@@ -2,9 +2,26 @@
 #include <cstdarg>
 #include <string>
 #include <stdexcept>
+#include <cmath>
 
-#include "formatting.h"
+#include <iomanip>
+#include <sstream>
+
+#include "formatting.h" 
 #include "unitconvert.h"
+
+std::string double_to_fixed_string(double num, int decimal_places) {
+    if (decimal_places < 0) {
+        throw std::runtime_error("Cannot produce double string with negative decimal places");
+    } else if (decimal_places == 0) {
+        return std::to_string((long)num);
+    }
+
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(decimal_places) << num;
+    std::string s = stream.str();
+    return s;
+}
 
 
 std::string get_formatted_string(std::string& format, ...) {
@@ -80,21 +97,31 @@ int parse_hh_mm_ss_duration(std::string formatted_duration) {
 bool is_hh_mm_ss_duration(std::string formatted_duration) {
     if (formatted_duration.length() >= 8) {
         const int END = formatted_duration.length() - 1;
-        const int FIRST_COLON_POSITION = END - 2;
-        const int SECOND_COLON_POSITION = END - 5;
+        const int MM_SS_COLON_POSITION = END - 2;
+        const int HH_MM_COLON_POSITION = END - 5;
 
-        if (formatted_duration[FIRST_COLON_POSITION] == ':' && formatted_duration[SECOND_COLON_POSITION] == ':') {
-            
+        if (formatted_duration[MM_SS_COLON_POSITION] == ':' && formatted_duration[HH_MM_COLON_POSITION] == ':') {
             for (int i = 0; i < formatted_duration.length(); i++) {
-                if (!std::isdigit(formatted_duration[i]) && !(i == FIRST_COLON_POSITION || i == SECOND_COLON_POSITION )) {
+                if (!std::isdigit(formatted_duration[i]) && !(i == MM_SS_COLON_POSITION || i == HH_MM_COLON_POSITION )) {
                     return false;
                 }
             }
 
-            return true;
-            
-        }
+            std::string seconds_section = formatted_duration.substr(MM_SS_COLON_POSITION + 1, 2);
+            std::string minutes_section = formatted_duration.substr(HH_MM_COLON_POSITION + 1, 2);
 
+            std::string hours_section = formatted_duration.substr(0, HH_MM_COLON_POSITION);
+            if (hours_section.length() > 2) {
+                if (hours_section[0] == '0') {
+                    return false;
+                }
+            }
+
+            int seconds = std::stoi(seconds_section);
+            int minutes = std::stoi(minutes_section);
+            
+            return seconds < 60 && minutes < 60;
+        }
     }
     return false;
 }
@@ -120,15 +147,26 @@ bool is_mm_ss_duration(std::string formatted_duration) {
     if (formatted_duration.length() >= 5) {
         const int END = formatted_duration.length() - 1;
         const int COLON_POSITION = END - 2;
-        if (formatted_duration[COLON_POSITION] == ':') {
 
+        if (formatted_duration[COLON_POSITION] == ':') {
             for (int i = 0; i < formatted_duration.length(); i++) {
                 if (!std::isdigit(formatted_duration[i]) && i != COLON_POSITION) {
                     return false;
                 }
             }
 
-            return true;
+            std::string minutes_section = formatted_duration.substr(0, COLON_POSITION);
+            if (minutes_section.length() > 2) {
+                if (minutes_section[0] == '0') {
+                    return false;
+                }
+            }
+
+
+            std::string seconds_section = formatted_duration.substr(COLON_POSITION + 1, 2);
+            int seconds = std::stoi(seconds_section);
+            
+            return seconds < 60;
         }
     }
     return false;

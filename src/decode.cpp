@@ -115,16 +115,21 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
     return audio_frames;
 }
 
-std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, PlayheadList<AVPacket*>& videoPacketList) {
+std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, PlayheadList<AVPacket*>& video_packet_list) {
     std::vector<AVFrame*> decoded_frames;
 
-    while (videoPacketList.can_step_forward()) {
+    while (video_packet_list.can_step_forward()) {
         try {
-            decoded_frames = decode_video_packet(video_codec_context, videoPacketList.get());
+            decoded_frames = decode_video_packet(video_codec_context, video_packet_list.get());
+            if (decoded_frames.size() == 0 && video_packet_list.can_step_forward()) {
+                video_packet_list.step_forward();
+                continue;
+            }
+
             return decoded_frames;
         } catch (ascii::ffmpeg_error e) {
-            if (e.is_eagain() && videoPacketList.can_step_forward()) {
-                videoPacketList.step_forward();
+            if (e.is_eagain() && video_packet_list.can_step_forward()) {
+                video_packet_list.step_forward();
             } else {
                 throw e;
             }
@@ -134,12 +139,25 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, P
     return decoded_frames;
 }
 
+void decode_until(AVCodecContext* video_codec_context, PlayheadList<AVPacket*>& video_packet_list, int64_t target_pts) {
+    while (video_packet_list.get()->pts < target_pts && video_packet_list.can_step_forward()) {
+        decode_video_packet(video_codec_context, video_packet_list);
+        video_packet_list.try_step_forward();
+    }
+}
+
+
 std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, PlayheadList<AVPacket*>& audio_packet_list) {
     std::vector<AVFrame*> decoded_frames;
 
     while (audio_packet_list.can_step_forward()) {
         try {
             decoded_frames = decode_audio_packet(audio_codec_context, audio_packet_list.get());
+            if (decoded_frames.size() == 0 && audio_packet_list.can_step_forward()) {
+                audio_packet_list.step_forward();
+                continue;
+            }
+
             return decoded_frames;
         } catch (ascii::ffmpeg_error e) {
             if (e.is_eagain() && audio_packet_list.can_step_forward()) {
@@ -165,22 +183,4 @@ std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audio_codec_context
     std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(raw_audio_frames);
     clear_av_frame_list(raw_audio_frames);
     return audio_frames;
-    // AVPacket* current_packet = audio_packets.get();
-    // std::vector<AVFrame*> audio_frames;
-    // bool reading = true;
-
-    // while (audio_packets.can_step_forward()) {
-    //     try {
-    //         audio_frames = get_final_audio_frames(audio_codec_context, audio_resampler, audio_packets.get());
-    //         return audio_frames;
-    //     } catch (ascii::ffmpeg_error e) {
-    //         if (e.is_eagain() && audio_packets.can_step_forward()) {
-    //             audio_packets.step_forward();
-    //             continue;
-    //         }
-    //         throw e;
-    //     }
-    // }
-
-    // return audio_frames;
 }

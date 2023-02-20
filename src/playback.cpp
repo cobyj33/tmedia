@@ -1,14 +1,11 @@
 #include <algorithm>
+#include <stdexcept>
 
 #include <playback.h>
 #include <wtime.h>
 #include <wmath.h>
 
 
-const double Playback::MAX_VOLUME;
-const double Playback::MAX_SPEED;
-const double Playback::MIN_VOLUME;
-const double Playback::MIN_SPEED;
 
 Playback::Playback() {
     this->m_start_time = 0.0;
@@ -32,43 +29,55 @@ void Playback::skip(double seconds_to_skip) {
 };
 
 void Playback::start(double current_system_time) {
+    if (this->is_playing()) {
+        throw std::runtime_error("Cannot resume while playback is already playing");
+    }
+
     this->m_playing = true;
     this->m_start_time = current_system_time;
+
+    this->m_skipped_time = 0.0;
+    this->m_paused_time = 0.0;
 };
 
 void Playback::resume(double current_system_time) {
+    if (this->is_playing()) {
+        throw std::runtime_error("Cannot resume while playback is already playing");
+    }
+
     this->m_playing = true;
     this->m_paused_time += current_system_time - this->m_last_pause_time;
 };
 
 
 void Playback::stop(double current_system_time) {
+    if (!this->is_playing()) {
+        throw std::runtime_error("Attempted to stop playback although playback is already stopped");
+    }
+
     this->m_playing = false;
     this->m_last_pause_time = current_system_time;
 };
 
-bool Playback::is_playing() {
+bool Playback::is_playing() const {
     return this->m_playing;
 };
 
-void Playback::set_playing(bool playing) {
-    this->m_playing = playing;
-};
 
-double Playback::get_speed() {
+double Playback::get_speed() const {
     return this->m_speed;
 };
 
-double Playback::get_volume() {
+double Playback::get_volume() const {
     return this->m_volume;
 };
 
 void Playback::set_speed(double amount) {
-    this->m_speed = clamp(amount, Playback::MIN_SPEED, Playback::MAX_SPEED);
+    this->m_speed = amount;
 }
 
 void Playback::set_volume(double amount) {
-    this->m_volume = clamp(amount, Playback::MIN_VOLUME, Playback::MAX_VOLUME);
+    this->m_volume = amount;
 };
 
 void Playback::change_speed(double offset) {
@@ -79,10 +88,7 @@ void Playback::change_volume(double offset) {
     this->set_volume(this->m_volume + offset);
 };
 
-double Playback::get_time(double current_system_time) {
+double Playback::get_time(double current_system_time) const {
     return current_system_time - this->m_start_time - this->m_paused_time + this->m_skipped_time;
 };
 
-// double get_playback_current_time(Playback* playback) {
-//     return system_clock_sec() - playback->start_time - playback->paused_time + playback->skipped_time; 
-// }

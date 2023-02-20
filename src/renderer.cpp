@@ -49,6 +49,8 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
     nodelay(inputWindow, true);
     keypad(inputWindow, true);
 
+    double batched_jump_time = 0;
+
 
     std::unique_lock<std::mutex> lock(alter_mutex, std::defer_lock);
     erase();
@@ -61,22 +63,37 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
             refresh();
         }
 
+        if (input == KEY_ESCAPE || input == KEY_BACKSPACE) {
+            player->in_use = false;
+        }
+
+
         lock.lock();
         erase();
         double current_playback_time = player->playback.get_time(system_clock_sec());
-        printw("%f", current_playback_time);
 
-        if (input == KEY_LEFT) {
-            player->jump_to_time(current_playback_time - 10);
+        if (input == KEY_LEFT || input == KEY_RIGHT) {
+            if (input == KEY_LEFT) {
+                batched_jump_time -= 5;
+            } else if (input == KEY_RIGHT) {
+                batched_jump_time += 5;
+            }
+            printw("%s%s%s\n", "Preparing to Jump ", std::to_string(batched_jump_time).c_str(), " seconds...");
+        } else if (batched_jump_time != 0) {
+            printw("%s%s%s\n", "Jumping", std::to_string(batched_jump_time).c_str(), " seconds...");
+            player->jump_to_time(current_playback_time + batched_jump_time, system_clock_sec());
+            batched_jump_time = 0;
         }
-        if (input == KEY_RIGHT) {
-            player->jump_to_time(current_playback_time + 10);
+
+        if (input == ' ') {
+            player->playback.toggle(system_clock_sec());
         }
 
         PixelData& image = player->cache.image;
         lock.unlock();
 
         render_movie_screen(image, gui_state.get_video_output_mode());
+        refresh();
         sleep_for_ms(41);
     }
 
@@ -86,7 +103,6 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
 
 void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode) {
     print_pixel_data(pixel_data, 0, 0, COLS, LINES, output_mode);
-    refresh();
 }
 
 void print_pixel_data_text(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height) {

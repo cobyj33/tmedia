@@ -50,6 +50,7 @@ class MediaStream {
         int get_stream_index() const;
         enum AVMediaType get_media_type() const;
         AVCodecContext* get_codec_context() const;
+        void flush();
 };
 
 class MediaData {
@@ -108,25 +109,26 @@ class MediaPlayer {
             this->media_data = std::make_unique<MediaData>(file_name);
         }
 
-        void start(GUIState gui_state);
-        double get_desync_time(double current_system_time);
+        void start(GUIState gui_state, double start_time);
+        double get_desync_time(double current_system_time) const;
         void resync(double current_system_time);
         void set_current_image(PixelData& data);
+        void set_current_image(AVFrame* frame);
         PixelData& get_current_image();
 
-        double get_duration();
-        void jump_to_time(double target_time);
+        double get_duration() const;
+        void jump_to_time(double target_time, double current_system_time);
 
-        bool has_video();
-        bool has_audio();
-        MediaStream& get_video_stream();
-        MediaStream& get_audio_stream();
+        bool has_video() const;
+        bool has_audio() const;
+        bool only_video() const;
+        bool only_audio() const;
+        MediaStream& get_video_stream() const;
+        MediaStream& get_audio_stream() const;
 };
 
 void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS);
-void move_packet_list_to_time_sec(PlayheadList<AVPacket*>& packets, double time);
 void move_frame_list_to_pts(PlayheadList<AVFrame*>& frames, int64_t targetPTS);
-void move_frame_list_to_time_sec(PlayheadList<AVFrame*>& frames, double time);
 
 void clear_playhead_packet_list(PlayheadList<AVPacket*>& packets);
 void clear_playhead_frame_list(PlayheadList<AVFrame*>& packets);

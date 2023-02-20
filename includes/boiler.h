@@ -17,5 +17,6 @@ extern "C" {
  */
 AVFormatContext* open_format_context(std::string file_name);
 void dump_file_info(const char* file_name);
+double get_file_duration(const char* file_name);
 
 #endif

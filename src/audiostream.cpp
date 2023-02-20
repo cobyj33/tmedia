@@ -22,7 +22,7 @@ AudioStream::AudioStream(int nb_channels, int sample_rate) {
     this->init(nb_channels, sample_rate);
 };
 
-std::size_t AudioStream::get_nb_samples() {
+std::size_t AudioStream::get_nb_samples() const {
     if (this->m_nb_channels == 0) {
         return 0;
     }
@@ -69,7 +69,7 @@ void AudioStream::clear() { // Note: No longer takes in a clear capacity
     this->m_playhead = 0;
 };
 
-double AudioStream::get_elapsed_time() {
+double AudioStream::get_elapsed_time() const {
     if (this->m_sample_rate == 0) {
         return 0.0;
     }
@@ -77,7 +77,7 @@ double AudioStream::get_elapsed_time() {
     return (double)this->m_playhead / (double)this->m_sample_rate;
 };
 
-double AudioStream::get_time() {
+double AudioStream::get_time() const {
     return this->m_start_time + this->get_elapsed_time();
 };
 
@@ -87,7 +87,7 @@ std::size_t AudioStream::set_time(double time) {
     return this->m_playhead;
 };
 
-double AudioStream::get_end_time() {
+double AudioStream::get_end_time() const {
     return this->m_start_time + ((double)this->get_nb_samples() / this->m_sample_rate);
 };
 
@@ -105,7 +105,7 @@ void AudioStream::write(float* samples, int nb_samples) {
     }
 };
 
-bool AudioStream::is_time_in_bounds(double time) {
+bool AudioStream::is_time_in_bounds(double time) const {
     return time >= this->m_start_time && time <= this->get_end_time();
 };
 
@@ -115,21 +115,21 @@ void AudioStream::clear_and_restart_at(double time) {
 };
 
 
-bool AudioStream::can_read(std::size_t nb_samples) {
+bool AudioStream::can_read(std::size_t nb_samples) const {
     return this->m_playhead + nb_samples <= this->get_nb_samples();
 };
 
-bool AudioStream::can_read() {
+bool AudioStream::can_read() const {
     return this->can_read(1);
 };
 
-void AudioStream::peek_into(std::size_t nb_samples, float* target) {
+void AudioStream::peek_into(std::size_t nb_samples, float* target) const {
     for (int i = 0; i < nb_samples * this->m_nb_channels; i++) {
         target[i] = uint8_sample_to_normalized_float(this->m_stream[this->m_playhead * this->m_nb_channels + i]);
     }
 };
 
-void AudioStream::read_into(std::size_t nb_samples, float* target) {
+void AudioStream::read_into(std::size_t nb_samples, float* target)  {
     this->peek_into(nb_samples, target);
     this->advance(nb_samples);
 };
@@ -138,85 +138,18 @@ void AudioStream::advance(std::size_t nb_samples) {
     this->m_playhead += nb_samples;
 };
 
-int AudioStream::get_nb_channels() {
+int AudioStream::get_nb_channels() const {
     return this->m_nb_channels;
 };
 
-int AudioStream::get_sample_rate() {
+int AudioStream::get_sample_rate() const {
     return this->m_sample_rate;
 };
 
-bool AudioStream::is_initialized() {
+bool AudioStream::is_initialized() const {
     return this->m_initialized;
 };
 
-std::size_t AudioStream::get_nb_can_read() {
+std::size_t AudioStream::get_nb_can_read() const {
     return this->get_nb_samples() - this->m_playhead;
 }
-
-
-// AudioStream* audio_stream_alloc() {
-//     AudioStream* audio_stream = (AudioStream*)malloc(sizeof(AudioStream));
-//     if (audio_stream == NULL) {
-//         return NULL;
-//     }
-//     audio_stream->stream = NULL;
-//     audio_stream->playhead = 0;
-//     audio_stream->nb_channels = 0;
-//     audio_stream->start_time = 0.0;
-//     audio_stream->sample_capacity = 0;
-//     audio_stream->nb_samples = 0;
-//     audio_stream->sample_rate = 0;
-//     return audio_stream;
-// }
-
-
-// int audio_stream_init(AudioStream* stream, int nb_channels, int initial_size, int sample_rate) {
-//     if (stream->stream != NULL) {
-//         free(stream->stream);
-//     }
-
-//     stream->stream = (uint8_t*)malloc(sizeof(uint8_t) * nb_channels * initial_size * 2);
-//     if (stream->stream == NULL) {
-//         return 0;
-//     }
-
-//     stream->sample_capacity = initial_size * 2;
-//     stream->nb_samples = 0;
-//     stream->nb_channels = nb_channels;
-//     stream->start_time = 0.0;
-//     stream->sample_rate = sample_rate;
-//     stream->playhead = 0;
-//     return 1;
-// }
-
-// int audio_stream_clear(AudioStream* stream, int cleared_capacity) {
-//     if (stream->stream != NULL) {
-//         free(stream->stream);
-//     }
-
-//     uint8_t* tmp =  (uint8_t*)malloc(sizeof(uint8_t) * stream->nb_channels * cleared_capacity * 2);
-//     if (tmp == NULL) {
-//         return 0;
-//     }
-//     stream->stream = tmp;
-//     stream->nb_samples = 0;
-//     stream->playhead = 0;
-//     stream->sample_capacity = cleared_capacity;
-//     stream->playhead = 0;
-//     return 1;
-// }
-
-// double audio_stream_time(AudioStream* stream) {
-//     return stream->start_time + ((double)stream->playhead / stream->sample_rate);
-// }
-
-// double audio_stream_set_time(AudioStream* stream, double time) {
-//     if (stream->nb_samples == 0) return 0.0;
-//     stream->playhead = (size_t)(std::min(stream->nb_samples - 1, std::max( 0.0, (time - stream->start_time) * stream->sample_rate  )  )  );
-//     return stream->playhead;
-// }
-
-// double audio_stream_end_time(AudioStream *stream) {
-//     return stream->start_time + ((double)stream->nb_samples / stream->sample_rate);
-// }

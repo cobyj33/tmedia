@@ -39,12 +39,15 @@ AVFormatContext* open_format_context(std::string file_name) {
 
 void dump_file_info(const char* file_name) {
     av_log_set_level(AV_LOG_INFO);
+    AVFormatContext* format_context = open_format_context(file_name);
+    av_dump_format(format_context, 0, file_name, 0);
+    avformat_close_input(&format_context);
+}
 
-    try {
-        AVFormatContext* format_context = open_format_context(file_name);
-        av_dump_format(format_context, 0, file_name, 0);
-        avformat_close_input(&format_context);
-    } catch (std::exception e) {
-        std::cerr << e.what() << std::endl;
-    }
+double get_file_duration(const char* file_name) {
+    AVFormatContext* format_context = open_format_context(file_name);
+    int64_t duration = format_context->duration;
+    double duration_seconds = (double)duration / AV_TIME_BASE;
+    avformat_close_input(&format_context);
+    return duration_seconds;
 }

@@ -59,8 +59,7 @@ AsciiImage::AsciiImage(PixelData& pixels, std::string& characters) {
     for (int row = 0; row < pixels.get_height(); row++) {
         this->lines.push_back(std::vector<ColorChar>());
         for (int col = 0; col < pixels.get_width(); col++) {
-            RGBColor color = pixels.at(row, col);
-            this->lines[row].push_back(ColorChar(get_char_from_value(characters, color.get_grayscale_value()), color));
+            this->lines[row].push_back(ColorChar(get_char_from_value(characters, pixels.at(row, col).get_grayscale_value()), pixels.at(row, col) ));
         }
     }
     

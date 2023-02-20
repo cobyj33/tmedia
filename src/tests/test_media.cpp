@@ -74,24 +74,21 @@ TEST_CASE("Media", "[functions]") {
 
         
         SECTION("Movement by PTS") {
-            const int TARGET_PTS = LIST_LENGTH / 2;
+            const int TARGET_PTS = LIST_LENGTH / 3;
             // move_frame_list_to_pts(frame_pts_list, TARGET_PTS);
             // REQUIRE(frame_pts_list.get()->pts == TARGET_PTS);
 
             move_packet_list_to_pts(packet_pts_list, TARGET_PTS);
             REQUIRE(packet_pts_list.get_index() == TARGET_PTS);
             REQUIRE(packet_pts_list.get()->pts == TARGET_PTS);
-        }
 
-        SECTION("Movement by Time") {
-            const int TARGET_PTS = LIST_LENGTH / 2;
-            double TARGET_TIME = TARGET_PTS * TIME_BASE_DECIMAL;
-            // move_frame_list_to_time_sec(frame_pts_list, TARGET_TIME);
-            // REQUIRE(frame_pts_list.get()->pts == TARGET_PTS);
+            move_packet_list_to_pts(packet_pts_list, TARGET_PTS / 2);
+            REQUIRE(packet_pts_list.get_index() == TARGET_PTS / 2);
+            REQUIRE(packet_pts_list.get()->pts == TARGET_PTS / 2);
 
-            move_packet_list_to_time_sec(packet_pts_list, TARGET_TIME);
-            REQUIRE(packet_pts_list.get()->pts == TARGET_PTS);
-            REQUIRE(packet_pts_list.get_index() == TARGET_PTS);
+            move_packet_list_to_pts(packet_pts_list, TARGET_PTS * 2);
+            REQUIRE(packet_pts_list.get_index() == TARGET_PTS * 2);
+            REQUIRE(packet_pts_list.get()->pts == TARGET_PTS * 2);
         }
 
         clear_playhead_frame_list(frame_pts_list);

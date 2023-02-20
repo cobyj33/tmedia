@@ -10,6 +10,7 @@
 #include "pixeldata.h"
 #include "scale.h"
 #include "media.h"
+#include "formatting.h"
 
 #include "gui.h"
 
@@ -72,6 +73,11 @@ int main(int argc, char** argv)
         .default_value(false)
         .implicit_value(true);
 
+    // parser.add_argument("-t", "--time")
+    //     .help("Choose the time to start media playback")
+    //     .default_value("00:00");
+
+
     try {
         parser.parse_args(argc, argv);
     }
@@ -89,11 +95,29 @@ int main(int argc, char** argv)
         bool background = parser.get<bool>("-b");
         bool dump = parser.get<bool>("-d");
 
+        double start_time = 0.0;
+        // std::string inputted_start_time = parser.get<std::string>("-t");
+
         if (dump) {
             dump_file_info(file.c_str());
             return EXIT_SUCCESS;
         }
-        
+
+        // if (is_duration(inputted_start_time) ) {
+        //     start_time = parse_duration(inputted_start_time);
+        //     double file_duration = get_file_duration(file.c_str());
+        //     if (start_time < 0) { // Catch errors in out of bounds times
+        //         std::cerr << "Cannot start file at a negative time ( got time " << double_to_fixed_string(start_time, 2) << "  from input " + inputted_start_time + " )" << std::endl;
+        //         return EXIT_FAILURE;
+        //     } else if (start_time >= file_duration) {
+        //         std::cerr << "Cannot start file at a time greater than duration of media file ( got time " << double_to_fixed_string(start_time, 2) << "  from input " << inputted_start_time << ". File ends at " + double_to_fixed_string(file_duration, 2) + " )" << std::endl;
+        //         return EXIT_FAILURE;
+        //     }
+        // } else if (inputted_start_time.length() > 0) {
+        //     std::cerr << "Inputted time must be in seconds, HH:MM:SS, MM:SS, or HH:MM:SS.MS format (got " << inputted_start_time << " )" << std::endl;
+        //     return EXIT_FAILURE;
+        // }
+
         ncurses_init();
         std::string warnings;
 
@@ -136,14 +160,13 @@ int main(int argc, char** argv)
 
         bool video = parser.get<bool>("-v");
         MediaPlayer player(file.c_str());
-        player.start(gui_state);
+        player.start(gui_state, start_time);
         ncurses_uninit();
     } else {
         throw std::runtime_error("Cannot open invalid path: " + file);
         std::exit(EXIT_FAILURE);
     }
 
-    ncurses_uninit();
     return EXIT_SUCCESS;
 }
 

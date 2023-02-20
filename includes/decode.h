@@ -24,6 +24,8 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
 std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet);
 std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, PlayheadList<AVPacket*>& videoPacketList);
 std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, PlayheadList<AVPacket*>& audio_packet_list);
+void decode_until(AVCodecContext* video_codec_context, PlayheadList<AVPacket*>& video_packet_list, int64_t target_pts); // mostly meant for media seeking
+
 
 std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audio_codec_context, AudioResampler& audio_resampler, AVPacket* packet);
 std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audio_codec_context, AudioResampler& audio_resampler, PlayheadList<AVPacket*>& packet_buffer);

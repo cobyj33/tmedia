@@ -12,7 +12,24 @@ constexpr int ONE_HOUR = 3600;
 
 
 TEST_CASE("Formatting", "[functions]") {
-    std::string format = "23:24";
+
+    SECTION("double to fixed string") {
+        REQUIRE(double_to_fixed_string(1.234, 2) == "1.23");
+        REQUIRE(double_to_fixed_string(1.23456, 2) == "1.23");
+        REQUIRE(double_to_fixed_string(1.23456, 8) == "1.23456000");
+        REQUIRE(double_to_fixed_string(1.23456, 1) == "1.2");
+        REQUIRE(double_to_fixed_string(34543.323, 2) == "34543.32");
+        REQUIRE(double_to_fixed_string(34543.323, 1) == "34543.3");
+        REQUIRE(double_to_fixed_string(34543.323, 4) == "34543.3230");
+        REQUIRE(double_to_fixed_string(34543.323, 6) == "34543.323000");
+
+        REQUIRE(double_to_fixed_string(34543.323, 0) == "34543");
+        REQUIRE(double_to_fixed_string(-34543.323, 0) == "-34543");
+        REQUIRE(double_to_fixed_string(100, 0) == "100");
+        REQUIRE(double_to_fixed_string(100, 2) == "100.00");
+
+        REQUIRE_THROWS(double_to_fixed_string(100, -1));
+    }
     
 
     SECTION("hh:mm:ss") {

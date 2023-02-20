@@ -28,8 +28,8 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-const int MAX_FRAME_WIDTH = 16 * 16;
-const int MAX_FRAME_HEIGHT = 16 * 9; 
+const int MAX_FRAME_WIDTH = 27 * 16;
+const int MAX_FRAME_HEIGHT = 27 * 9; 
 const char* DEBUG_VIDEO_SOURCE = "video";
 const char* DEBUG_VIDEO_TYPE = "debug";
 
@@ -71,8 +71,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
                 frame_duration = (double)frame_image->duration * video_stream.get_time_base();
                 frame_pts_time_sec = (double)frame_image->pts * video_stream.get_time_base();
                 extra_delay = (double)(frame_image->repeat_pict) / (2 * frame_time_sec);
-                PixelData pixel_image(frame_image);
-                player->set_current_image(pixel_image);
+                player->set_current_image(frame_image);
                 av_frame_free(&frame_image);
             }
 

@@ -35,6 +35,7 @@ void MediaData::fetch_next(int requestedPacketCount) {
             if (this->media_streams[i]->get_stream_index() == reading_packet->stream_index) {
                 AVPacket* saved_packet = av_packet_alloc();
                 av_packet_ref(saved_packet, reading_packet);
+                
                 this->media_streams[i]->packets.push_back(saved_packet);
                 packets_read++;
                 break;
