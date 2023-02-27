@@ -52,7 +52,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
     VideoConverter videoConverter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt);
 
-    while (player->in_use && player->playback.get_time(system_clock_sec()) < player->get_duration()) {
+    while (player->in_use) {
         if (!player->playback.is_playing() || !video_stream.packets.can_move_index(10)) { // paused or not enough data
             sleep_quick();
             continue;

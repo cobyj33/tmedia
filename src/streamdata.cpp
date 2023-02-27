@@ -54,8 +54,12 @@ StreamData::~StreamData() {
  */
 StreamDataGroup::StreamDataGroup(AVFormatContext* format_context, const enum AVMediaType* media_types, int nb_target_streams) {
     for (int i = 0; i < nb_target_streams; i++) {
-        std::shared_ptr<StreamData> stream_data_ptr = std::make_shared<StreamData>(format_context, media_types[i]);
-        this->m_datas.push_back(stream_data_ptr);
+        try {
+            std::shared_ptr<StreamData> stream_data_ptr = std::make_shared<StreamData>(format_context, media_types[i]);
+            this->m_datas.push_back(stream_data_ptr);
+        } catch (std::invalid_argument e) {
+            continue;
+        }
     }
 
     this->m_format_context = format_context;

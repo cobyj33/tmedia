@@ -107,6 +107,12 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         }
 
         AudioStream& audio_stream = player->cache.audio_stream;
+
+        const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
+        if (player->get_desync_time(system_clock_sec()) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
+            player->resync(system_clock_sec());
+        }
+        
         std::vector<AVFrame*> audio_frames = get_final_audio_frames(audio_codec_context, audio_resampler, audio_media_stream.packets);
         for (int i = 0; i < audio_frames.size(); i++) {
             AVFrame* current_frame = audio_frames[i];
@@ -119,11 +125,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
 
         audio_device.sampleRate = audio_codec_context->sample_rate * player->playback.get_speed();
 
-        // const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
-        // if (player->get_desync_time(system_clock_sec()) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
-        //     player->resync(system_clock_sec());
-        // }
-
+        
         mutex_lock.unlock();
         sleep_quick();
     }

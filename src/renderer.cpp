@@ -65,6 +65,12 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
 
         if (input == KEY_ESCAPE || input == KEY_BACKSPACE) {
             player->in_use = false;
+            break;
+        }
+
+        if (player->playback.get_time(system_clock_sec()) >= player->get_duration()) {
+            player->in_use = false;
+            break;
         }
 
 
@@ -81,7 +87,9 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
             printw("%s%s%s\n", "Preparing to Jump ", std::to_string(batched_jump_time).c_str(), " seconds...");
         } else if (batched_jump_time != 0) {
             printw("%s%s%s\n", "Jumping", std::to_string(batched_jump_time).c_str(), " seconds...");
-            player->jump_to_time(current_playback_time + batched_jump_time, system_clock_sec());
+            double target_time = current_playback_time + batched_jump_time;
+            target_time = clamp(target_time, 0.0, player->get_duration());
+            player->jump_to_time(target_time, system_clock_sec());
             batched_jump_time = 0;
         }
 

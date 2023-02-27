@@ -34,6 +34,7 @@ TEST_CASE("Formatting", "[functions]") {
 
     SECTION("hh:mm:ss") {
         SECTION("validation") {
+            REQUIRE(is_hh_mm_ss_duration("00:00:00"));
             REQUIRE(is_hh_mm_ss_duration("00:00:10"));
             REQUIRE(is_hh_mm_ss_duration("00:01:10"));
             REQUIRE(is_hh_mm_ss_duration("00:10:10"));
@@ -90,6 +91,7 @@ TEST_CASE("Formatting", "[functions]") {
     SECTION("mm:ss") {
 
         SECTION("validation") {
+            REQUIRE(is_mm_ss_duration("00:00"));
             REQUIRE(is_mm_ss_duration("00:10"));
             REQUIRE(is_mm_ss_duration("01:10"));
             REQUIRE(is_mm_ss_duration("10:10"));
@@ -101,9 +103,12 @@ TEST_CASE("Formatting", "[functions]") {
         }
 
         SECTION("Invalid") {
-            REQUIRE_FALSE(is_mm_ss_duration("00:61"));
+            REQUIRE_FALSE(is_mm_ss_duration("00:61")); // seconds >= 60
+            REQUIRE_FALSE(is_mm_ss_duration("00:60")); // seconds >= 60
             REQUIRE_FALSE(is_mm_ss_duration("00:99"));
             REQUIRE_FALSE(is_mm_ss_duration("00:10:"));
+            REQUIRE_FALSE(is_mm_ss_duration("0:10"));
+            REQUIRE_FALSE(is_mm_ss_duration("1:10"));
             REQUIRE_FALSE(is_mm_ss_duration(":00:10"));
             REQUIRE_FALSE(is_mm_ss_duration("000:10"));
             REQUIRE_FALSE(is_mm_ss_duration("00:00:10"));
@@ -113,27 +118,39 @@ TEST_CASE("Formatting", "[functions]") {
             REQUIRE_FALSE(is_mm_ss_duration("-00:61"));
         }
 
-        std::string ten_sec = format_time_mm_ss(SECOND * 10);
-        REQUIRE(ten_sec == "00:10");
+        SECTION("Formatting") {
+            std::string ten_sec = format_time_mm_ss(SECOND * 10);
+            REQUIRE(ten_sec == "00:10");
 
-        std::string ten_half_sec = format_time_mm_ss(SECOND * 10.5);
-        REQUIRE(ten_half_sec == "00:10");
+            std::string ten_half_sec = format_time_mm_ss(SECOND * 10.5);
+            REQUIRE(ten_half_sec == "00:10");
 
-        std::string min_format = format_time_mm_ss(ONE_MINUTE);
-        REQUIRE(min_format == "01:00");
+            std::string min_format = format_time_mm_ss(ONE_MINUTE);
+            REQUIRE(min_format == "01:00");
 
-        std::string min_half_format = format_time_mm_ss(ONE_MINUTE + HALF_MINUTE);
-        REQUIRE(min_half_format == "01:30");
+            std::string min_half_format = format_time_mm_ss(ONE_MINUTE + HALF_MINUTE);
+            REQUIRE(min_half_format == "01:30");
 
-        std::string hour_format = format_time_mm_ss(ONE_HOUR);
-        REQUIRE(hour_format == "60:00");
+            std::string hour_format = format_time_mm_ss(ONE_HOUR);
+            REQUIRE(hour_format == "60:00");
 
-        std::string hour_min_30_format = format_time_mm_ss(ONE_HOUR + ONE_MINUTE + HALF_MINUTE);
-        REQUIRE(hour_min_30_format == "61:30");
+            std::string hour_min_30_format = format_time_mm_ss(ONE_HOUR + ONE_MINUTE + HALF_MINUTE);
+            REQUIRE(hour_min_30_format == "61:30");
 
-        std::string seventy_hours_format = format_time_mm_ss(ONE_HOUR * 70);
-        REQUIRE(seventy_hours_format == "4200:00");
-    }
+            std::string seventy_hours_format = format_time_mm_ss(ONE_HOUR * 70);
+            REQUIRE(seventy_hours_format == "4200:00");
+        }
+
+        SECTION("Parsing") {
+            REQUIRE(parse_mm_ss_duration("01:30") == 90);
+            REQUIRE(parse_mm_ss_duration("00:30") == 30);
+            REQUIRE(parse_mm_ss_duration("00:00") == 00);
+            REQUIRE(parse_mm_ss_duration("02:00") == 120);
+            REQUIRE(parse_mm_ss_duration("30:00") == 1800);
+            REQUIRE(parse_mm_ss_duration("30:35") == 1835);
+        }
+
+    } // SECTION mm:ss
 
     SECTION("Format duration") {
         std::string ten_sec = format_duration(SECOND * 10);

@@ -30,13 +30,28 @@ void clear_av_frame_list(std::vector<AVFrame*>& frame_list) {
     frame_list.clear();
 }
 
+void decode_video_packet_void(AVCodecContext* video_codec_context, AVPacket* video_packet) {
+    int result;
+
+    result = avcodec_send_packet(video_codec_context, video_packet);
+    if (result < 0) {
+        return;
+    }
+
+    AVFrame* video_frame = av_frame_alloc();
+    while (result == 0) {
+        result = avcodec_receive_frame(video_codec_context, video_frame);
+    }
+    av_frame_free(&video_frame);
+}
+
 
 std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet) {
     std::vector<AVFrame*> video_frames;
     int result;
 
     result = avcodec_send_packet(video_codec_context, video_packet);
-    if (result < 0 && result != AVERROR(EAGAIN)) {
+    if (result < 0) {
         return video_frames;
         // throw ascii::ffmpeg_error("Error while sending video packet: ", result);
     }
@@ -141,7 +156,7 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, P
 
 void decode_until(AVCodecContext* video_codec_context, PlayheadList<AVPacket*>& video_packet_list, int64_t target_pts) {
     while (video_packet_list.get()->pts < target_pts && video_packet_list.can_step_forward()) {
-        decode_video_packet(video_codec_context, video_packet_list);
+        decode_video_packet_void(video_codec_context, video_packet_list.get());
         video_packet_list.try_step_forward();
     }
 }

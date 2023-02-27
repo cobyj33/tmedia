@@ -112,11 +112,39 @@ class MediaPlayer {
         void start(GUIState gui_state, double start_time);
         double get_desync_time(double current_system_time) const;
         void resync(double current_system_time);
+
+        /**
+         * @brief Sets the currently displayed image of the currently playing media according to the PixelData
+         * @return void 
+         */
         void set_current_image(PixelData& data);
+
+        /**
+         * @brief Sets the currently displayed image of the currently playing media according to the AVFrame.
+         * @return void 
+         */
         void set_current_image(AVFrame* frame);
+
+        /**
+         * @brief Returns the currently displayed image of the currently playing media
+         * @return double 
+         */
         PixelData& get_current_image();
 
+        /**
+         * @brief Returns the duration in seconds of the currently playing media
+         * @return double 
+         */
         double get_duration() const;
+
+        /**
+         * @brief Moves the MediaPlayer's playback to a certain time (including video and audio streams)
+         * @note The caller is responsible for making sure the time to jump to is in the bounds of the video's playtime
+         * 
+         * @param target_time The target time to jump the playback to (must be reachable)
+         * @param current_system_time The current system time
+         * @throws 
+         */
         void jump_to_time(double target_time, double current_system_time);
 
         bool has_video() const;
