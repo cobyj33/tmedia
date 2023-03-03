@@ -50,42 +50,68 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
     keypad(inputWindow, true);
 
     double batched_jump_time = 0;
+    const int RENDER_LOOP_SLEEP_TIME_MS = 41;
 
 
     std::unique_lock<std::mutex> lock(alter_mutex, std::defer_lock);
     erase();
+
     while (player->in_use) {
-        
+
         int input = wgetch(inputWindow);
-        if (input == KEY_RESIZE) {
+
+        if (input == ERR) { // no input coming in, simply render the current image, sleep, and restart
+            lock.lock();
+            PixelData& image = player->cache.image;
+            lock.unlock();
+
             erase();
-            endwin();
+            render_movie_screen(image, gui_state.get_video_output_mode());
             refresh();
+            sleep_for_ms(RENDER_LOOP_SLEEP_TIME_MS);
+            continue;
         }
 
-        if (input == KEY_ESCAPE || input == KEY_BACKSPACE) {
-            player->in_use = false;
-            break;
-        }
+        lock.lock();
 
         if (player->playback.get_time(system_clock_sec()) >= player->get_duration()) {
             player->in_use = false;
             break;
         }
 
-
-        lock.lock();
-        erase();
-        double current_playback_time = player->playback.get_time(system_clock_sec());
-
-        if (input == KEY_LEFT || input == KEY_RIGHT) {
-            if (input == KEY_LEFT) {
-                batched_jump_time -= 5;
-            } else if (input == KEY_RIGHT) {
-                batched_jump_time += 5;
+        while (input != ERR) { // Go through and process all the batched input
+            if (input == KEY_ESCAPE || input == KEY_BACKSPACE) {
+                player->in_use = false;
+                break;
             }
-            printw("%s%s%s\n", "Preparing to Jump ", std::to_string(batched_jump_time).c_str(), " seconds...");
-        } else if (batched_jump_time != 0) {
+
+            if (input == KEY_RESIZE) {
+                erase();
+                endwin();
+                refresh();
+            }
+
+
+
+
+            if (input == KEY_LEFT || input == KEY_RIGHT) {
+                if (input == KEY_LEFT) {
+                    batched_jump_time -= 5;
+                } else if (input == KEY_RIGHT) {
+                    batched_jump_time += 5;
+                }
+                printw("%s%s%s\n", "Preparing to Jump ", std::to_string(batched_jump_time).c_str(), " seconds...");
+            }
+
+            if (input == ' ') {
+                player->playback.toggle(system_clock_sec());
+            }
+
+            input = wgetch(inputWindow);
+        }
+
+        double current_playback_time = player->playback.get_time(system_clock_sec());
+        if (batched_jump_time != 0) {
             printw("%s%s%s\n", "Jumping", std::to_string(batched_jump_time).c_str(), " seconds...");
             double target_time = current_playback_time + batched_jump_time;
             target_time = clamp(target_time, 0.0, player->get_duration());
@@ -93,16 +119,13 @@ void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_stat
             batched_jump_time = 0;
         }
 
-        if (input == ' ') {
-            player->playback.toggle(system_clock_sec());
-        }
-
         PixelData& image = player->cache.image;
         lock.unlock();
 
+        erase();
         render_movie_screen(image, gui_state.get_video_output_mode());
         refresh();
-        sleep_for_ms(41);
+        sleep_for_ms(RENDER_LOOP_SLEEP_TIME_MS);
     }
 
     delwin(inputWindow);
