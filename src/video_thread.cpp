@@ -63,7 +63,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         double extra_delay = 0.0;
 
         try {
-            std::vector<AVFrame*> decoded_frames = decode_video_packet(video_codec_context, video_stream.packets);
+            std::vector<AVFrame*> decoded_frames = player->next_video_frames();
 
             if (decoded_frames.size() > 0) {
                 AVFrame* frame_image = videoConverter.convert_video_frame(decoded_frames[0]);
@@ -78,6 +78,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         } catch (std::exception e) {
             PixelData error_image = VideoIcon::ERROR_ICON.pixel_data;
             player->set_current_image(error_image);
+            video_stream.packets.try_step_forward();
         }
 
         double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / player->playback.get_speed() ) );
@@ -86,7 +87,6 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         const double current_time = player->playback.get_time(system_clock_sec());
         double waitDuration = frame_pts_time_sec - current_time + extra_delay - frame_speed_skip_time_sec;
 
-        video_stream.packets.try_step_forward();
         mutex_lock.unlock();
         if (waitDuration <= 0) {
             continue;

@@ -16,6 +16,7 @@
 #include "threads.h"
 
 extern "C" {
+#include "ncurses.h"
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 }
@@ -37,88 +38,6 @@ bool MediaData::has_media_stream(enum AVMediaType media_type) {
         return false;
     }
 }
-
-
-void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS) {
-    if (packets.is_empty()) {
-        return;
-    }
-
-    int64_t lastPTS = packets.get()->pts;
-    while (true) {
-
-        if (packets.get()->pts == targetPTS) {
-            break;
-        } else if  (std::min(packets.get()->pts, lastPTS) <= targetPTS && std::max(packets.get()->pts, lastPTS) >= targetPTS) {
-            break;
-        } else if (packets.get()->pts > targetPTS) {
-            if (packets.can_step_backward()) {
-                packets.step_backward();
-                if (packets.get()->pts <= targetPTS) {
-                    break;
-                }
-            } else {
-                break;
-            }
-        } else if (packets.get()->pts < targetPTS) {
-            if (packets.can_step_forward()) {
-                packets.step_forward();
-                if (packets.get()->pts == targetPTS) {
-                    break;
-                } else if (packets.get()->pts > targetPTS) {
-                    packets.step_backward();
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-        
-        lastPTS = packets.get()->pts;
-    }
-}
-
-
-
-void move_frame_list_to_pts(PlayheadList<AVFrame*>& frames, int64_t targetPTS) {
-    if (frames.is_empty()) {
-        return;
-    }
-
-    int64_t lastPTS = frames.get()->pts;
-    while (true) {
-
-        if (frames.get()->pts == targetPTS) {
-            break;
-        } else if  (std::min(frames.get()->pts, lastPTS) <= targetPTS && std::max(frames.get()->pts, lastPTS) >= targetPTS) {
-            break;
-        } else if (frames.get()->pts > targetPTS) {
-            if (frames.can_step_backward()) {
-                frames.step_backward();
-                if (frames.get()->pts <= targetPTS) {
-                    break;
-                }
-            } else {
-                break;
-            }
-        } else if (frames.get()->pts < targetPTS) {
-            if (frames.can_step_forward()) {
-                frames.step_forward();
-                if (frames.get()->pts == targetPTS) {
-                    break;
-                } else if (frames.get()->pts > targetPTS) {
-                    frames.step_backward();
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-        
-        lastPTS = frames.get()->pts;
-    }
-}
-
 
 double MediaPlayer::get_duration() const {
     return this->media_data->duration;
@@ -255,34 +174,123 @@ MediaStream::~MediaStream() {
     // delete this->info;
 }
 
+std::vector<AVFrame*> MediaStream::decode_next() {
+    if (this->get_media_type() == AVMEDIA_TYPE_VIDEO) {
+        std::vector<AVFrame*> decoded_frames = decode_video_packet(this->get_codec_context(), this->packets);
+        this->packets.try_step_forward();
+        return decoded_frames;
+    } else if (this->get_media_type() == AVMEDIA_TYPE_AUDIO) {
+        std::vector<AVFrame*> decoded_frames = decode_audio_packet(this->get_codec_context(), this->packets);
+        this->packets.try_step_forward();
+        return decoded_frames;
+    }
+
+    throw std::runtime_error("[MediaStream::decode_next] Could not decode next video packet, Media type " + std::string(av_get_media_type_string(this->get_media_type())) + " is currently unsupported");
+}
+
+std::vector<AVFrame*> MediaPlayer::next_video_frames() {
+    if (this->has_video()) {
+        MediaStream& video_stream = this->get_video_stream();
+        std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
+        if (decodedFrames.size() > 0) {
+            return decodedFrames;
+        } 
+
+        
+        int fetch_count = 0;
+        do {
+            fetch_count = this->media_data->fetch_next(10);
+            std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
+            if (decodedFrames.size() > 0) {
+                return decodedFrames;
+            } 
+        } while (fetch_count > 0);
+
+
+        return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
+    }
+    throw std::runtime_error("[MediaPlayer::next_video_frames] Cannot get next video frames, as no video stream is available to decode from");
+}
+
+std::vector<AVFrame*> MediaPlayer::next_audio_frames() {
+    if (this->has_audio()) {
+        MediaStream& audio_stream = this->get_audio_stream();
+        std::vector<AVFrame*> decodedFrames = audio_stream.decode_next();
+        if (decodedFrames.size() > 0) {
+            return decodedFrames;
+        } 
+
+        
+        int fetch_count = 0;
+        do {
+            fetch_count = this->media_data->fetch_next(10);
+            std::vector<AVFrame*> decodedFrames = audio_stream.decode_next();
+            if (decodedFrames.size() > 0) {
+                return decodedFrames;
+            } 
+        } while (fetch_count > 0);
+
+
+        return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
+    }
+    throw std::runtime_error("[MediaPlayer::next_audio_frames] Cannot get next audio frames, as no video stream is available to decode from");
+}
+
 void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     if (target_time < 0.0 || target_time > this->get_duration()) {
         throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time));
     }
     const double original_time = this->playback.get_time(current_system_time);
-    double final_time = original_time;
+    int ret = avformat_seek_file(this->media_data->format_context, -1, 0.0, target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
+
+    if (ret < 0) {
+        throw std::runtime_error("[MediaPlayer::jump_to_time] Failed to seek file");
+    }
 
     if (this->has_video()) {
         MediaStream& video_stream = this->get_video_stream();
         video_stream.flush();
-        double video_target_time = std::max(0.0, target_time - 10);
-        move_packet_list_to_pts(video_stream.packets, video_target_time / video_stream.get_time_base());
-        decode_until(video_stream.get_codec_context(), video_stream.packets, target_time / video_stream.get_time_base());
-        final_time = video_stream.packets.get()->pts * video_stream.get_time_base();
+        clear_playhead_packet_list(video_stream.packets);
+
+        std::vector<AVFrame*> frames;
+        bool passed_target_time = false;
+        do {
+            clear_av_frame_list(frames);
+            frames = this->next_video_frames();
+            for (int i = 0; i < frames.size(); i++) {
+                if (frames[i]->pts * video_stream.get_time_base() >= target_time) {
+                    passed_target_time = true;
+                    break;
+                }
+            }
+        } while (!passed_target_time && frames.size() > 0);
+        clear_av_frame_list(frames);
+
     }
 
     if (this->has_audio()) {
         MediaStream& audio_stream = this->get_audio_stream();
         audio_stream.flush();
-        move_packet_list_to_pts(audio_stream.packets, target_time / audio_stream.get_time_base());
-        if (this->only_audio()) {
-            final_time = audio_stream.packets.get()->pts * audio_stream.get_time_base();
-        }
-        this->cache.audio_stream.clear_and_restart_at(final_time);
+        clear_playhead_packet_list(audio_stream.packets);
+
+        std::vector<AVFrame*> frames;
+        bool passed_target_time = false;
+        do {
+            clear_av_frame_list(frames);
+            frames = this->next_audio_frames();
+            for (int i = 0; i < frames.size(); i++) {
+                if (frames[i]->pts * audio_stream.get_time_base() >= target_time) {
+                    passed_target_time = true;
+                    break;
+                }
+            }
+        } while (!passed_target_time && frames.size() > 0);
+        clear_av_frame_list(frames);
+
+        this->cache.audio_stream.clear_and_restart_at(target_time);
     }
 
-    double timeMoved = final_time - original_time;
-    this->playback.skip(timeMoved);
+    this->playback.skip(target_time - original_time);
     if (this->get_desync_time(current_system_time) > 0.15) {
         this->resync(current_system_time);
     }
@@ -321,3 +329,87 @@ void clear_playhead_frame_list(PlayheadList<AVFrame*>& frames) {
 
     frames.clear();
 }
+
+
+
+
+void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS) {
+    if (packets.is_empty()) {
+        return;
+    }
+
+    int64_t lastPTS = packets.get()->pts;
+    while (true) {
+
+        if (packets.get()->pts == targetPTS) {
+            break;
+        } else if  (std::min(packets.get()->pts, lastPTS) <= targetPTS && std::max(packets.get()->pts, lastPTS) >= targetPTS) {
+            break;
+        } else if (packets.get()->pts > targetPTS) {
+            if (packets.can_step_backward()) {
+                packets.step_backward();
+                if (packets.get()->pts <= targetPTS) {
+                    break;
+                }
+            } else {
+                break;
+            }
+        } else if (packets.get()->pts < targetPTS) {
+            if (packets.can_step_forward()) {
+                packets.step_forward();
+                if (packets.get()->pts == targetPTS) {
+                    break;
+                } else if (packets.get()->pts > targetPTS) {
+                    packets.step_backward();
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+        
+        lastPTS = packets.get()->pts;
+    }
+}
+
+
+
+void move_frame_list_to_pts(PlayheadList<AVFrame*>& frames, int64_t targetPTS) {
+    if (frames.is_empty()) {
+        return;
+    }
+
+    int64_t lastPTS = frames.get()->pts;
+    while (true) {
+
+        if (frames.get()->pts == targetPTS) {
+            break;
+        } else if  (std::min(frames.get()->pts, lastPTS) <= targetPTS && std::max(frames.get()->pts, lastPTS) >= targetPTS) {
+            break;
+        } else if (frames.get()->pts > targetPTS) {
+            if (frames.can_step_backward()) {
+                frames.step_backward();
+                if (frames.get()->pts <= targetPTS) {
+                    break;
+                }
+            } else {
+                break;
+            }
+        } else if (frames.get()->pts < targetPTS) {
+            if (frames.can_step_forward()) {
+                frames.step_forward();
+                if (frames.get()->pts == targetPTS) {
+                    break;
+                } else if (frames.get()->pts > targetPTS) {
+                    frames.step_backward();
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+        
+        lastPTS = frames.get()->pts;
+    }
+}
+

@@ -113,19 +113,18 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             player->resync(system_clock_sec());
         }
         
-        std::vector<AVFrame*> audio_frames = get_final_audio_frames(audio_codec_context, audio_resampler, audio_media_stream.packets);
+        std::vector<AVFrame*> next_raw_audio_frames = player->next_audio_frames();
+        std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
         for (int i = 0; i < audio_frames.size(); i++) {
             AVFrame* current_frame = audio_frames[i];
             float* frameData = (float*)(current_frame->data[0]);
             audio_stream.write(frameData, current_frame->nb_samples);
         }
+        clear_av_frame_list(next_raw_audio_frames);
         clear_av_frame_list(audio_frames);
-
-        audio_media_stream.packets.try_step_forward();
 
         audio_device.sampleRate = audio_codec_context->sample_rate * player->playback.get_speed();
 
-        
         mutex_lock.unlock();
         sleep_quick();
     }

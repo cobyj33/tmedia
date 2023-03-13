@@ -25,6 +25,7 @@
 #include <ftxui/screen/screen.hpp>
 
 extern "C" {
+#include "ncurses.h"
 #include <libavutil/avutil.h>
 }
 
@@ -47,114 +48,106 @@ RGBColor get_index_display_color(int index, int length) {
 
 
 void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_state) {
-    // WINDOW* inputWindow = newwin(0, 0, 1, 1);
-    // nodelay(inputWindow, true);
-    // keypad(inputWindow, true);
+    WINDOW* inputWindow = newwin(0, 0, 1, 1);
+    nodelay(inputWindow, true);
+    keypad(inputWindow, true);
 
-    // double batched_jump_time = 0;
-    // const int RENDER_LOOP_SLEEP_TIME_MS = 41;
-
-
-    // std::unique_lock<std::mutex> lock(alter_mutex, std::defer_lock);
-    // erase();
-
-    // while (player->in_use) {
-
-    //     int input = wgetch(inputWindow);
-
-    //     if (input == ERR) { // no input coming in, simply render the current image, sleep, and restart
-    //         lock.lock();
-    //         PixelData& image = player->cache.image;
-    //         lock.unlock();
-
-    //         erase();
-    //         render_movie_screen(image, gui_state.get_video_output_mode());
-    //         refresh();
-    //         sleep_for_ms(RENDER_LOOP_SLEEP_TIME_MS);
-    //         continue;
-    //     }
-
-    //     lock.lock();
-
-    //     if (player->playback.get_time(system_clock_sec()) >= player->get_duration()) {
-    //         player->in_use = false;
-    //         break;
-    //     }
-
-    //     while (input != ERR) { // Go through and process all the batched input
-    //         if (input == KEY_ESCAPE || input == KEY_BACKSPACE) {
-    //             player->in_use = false;
-    //             break;
-    //         }
-
-    //         if (input == KEY_RESIZE) {
-    //             erase();
-    //             endwin();
-    //             refresh();
-    //         }
-
-
-
-
-    //         if (input == KEY_LEFT || input == KEY_RIGHT) {
-    //             if (input == KEY_LEFT) {
-    //                 batched_jump_time -= 5;
-    //             } else if (input == KEY_RIGHT) {
-    //                 batched_jump_time += 5;
-    //             }
-    //             printw("%s%s%s\n", "Preparing to Jump ", std::to_string(batched_jump_time).c_str(), " seconds...");
-    //         }
-
-    //         if (input == ' ') {
-    //             player->playback.toggle(system_clock_sec());
-    //         }
-
-    //         input = wgetch(inputWindow);
-    //     }
-
-    //     double current_playback_time = player->playback.get_time(system_clock_sec());
-    //     if (batched_jump_time != 0) {
-    //         printw("%s%s%s\n", "Jumping", std::to_string(batched_jump_time).c_str(), " seconds...");
-    //         double target_time = current_playback_time + batched_jump_time;
-    //         target_time = clamp(target_time, 0.0, player->get_duration());
-    //         player->jump_to_time(target_time, system_clock_sec());
-    //         batched_jump_time = 0;
-    //     }
-
-    //     PixelData& image = player->cache.image;
-    //     lock.unlock();
-
-    //     erase();
-    //     render_movie_screen(image, gui_state.get_video_output_mode());
-    //     refresh();
-    //     sleep_for_ms(RENDER_LOOP_SLEEP_TIME_MS);
-    // }
-
-    // delwin(inputWindow);
-
+    double batched_jump_time = 0;
     const int RENDER_LOOP_SLEEP_TIME_MS = 41;
     std::unique_lock<std::mutex> lock(alter_mutex, std::defer_lock);
     ftxui::Screen screen = ftxui::Screen::Create(ftxui::Dimension::Full(), ftxui::Dimension::Full());
     screen.SetCursor({0, 0, ftxui::Screen::Cursor::Hidden });
 
+
+    // std::unique_lock<std::mutex> lock(alter_mutex, std::defer_lock);
+    erase();
+
     while (player->in_use) {
+
+        int input = wgetch(inputWindow);
+
         lock.lock();
+        if (input == ERR) { // no input coming in, simply render the current image, sleep, and restart
+            goto render;
+        }
+
 
         if (player->playback.get_time(system_clock_sec()) >= player->get_duration()) {
             player->in_use = false;
-            lock.unlock();
             break;
         }
 
-        PixelData& image = player->cache.image;
-        lock.unlock();
+        while (input != ERR) { // Go through and process all the batched input
+            if (input == KEY_ESCAPE || input == KEY_BACKSPACE) {
+                player->in_use = false;
+                break;
+            }
 
-        print_pixel_data(image, screen, gui_state.get_video_output_mode());
+            // if (input == KEY_RESIZE) {
+            //     erase();
+            //     endwin();
+            //     refresh();
+            // }
 
-        std::cout << screen.ToString() << screen.ResetPosition();
-        screen.Clear();
-        sleep_for_ms(41);
+
+
+
+            if (input == KEY_LEFT || input == KEY_RIGHT) {
+                if (input == KEY_LEFT) {
+                    batched_jump_time -= 5;
+                } else if (input == KEY_RIGHT) {
+                    batched_jump_time += 5;
+                }
+                printw("%s%s%s\n", "Preparing to Jump ", std::to_string(batched_jump_time).c_str(), " seconds...");
+            }
+
+            if (input == ' ') {
+                player->playback.toggle(system_clock_sec());
+            }
+
+            input = wgetch(inputWindow);
+        }
+
+        if (batched_jump_time != 0) {
+            double current_playback_time = player->playback.get_time(system_clock_sec());
+            printw("%s%s%s\n", "Jumping", std::to_string(batched_jump_time).c_str(), " seconds...");
+            double target_time = current_playback_time + batched_jump_time;
+            target_time = clamp(target_time, 0.0, player->get_duration());
+            player->jump_to_time(target_time, system_clock_sec());
+            batched_jump_time = 0;
+        }
+
+        render:
+            PixelData& image = player->cache.image;
+            lock.unlock();
+
+            print_pixel_data(image, screen, gui_state.get_video_output_mode());
+
+            std::cout << screen.ToString() << screen.ResetPosition();
+            screen.Clear();
+            sleep_for_ms(41);
     }
+
+    delwin(inputWindow);
+
+    // while (player->in_use) {
+        // lock.lock();
+
+        // if (player->playback.get_time(system_clock_sec()) >= player->get_duration()) {
+        //     player->in_use = false;
+        //     lock.unlock();
+        //     break;
+        // }
+
+        // PixelData& image = player->cache.image;
+        // lock.unlock();
+
+        // print_pixel_data(image, screen, gui_state.get_video_output_mode());
+
+        // std::cout << screen.ToString() << screen.ResetPosition();
+        // screen.Clear();
+        // sleep_for_ms(41);
+    // }
 }
 
 

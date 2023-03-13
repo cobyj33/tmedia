@@ -15,16 +15,37 @@ void data_loading_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     }
 }
 
+
 bool data_loading_thread_loop(MediaPlayer* player, std::mutex& mutex) {
     std::lock_guard<std::mutex> lock_guard(mutex);
+
+    const int MAX_PACKET_LENGTH = 100;
+
     if (!player->in_use) {
-        return false;
+        return false; // exit thread
     }
-    player->media_data->fetch_next(40);
+
+    int audio_packet_length = 0;
+    int video_packet_length = 0;
+
+    if (player->has_audio()) {
+        MediaStream& audio_stream = player->get_audio_stream();
+        audio_packet_length = audio_stream.packets.get_length();
+    }
+
+    if (player->has_video()) {
+        MediaStream& video_stream = player->get_video_stream();
+        video_packet_length = video_stream.packets.get_length();
+    }
+
+    if ((player->has_audio() && audio_packet_length < MAX_PACKET_LENGTH) || ( player->has_video() && video_packet_length < MAX_PACKET_LENGTH)) {
+        player->media_data->fetch_next(40);
+    }
+
     return true;
 }
 
-void MediaData::fetch_next(int requestedPacketCount) {
+int MediaData::fetch_next(int requestedPacketCount) {
     AVPacket* reading_packet = av_packet_alloc();
     int packets_read = 0;
 
@@ -45,9 +66,12 @@ void MediaData::fetch_next(int requestedPacketCount) {
 
          if (packets_read >= requestedPacketCount) {
             av_packet_free(&reading_packet);
-            return;
+            return packets_read;
         }
     }
 
+    //reached EOF
+
     av_packet_free(&reading_packet);
+    return packets_read;
 }

@@ -34,11 +34,6 @@ class MediaStream {
 
     public:
         PlayheadList<AVPacket*> packets;
-        // double time_base;
-        // double average_frame_rate;
-        // double start_time;
-        // int stream_index;
-        // enum AVMediaType media_type;
 
         MediaStream(StreamData& streamData);
         ~MediaStream();
@@ -50,6 +45,9 @@ class MediaStream {
         int get_stream_index() const;
         enum AVMediaType get_media_type() const;
         AVCodecContext* get_codec_context() const;
+
+        std::vector<AVFrame*> decode_next();
+
         void flush();
 };
 
@@ -67,7 +65,7 @@ class MediaData {
 
         MediaStream& get_media_stream(enum AVMediaType media_type);
         bool has_media_stream(enum AVMediaType media_type);
-        void fetch_next(int requestedPacketCount);
+        int fetch_next(int requestedPacketCount);
 };
 
 class Sample {
@@ -151,6 +149,10 @@ class MediaPlayer {
         bool has_audio() const;
         bool only_video() const;
         bool only_audio() const;
+
+        std::vector<AVFrame*> next_video_frames(); 
+        std::vector<AVFrame*> next_audio_frames();
+
         MediaStream& get_video_stream() const;
         MediaStream& get_audio_stream() const;
 };
