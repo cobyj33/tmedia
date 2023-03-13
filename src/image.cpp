@@ -17,8 +17,6 @@
 #include "except.h"
 
 extern "C" {
-#include <ncurses.h>
-
 #include <libavutil/pixfmt.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>

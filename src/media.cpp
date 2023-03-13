@@ -16,7 +16,6 @@
 #include "threads.h"
 
 extern "C" {
-#include <ncurses.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 }

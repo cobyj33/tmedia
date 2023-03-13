@@ -4,7 +4,6 @@
 #include "threads.h"
 
 extern "C" {
-#include <curses.h>
 #include <libavutil/avutil.h>
 }
 

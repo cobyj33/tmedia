@@ -20,7 +20,6 @@
 #include "except.h"
 
 extern "C" {
-#include <curses.h>
 #include <libavutil/pixfmt.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>

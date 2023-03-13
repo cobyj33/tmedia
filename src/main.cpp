@@ -6,7 +6,6 @@
 #include <optional>
 
 #include "color.h"
-#include "termcolor.h"
 #include "icons.h"
 #include "pixeldata.h"
 #include "scale.h"
@@ -17,23 +16,23 @@
 
 #include <argparse.hpp>
 
-
+// #include <ftxui/dom/elements.hpp>
+// #include <ftxui/screen/screen.hpp>
 
 extern "C" {
-#include <ncurses.h>
 #include <libavutil/log.h>
 }
 
-bool ncurses_initialized = false;
+// bool ncurses_initialized = false;
 
 bool is_valid_path(const char* path);
-void ncurses_init();
-void ncurses_uninit();
+// void ncurses_init();
+// void ncurses_uninit();
 
 void on_terminate() {
-    if (ncurses_initialized) {
-        ncurses_uninit();
-    }
+    // if (ncurses_initialized) {
+    //     ncurses_uninit();
+    // }
 
     std::exception_ptr exptr = std::current_exception();
     try {
@@ -49,6 +48,27 @@ void on_terminate() {
 
 int main(int argc, char** argv)
 {
+
+    // ftxui::Element document =
+    //     ftxui::vbox({
+    //         ftxui::hbox({
+    //             ftxui::text("left")   | ftxui::border,
+    //             ftxui::text("middle") | ftxui::border | ftxui::flex,
+    //             ftxui::text("right")  | ftxui::border,
+    //         }),
+    //         ftxui::gauge(0.5) | ftxui::border
+    //     });
+    
+    // ftxui::Screen screen = ftxui::Screen::Create(
+    //     ftxui::Dimension::Full(),       // Width
+    //     ftxui::Dimension::Fit(document) // Height
+    // );
+
+
+    // ftxui::Render(screen, document);
+    // screen.Print();
+    
+
     srand(time(nullptr));
     av_log_set_level(AV_LOG_QUIET);
     std::set_terminate(on_terminate);
@@ -134,45 +154,42 @@ int main(int argc, char** argv)
             return EXIT_FAILURE;
         }
 
-        
-        
-
-        ncurses_init();
+        // ncurses_init();
         std::string warnings;
 
-        if ( (colors || grayscale) && !has_colors()) {
-            warnings += "WARNING: Terminal does not support colored output\n";
-            colors = false;
-            grayscale = false;
-        }
+        // if ( (colors || grayscale) && !has_colors()) {
+        //     warnings += "WARNING: Terminal does not support colored output\n";
+        //     colors = false;
+        //     grayscale = false;
+        // }
 
-        if (background && !(colors || grayscale) ) {
-            if (!has_colors()) {
-                warnings += "WARNING: Cannot use background option as colors are not available in this terminal\n";
-            } else {
-                warnings += "WARNING: Cannot only show background without either color (-c, --color) or grayscale(-g, --gray, --grayscale) options selected\n";
-            }
+        // if (background && !(colors || grayscale) ) {
+        //     if (!has_colors()) {
+        //         warnings += "WARNING: Cannot use background option as colors are not available in this terminal\n";
+        //     } else {
+        //         warnings += "WARNING: Cannot only show background without either color (-c, --color) or grayscale(-g, --gray, --grayscale) options selected\n";
+        //     }
 
-            background = false;
-        }
+        //     background = false;
+        // }
 
-        if ( (grayscale || colors) && has_colors() && !can_change_color()) {
-            warnings += "WARNING: Terminal does not support changing colored output data, colors may not be as accurate as expected\n";
-        }
+        // if ( (grayscale || colors) && has_colors() && !can_change_color()) {
+        //     warnings += "WARNING: Terminal does not support changing colored output data, colors may not be as accurate as expected\n";
+        // }
 
-        if (warnings.length() > 0) {
-            printw("%s", warnings.c_str());
-            printw("%s\n", "Press any key to continue");
-            refresh();
-            getch();
-        }
-        erase();
+        // if (warnings.length() > 0) {
+        //     printw("%s", warnings.c_str());
+        //     printw("%s\n", "Press any key to continue");
+        //     refresh();
+        //     getch();
+        // }
+        // erase();
 
         VideoOutputMode mode = get_video_output_mode_from_params(colors, grayscale, background);
 
-        if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
-            ncurses_initialize_grayscale_colors();
-        }
+        // if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
+        //     ncurses_initialize_grayscale_colors();
+        // }
 
         GUIState gui_state;
         gui_state.set_video_output_mode(mode);
@@ -180,7 +197,7 @@ int main(int argc, char** argv)
         bool video = parser.get<bool>("-v");
         MediaPlayer player(file.c_str());
         player.start(gui_state, start_time);
-        ncurses_uninit();
+        // ncurses_uninit();
     } else {
         std::cerr << "Cannot open invalid path: " + file << std::endl;
         return EXIT_FAILURE;
@@ -201,24 +218,24 @@ bool is_valid_path(const char* path) {
     return false;
 }
 
-void ncurses_init() {
-    if (ncurses_initialized) {
-        throw std::runtime_error("ncurses attempted to be initialized although it has already been initialized");
-    }
-    ncurses_initialized = true;
-    initscr();
-    start_color();
-    ncurses_initialize_colors();
-    cbreak();
-    noecho();
-    curs_set(0);
-    keypad(stdscr, true);
-}
+// void ncurses_init() {
+//     if (ncurses_initialized) {
+//         throw std::runtime_error("ncurses attempted to be initialized although it has already been initialized");
+//     }
+//     ncurses_initialized = true;
+//     initscr();
+//     start_color();
+//     ncurses_initialize_colors();
+//     cbreak();
+//     noecho();
+//     curs_set(0);
+//     keypad(stdscr, true);
+// }
 
-void ncurses_uninit() {
-    if (!ncurses_initialized) {
-        throw std::runtime_error("ncurses attempted to be uninitialized although it has never been initialized");
-    }
-    ncurses_initialized = false;
-    endwin();
-}
+// void ncurses_uninit() {
+//     if (!ncurses_initialized) {
+//         throw std::runtime_error("ncurses attempted to be uninitialized although it has never been initialized");
+//     }
+//     ncurses_initialized = false;
+//     endwin();
+// }
