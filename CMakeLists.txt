@@ -16,7 +16,7 @@ project(ascii_video)
 
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 
-find_package(Curses REQUIRED)
+# find_package(Curses REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
     libavdevice
@@ -33,7 +33,8 @@ set(FTXUI_BUILD_DOCS OFF CACHE BOOL "Set to ON to build docs" FORCE)
 set(FTXUI_BUILD_EXAMPLES OFF CACHE BOOL "Set to ON to build examples" FORCE)
 add_subdirectory(lib/FTXUI)
 
-include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio/extras/miniaudio_split ./lib/argparse/include/argparse )
+# include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio/extras/miniaudio_split ./lib/argparse/include/argparse )
+include_directories( ./includes ./lib/miniaudio/extras/miniaudio_split ./lib/argparse/include/argparse )
 
 add_executable(ascii_video
 ./lib/miniaudio/extras/miniaudio_split/miniaudio.c
@@ -67,7 +68,6 @@ add_executable(ascii_video
 )
 
 target_link_libraries( ascii_video 
-    ${CURSES_LIBRARIES} 
     PkgConfig::LIBAV
     ftxui::screen
     ftxui::dom
@@ -118,7 +118,6 @@ add_executable(tests
 
 target_link_libraries(tests 
     PRIVATE Catch2::Catch2WithMain 
-    ${CURSES_LIBRARIES} 
     PkgConfig::LIBAV
     ftxui::screen
     ftxui::dom
