@@ -25,9 +25,6 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-
-
-
 class MediaStream {
     private:
         StreamData& info;
@@ -66,15 +63,6 @@ class MediaData {
         MediaStream& get_media_stream(enum AVMediaType media_type);
         bool has_media_stream(enum AVMediaType media_type);
         int fetch_next(int requestedPacketCount);
-};
-
-class Sample {
-    public:
-        float* data;
-        int channels;
-
-        Sample();
-        ~Sample();
 };
 
 

@@ -181,8 +181,8 @@ class AudioStream {
         /**
          * @brief Determines whether the audio stream has been initialized with 
          * 
-         * @return true The audio stream has been initialized and is ready to store data
-         * @return false The audio stream has not been initialized and data cannot yet be written to it
+         * @return true: The audio stream has been initialized and is ready to store data
+         * @return false: The audio stream has not been initialized and data cannot yet be written to it
          */
         bool is_initialized() const;
 };

@@ -10,13 +10,29 @@ extern "C" {
 /**
  * @brief Opens and returns an AVFormat Context
  * 
- * Note that it is guaranteed to not be NULL or nullptr
+ * @note The returned AVFormatContext is guaranteed to be non-null
+ * @throws std::runtime_error if the format context could not be opened for the corresponding file name
+ * @throws std::runtime_error if the stream information for the format context could not be found
  * 
- * @param file_name 
- * @return AVFormatContext* 
+ * @param file_path The path of the file to open from the current working directory
+ * @return An AVFormatContext pointer representing the opened media file
  */
-AVFormatContext* open_format_context(std::string file_name);
-void dump_file_info(const char* file_name);
-double get_file_duration(const char* file_name);
+AVFormatContext* open_format_context(std::string file_path);
+
+/**
+ * @brief Dump a media file's metadata into standard output.
+ * @param file_path The path of the file to open from the current working directory
+ */
+void dump_file_info(const char* file_path);
+
+/**
+ * @brief Return the duration of the media file
+ * @param file_path The path of the file to open from the current working directory
+ * 
+ * @throws std::runtime_error if a format context could not be opened for the corresponding file name
+ * @throws std::runtime_error if the stream information for the format context could not be found
+ * @return The duration of the media file at the selected path in seconds
+ */
+double get_file_duration(const char* file_path);
 
 #endif

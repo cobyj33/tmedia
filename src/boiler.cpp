@@ -13,14 +13,14 @@ extern "C" {
 #include <libavutil/log.h>
 }
 
-AVFormatContext* open_format_context(std::string file_name) {
+AVFormatContext* open_format_context(std::string file_path) {
     AVFormatContext* format_context = nullptr;
-    int result = avformat_open_input(&format_context, file_name.c_str(), nullptr, nullptr);
+    int result = avformat_open_input(&format_context, file_path.c_str(), nullptr, nullptr);
     if (result < 0) {
         if (format_context != nullptr) {
             avformat_free_context(format_context);
         }
-        throw ascii::ffmpeg_error("Failed to open format context input for " + file_name, result);
+        throw ascii::ffmpeg_error("Failed to open format context input for " + file_path, result);
     }
 
     result = avformat_find_stream_info(format_context, NULL);
@@ -28,7 +28,7 @@ AVFormatContext* open_format_context(std::string file_name) {
         if (format_context != nullptr) {
             avformat_free_context(format_context);
         }
-        throw std::runtime_error("Failed to find stream info for " + file_name);
+        throw std::runtime_error("Failed to find stream info for " + file_path);
     }
 
     if (format_context != nullptr) {
@@ -37,15 +37,15 @@ AVFormatContext* open_format_context(std::string file_name) {
     throw std::runtime_error("Failed to open format context input, unknown error occured");
 }
 
-void dump_file_info(const char* file_name) {
+void dump_file_info(const char* file_path) {
     av_log_set_level(AV_LOG_INFO);
-    AVFormatContext* format_context = open_format_context(file_name);
-    av_dump_format(format_context, 0, file_name, 0);
+    AVFormatContext* format_context = open_format_context(file_path);
+    av_dump_format(format_context, 0, file_path, 0);
     avformat_close_input(&format_context);
 }
 
-double get_file_duration(const char* file_name) {
-    AVFormatContext* format_context = open_format_context(file_name);
+double get_file_duration(const char* file_path) {
+    AVFormatContext* format_context = open_format_context(file_path);
     int64_t duration = format_context->duration;
     double duration_seconds = (double)duration / AV_TIME_BASE;
     avformat_close_input(&format_context);
