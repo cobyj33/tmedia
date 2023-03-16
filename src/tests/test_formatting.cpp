@@ -32,38 +32,39 @@ TEST_CASE("Formatting", "[functions]") {
     }
     
 
-    SECTION("hh:mm:ss") {
+    SECTION("H:MM:SS") {
         SECTION("validation") {
-            REQUIRE(is_hh_mm_ss_duration("00:00:00"));
-            REQUIRE(is_hh_mm_ss_duration("00:00:10"));
-            REQUIRE(is_hh_mm_ss_duration("00:01:10"));
-            REQUIRE(is_hh_mm_ss_duration("00:10:10"));
-            REQUIRE(is_hh_mm_ss_duration("00:01:00"));
-            REQUIRE(is_hh_mm_ss_duration("00:01:30"));
-            REQUIRE(is_hh_mm_ss_duration("01:00:10"));
-            REQUIRE(is_hh_mm_ss_duration("01:01:10"));
-            REQUIRE(is_hh_mm_ss_duration("70:00:10"));
+            REQUIRE(is_h_mm_ss_duration("00:00:00"));
+            REQUIRE(is_h_mm_ss_duration("0:00:00"));
+            REQUIRE(is_h_mm_ss_duration("00:00:10"));
+            REQUIRE(is_h_mm_ss_duration("00:01:10"));
+            REQUIRE(is_h_mm_ss_duration("00:10:10"));
+            REQUIRE(is_h_mm_ss_duration("00:01:00"));
+            REQUIRE(is_h_mm_ss_duration("00:01:30"));
+            REQUIRE(is_h_mm_ss_duration("01:00:10"));
+            REQUIRE(is_h_mm_ss_duration("01:01:10"));
+            REQUIRE(is_h_mm_ss_duration("70:00:10"));
         }
 
         SECTION("Incorrect") {
-            REQUIRE_FALSE(is_hh_mm_ss_duration("00:01"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration(":00:00:01"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("00:00:01:"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("00:0.1"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("00:01."));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("0.0:01"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("0:0:0"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("1:1:1"));
+            REQUIRE_FALSE(is_h_mm_ss_duration("00:01"));
+            REQUIRE_FALSE(is_h_mm_ss_duration(":00:00:01"));
+            REQUIRE_FALSE(is_h_mm_ss_duration("00:00:01:"));
+            REQUIRE_FALSE(is_h_mm_ss_duration("00:0.1"));
+            REQUIRE_FALSE(is_h_mm_ss_duration("00:01."));
+            REQUIRE_FALSE(is_h_mm_ss_duration("0.0:01"));
+            REQUIRE_FALSE(is_h_mm_ss_duration("0:0:0")); 
+            REQUIRE_FALSE(is_h_mm_ss_duration("1:1:1"));
 
-            REQUIRE_FALSE(is_hh_mm_ss_duration("10:00:61"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("10:61:00"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("10:61:61"));
+            REQUIRE_FALSE(is_h_mm_ss_duration("10:00:61")); // seconds greater than 60
+            REQUIRE_FALSE(is_h_mm_ss_duration("10:61:00")); // minutes greater than 60
+            REQUIRE_FALSE(is_h_mm_ss_duration("10:61:61")); // minutes and seconds greater than 60
 
-            REQUIRE_FALSE(is_hh_mm_ss_duration("10:-34:15"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("10:34:-15"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("-10:34:15"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("10 34 15"));
-            REQUIRE_FALSE(is_hh_mm_ss_duration("-10 34 15"));
+            REQUIRE_FALSE(is_h_mm_ss_duration("10:-34:15")); // negative minutes
+            REQUIRE_FALSE(is_h_mm_ss_duration("10:34:-15")); // negative seconds
+            REQUIRE_FALSE(is_h_mm_ss_duration("-10:34:15")); // negative hours
+            REQUIRE_FALSE(is_h_mm_ss_duration("10 34 15")); // whitespace instead of colons
+            REQUIRE_FALSE(is_h_mm_ss_duration("-10 34 15")); // negative hours and whitespace instead of colons
         }
 
         std::string ten_sec = format_time_hh_mm_ss(SECOND * 10);
@@ -91,31 +92,31 @@ TEST_CASE("Formatting", "[functions]") {
     SECTION("mm:ss") {
 
         SECTION("validation") {
-            REQUIRE(is_mm_ss_duration("00:00"));
-            REQUIRE(is_mm_ss_duration("00:10"));
-            REQUIRE(is_mm_ss_duration("01:10"));
-            REQUIRE(is_mm_ss_duration("10:10"));
-            REQUIRE(is_mm_ss_duration("01:00"));
-            REQUIRE(is_mm_ss_duration("01:30"));
-            REQUIRE(is_mm_ss_duration("00:10"));
-            REQUIRE(is_mm_ss_duration("01:10"));
-            REQUIRE(is_mm_ss_duration("61:10"));
+            REQUIRE(is_m_ss_duration("00:00"));
+            REQUIRE(is_m_ss_duration("00:10"));
+            REQUIRE(is_m_ss_duration("01:10"));
+            REQUIRE(is_m_ss_duration("10:10"));
+            REQUIRE(is_m_ss_duration("01:00"));
+            REQUIRE(is_m_ss_duration("01:30"));
+            REQUIRE(is_m_ss_duration("00:10"));
+            REQUIRE(is_m_ss_duration("01:10"));
+            REQUIRE(is_m_ss_duration("61:10"));
+            REQUIRE(is_m_ss_duration("0:10"));
+            REQUIRE(is_m_ss_duration("1:10"));
         }
 
         SECTION("Invalid") {
-            REQUIRE_FALSE(is_mm_ss_duration("00:61")); // seconds >= 60
-            REQUIRE_FALSE(is_mm_ss_duration("00:60")); // seconds >= 60
-            REQUIRE_FALSE(is_mm_ss_duration("00:99"));
-            REQUIRE_FALSE(is_mm_ss_duration("00:10:"));
-            REQUIRE_FALSE(is_mm_ss_duration("0:10"));
-            REQUIRE_FALSE(is_mm_ss_duration("1:10"));
-            REQUIRE_FALSE(is_mm_ss_duration(":00:10"));
-            REQUIRE_FALSE(is_mm_ss_duration("000:10"));
-            REQUIRE_FALSE(is_mm_ss_duration("00:00:10"));
+            REQUIRE_FALSE(is_m_ss_duration("00:61")); // seconds >= 60
+            REQUIRE_FALSE(is_m_ss_duration("00:60")); // seconds >= 60
+            REQUIRE_FALSE(is_m_ss_duration("00:99"));
+            REQUIRE_FALSE(is_m_ss_duration("00:10:"));
+            REQUIRE_FALSE(is_m_ss_duration(":00:10"));
+            REQUIRE_FALSE(is_m_ss_duration("000:10"));
+            REQUIRE_FALSE(is_m_ss_duration("00:00:10"));
             
-            REQUIRE_FALSE(is_mm_ss_duration("-00:10"));
-            REQUIRE_FALSE(is_mm_ss_duration("-000:10"));
-            REQUIRE_FALSE(is_mm_ss_duration("-00:61"));
+            REQUIRE_FALSE(is_m_ss_duration("-00:10"));
+            REQUIRE_FALSE(is_m_ss_duration("-000:10"));
+            REQUIRE_FALSE(is_m_ss_duration("-00:61"));
         }
 
         SECTION("Formatting") {
@@ -142,12 +143,17 @@ TEST_CASE("Formatting", "[functions]") {
         }
 
         SECTION("Parsing") {
-            REQUIRE(parse_mm_ss_duration("01:30") == 90);
-            REQUIRE(parse_mm_ss_duration("00:30") == 30);
-            REQUIRE(parse_mm_ss_duration("00:00") == 00);
-            REQUIRE(parse_mm_ss_duration("02:00") == 120);
-            REQUIRE(parse_mm_ss_duration("30:00") == 1800);
-            REQUIRE(parse_mm_ss_duration("30:35") == 1835);
+            REQUIRE(parse_m_ss_duration("01:30") == 90);
+            REQUIRE(parse_m_ss_duration("00:30") == 30);
+            REQUIRE(parse_m_ss_duration("00:00") == 00);
+            REQUIRE(parse_m_ss_duration("02:00") == 120);
+            REQUIRE(parse_m_ss_duration("30:00") == 1800);
+            REQUIRE(parse_m_ss_duration("30:35") == 1835);
+
+            REQUIRE(parse_m_ss_duration("1:30") == 90);
+            REQUIRE(parse_m_ss_duration("0:30") == 30);
+            REQUIRE(parse_m_ss_duration("0:00") == 00);
+            REQUIRE(parse_m_ss_duration("2:00") == 120);
         }
 
     } // SECTION mm:ss

@@ -75,11 +75,9 @@ double MediaPlayer::get_desync_time(double current_system_time) const {
 }
 
 void MediaPlayer::resync(double current_system_time) {
-
     if (this->has_audio()) {
         AudioStream& audio_stream = this->cache.audio_stream;
         MediaStream& audio_media_stream = this->get_audio_stream();
-
 
         double current_playback_time = this->playback.get_time(current_system_time);
         if (audio_stream.is_time_in_bounds(current_playback_time)) {
@@ -236,6 +234,33 @@ std::vector<AVFrame*> MediaPlayer::next_audio_frames() {
     throw std::runtime_error("[MediaPlayer::next_audio_frames] Cannot get next audio frames, as no video stream is available to decode from");
 }
 
+void MediaPlayer::load_next_audio_frames(int frames) {
+    if (!this->has_audio()) {
+        throw std::runtime_error("[MediaPlayer::load_next_audio_frames] Cannot load next audio frames, Media Player does not have any audio data to load");
+    }
+    if (frames < 0) {
+        throw std::runtime_error("Cannot load negative frames, (got " + std::to_string(frames) + " ). ");
+    }
+
+    MediaStream& audio_media_stream = this->get_audio_stream();
+    AVCodecContext* audio_codec_context = audio_media_stream.get_codec_context();
+    AudioResampler audio_resampler(
+        &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
+        &(audio_codec_context->ch_layout), audio_codec_context->sample_fmt, audio_codec_context->sample_rate);
+
+    for (int i = 0; i < frames; i++) {
+        std::vector<AVFrame*> next_raw_audio_frames = this->next_audio_frames();
+        std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
+        for (int i = 0; i < audio_frames.size(); i++) {
+            AVFrame* current_frame = audio_frames[i];
+            float* frameData = (float*)(current_frame->data[0]);
+            this->cache.audio_stream.write(frameData, current_frame->nb_samples);
+        }
+        clear_av_frame_list(next_raw_audio_frames);
+        clear_av_frame_list(audio_frames);
+    }
+}
+
 void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     if (target_time < 0.0 || target_time > this->get_duration()) {
         throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time));
@@ -251,7 +276,18 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
         MediaStream& video_stream = this->get_video_stream();
         video_stream.flush();
         clear_playhead_packet_list(video_stream.packets);
+    }
 
+    if (this->has_audio()) {
+        MediaStream& audio_stream = this->get_audio_stream();
+        audio_stream.flush();
+        clear_playhead_packet_list(audio_stream.packets);
+    }
+
+    this->media_data->fetch_next(1000);
+
+    if (this->has_video()) {
+        MediaStream& video_stream = this->get_video_stream();
         std::vector<AVFrame*> frames;
         bool passed_target_time = false;
         do {
@@ -265,14 +301,10 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
             }
         } while (!passed_target_time && frames.size() > 0);
         clear_av_frame_list(frames);
-
     }
 
     if (this->has_audio()) {
         MediaStream& audio_stream = this->get_audio_stream();
-        audio_stream.flush();
-        clear_playhead_packet_list(audio_stream.packets);
-
         std::vector<AVFrame*> frames;
         bool passed_target_time = false;
         do {
@@ -288,12 +320,11 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
         clear_av_frame_list(frames);
 
         this->cache.audio_stream.clear_and_restart_at(target_time);
+        this->load_next_audio_frames(20);
     }
 
-    this->playback.skip(target_time - original_time);
-    if (this->get_desync_time(current_system_time) > 0.15) {
-        this->resync(current_system_time);
-    }
+
+    this->playback.skip(target_time - original_time); // Update the playback to account for the skipped time
 }
 
 bool MediaPlayer::only_audio() const {
@@ -305,6 +336,11 @@ bool MediaPlayer::only_video() const {
 }
 
 void clear_playhead_packet_list(PlayheadList<AVPacket*>& packets) {
+    if (packets.is_empty()) {
+        return;
+    }
+
+    packets.set_index(0);
     while (packets.can_step_forward()) {
         AVPacket* packet = packets.get();
         av_packet_free(&packet);
@@ -313,11 +349,15 @@ void clear_playhead_packet_list(PlayheadList<AVPacket*>& packets) {
 
     AVPacket* packet = packets.get();
     av_packet_free(&packet);
-
     packets.clear();
 }
 
 void clear_playhead_frame_list(PlayheadList<AVFrame*>& frames) {
+    if (frames.is_empty()) {
+        return;
+    }
+
+    frames.set_index(0);
     while (frames.can_step_forward()) {
         AVFrame* frame = frames.get();
         av_frame_free(&frame);
@@ -328,6 +368,20 @@ void clear_playhead_frame_list(PlayheadList<AVFrame*>& frames) {
     av_frame_free(&frame);
 
     frames.clear();
+}
+
+void clear_behind_packet_list(PlayheadList<AVPacket*>& packets) {
+    if (packets.is_empty()) {
+        return;
+    }
+
+    int index = packets.get_index();
+    while (packets.can_step_backward()) {
+        packets.step_backward();
+    }
+
+    packets.set_index(index);
+    packets.clear_behind();
 }
 
 

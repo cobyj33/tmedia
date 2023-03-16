@@ -13,11 +13,9 @@
 #include "formatting.h"
 
 #include "gui.h"
+#include <termcolor.h>
 
 #include <argparse.hpp>
-
-// #include <ftxui/dom/elements.hpp>
-// #include <ftxui/screen/screen.hpp>
 
 extern "C" {
 #include "ncurses.h"
@@ -49,27 +47,6 @@ void on_terminate() {
 
 int main(int argc, char** argv)
 {
-
-    // ftxui::Element document =
-    //     ftxui::vbox({
-    //         ftxui::hbox({
-    //             ftxui::text("left")   | ftxui::border,
-    //             ftxui::text("middle") | ftxui::border | ftxui::flex,
-    //             ftxui::text("right")  | ftxui::border,
-    //         }),
-    //         ftxui::gauge(0.5) | ftxui::border
-    //     });
-    
-    // ftxui::Screen screen = ftxui::Screen::Create(
-    //     ftxui::Dimension::Full(),       // Width
-    //     ftxui::Dimension::Fit(document) // Height
-    // );
-
-
-    // ftxui::Render(screen, document);
-    // screen.Print();
-    
-
     srand(time(nullptr));
     av_log_set_level(AV_LOG_QUIET);
     std::set_terminate(on_terminate);
@@ -151,12 +128,17 @@ int main(int argc, char** argv)
                 return EXIT_FAILURE;
             }
         } else if (inputted_start_time.length() > 0) {
-            std::cerr << "Inputted time must be in seconds, HH:MM:SS, or MM:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
+            std::cerr << "Inputted time must be in seconds, H:MM:SS, or MM:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
             return EXIT_FAILURE;
         }
 
         ncurses_init();
         std::string warnings;
+
+        if (colors && grayscale) {
+            warnings += "WARNING: Cannot have both colored (-c, --color) and grayscale (-g, --gray) output. Falling back to colored output\n";
+            grayscale = false;
+        }
 
         if ( (colors || grayscale) && !has_colors()) {
             warnings += "WARNING: Terminal does not support colored output\n";
@@ -166,12 +148,13 @@ int main(int argc, char** argv)
 
         if (background && !(colors || grayscale) ) {
             if (!has_colors()) {
-                warnings += "WARNING: Cannot use background option as colors are not available in this terminal\n";
+                warnings += "WARNING: Cannot use background option as colors are not available in this terminal. Falling back to pure text output\n";
+                background = false;
             } else {
-                warnings += "WARNING: Cannot only show background without either color (-c, --color) or grayscale(-g, --gray, --grayscale) options selected\n";
+                warnings += "WARNING: Cannot only show background without either color (-c, --color) or grayscale(-g, --gray, --grayscale) options selected. Falling back to colored output\n";
+                colors = true;
+                grayscale = false;
             }
-
-            background = false;
         }
 
         if ( (grayscale || colors) && has_colors() && !can_change_color()) {
@@ -188,16 +171,16 @@ int main(int argc, char** argv)
 
         VideoOutputMode mode = get_video_output_mode_from_params(colors, grayscale, background);
 
-        // if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
-        //     ncurses_initialize_grayscale_colors();
-        // }
-
+        if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
+            ncurses_initialize_grayscale_colors();
+        }
         GUIState gui_state;
         gui_state.set_video_output_mode(mode);
 
         bool video = parser.get<bool>("-v");
         MediaPlayer player(file.c_str());
         player.start(gui_state, start_time);
+
         ncurses_uninit();
     } else {
         std::cerr << "Cannot open invalid path: " + file << std::endl;
@@ -225,8 +208,8 @@ void ncurses_init() {
     }
     ncurses_initialized = true;
     initscr();
-    // start_color();
-    // ncurses_initialize_colors();
+    start_color();
+    ncurses_initialize_colors();
     cbreak();
     noecho();
     curs_set(0);

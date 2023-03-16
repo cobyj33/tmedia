@@ -153,6 +153,8 @@ class MediaPlayer {
         std::vector<AVFrame*> next_video_frames(); 
         std::vector<AVFrame*> next_audio_frames();
 
+        void load_next_audio_frames(int frames);
+
         MediaStream& get_video_stream() const;
         MediaStream& get_audio_stream() const;
 };
@@ -161,6 +163,8 @@ void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS
 void move_frame_list_to_pts(PlayheadList<AVFrame*>& frames, int64_t targetPTS);
 
 void clear_playhead_packet_list(PlayheadList<AVPacket*>& packets);
-void clear_playhead_frame_list(PlayheadList<AVFrame*>& packets);
+void clear_playhead_frame_list(PlayheadList<AVFrame*>& frames);
+
+void clear_behind_packet_list(PlayheadList<AVPacket*>& packets);
 
 #endif

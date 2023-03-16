@@ -29,10 +29,6 @@ pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
 )
 
 add_subdirectory(lib/Catch2)
-set(FTXUI_BUILD_DOCS OFF CACHE BOOL "Set to ON to build docs" FORCE)
-set(FTXUI_BUILD_EXAMPLES OFF CACHE BOOL "Set to ON to build examples" FORCE)
-add_subdirectory(lib/FTXUI)
-
 include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio/extras/miniaudio_split ./lib/argparse/include/argparse )
 # include_directories( ./includes ./lib/miniaudio/extras/miniaudio_split ./lib/argparse/include/argparse )
 
@@ -65,14 +61,12 @@ add_executable(ascii_video
 ./src/aabb.cpp
 ./src/scale.cpp
 ./src/ui/gui.cpp
+./src/termcolor.cpp
 )
 
 target_link_libraries( ascii_video 
     PkgConfig::LIBAV
     ${CURSES_LIBRARIES}
-    ftxui::screen
-    ftxui::dom
-    ftxui::component
 )
 
 add_executable(tests 
@@ -103,6 +97,7 @@ add_executable(tests
 ./src/aabb.cpp
 ./src/scale.cpp
 ./src/ui/gui.cpp
+./src/termcolor.cpp
 
 
 ./src/tests/test_audiostream.cpp
@@ -121,7 +116,4 @@ target_link_libraries(tests
     PRIVATE Catch2::Catch2WithMain 
     ${CURSES_LIBRARIES}
     PkgConfig::LIBAV
-    ftxui::screen
-    ftxui::dom
-    ftxui::component
 )

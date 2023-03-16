@@ -26,14 +26,16 @@ extern "C" {
 #include <libavutil/audio_fifo.h>
 }
 
-const int AUDIO_BUFFER_SIZE = 8192;
-const int MAX_AUDIO_BUFFER_SIZE = 524288;
+const int MIN_RECOMMENDED_AUDIO_BUFFER_SIZE = 44100; // 1 second
+const int MAX_RECOMMENDED_AUDIO_BUFFER_SIZE = 524288;
+const int RECOMMENDED_AUDIO_BUFFER_SIZE = 220500; // 44100 * 5
 const char* DEBUG_AUDIO_SOURCE = "Audio";
 const char* DEBUG_AUDIO_TYPE = "Debug";
 
 typedef struct CallbackData {
     MediaPlayer* player;
     std::reference_wrapper<std::mutex> mutex;
+
     CallbackData(MediaPlayer* player, std::reference_wrapper<std::mutex> mutex) : player(player), mutex(mutex) {}
 } CallbackData;
 
@@ -43,9 +45,17 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     std::lock_guard<std::mutex> mutex_lock_guard(data->mutex.get());
     AudioStream& audio_stream = data->player->cache.audio_stream;
 
-    if (audio_stream.can_read(frameCount)) {
-        audio_stream.read_into(frameCount, (float*)pOutput);
+    // AudioStream& audio_stream = player->cache.audio_stream;
+    const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
+    if (data->player->get_desync_time(system_clock_sec()) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
+        data->player->resync(system_clock_sec());
     }
+
+    while (!audio_stream.can_read(frameCount)) {
+        data->player->load_next_audio_frames(10);
+    }
+
+    audio_stream.read_into(frameCount, (float*)pOutput);
 }
 
 void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
@@ -106,25 +116,8 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             mutex_lock.lock();
         }
 
-        AudioStream& audio_stream = player->cache.audio_stream;
-
-        const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
-        if (player->get_desync_time(system_clock_sec()) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
-            player->resync(system_clock_sec());
-        }
-        
-        std::vector<AVFrame*> next_raw_audio_frames = player->next_audio_frames();
-        std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
-        for (int i = 0; i < audio_frames.size(); i++) {
-            AVFrame* current_frame = audio_frames[i];
-            float* frameData = (float*)(current_frame->data[0]);
-            audio_stream.write(frameData, current_frame->nb_samples);
-        }
-        clear_av_frame_list(next_raw_audio_frames);
-        clear_av_frame_list(audio_frames);
-
+        player->load_next_audio_frames(10);
         audio_device.sampleRate = audio_codec_context->sample_rate * player->playback.get_speed();
-
         mutex_lock.unlock();
         sleep_quick();
     }

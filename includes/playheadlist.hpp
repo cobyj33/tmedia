@@ -64,8 +64,15 @@ class PlayheadList {
          */
         T get();
         void clear();
+
+        void clear_behind();
+        void clear_ahead();
+
         void push_back(T item);
         void push_front(T item);
+
+        T pop_front();
+
         void set_index(int index);
         void move_index(int offset);
         bool can_move_index(int offset) const;
@@ -113,19 +120,15 @@ void PlayheadList<T>::clear() {
 
     std::shared_ptr<PlayheadListNode<T>> currentNode = this->m_first;
     while (currentNode->next != nullptr) {
-        std::shared_ptr<PlayheadListNode<T>> temp = currentNode;
         currentNode = currentNode->next;
 
         currentNode->prev->next = nullptr;
         currentNode->prev->prev = nullptr;
         currentNode->prev = nullptr;
-        // delete temp;
         this->m_length--;
     }
     currentNode->prev = nullptr;
     currentNode->next = nullptr;
-
-    // delete currentNode;
 
     this->m_length--;
     this->m_first = nullptr;
@@ -133,6 +136,80 @@ void PlayheadList<T>::clear() {
     this->m_current = nullptr;
     this->m_index = -1;
 };
+
+template<typename T>
+void PlayheadList<T>::clear_behind() {
+    if (this->m_length == 0 || this->m_index == -1) {
+        return;
+    }
+
+    std::shared_ptr<PlayheadListNode<T>> currentNode = this->m_first; // starts from the start and clears until current
+    int index = 0;
+    while (currentNode->next != this->m_current) { // clear until current
+        currentNode = currentNode->next;
+
+        currentNode->prev->next = nullptr;
+        currentNode->prev->prev = nullptr;
+        currentNode->prev = nullptr;
+    }
+
+    this->m_first = this->m_current; // the current node is the new first
+    this->m_current->prev = nullptr; // since the current node is the new first, the current node must have no previous node
+
+    this->m_length -= this->m_index;
+    this->m_index = 0;
+}
+
+
+template<typename T>
+T PlayheadList<T>::pop_front() {
+    if (this->m_length == 0) {
+        throw std::runtime_error("Cannot pop from front of empty playhead list");
+    } else if (this->m_length == 1) {
+        T data = this->get();
+        this->clear();
+        return data;
+    }
+
+    std::shared_ptr<PlayheadListNode<T>> target_node = this->m_first;
+    this->m_first->next->prev = nullptr;
+
+    if (this->m_current == this->m_first) { // if the start is the current
+        this->m_current = this->m_first->next;
+    }
+
+    this->m_first = this->m_first->next;
+    this->m_first->prev->next = nullptr; // break linking on both sides
+
+    if (this->m_index > 0) {
+        this->m_index--;
+    }
+    this->m_length--;
+
+    return target_node->data;
+}
+
+template<typename T>
+void PlayheadList<T>::clear_ahead() {
+    if (this->m_length == 0 || this->m_index == this->m_length - 1) {
+        return;
+    }
+
+    std::shared_ptr<PlayheadListNode<T>> currentNode = this->m_last;
+    int index = this->m_index + 1;
+    while (currentNode != this->m_current) { // clear backwards until current
+        currentNode = currentNode->prev;
+
+        currentNode->next->next = nullptr;
+        currentNode->next->prev = nullptr;
+        currentNode->next = nullptr;
+    }
+
+    this->m_current->next = nullptr;
+    this->m_last = this->m_current;
+    this->m_length = this->m_index + 1;
+    //index does not change
+}
 
 template<typename T>
 void PlayheadList<T>::push_back(T item) {

@@ -62,16 +62,16 @@ std::string format_duration(double time_in_seconds) {
 
 
 int parse_duration(std::string duration) {
-    if (is_hh_mm_ss_duration(duration)) {
-        return parse_hh_mm_ss_duration(duration);
-    } else if (is_mm_ss_duration(duration)) {
-        return parse_mm_ss_duration(duration);
+    if (is_h_mm_ss_duration(duration)) {
+        return parse_h_mm_ss_duration(duration);
+    } else if (is_m_ss_duration(duration)) {
+        return parse_m_ss_duration(duration);
     }
     throw std::runtime_error("Cannot parse duration " + duration + " as duration format could not be found in implemented format types");
 }
 
 bool is_duration(std::string duration) {
-    return is_hh_mm_ss_duration(duration) || is_mm_ss_duration(duration);  
+    return is_h_mm_ss_duration(duration) || is_m_ss_duration(duration);  
 }
 
 std::string format_time_hh_mm_ss(double time_in_seconds) {
@@ -84,18 +84,21 @@ std::string format_time_hh_mm_ss(double time_in_seconds) {
     return format_duration_time_digit(hours) + ":" + format_duration_time_digit(minutes) + ":" + format_duration_time_digit(seconds);
 }
 
-int parse_hh_mm_ss_duration(std::string formatted_duration) {
-    if (is_hh_mm_ss_duration(formatted_duration)) {
-        std::string hours_str = formatted_duration.substr(0, formatted_duration.length() - 6);
-        std::string minutes_str = formatted_duration.substr(formatted_duration.length() - 5, 2);
-        std::string seconds_str = formatted_duration.substr(formatted_duration.length() - 2, 2);
+int parse_h_mm_ss_duration(std::string formatted_duration) {
+    if (is_h_mm_ss_duration(formatted_duration)) {
+        const int END = formatted_duration.length() - 1;
+        const int MM_SS_COLON_POSITION = END - 2;
+        const int HH_MM_COLON_POSITION = END - 5;
+        std::string hours_str = formatted_duration.substr(0, HH_MM_COLON_POSITION);
+        std::string minutes_str = formatted_duration.substr(HH_MM_COLON_POSITION + 1, 2);
+        std::string seconds_str = formatted_duration.substr(MM_SS_COLON_POSITION + 1, 2);
         return std::stoi(hours_str) * HOURS_TO_SECONDS + std::stoi(minutes_str) * MINUTES_TO_SECONDS + std::stoi(seconds_str);
     }
-    throw std::runtime_error("Cannot parse HH:MM:SS duration of " + formatted_duration + ", this duration is not formatted correctly as HH:MM:SS");
+    throw std::runtime_error("Cannot parse H:MM:SS duration of " + formatted_duration + ", this duration is not formatted correctly as H:MM:SS");
 }
 
-bool is_hh_mm_ss_duration(std::string formatted_duration) {
-    if (formatted_duration.length() >= 8) {
+bool is_h_mm_ss_duration(std::string formatted_duration) {
+    if (formatted_duration.length() >= 7) {
         const int END = formatted_duration.length() - 1;
         const int MM_SS_COLON_POSITION = END - 2;
         const int HH_MM_COLON_POSITION = END - 5;
@@ -107,10 +110,10 @@ bool is_hh_mm_ss_duration(std::string formatted_duration) {
                 }
             }
 
-            std::string seconds_section = formatted_duration.substr(MM_SS_COLON_POSITION + 1, 2);
-            std::string minutes_section = formatted_duration.substr(HH_MM_COLON_POSITION + 1, 2);
-
             std::string hours_section = formatted_duration.substr(0, HH_MM_COLON_POSITION);
+            std::string minutes_section = formatted_duration.substr(HH_MM_COLON_POSITION + 1, 2);
+            std::string seconds_section = formatted_duration.substr(MM_SS_COLON_POSITION + 1, 2);
+
             if (hours_section.length() > 2) {
                 if (hours_section[0] == '0') {
                     return false;
@@ -123,6 +126,7 @@ bool is_hh_mm_ss_duration(std::string formatted_duration) {
             return seconds < 60 && minutes < 60;
         }
     }
+
     return false;
 }
 
@@ -133,18 +137,20 @@ std::string format_time_mm_ss(double time_in_seconds) {
     return format_duration_time_digit(minutes) + ":" + format_duration_time_digit(seconds);
 }
 
-int parse_mm_ss_duration(std::string formatted_duration) {
-    if (is_mm_ss_duration(formatted_duration)) {
-        std::string minutes_str = formatted_duration.substr(0, formatted_duration.length() - 3);
-        std::string seconds_str = formatted_duration.substr(formatted_duration.length() - 2, 2);
+int parse_m_ss_duration(std::string formatted_duration) {
+    if (is_m_ss_duration(formatted_duration)) {
+        const int END = formatted_duration.length() - 1;
+        const int COLON_POSITION = END - 2;
+        std::string minutes_str = formatted_duration.substr(0, COLON_POSITION);
+        std::string seconds_str = formatted_duration.substr(COLON_POSITION + 1, 2);
         return std::stoi(minutes_str) * MINUTES_TO_SECONDS + std::stoi(seconds_str);
     }
     throw std::runtime_error("Cannot parse MM:SS duration of " + formatted_duration + ", this duration is not formatted correctly as MM:SS");
 }
 
 
-bool is_mm_ss_duration(std::string formatted_duration) {
-    if (formatted_duration.length() >= 5) {
+bool is_m_ss_duration(std::string formatted_duration) {
+    if (formatted_duration.length() >= 4) {
         const int END = formatted_duration.length() - 1;
         const int COLON_POSITION = END - 2;
 
