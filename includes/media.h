@@ -103,7 +103,7 @@ class MediaPlayer {
 
         void start(GUIState gui_state, double start_time);
         double get_desync_time(double current_system_time) const;
-        void resync(double current_system_time);
+        // void resync(double current_system_time);
 
         /**
          * @brief Sets the currently displayed image of the currently playing media according to the PixelData

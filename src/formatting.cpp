@@ -177,3 +177,27 @@ bool is_m_ss_duration(std::string formatted_duration) {
     }
     return false;
 }
+
+bool is_int_str(std::string str) {
+    if (str.length() == 0) {
+        return false;
+    }
+
+    for (int i = 0; i < str.length(); i++) {
+        if (str[i] == '-') {
+            if (i == 0) {
+                if (str.length() == 1) { // the string is "-"
+                    return false;
+                }
+                continue;
+            }
+            return false; // The string has a '-' somewhere besides the start
+        }
+        
+        if (!std::isdigit(str[i])) { // the string has a character that is not a digit or a '-'
+            return false;
+        }
+    }
+    
+    return true;
+}

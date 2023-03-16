@@ -30,6 +30,28 @@ TEST_CASE("Formatting", "[functions]") {
 
         REQUIRE_THROWS(double_to_fixed_string(100, -1));
     }
+
+    SECTION("Is integer string") {
+
+        SECTION("Valid") {
+            REQUIRE(is_int_str("12"));
+            REQUIRE(is_int_str("-12"));
+            REQUIRE(is_int_str("94732"));
+            REQUIRE(is_int_str("-232"));
+            REQUIRE(is_int_str("243"));
+            REQUIRE(is_int_str("-32"));
+        }
+
+        SECTION("Invalid") {
+            REQUIRE_FALSE(is_int_str("1.2"));
+            REQUIRE_FALSE(is_int_str("1-2"));
+            REQUIRE_FALSE(is_int_str("12-"));
+            REQUIRE_FALSE(is_int_str("0x12"));
+            REQUIRE_FALSE(is_int_str("--13"));
+            REQUIRE_FALSE(is_int_str(" 345"));
+            REQUIRE_FALSE(is_int_str("345 "));
+        }
+    }
     
 
     SECTION("H:MM:SS") {

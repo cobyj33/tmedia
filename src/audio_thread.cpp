@@ -55,8 +55,9 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
     // AudioStream& audio_stream = player->cache.audio_stream;
     const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
-    if (data->player->get_desync_time(system_clock_sec()) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
-        data->player->resync(system_clock_sec());
+    double current_system_time = system_clock_sec();
+    if (data->player->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
+        data->player->jump_to_time(data->player->playback.get_time(current_system_time), current_system_time);
     }
 
     while (!audio_stream.can_read(frameCount)) {

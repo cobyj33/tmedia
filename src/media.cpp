@@ -69,24 +69,8 @@ double MediaPlayer::get_desync_time(double current_system_time) const {
         double current_playback_time = this->playback.get_time(current_system_time);
         double desync = std::abs(this->cache.audio_stream.get_time() - current_playback_time);
         return desync;
-    } else {
+    } else { // if there is only a video or audio stream, there can never be desync
         return 0.0;
-    }
-}
-
-void MediaPlayer::resync(double current_system_time) {
-    if (this->has_audio()) {
-        AudioStream& audio_stream = this->cache.audio_stream;
-        MediaStream& audio_media_stream = this->get_audio_stream();
-
-        double current_playback_time = this->playback.get_time(current_system_time);
-        if (audio_stream.is_time_in_bounds(current_playback_time)) {
-            audio_stream.set_time(current_playback_time);
-        } else {
-            audio_stream.clear_and_restart_at(current_playback_time);
-        }
-
-        move_packet_list_to_pts(audio_media_stream.packets, current_playback_time / audio_media_stream.get_time_base());
     }
 }
 
@@ -320,7 +304,7 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
         clear_av_frame_list(frames);
 
         this->cache.audio_stream.clear_and_restart_at(target_time);
-        this->load_next_audio_frames(20);
+        this->load_next_audio_frames(40);
     }
 
 

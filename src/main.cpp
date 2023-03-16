@@ -53,6 +53,14 @@ int main(int argc, char** argv)
 
     argparse::ArgumentParser parser("ascii_video", "1.1");
 
+    const std::string controls = std::string("-------CONTROLS-----------\n") +
+                            "SPACE - Toggle Playback \n" +
+                            "Left Arrow - Skip backward 5 seconds\n" +
+                            "Right Arrow - Skip forward 5 seconds \n" +
+                            "Escape or Backspace - End Playback \n";
+
+    parser.add_description(controls);
+
     parser.add_argument("-v", "--video")
         .default_value(true)
         .implicit_value(true)
@@ -117,19 +125,23 @@ int main(int argc, char** argv)
 
         std::string inputted_start_time = parser.get<std::string>("-t");
 
-        if (is_duration(inputted_start_time) ) {
+        if (is_duration(inputted_start_time)) {
             start_time = parse_duration(inputted_start_time);
-            double file_duration = get_file_duration(file.c_str());
-            if (start_time < 0) { // Catch errors in out of bounds times
-                std::cerr << "Cannot start file at a negative time ( got time " << double_to_fixed_string(start_time, 2) << "  from input " + inputted_start_time + " )" << std::endl;
-                return EXIT_FAILURE;
-            } else if (start_time >= file_duration) {
-                std::cerr << "Cannot start file at a time greater than duration of media file ( got time " << double_to_fixed_string(start_time, 2) << " seconds from input " << inputted_start_time << ". File ends at " << double_to_fixed_string(file_duration, 2) << " seconds (" << format_duration(file_duration) << ") ) "  << std::endl;
+        } else if (inputted_start_time.length() > 0) {
+            if (is_int_str(inputted_start_time)) {
+                start_time = std::stoi(inputted_start_time);
+            } else {
+                std::cerr << "Inputted time must be in seconds, H:MM:SS, or MM:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
                 return EXIT_FAILURE;
             }
-        } else if (inputted_start_time.length() > 0) {
+        }
 
-            std::cerr << "Inputted time must be in seconds, H:MM:SS, or MM:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
+        double file_duration = get_file_duration(file.c_str());
+        if (start_time < 0) { // Catch errors in out of bounds times
+            std::cerr << "Cannot start file at a negative time ( got time " << double_to_fixed_string(start_time, 2) << "  from input " + inputted_start_time + " )" << std::endl;
+            return EXIT_FAILURE;
+        } else if (start_time >= file_duration) {
+            std::cerr << "Cannot start file at a time greater than duration of media file ( got time " << double_to_fixed_string(start_time, 2) << " seconds from input " << inputted_start_time << ". File ends at " << double_to_fixed_string(file_duration, 2) << " seconds (" << format_duration(file_duration) << ") ) "  << std::endl;
             return EXIT_FAILURE;
         }
 
