@@ -85,10 +85,10 @@ int main(int argc, char** argv)
         .help("Choose the time to start media playback")
         .default_value(std::string("00:00"));
     
-    parser.add_argument("-l", "--loop", "--looped")
-        .help("Loop the media playback")
-        .default_value(false)
-        .implicit_value(true);
+    // parser.add_argument("-l", "--loop", "--looped")
+    //     .help("Loop the media playback")
+    //     .default_value(false)
+    //     .implicit_value(true);
 
 
     try {
