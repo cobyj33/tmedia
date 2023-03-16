@@ -14,13 +14,14 @@
 #include <utility>
 
 /**
- * @brief Returns a <width, height> pair representing the <src_width, src_height> bounded into the <max_width, max_height> dimensions while preserving aspect ratio
+ * @brief Returns a <width, height> pair representing the source dimensions bounded into the bounded dimensions while preserving aspect ratio
  * 
- * @param src_width 
- * @param src_height 
- * @param max_width 
- * @param max_height 
- * @return std::pair<int, int> 
+ * @note The source will NOT be expanded into the bounds. The bounds only serve as an area where the source cannot extend past. If the source already fits in the bounds, this function will perform no transformations and simply return the source dimensions through the pair.
+ * @param src_width The width of the source frame
+ * @param src_height The height of the source frame
+ * @param max_width The width of the bounded box which the source will be fitted into
+ * @param max_height The height of the bounded box which the source will be fitted into
+ * @return The size of the frame when it is bounded into the bounded dimensions. 
  */
 std::pair<int, int> get_bounded_dimensions(int src_width, int src_height, int max_width, int max_height);
 std::pair<int, int> get_scale_size(int src_width, int src_height, int target_width, int target_height);

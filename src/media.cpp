@@ -27,14 +27,14 @@ MediaStream& MediaData::get_media_stream(enum AVMediaType media_type) {
             return *this->media_streams[i];
         }
     }
-    throw ascii::not_found_error("Cannot get media stream " + std::string(av_get_media_type_string(media_type)) + " from media data, could not be found");
+    throw std::runtime_error("Cannot get media stream " + std::string(av_get_media_type_string(media_type)) + " from media data, could not be found");
 }
 
 bool MediaData::has_media_stream(enum AVMediaType media_type) {
     try {
         this->get_media_stream(media_type);
         return true;
-    } catch (ascii::not_found_error not_found_error) {
+    } catch (std::runtime_error not_found_error) {
         return false;
     }
 }

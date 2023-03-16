@@ -21,7 +21,7 @@ AudioResampler::AudioResampler(AVChannelLayout* dst_ch_layout, enum AVSampleForm
         if (context != nullptr) {
             swr_free(&context);
         }
-        throw ascii::bad_alloc("Allocation of internal SwrContext of AudioResampler failed. Aborting...");
+        throw std::runtime_error("Allocation of internal SwrContext of AudioResampler failed. Aborting...");
     } else {
         result = swr_init(context);
         if (result < 0) {
@@ -60,7 +60,7 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
         int result;
         AVFrame* resampled_frame = av_frame_alloc();
         if (resampled_frame == NULL) {
-            throw ascii::bad_alloc("Could not create AVFrame audio frame for resampling");
+            throw std::runtime_error("Could not create AVFrame audio frame for resampling");
         }
 
         resampled_frame->sample_rate = this->m_dst_sample_rate;

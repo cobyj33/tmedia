@@ -13,7 +13,7 @@ VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat
             SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
 
     if (this->m_context == nullptr) {
-        throw ascii::bad_alloc("Allocation of internal SwsContext of AudioResampler failed. Aborting...");
+        throw std::runtime_error("Allocation of internal SwsContext of AudioResampler failed. Aborting...");
     }
     
     this->m_dst_width = dst_width;
@@ -31,7 +31,7 @@ VideoConverter::~VideoConverter() {
 AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
     AVFrame* resized_video_frame = av_frame_alloc();
     if (resized_video_frame == nullptr) {
-        throw ascii::bad_alloc("Could not allocate resized frame for VideoConverter");
+        throw std::runtime_error("Could not allocate resized frame for VideoConverter");
     }
 
     resized_video_frame->format = this->m_dst_pix_fmt;

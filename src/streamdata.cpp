@@ -76,7 +76,7 @@ StreamData& StreamDataGroup::get_av_media_stream(enum AVMediaType media_type) {
         }
     }
 
-    throw ascii::not_found_error("Could not find stream data for media type " + std::string(av_get_media_type_string(media_type)));
+    throw std::runtime_error("Could not find stream data for media type " + std::string(av_get_media_type_string(media_type)));
 };
 
 bool StreamDataGroup::has_av_media_stream(enum AVMediaType media_type) {

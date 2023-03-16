@@ -39,6 +39,14 @@ typedef struct CallbackData {
     CallbackData(MediaPlayer* player, std::reference_wrapper<std::mutex> mutex) : player(player), mutex(mutex) {}
 } CallbackData;
 
+/**
+ * @brief The callback called by miniaudio once the 
+ * 
+ * @param pDevice 
+ * @param pOutput 
+ * @param pInput 
+ * @param frameCount 
+ */
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
     CallbackData* data = (CallbackData*)(pDevice->pUserData);

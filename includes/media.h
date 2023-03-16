@@ -35,6 +35,12 @@ class MediaStream {
         MediaStream(StreamData& streamData);
         ~MediaStream();
 
+        /**
+         * @brief Get the time base object
+         * 
+         * 
+         * @return double 
+         */
         double get_time_base() const;
         double get_average_frame_rate_sec() const;
         double get_average_frame_time_sec() const;

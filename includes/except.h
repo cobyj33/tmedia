@@ -9,18 +9,6 @@ extern "C" {
 
 
 namespace ascii {
-    class bad_alloc : public std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
-
-    class not_found_error : public std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
-
-    class forbidden_action_error : public std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
-
     class ffmpeg_error : public std::runtime_error {
         int averror;
         std::string error_string;

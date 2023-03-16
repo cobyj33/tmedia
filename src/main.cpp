@@ -128,6 +128,7 @@ int main(int argc, char** argv)
                 return EXIT_FAILURE;
             }
         } else if (inputted_start_time.length() > 0) {
+
             std::cerr << "Inputted time must be in seconds, H:MM:SS, or MM:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
             return EXIT_FAILURE;
         }

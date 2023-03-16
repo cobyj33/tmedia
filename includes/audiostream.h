@@ -5,7 +5,12 @@
 #include <vector>
 
 /**
- * @brief The audio stream is a way to store continuous audio data throughout a certain time interval. 
+ * @brief The audio stream is a way to store continuous audio data throughout a certain time interval.
+ * 
+ * The reasoning for a specific AudioStream class is to be able to track and pick up exactly where playback leaves off, so as to prevent weird peaking, static, and cuts in audio playback.
+ * Additionally, the AudioStream object helps easily track the time of the audio playback to detect desynchronization along media playback.
+ * 
+ * While this structure is very similar to the PlayheadList, as it has a buffer of data with a "playhead" index, the AudioStream allows much faster indexing and fetching of data, as the data is stored in a vector instead of a doubly-linked list  
  */
 class AudioStream {
     private:
