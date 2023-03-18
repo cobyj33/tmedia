@@ -31,7 +31,7 @@ PixelData::PixelData(const char* file_name) {
     if (!media_data.has_media_stream(AVMEDIA_TYPE_VIDEO)) {
         throw std::runtime_error("[PixelData::PixelData] Could not fetch image of file " + std::string(file_name));
     }
-    MediaStream& imageStream = media_data.get_media_stream(AVMEDIA_TYPE_VIDEO);
+    StreamData& imageStream = media_data.get_media_stream(AVMEDIA_TYPE_VIDEO);
 
     AVCodecContext* codec_context = imageStream.get_codec_context();
     VideoConverter image_converter(

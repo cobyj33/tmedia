@@ -187,12 +187,12 @@ int main(int argc, char** argv)
         if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
             ncurses_initialize_grayscale_color_palette();
         }
-        GUIState gui_state;
-        gui_state.set_video_output_mode(mode);
+        MediaGUI media_gui;
+        media_gui.set_video_output_mode(mode);
 
         bool video = parser.get<bool>("-v");
         MediaPlayer player(file.c_str());
-        player.start(gui_state, start_time);
+        player.start(media_gui, start_time);
 
         ncurses_uninit();
     } else {

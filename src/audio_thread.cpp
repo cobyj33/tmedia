@@ -86,7 +86,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
     }
 
-    MediaStream& audio_media_stream = player->get_audio_stream();
+    StreamData& audio_media_stream = player->get_audio_stream();
     AVCodecContext* audio_codec_context = audio_media_stream.get_codec_context();
     const int nb_channels = audio_codec_context->ch_layout.nb_channels;
 

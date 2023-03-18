@@ -30,7 +30,7 @@ extern "C"
 
 const int KEY_ESCAPE = 27;
 
-void render_movie_screen(PixelData& pixel_data, VideoOutputMode gui_state);
+void render_movie_screen(PixelData& pixel_data, VideoOutputMode media_gui);
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
 void print_pixel_data_text(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height);
 
@@ -44,7 +44,7 @@ RGBColor get_index_display_color(int index, int length)
     return RGBColor(red, green, blue);
 }
 
-void render_loop(MediaPlayer *player, std::mutex &alter_mutex, GUIState gui_state)
+void render_loop(MediaPlayer *player, std::mutex &alter_mutex, MediaGUI media_gui)
 {
     WINDOW *inputWindow = newwin(0, 0, 1, 1);
     nodelay(inputWindow, true);
@@ -119,7 +119,7 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex, GUIState gui_stat
         PixelData &image = player->cache.image;
         lock.unlock();
 
-        render_movie_screen(image, gui_state.get_video_output_mode());
+        render_movie_screen(image, media_gui.get_video_output_mode());
         refresh();
         sleep_for_ms(41);
     }

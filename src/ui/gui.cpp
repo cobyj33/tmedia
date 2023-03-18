@@ -3,20 +3,24 @@
 #include <termcolor.h>
 
 
-void GUIState::set_video_output_mode(VideoOutputMode mode) {
-    switch (mode) {
-        case VideoOutputMode::COLORED: ncurses_initialize_color_palette();
+void MediaGUI::set_video_output_mode(VideoOutputMode mode) {
+    if (mode != this->m_video_output_mode) {
+        if (mode == VideoOutputMode::COLORED || mode == VideoOutputMode::COLORED_BACKGROUND_ONLY) {
+            ncurses_initialize_color_palette();
+        } else if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
+            ncurses_initialize_grayscale_color_palette();
+        }
 
+        this->m_video_output_mode = mode;
     }
-    this->m_video_output_mode = mode;
 }
 
-MediaScreen GUIState::get_media_screen() const {
+MediaScreen MediaGUI::get_media_screen() const {
     return this->m_screen;
 }
 
 
-VideoOutputMode GUIState::get_video_output_mode() const {
+VideoOutputMode MediaGUI::get_video_output_mode() const {
     return this->m_video_output_mode;
 }
 

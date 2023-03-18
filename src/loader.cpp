@@ -29,12 +29,12 @@ bool data_loading_thread_loop(MediaPlayer* player, std::mutex& mutex) {
     int video_packet_length = 0;
 
     if (player->has_audio()) {
-        MediaStream& audio_stream = player->get_audio_stream();
+        StreamData& audio_stream = player->get_audio_stream();
         audio_packet_length = audio_stream.packets.get_length();
     }
 
     if (player->has_video()) {
-        MediaStream& video_stream = player->get_video_stream();
+        StreamData& video_stream = player->get_video_stream();
         video_packet_length = video_stream.packets.get_length();
     }
 

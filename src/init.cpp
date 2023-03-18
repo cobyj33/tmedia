@@ -9,7 +9,7 @@
 
 #include "gui.h"
 
-void MediaPlayer::start(GUIState gui_state, double start_time) {
+void MediaPlayer::start(MediaGUI media_gui, double start_time) {
     if (this->in_use) {
         throw std::runtime_error("CANNOT USE MEDIA PLAYER THAT IS ALREADY IN USE");
     }
@@ -23,7 +23,7 @@ void MediaPlayer::start(GUIState gui_state, double start_time) {
     std::thread video_thread(video_playback_thread, this, std::ref(alter_mutex));
     std::thread audio_thread(audio_playback_thread, this, std::ref(alter_mutex));
     // std::thread data_thread(data_loading_thread, this, std::ref(alter_mutex));
-    render_loop(this, std::ref(alter_mutex), gui_state);
+    render_loop(this, std::ref(alter_mutex), media_gui);
 
     video_thread.join();
     audio_thread.join();

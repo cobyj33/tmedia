@@ -41,7 +41,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         throw std::runtime_error("Could not playback video data: Could not find video stream in media player");
     }
 
-    MediaStream& video_stream = player->get_video_stream();
+    StreamData& video_stream = player->get_video_stream();
     double avg_frame_time_sec = video_stream.get_average_frame_time_sec();
     AVCodecContext* video_codec_context = video_stream.get_codec_context();
 

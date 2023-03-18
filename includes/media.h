@@ -25,39 +25,39 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-class MediaStream {
-    private:
-        StreamData& info;
+// class MediaStream {
+//     private:
+//         StreamData& info;
 
-    public:
-        PlayheadList<AVPacket*> packets;
+//     public:
+//         PlayheadList<AVPacket*> packets;
 
-        MediaStream(StreamData& streamData);
-        ~MediaStream();
+//         MediaStream(StreamData& streamData);
+//         ~MediaStream();
 
-        /**
-         * @brief Get the time base object
-         * 
-         * 
-         * @return double 
-         */
-        double get_time_base() const;
-        double get_average_frame_rate_sec() const;
-        double get_average_frame_time_sec() const;
-        double get_start_time() const;
-        int get_stream_index() const;
-        enum AVMediaType get_media_type() const;
-        AVCodecContext* get_codec_context() const;
+//         /**
+//          * @brief Get the time base object
+//          * 
+//          * 
+//          * @return double 
+//          */
+//         double get_time_base() const;
+//         double get_average_frame_rate_sec() const;
+//         double get_average_frame_time_sec() const;
+//         double get_start_time() const;
+//         int get_stream_index() const;
+//         enum AVMediaType get_media_type() const;
+//         AVCodecContext* get_codec_context() const;
 
-        std::vector<AVFrame*> decode_next();
+//         std::vector<AVFrame*> decode_next();
 
-        void flush();
-};
+//         void flush();
+// };
 
 class MediaData {
     public:
         AVFormatContext* format_context;
-        std::vector<std::unique_ptr<MediaStream>> media_streams;
+        std::vector<std::unique_ptr<StreamData>> media_streams;
         std::unique_ptr<StreamDataGroup> stream_datas;
         int nb_streams;
         bool allPacketsRead;
@@ -66,7 +66,7 @@ class MediaData {
         MediaData(const char* file_name);
         ~MediaData();
 
-        MediaStream& get_media_stream(enum AVMediaType media_type);
+        StreamData& get_media_stream(enum AVMediaType media_type);
         bool has_media_stream(enum AVMediaType media_type);
         int fetch_next(int requestedPacketCount);
 };
@@ -93,6 +93,9 @@ class MediaPlayer {
     public:
         MediaCache cache;
         std::unique_ptr<MediaData> media_data;
+
+        MediaGUI media_gui;
+
         Playback playback;
         const char* file_name;
         bool in_use;
@@ -101,7 +104,11 @@ class MediaPlayer {
             this->media_data = std::make_unique<MediaData>(file_name);
         }
 
-        void start(GUIState gui_state, double start_time);
+        MediaPlayer(const char* file_name, MediaGUI starting_media_gui) : in_use(false), file_name(file_name), media_gui(starting_media_gui) {
+            this->media_data = std::make_unique<MediaData>(file_name);
+        }
+
+        void start(MediaGUI media_gui, double start_time);
         double get_desync_time(double current_system_time) const;
 
         /**
@@ -172,8 +179,8 @@ class MediaPlayer {
 
         void load_next_audio_frames(int frames);
 
-        MediaStream& get_video_stream() const;
-        MediaStream& get_audio_stream() const;
+        StreamData& get_video_stream() const;
+        StreamData& get_audio_stream() const;
 };
 
 // void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS);

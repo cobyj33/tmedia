@@ -70,7 +70,7 @@ void data_loading_thread(MediaPlayer* player, std::mutex& alter_mutex);
  * 
  * @param player The MediaPlayer to render toward the terminal
  * @param alter_mutex The mutex used to synchronize the threads 
- * @param gui_state The state of the GUI, usually configured from the command line at program invokation, to use to render.
+ * @param media_gui The state of the GUI, usually configured from the command line at program invokation, to use to render.
  */
-void render_loop(MediaPlayer* player, std::mutex& alter_mutex, GUIState gui_state);
+void render_loop(MediaPlayer* player, std::mutex& alter_mutex, MediaGUI media_gui);
 #endif

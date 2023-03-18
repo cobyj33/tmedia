@@ -21,7 +21,7 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-MediaStream& MediaData::get_media_stream(enum AVMediaType media_type) {
+StreamData& MediaData::get_media_stream(enum AVMediaType media_type) {
     for (int i = 0; i < this->nb_streams; i++) {
         if (this->media_streams[i]->get_media_type() == media_type) {
             return *this->media_streams[i];
@@ -54,14 +54,14 @@ bool MediaPlayer::has_audio() const {
     return this->media_data->has_media_stream(AVMEDIA_TYPE_AUDIO);
 }
 
-MediaStream& MediaPlayer::get_video_stream() const {
+StreamData& MediaPlayer::get_video_stream() const {
     if (this->has_video()) {
         return this->media_data->get_media_stream(AVMEDIA_TYPE_VIDEO);
     }
     throw std::runtime_error("Cannot get video stream from MediaPlayer, no video is available to retrieve");
 }
 
-MediaStream& MediaPlayer::get_audio_stream() const {
+StreamData& MediaPlayer::get_audio_stream() const {
     if (this->has_audio()) {
         return this->media_data->get_media_stream(AVMEDIA_TYPE_AUDIO);
     }
@@ -107,47 +107,16 @@ MediaData::MediaData(const char* file_name) {
     this->nb_streams = this->stream_datas->get_nb_streams();
 
     for (int i = 0; i < this->nb_streams; i++) {
-        std::unique_ptr<MediaStream> media_stream_ptr = std::make_unique<MediaStream>( (*this->stream_datas)[i] );
+        std::unique_ptr<StreamData> media_stream_ptr = std::make_unique<StreamData>( (*this->stream_datas)[i] );
         this->media_streams.push_back(std::move(media_stream_ptr));
     }
 
     this->duration = (double)this->format_context->duration / AV_TIME_BASE;
 }
 
-double MediaStream::get_average_frame_rate_sec() const {
-    return av_q2d(this->info.stream->avg_frame_rate);
-}
 
-double MediaStream::get_average_frame_time_sec() const {
-    return 1 / av_q2d(this->info.stream->avg_frame_rate);
-}
 
-double MediaStream::get_start_time() const {
-    return this->info.stream->start_time * this->get_time_base();
-}
-
-int MediaStream::get_stream_index() const {
-    return this->info.stream->index;
-}
-
-void MediaStream::flush() {
-    AVCodecContext* codec_context = this->get_codec_context();
-    avcodec_flush_buffers(codec_context);
-}
-
-enum AVMediaType MediaStream::get_media_type() const {
-    return this->info.media_type;
-}
-
-double MediaStream::get_time_base() const {
-    return av_q2d(this->info.stream->time_base);
-}
-
-AVCodecContext* MediaStream::get_codec_context() const {
-    return this->info.codec_context;
-}
-
-MediaStream::MediaStream(StreamData& streamData) : info(streamData) { }
+// MediaStream::MediaStream(StreamData& streamData) : info(streamData) { }
 
 MediaData::~MediaData() {
     avformat_close_input(&(this->format_context));
@@ -155,28 +124,16 @@ MediaData::~MediaData() {
 }
 
 //TODO: There's totally a memory leak here with the freeing of the packets
-MediaStream::~MediaStream() {
-    // delete this->packets;
-    // delete this->info;
-}
+// MediaStream::~MediaStream() {
+//     // delete this->packets;
+//     // delete this->info;
+// }
 
-std::vector<AVFrame*> MediaStream::decode_next() {
-    if (this->get_media_type() == AVMEDIA_TYPE_VIDEO) {
-        std::vector<AVFrame*> decoded_frames = decode_video_packet(this->get_codec_context(), this->packets);
-        this->packets.try_step_forward();
-        return decoded_frames;
-    } else if (this->get_media_type() == AVMEDIA_TYPE_AUDIO) {
-        std::vector<AVFrame*> decoded_frames = decode_audio_packet(this->get_codec_context(), this->packets);
-        this->packets.try_step_forward();
-        return decoded_frames;
-    }
 
-    throw std::runtime_error("[MediaStream::decode_next] Could not decode next video packet, Media type " + std::string(av_get_media_type_string(this->get_media_type())) + " is currently unsupported");
-}
 
 std::vector<AVFrame*> MediaPlayer::next_video_frames() {
     if (this->has_video()) {
-        MediaStream& video_stream = this->get_video_stream();
+        StreamData& video_stream = this->get_video_stream();
         std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
         if (decodedFrames.size() > 0) {
             return decodedFrames;
@@ -200,7 +157,7 @@ std::vector<AVFrame*> MediaPlayer::next_video_frames() {
 
 std::vector<AVFrame*> MediaPlayer::next_audio_frames() {
     if (this->has_audio()) {
-        MediaStream& audio_stream = this->get_audio_stream();
+        StreamData& audio_stream = this->get_audio_stream();
         std::vector<AVFrame*> decodedFrames = audio_stream.decode_next();
         if (decodedFrames.size() > 0) {
             return decodedFrames;
@@ -230,7 +187,7 @@ void MediaPlayer::load_next_audio_frames(int frames) {
         throw std::runtime_error("Cannot load negative frames, (got " + std::to_string(frames) + " ). ");
     }
 
-    MediaStream& audio_media_stream = this->get_audio_stream();
+    StreamData& audio_media_stream = this->get_audio_stream();
     AVCodecContext* audio_codec_context = audio_media_stream.get_codec_context();
     AudioResampler audio_resampler(
         &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
@@ -268,13 +225,13 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     }
 
     if (this->has_video()) {
-        MediaStream& video_stream = this->get_video_stream();
+        StreamData& video_stream = this->get_video_stream();
         video_stream.flush();
         clear_playhead_packet_list(video_stream.packets);
     }
 
     if (this->has_audio()) {
-        MediaStream& audio_stream = this->get_audio_stream();
+        StreamData& audio_stream = this->get_audio_stream();
         audio_stream.flush();
         clear_playhead_packet_list(audio_stream.packets);
     }
@@ -282,7 +239,7 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     this->media_data->fetch_next(1000);
 
     if (this->has_video()) {
-        MediaStream& video_stream = this->get_video_stream();
+        StreamData& video_stream = this->get_video_stream();
         std::vector<AVFrame*> frames;
         bool passed_target_time = false;
         do {
@@ -299,7 +256,7 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     }
 
     if (this->has_audio()) {
-        MediaStream& audio_stream = this->get_audio_stream();
+        StreamData& audio_stream = this->get_audio_stream();
         std::vector<AVFrame*> frames;
         bool passed_target_time = false;
         do {
