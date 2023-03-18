@@ -185,7 +185,7 @@ int main(int argc, char** argv)
         VideoOutputMode mode = get_video_output_mode_from_params(colors, grayscale, background);
 
         if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
-            ncurses_initialize_grayscale_colors();
+            ncurses_initialize_grayscale_color_palette();
         }
         GUIState gui_state;
         gui_state.set_video_output_mode(mode);
@@ -222,7 +222,7 @@ void ncurses_init() {
     ncurses_initialized = true;
     initscr();
     start_color();
-    ncurses_initialize_colors();
+    ncurses_initialize_color_palette();
     cbreak();
     noecho();
     curs_set(0);

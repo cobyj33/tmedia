@@ -34,9 +34,6 @@ void render_movie_screen(PixelData& pixel_data, VideoOutputMode gui_state);
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
 void print_pixel_data_text(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height);
 
-// void print_pixel_data(PixelData &pixel_data, ftxui::Screen &screen, VideoOutputMode output_mode);
-// void print_pixel_data_text(PixelData &pixel_data, ftxui::Screen &screen);
-
 RGBColor get_index_display_color(int index, int length)
 {
     const double step = (255.0 / 2.0) / length;
@@ -56,11 +53,7 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex, GUIState gui_stat
     double batched_jump_time = 0;
     const int RENDER_LOOP_SLEEP_TIME_MS = 41;
     std::unique_lock<std::mutex> lock(alter_mutex, std::defer_lock);
-    // ftxui::Screen screen = ftxui::Screen::Create(ftxui::Dimension::Full(), ftxui::Dimension::Full());
-    // screen.SetCursor({0, 0, ftxui::Screen::Cursor::Hidden});
-
-    // std::unique_lock<std::mutex> lock(alter_mutex, std::defer_lock);
-    // erase();
+    erase();
 
     while (player->in_use)
     {
@@ -73,7 +66,7 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex, GUIState gui_stat
             goto render;
         }
 
-        if (player->playback.get_time(system_clock_sec()) >= player->get_duration())
+        if (player->get_time(system_clock_sec()) >= player->get_duration())
         {
             player->in_use = false;
             break;
@@ -91,7 +84,6 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex, GUIState gui_stat
             {
                 erase();
                 refresh();
-                // screen = ftxui::Screen::Create(ftxui::Dimension::Full(), ftxui::Dimension::Full());
             }
 
             if (input == KEY_LEFT || input == KEY_RIGHT)
@@ -116,7 +108,7 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex, GUIState gui_stat
 
         if (batched_jump_time != 0)
         {
-            double current_playback_time = player->playback.get_time(system_clock_sec());
+            double current_playback_time = player->get_time(system_clock_sec());
             double target_time = current_playback_time + batched_jump_time;
             target_time = clamp(target_time, 0.0, player->get_duration());
             player->jump_to_time(target_time, system_clock_sec());

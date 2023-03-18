@@ -107,7 +107,7 @@ int available_color_pairs = 0;
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 
-void ncurses_initialize_grayscale_colors() {
+void ncurses_initialize_grayscale_color_palette() {
     if (!has_colors()) {
         throw std::runtime_error("Cannot initialize ncurses grayscale colors, The current terminal does not support colors");
     }
@@ -118,7 +118,7 @@ void ncurses_initialize_grayscale_colors() {
     }
 }
 
-void ncurses_initialize_colors() {
+void ncurses_initialize_color_palette() {
     if (!has_colors()) {
         throw std::runtime_error("Cannot initialize ncurses colors, The current terminal does not support colors");
     }

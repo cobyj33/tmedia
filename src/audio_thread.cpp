@@ -54,17 +54,29 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     AudioStream& audio_stream = data->player->cache.audio_stream;
 
     // AudioStream& audio_stream = player->cache.audio_stream;
-    const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.15;
+    const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
     double current_system_time = system_clock_sec();
     if (data->player->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
-        data->player->jump_to_time(data->player->playback.get_time(current_system_time), current_system_time);
+        double target_resync_time = data->player->get_time(current_system_time);
+        if (audio_stream.is_time_in_bounds(target_resync_time)) {
+            audio_stream.set_time(target_resync_time);
+        } else {
+            data->player->jump_to_time(target_resync_time, current_system_time);
+        }
     }
 
     while (!audio_stream.can_read(frameCount)) {
         data->player->load_next_audio_frames(10);
     }
 
-    audio_stream.read_into(frameCount, (float*)pOutput);
+    if (audio_stream.can_read(frameCount)) {
+        audio_stream.read_into(frameCount, (float*)pOutput);
+    } else {
+        float* pFloatOutput = (float*)pOutput;
+        for (int i = 0; i < frameCount; i++) {
+            pFloatOutput[i] = 0.0;
+        }
+    }
 }
 
 void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
@@ -128,7 +140,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         player->load_next_audio_frames(10);
         audio_device.sampleRate = audio_codec_context->sample_rate * player->playback.get_speed();
         mutex_lock.unlock();
-        sleep_quick();
+        sleep_for_ms(17);
     }
 
 }

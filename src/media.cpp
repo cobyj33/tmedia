@@ -43,6 +43,10 @@ double MediaPlayer::get_duration() const {
     return this->media_data->duration;
 }
 
+double MediaPlayer::get_time(double current_system_time) const {
+    return this->playback.get_time(current_system_time);
+}
+
 bool MediaPlayer::has_video() const {
     return this->media_data->has_media_stream(AVMEDIA_TYPE_VIDEO);
 }
@@ -66,7 +70,7 @@ MediaStream& MediaPlayer::get_audio_stream() const {
 
 double MediaPlayer::get_desync_time(double current_system_time) const {
     if (this->has_audio() && this->has_video()) {
-        double current_playback_time = this->playback.get_time(current_system_time);
+        double current_playback_time = this->get_time(current_system_time);
         double desync = std::abs(this->cache.audio_stream.get_time() - current_playback_time);
         return desync;
     } else { // if there is only a video or audio stream, there can never be desync
@@ -249,8 +253,15 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     if (target_time < 0.0 || target_time > this->get_duration()) {
         throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time));
     }
-    const double original_time = this->playback.get_time(current_system_time);
-    int ret = avformat_seek_file(this->media_data->format_context, -1, 0.0, target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
+
+    const double EXACT_SEEK_TIME_START_THRESHOLD = 5.0;
+    const double SEEK_TIME_OFFSET = 1.0;
+    double seek_time = target_time > EXACT_SEEK_TIME_START_THRESHOLD ? target_time - SEEK_TIME_OFFSET : target_time;
+
+    //seek_time <= target_time is always true
+
+    const double original_time = this->get_time(current_system_time);
+    int ret = avformat_seek_file(this->media_data->format_context, -1, 0.0, seek_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
 
     if (ret < 0) {
         throw std::runtime_error("[MediaPlayer::jump_to_time] Failed to seek file");
@@ -362,92 +373,10 @@ void clear_behind_packet_list(PlayheadList<AVPacket*>& packets) {
     int index = packets.get_index();
     while (packets.can_step_backward()) {
         packets.step_backward();
+        AVPacket* packet = packets.get();
+        av_packet_free(&packet);
     }
 
     packets.set_index(index);
     packets.clear_behind();
 }
-
-
-
-
-void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS) {
-    if (packets.is_empty()) {
-        return;
-    }
-
-    int64_t lastPTS = packets.get()->pts;
-    while (true) {
-
-        if (packets.get()->pts == targetPTS) {
-            break;
-        } else if  (std::min(packets.get()->pts, lastPTS) <= targetPTS && std::max(packets.get()->pts, lastPTS) >= targetPTS) {
-            break;
-        } else if (packets.get()->pts > targetPTS) {
-            if (packets.can_step_backward()) {
-                packets.step_backward();
-                if (packets.get()->pts <= targetPTS) {
-                    break;
-                }
-            } else {
-                break;
-            }
-        } else if (packets.get()->pts < targetPTS) {
-            if (packets.can_step_forward()) {
-                packets.step_forward();
-                if (packets.get()->pts == targetPTS) {
-                    break;
-                } else if (packets.get()->pts > targetPTS) {
-                    packets.step_backward();
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-        
-        lastPTS = packets.get()->pts;
-    }
-}
-
-
-
-void move_frame_list_to_pts(PlayheadList<AVFrame*>& frames, int64_t targetPTS) {
-    if (frames.is_empty()) {
-        return;
-    }
-
-    int64_t lastPTS = frames.get()->pts;
-    while (true) {
-
-        if (frames.get()->pts == targetPTS) {
-            break;
-        } else if  (std::min(frames.get()->pts, lastPTS) <= targetPTS && std::max(frames.get()->pts, lastPTS) >= targetPTS) {
-            break;
-        } else if (frames.get()->pts > targetPTS) {
-            if (frames.can_step_backward()) {
-                frames.step_backward();
-                if (frames.get()->pts <= targetPTS) {
-                    break;
-                }
-            } else {
-                break;
-            }
-        } else if (frames.get()->pts < targetPTS) {
-            if (frames.can_step_forward()) {
-                frames.step_forward();
-                if (frames.get()->pts == targetPTS) {
-                    break;
-                } else if (frames.get()->pts > targetPTS) {
-                    frames.step_backward();
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-        
-        lastPTS = frames.get()->pts;
-    }
-}
-

@@ -103,7 +103,6 @@ class MediaPlayer {
 
         void start(GUIState gui_state, double start_time);
         double get_desync_time(double current_system_time) const;
-        // void resync(double current_system_time);
 
         /**
          * @brief Sets the currently displayed image of the currently playing media according to the PixelData
@@ -129,6 +128,15 @@ class MediaPlayer {
          */
         double get_duration() const;
 
+
+        /**
+         * @brief Returns the current timestamp of the video in seconds since the beginning of playback. This takes into account pausing, skipping, etc... and calculates the time according to the current system time given.
+         * 
+         * 
+         * @return The current time of playback since 0:00 in seconds
+         */
+        double get_time(double current_system_time) const;
+
         /**
          * @brief Moves the MediaPlayer's playback to a certain time (including video and audio streams)
          * @note The caller is responsible for making sure the time to jump to is in the bounds of the video's playtime
@@ -139,9 +147,24 @@ class MediaPlayer {
          */
         void jump_to_time(double target_time, double current_system_time);
 
+        /**
+         * @brief Dictates whether this media player has an available video stream
+         */
         bool has_video() const;
+
+        /**
+         * @brief Dictates whether this media player has an available audio stream
+         */
         bool has_audio() const;
+
+        /**
+         * @brief Dictates whether this media player has only an available video media stream and no other available types of media streams
+         */
         bool only_video() const;
+
+        /**
+         * @brief Dictates whether this media player has only an available audio media stream and no other available types of media streams
+         */
         bool only_audio() const;
 
         std::vector<AVFrame*> next_video_frames(); 
@@ -153,12 +176,14 @@ class MediaPlayer {
         MediaStream& get_audio_stream() const;
 };
 
-void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS);
-void move_frame_list_to_pts(PlayheadList<AVFrame*>& frames, int64_t targetPTS);
+// void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS);
+// void move_frame_list_to_pts(PlayheadList<AVFrame*>& frames, int64_t targetPTS);
+
+void clear_behind_packet_list(PlayheadList<AVPacket*>& packets);
 
 void clear_playhead_packet_list(PlayheadList<AVPacket*>& packets);
 void clear_playhead_frame_list(PlayheadList<AVFrame*>& frames);
 
-void clear_behind_packet_list(PlayheadList<AVPacket*>& packets);
+
 
 #endif

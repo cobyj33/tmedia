@@ -42,7 +42,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     }
 
     MediaStream& video_stream = player->get_video_stream();
-    double frame_time_sec = video_stream.get_average_frame_time_sec();
+    double avg_frame_time_sec = video_stream.get_average_frame_time_sec();
     AVCodecContext* video_codec_context = video_stream.get_codec_context();
 
     std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(video_codec_context->width, video_codec_context->height, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
@@ -58,8 +58,8 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         }
 
         mutex_lock.lock();
-        double frame_duration = frame_time_sec;
-        double frame_pts_time_sec = player->playback.get_time(system_clock_sec()) + frame_duration;
+        double frame_duration = avg_frame_time_sec;
+        double frame_pts_time_sec = player->get_time(system_clock_sec()) + frame_duration;
         double extra_delay = 0.0;
 
         try {
@@ -69,7 +69,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
                 AVFrame* frame_image = videoConverter.convert_video_frame(decoded_frames[0]);
                 frame_duration = (double)frame_image->duration * video_stream.get_time_base();
                 frame_pts_time_sec = (double)frame_image->pts * video_stream.get_time_base();
-                extra_delay = (double)(frame_image->repeat_pict) / (2 * frame_time_sec);
+                extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
                 player->set_current_image(frame_image);
                 av_frame_free(&frame_image);
             }
@@ -84,7 +84,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / player->playback.get_speed() ) );
         player->playback.skip(frame_speed_skip_time_sec);
 
-        const double current_time = player->playback.get_time(system_clock_sec());
+        const double current_time = player->get_time(system_clock_sec());
         double waitDuration = frame_pts_time_sec - current_time + extra_delay - frame_speed_skip_time_sec;
 
         mutex_lock.unlock();

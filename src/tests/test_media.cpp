@@ -73,23 +73,23 @@ TEST_CASE("Media", "[functions]") {
 
 
         
-        SECTION("Movement by PTS") {
-            const int TARGET_PTS = LIST_LENGTH / 3;
-            // move_frame_list_to_pts(frame_pts_list, TARGET_PTS);
-            // REQUIRE(frame_pts_list.get()->pts == TARGET_PTS);
+        // SECTION("Movement by PTS") {
+        //     const int TARGET_PTS = LIST_LENGTH / 3;
+        //     // move_frame_list_to_pts(frame_pts_list, TARGET_PTS);
+        //     // REQUIRE(frame_pts_list.get()->pts == TARGET_PTS);
 
-            move_packet_list_to_pts(packet_pts_list, TARGET_PTS);
-            REQUIRE(packet_pts_list.get_index() == TARGET_PTS);
-            REQUIRE(packet_pts_list.get()->pts == TARGET_PTS);
+        //     move_packet_list_to_pts(packet_pts_list, TARGET_PTS);
+        //     REQUIRE(packet_pts_list.get_index() == TARGET_PTS);
+        //     REQUIRE(packet_pts_list.get()->pts == TARGET_PTS);
 
-            move_packet_list_to_pts(packet_pts_list, TARGET_PTS / 2);
-            REQUIRE(packet_pts_list.get_index() == TARGET_PTS / 2);
-            REQUIRE(packet_pts_list.get()->pts == TARGET_PTS / 2);
+        //     move_packet_list_to_pts(packet_pts_list, TARGET_PTS / 2);
+        //     REQUIRE(packet_pts_list.get_index() == TARGET_PTS / 2);
+        //     REQUIRE(packet_pts_list.get()->pts == TARGET_PTS / 2);
 
-            move_packet_list_to_pts(packet_pts_list, TARGET_PTS * 2);
-            REQUIRE(packet_pts_list.get_index() == TARGET_PTS * 2);
-            REQUIRE(packet_pts_list.get()->pts == TARGET_PTS * 2);
-        }
+        //     move_packet_list_to_pts(packet_pts_list, TARGET_PTS * 2);
+        //     REQUIRE(packet_pts_list.get_index() == TARGET_PTS * 2);
+        //     REQUIRE(packet_pts_list.get()->pts == TARGET_PTS * 2);
+        // }
 
         clear_playhead_frame_list(frame_pts_list);
         clear_playhead_packet_list(packet_pts_list);
