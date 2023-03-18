@@ -5,6 +5,8 @@
 #include <string>
 #include <algorithm>
 #include <memory>
+#include <thread>
+#include <mutex>
 
 #include "boiler.h"
 #include "playheadlist.hpp"
@@ -19,6 +21,28 @@ extern "C" {
 #include "ncurses.h"
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
+}
+
+void MediaPlayer::start(MediaGUI media_gui, double start_time) {
+    if (this->in_use) {
+        throw std::runtime_error("CANNOT USE MEDIA PLAYER THAT IS ALREADY IN USE");
+    }
+
+    this->in_use = true;
+    this->playback.start(system_clock_sec());
+    this->jump_to_time(start_time, system_clock_sec());
+
+
+    std::mutex alter_mutex;
+    std::thread video_thread(video_playback_thread, this, std::ref(alter_mutex));
+    std::thread audio_thread(audio_playback_thread, this, std::ref(alter_mutex));
+    render_loop(this, std::ref(alter_mutex), media_gui);
+
+    video_thread.join();
+    audio_thread.join();
+
+    this->playback.stop(system_clock_sec());
+    this->in_use = false;
 }
 
 StreamData& MediaData::get_media_stream(enum AVMediaType media_type) {

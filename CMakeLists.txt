@@ -46,7 +46,6 @@ add_executable(ascii_video
 ./src/image.cpp
 ./src/media.cpp
 ./src/boiler.cpp
-./src/init.cpp
 ./src/threads.cpp
 ./src/video_thread.cpp
 ./src/formatting.cpp
@@ -81,7 +80,6 @@ add_executable(tests
 ./src/image.cpp
 ./src/media.cpp
 ./src/boiler.cpp
-./src/init.cpp
 ./src/threads.cpp
 ./src/video_thread.cpp
 ./src/formatting.cpp
