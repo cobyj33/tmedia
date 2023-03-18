@@ -22,12 +22,10 @@ void MediaPlayer::start(MediaGUI media_gui, double start_time) {
     std::mutex alter_mutex;
     std::thread video_thread(video_playback_thread, this, std::ref(alter_mutex));
     std::thread audio_thread(audio_playback_thread, this, std::ref(alter_mutex));
-    // std::thread data_thread(data_loading_thread, this, std::ref(alter_mutex));
     render_loop(this, std::ref(alter_mutex), media_gui);
 
     video_thread.join();
     audio_thread.join();
-    // data_thread.join();
 
     this->playback.stop(system_clock_sec());
     this->in_use = false;

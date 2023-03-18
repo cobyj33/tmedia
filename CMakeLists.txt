@@ -52,7 +52,6 @@ add_executable(ascii_video
 ./src/formatting.cpp
 ./src/wmath.cpp
 ./src/renderer.cpp
-./src/loader.cpp
 ./src/wtime.cpp
 ./src/color.cpp
 ./src/icons.cpp
@@ -88,7 +87,6 @@ add_executable(tests
 ./src/formatting.cpp
 ./src/wmath.cpp
 ./src/renderer.cpp
-./src/loader.cpp
 ./src/wtime.cpp
 ./src/color.cpp
 ./src/icons.cpp

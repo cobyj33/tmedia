@@ -52,17 +52,6 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex);
 void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex);
 
 /**
- * @brief This loop is responsible for loading 
- * 
- * @note This loop should be run in a separate thread
- * @note This loop should not output anything toward the stdout stream in any way
- * 
- * @param player The MediaPlayer to generate and update video frames for
- * @param alter_mutex The mutex used to synchronize the threads 
- */
-void data_loading_thread(MediaPlayer* player, std::mutex& alter_mutex);
-
-/**
  * 
  * @brief Some responsibilites of this thread are to process terminal input, render frames, and detect when the MediaPlayer has finished and send a notification in some way for other threads to end.
  * 
