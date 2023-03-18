@@ -130,22 +130,23 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
     return audio_frames;
 }
 
-std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, PlayheadList<AVPacket*>& video_packet_list) {
+std::vector<AVFrame*> decode_video_packet_list(AVCodecContext* video_codec_context, PlayheadList<AVPacket*>& video_packet_list) {
     std::vector<AVFrame*> decoded_frames;
-
-    while (video_packet_list.can_step_forward()) {
+    AVPacket* packet;
+    
+    while (!video_packet_list.is_empty()) {
         try {
-            decoded_frames = decode_video_packet(video_codec_context, video_packet_list.get());
-            if (decoded_frames.size() == 0 && video_packet_list.can_step_forward()) {
-                video_packet_list.step_forward();
+            packet = video_packet_list.pop_front();
+            decoded_frames = decode_video_packet(video_codec_context, packet);
+            av_packet_free(&packet);
+
+            if (decoded_frames.size() == 0 && !video_packet_list.is_empty()) {
                 continue;
             }
-
             return decoded_frames;
         } catch (ascii::ffmpeg_error e) {
-            if (e.is_eagain() && video_packet_list.can_step_forward()) {
-                video_packet_list.step_forward();
-            } else {
+            av_packet_free(&packet);
+            if (!e.is_eagain() || video_packet_list.is_empty()) { // if error is fatal, or the packet list is empty
                 throw e;
             }
         }
@@ -154,30 +155,32 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, P
     return decoded_frames;
 }
 
-void decode_until(AVCodecContext* video_codec_context, PlayheadList<AVPacket*>& video_packet_list, int64_t target_pts) {
-    while (video_packet_list.get()->pts < target_pts && video_packet_list.can_step_forward()) {
-        decode_video_packet_void(video_codec_context, video_packet_list.get());
-        video_packet_list.try_step_forward();
+void decode_packet_list_until(AVCodecContext* video_codec_context, PlayheadList<AVPacket*>& video_packet_list, int64_t target_pts) {
+    while (video_packet_list.get()->pts < target_pts && !video_packet_list.is_empty()) {
+        AVPacket* packet = video_packet_list.pop_front();
+        decode_video_packet_void(video_codec_context, packet);
+        av_packet_free(&packet);
     }
 }
 
 
-std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, PlayheadList<AVPacket*>& audio_packet_list) {
+std::vector<AVFrame*> decode_audio_packet_list(AVCodecContext* audio_codec_context, PlayheadList<AVPacket*>& audio_packet_list) {
     std::vector<AVFrame*> decoded_frames;
+    AVPacket* packet;
 
-    while (audio_packet_list.can_step_forward()) {
+    while (!audio_packet_list.is_empty()) {
         try {
-            decoded_frames = decode_audio_packet(audio_codec_context, audio_packet_list.get());
-            if (decoded_frames.size() == 0 && audio_packet_list.can_step_forward()) {
-                audio_packet_list.step_forward();
+            packet = audio_packet_list.pop_front();
+            decoded_frames = decode_audio_packet(audio_codec_context, packet);
+            av_packet_free(&packet);
+            if (decoded_frames.size() == 0 && !audio_packet_list.is_empty()) {
                 continue;
             }
 
             return decoded_frames;
         } catch (ascii::ffmpeg_error e) {
-            if (e.is_eagain() && audio_packet_list.can_step_forward()) {
-                audio_packet_list.step_forward();
-            } else {
+            av_packet_free(&packet);
+            if (!e.is_eagain() || audio_packet_list.is_empty()) { // if error is fatal, or the packet list is empty
                 throw e;
             }
         }
@@ -186,16 +189,16 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, P
     return decoded_frames;
 }
 
-std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audio_codec_context, AudioResampler& audio_resampler, AVPacket* packet) {
-    std::vector<AVFrame*> raw_audio_frames = decode_audio_packet(audio_codec_context, packet);
-    std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(raw_audio_frames);
-    clear_av_frame_list(raw_audio_frames);
-    return audio_frames;
-}
+// std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audio_codec_context, AudioResampler& audio_resampler, AVPacket* packet) {
+//     std::vector<AVFrame*> raw_audio_frames = decode_audio_packet(audio_codec_context, packet);
+//     std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(raw_audio_frames);
+//     clear_av_frame_list(raw_audio_frames);
+//     return audio_frames;
+// }
 
-std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audio_codec_context, AudioResampler& audio_resampler, PlayheadList<AVPacket*>& packet_buffer) {
-    std::vector<AVFrame*> raw_audio_frames = decode_audio_packet(audio_codec_context, packet_buffer);
-    std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(raw_audio_frames);
-    clear_av_frame_list(raw_audio_frames);
-    return audio_frames;
-}
+// std::vector<AVFrame*> get_final_audio_frames(AVCodecContext* audio_codec_context, AudioResampler& audio_resampler, PlayheadList<AVPacket*>& packet_buffer) {
+//     std::vector<AVFrame*> raw_audio_frames = decode_audio_packet_list(audio_codec_context, packet_buffer);
+//     std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(raw_audio_frames);
+//     clear_av_frame_list(raw_audio_frames);
+//     return audio_frames;
+// }

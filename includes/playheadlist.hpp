@@ -174,17 +174,24 @@ T PlayheadList<T>::pop_front() {
     std::shared_ptr<PlayheadListNode<T>> target_node = this->m_first;
     this->m_first->next->prev = nullptr;
 
-    if (this->m_current == this->m_first) { // if the start is the current
-        this->m_current = this->m_first->next;
-    }
 
-    this->m_first = this->m_first->next;
-    this->m_first->prev->next = nullptr; // break linking on both sides
+    std::shared_ptr<PlayheadListNode<T>> next_first = this->m_first->next;
+    this->m_first->next->prev = nullptr; // break linking on both sides
+    this->m_first->next = nullptr;
+    this->m_first = next_first;
 
-    if (this->m_index > 0) {
+    if (this->m_index == 0) { // if the start is the current
+        this->m_current = next_first;
+    } else if (this->m_index > 0) {
         this->m_index--;
     }
+
     this->m_length--;
+
+    if (this->m_length == 1) {
+        this->m_current = this->m_first;
+        this->m_last = this->m_first;
+    }
 
     return target_node->data;
 }
@@ -317,12 +324,12 @@ bool PlayheadList<T>::is_empty() const {
 
 template<typename T>
 bool PlayheadList<T>::at_start() const {
-    return this->m_index == 0;
+    return this->m_length > 0 && this->m_index == 0;
 };
 
 template<typename T>
 bool PlayheadList<T>::at_end() const {
-    return this->m_index == this->m_length - 1;
+    return this->m_length > 0 && this->m_index == this->m_length - 1;
 };
 
 template<typename T>

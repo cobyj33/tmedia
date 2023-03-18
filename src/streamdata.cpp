@@ -74,12 +74,10 @@ AVCodecContext* StreamData::get_codec_context() const {
 
 std::vector<AVFrame*> StreamData::decode_next() {
     if (this->media_type == AVMEDIA_TYPE_VIDEO) {
-        std::vector<AVFrame*> decoded_frames = decode_video_packet(this->get_codec_context(), this->packets);
-        this->packets.try_step_forward();
+        std::vector<AVFrame*> decoded_frames = decode_video_packet_list(this->codec_context, this->packets);
         return decoded_frames;
     } else if (this->media_type == AVMEDIA_TYPE_AUDIO) {
-        std::vector<AVFrame*> decoded_frames = decode_audio_packet(this->get_codec_context(), this->packets);
-        this->packets.try_step_forward();
+        std::vector<AVFrame*> decoded_frames = decode_audio_packet_list(this->codec_context, this->packets);
         return decoded_frames;
     }
 

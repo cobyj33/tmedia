@@ -39,6 +39,37 @@ bool MediaData::has_media_stream(enum AVMediaType media_type) {
     }
 }
 
+int MediaData::fetch_next(int requestedPacketCount) {
+    AVPacket* reading_packet = av_packet_alloc();
+    int packets_read = 0;
+
+    while (av_read_frame(this->format_context, reading_packet) == 0) {
+       
+        for (int i = 0; i < this->nb_streams; i++) {
+            if (this->media_streams[i]->get_stream_index() == reading_packet->stream_index) {
+                AVPacket* saved_packet = av_packet_alloc();
+                av_packet_ref(saved_packet, reading_packet);
+                
+                this->media_streams[i]->packets.push_back(saved_packet);
+                packets_read++;
+                break;
+            }
+        }
+
+        av_packet_unref(reading_packet);
+
+         if (packets_read >= requestedPacketCount) {
+            av_packet_free(&reading_packet);
+            return packets_read;
+        }
+    }
+
+    //reached EOF
+
+    av_packet_free(&reading_packet);
+    return packets_read;
+}
+
 double MediaPlayer::get_duration() const {
     return this->media_data->duration;
 }
@@ -114,21 +145,10 @@ MediaData::MediaData(const char* file_name) {
     this->duration = (double)this->format_context->duration / AV_TIME_BASE;
 }
 
-
-
-// MediaStream::MediaStream(StreamData& streamData) : info(streamData) { }
-
 MediaData::~MediaData() {
     avformat_close_input(&(this->format_context));
     avformat_free_context(this->format_context);
 }
-
-//TODO: There's totally a memory leak here with the freeing of the packets
-// MediaStream::~MediaStream() {
-//     // delete this->packets;
-//     // delete this->info;
-// }
-
 
 
 std::vector<AVFrame*> MediaPlayer::next_video_frames() {
@@ -137,7 +157,7 @@ std::vector<AVFrame*> MediaPlayer::next_video_frames() {
         std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
         if (decodedFrames.size() > 0) {
             return decodedFrames;
-        } 
+        }
 
         
         int fetch_count = 0;
@@ -148,7 +168,6 @@ std::vector<AVFrame*> MediaPlayer::next_video_frames() {
                 return decodedFrames;
             } 
         } while (fetch_count > 0);
-
 
         return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
     }
@@ -298,9 +317,9 @@ void clear_playhead_packet_list(PlayheadList<AVPacket*>& packets) {
         av_packet_free(&packet);
         packets.step_forward();
     }
-
     AVPacket* packet = packets.get();
     av_packet_free(&packet);
+
     packets.clear();
 }
 

@@ -45,33 +45,3 @@ bool data_loading_thread_loop(MediaPlayer* player, std::mutex& mutex) {
     return true;
 }
 
-int MediaData::fetch_next(int requestedPacketCount) {
-    AVPacket* reading_packet = av_packet_alloc();
-    int packets_read = 0;
-
-    while (av_read_frame(this->format_context, reading_packet) == 0) {
-       
-        for (int i = 0; i < this->nb_streams; i++) {
-            if (this->media_streams[i]->get_stream_index() == reading_packet->stream_index) {
-                AVPacket* saved_packet = av_packet_alloc();
-                av_packet_ref(saved_packet, reading_packet);
-                
-                this->media_streams[i]->packets.push_back(saved_packet);
-                packets_read++;
-                break;
-            }
-        }
-
-        av_packet_unref(reading_packet);
-
-         if (packets_read >= requestedPacketCount) {
-            av_packet_free(&reading_packet);
-            return packets_read;
-        }
-    }
-
-    //reached EOF
-
-    av_packet_free(&reading_packet);
-    return packets_read;
-}

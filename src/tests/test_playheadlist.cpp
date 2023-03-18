@@ -17,6 +17,7 @@ TEST_CASE("PlaylistHead", "[structure]") {
     }
 
     SECTION("Initial Push Back") {
+        PlayheadList<int> list;
         list.push_back(5);
         REQUIRE( list.get() == 5 );
         REQUIRE(list.get_index() == 0);
@@ -44,6 +45,7 @@ TEST_CASE("PlaylistHead", "[structure]") {
     }
 
     SECTION("Initial Push Front") {
+        PlayheadList<int> list;
         list.push_front(5);
         REQUIRE( list.get() == 5 );
         REQUIRE(list.get_index() == 0);
@@ -59,9 +61,90 @@ TEST_CASE("PlaylistHead", "[structure]") {
     }
 
     SECTION("Data") {
-        const int RANGE_10[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+        SECTION("Pop front") {
+
+            SECTION("Index starts at 0") {
+                PlayheadList<int> list;
+                for (int i = 0; i < 5; i++) {
+                    list.push_back(i);
+                }
+
+                REQUIRE(list.pop_front() == 0);
+
+                REQUIRE(list.at_edge());
+                REQUIRE(list.at_start());
+                REQUIRE(list.get_index() == 0);
+
+                REQUIRE(list.pop_front() == 1);
+
+                REQUIRE(list.at_edge());
+                REQUIRE(list.at_start());
+                REQUIRE(list.get_index() == 0);
+
+                REQUIRE(list.pop_front() == 2);
+
+                REQUIRE(list.at_edge());
+                REQUIRE(list.at_start());
+                REQUIRE(list.get_index() == 0);
+
+                REQUIRE(list.pop_front() == 3);
+
+                REQUIRE(list.at_edge());
+                REQUIRE(list.at_start());
+                REQUIRE(list.get_index() == 0);
+
+                REQUIRE(list.pop_front() == 4);
+
+                REQUIRE(list.get_index() == -1);
+                REQUIRE(list.is_empty());
+                REQUIRE(list.get_length() == 0);
+
+                REQUIRE_THROWS([&](){ list.pop_front(); }());
+
+            }
+
+            SECTION("Index does not start at 0") {
+                PlayheadList<int> list;
+                for (int i = 0; i < 10; i++) {
+                    list.push_back(i);
+                }
+
+                list.set_index(4);
+
+                REQUIRE(list.pop_front() == 0);
+                REQUIRE(list.get_index() == 3);
+                REQUIRE(list.get_length() == 9);
+
+                REQUIRE(list.pop_front() == 1);
+                REQUIRE(list.get_index() == 2);
+                REQUIRE(list.get_length() == 8);
+
+                REQUIRE(list.pop_front() == 2);
+                REQUIRE(list.get_index() == 1);
+                REQUIRE(list.get_length() == 7);
+
+                REQUIRE(list.pop_front() == 3);
+                REQUIRE(list.get_index() == 0);
+                REQUIRE(list.get_length() == 6);
+
+                REQUIRE(list.pop_front() == 4);
+                REQUIRE(list.get_index() == 0);
+                REQUIRE(list.get_length() == 5);
+
+                REQUIRE(list.pop_front() == 5);
+                REQUIRE(list.get_index() == 0);
+                REQUIRE(list.get_length() == 4);
+
+                REQUIRE(list.pop_front() == 6);
+                REQUIRE(list.get_index() == 0);
+                REQUIRE(list.get_length() == 3);
+            }
+
+        }
 
         SECTION("Pushing To Back") {
+            PlayheadList<int> list;
             for (int i = 0; i < 10; i++) {
                 list.push_back(i);
             }
@@ -69,45 +152,56 @@ TEST_CASE("PlaylistHead", "[structure]") {
             REQUIRE( list.get_length() == 10 );
             REQUIRE( list.get() == 0 );
             REQUIRE( list.get_index() == 0 );
+        }
 
-            SECTION("Setting index") {
-                list.set_index(3);
+        SECTION("Setting index") {
+            PlayheadList<int> list;
+            for (int i = 0; i < 10; i++) {
+                list.push_back(i);
+            }
 
-                REQUIRE( list.get_length() == 10 );
-                REQUIRE( list.get() == 3 );
-                REQUIRE( list.get_index() == 3 );
+            list.set_index(3);
 
-                SECTION("Setting index backward") {
-                    list.set_index(1);
-                    REQUIRE( list.get() == 1 );
-                    REQUIRE( list.get_index() == 1 );
+            REQUIRE( list.get_length() == 10 );
+            REQUIRE( list.get() == 3 );
+            REQUIRE( list.get_index() == 3 );
 
-                }
-            } // SECTION "Setting index"
+            SECTION("Setting index backward") {
+                list.set_index(1);
+                REQUIRE( list.get() == 1 );
+                REQUIRE( list.get_index() == 1 );
 
-            SECTION("Stepping Forward") {
-                REQUIRE(list.can_step_forward());
-                list.step_forward();
-                REQUIRE(list.can_step_forward());
-                list.step_forward();
-                REQUIRE(list.can_step_forward());
-                list.step_forward();
-                REQUIRE(list.get() == 3);
-                REQUIRE(list.get_index() == 3);
+            }
+        } // SECTION "Setting index"
 
-                SECTION("Stepping Backward") {
-                    REQUIRE(list.can_step_backward());
-                    list.step_backward();
-                    REQUIRE(list.can_step_backward());
-                    list.step_backward();
-                    REQUIRE(list.get() == 1);
-                    REQUIRE(list.get_index() == 1);
-                }
-            } // SECTION "Stepping Forward"
-        } // SECTION "Pushing To Back"
+        SECTION("Stepping Forward") {
+            PlayheadList<int> list;
+            for (int i = 0; i < 10; i++) {
+                list.push_back(i);
+            }
+
+            REQUIRE(list.can_step_forward());
+            list.step_forward();
+            REQUIRE(list.can_step_forward());
+            list.step_forward();
+            REQUIRE(list.can_step_forward());
+            list.step_forward();
+            REQUIRE(list.get() == 3);
+            REQUIRE(list.get_index() == 3);
+
+            SECTION("Stepping Backward") {
+                REQUIRE(list.can_step_backward());
+                list.step_backward();
+                REQUIRE(list.can_step_backward());
+                list.step_backward();
+                REQUIRE(list.get() == 1);
+                REQUIRE(list.get_index() == 1);
+            }
+        } // SECTION "Stepping Forward"
 
 
         SECTION("Pushing To Front") {
+            PlayheadList<int> list;
             for (int i = 0; i < 10; i++) {
                 list.push_front(i);
             }
@@ -129,8 +223,5 @@ TEST_CASE("PlaylistHead", "[structure]") {
             }
         } // SECTION "Pushing To Front"
 
-        
-
     } // SECTION "Data"
-
 }
