@@ -25,22 +25,6 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-
-class MediaData {
-    public:
-        AVFormatContext* format_context;
-        std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> media_streams;
-
-        MediaData(const char* file_name);
-        ~MediaData();
-
-        int get_nb_media_streams() const;
-        StreamData& get_media_stream(enum AVMediaType media_type);
-        bool has_media_stream(enum AVMediaType media_type);
-        int fetch_next(int requestedPacketCount);
-};
-
-
 class MediaCache {
     public:
         PixelData image;
@@ -61,7 +45,8 @@ class MediaCache {
 class MediaPlayer {
     public:
         MediaCache cache;
-        std::unique_ptr<MediaData> media_data;
+        AVFormatContext* format_context;
+        std::vector<std::unique_ptr<StreamData>> media_streams;
 
         MediaGUI media_gui;
 
@@ -70,13 +55,8 @@ class MediaPlayer {
         bool in_use;
         bool is_looped;
 
-        MediaPlayer(const char* file_name) : in_use(false), is_looped(false), file_name(file_name) {
-            this->media_data = std::make_unique<MediaData>(file_name);
-        }
-
-        MediaPlayer(const char* file_name, MediaGUI starting_media_gui) : in_use(false), is_looped(false), file_name(file_name), media_gui(starting_media_gui) {
-            this->media_data = std::make_unique<MediaData>(file_name);
-        }
+        MediaPlayer(const char* file_name);
+        MediaPlayer(const char* file_name, MediaGUI starting_media_gui);
 
         void start(double start_time);
         double get_desync_time(double current_system_time) const;
@@ -151,10 +131,14 @@ class MediaPlayer {
 
         StreamData& get_video_stream() const;
         StreamData& get_audio_stream() const;
-};
 
-// void move_packet_list_to_pts(PlayheadList<AVPacket*>& packets, int64_t targetPTS);
-// void move_frame_list_to_pts(PlayheadList<AVFrame*>& frames, int64_t targetPTS);
+        int get_nb_media_streams() const;
+        StreamData& get_media_stream(enum AVMediaType media_type) const;
+        bool has_media_stream(enum AVMediaType media_type) const;
+        int fetch_next(int requestedPacketCount);
+
+        ~MediaPlayer();
+};
 
 void clear_behind_packet_list(PlayheadList<AVPacket*>& packets);
 

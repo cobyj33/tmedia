@@ -106,7 +106,7 @@ std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> get_stream_datas(AVFor
     return std::move(stream_datas);
 }
 
-StreamData& get_av_media_stream(std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> stream_datas, enum AVMediaType media_type) {
+StreamData& get_av_media_stream(std::unique_ptr<std::vector<std::unique_ptr<StreamData>>>& stream_datas, enum AVMediaType media_type) {
     for (int i = 0; i < stream_datas->size(); i++) {
         if ((*stream_datas)[i]->media_type == media_type) {
             return *(*stream_datas)[i];
@@ -116,7 +116,7 @@ StreamData& get_av_media_stream(std::unique_ptr<std::vector<std::unique_ptr<Stre
     throw std::runtime_error("Could not find stream data for media type " + std::string(av_get_media_type_string(media_type)));
 };
 
-bool has_av_media_stream(std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> stream_datas, enum AVMediaType media_type) {
+bool has_av_media_stream(std::unique_ptr<std::vector<std::unique_ptr<StreamData>>>& stream_datas, enum AVMediaType media_type) {
     for (int i = 0; i < stream_datas->size(); i++) {
         if ((*stream_datas)[i]->media_type == media_type) {
             return true;

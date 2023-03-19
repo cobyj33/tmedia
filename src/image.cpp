@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 #include <cstdlib>
+#include <memory>
 
 
 #include "ascii.h"
@@ -15,6 +16,7 @@
 #include "boiler.h"
 #include "videoconverter.h"
 #include "except.h"
+#include "streamdata.h"
 
 extern "C" {
 #include <libavutil/pixfmt.h>
@@ -27,11 +29,14 @@ extern "C" {
 
 
 PixelData::PixelData(const char* file_name) {
-    MediaData media_data(file_name);
-    if (!media_data.has_media_stream(AVMEDIA_TYPE_VIDEO)) {
-        throw std::runtime_error("[PixelData::PixelData] Could not fetch image of file " + std::string(file_name));
+    AVFormatContext* format_context = open_format_context(std::string(file_name));
+    std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO };
+    std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> media_streams = std::move(get_stream_datas(format_context, media_types));
+
+    if (!has_av_media_stream(media_streams, AVMEDIA_TYPE_VIDEO)) {
+        throw std::runtime_error("[PixelData::PixelData(const char* file_name)] Could not fetch image of file " + std::string(file_name));
     }
-    StreamData& imageStream = media_data.get_media_stream(AVMEDIA_TYPE_VIDEO);
+    StreamData& imageStream = get_av_media_stream(media_streams, AVMEDIA_TYPE_VIDEO);
 
     AVCodecContext* codec_context = imageStream.get_codec_context();
     VideoConverter image_converter(
@@ -44,7 +49,7 @@ PixelData::PixelData(const char* file_name) {
 
     std::vector<AVFrame*> original_frame_container;
 
-    while (av_read_frame(media_data.format_context, packet) == 0) {
+    while (av_read_frame(format_context, packet) == 0) {
         if (packet->stream_index != imageStream.get_stream_index())
             continue;
 
