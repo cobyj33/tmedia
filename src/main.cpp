@@ -95,13 +95,12 @@ int main(int argc, char** argv)
     parser.add_argument("-t", "--time")
         .help("Choose the time to start media playback")
         .default_value(std::string("00:00"));
-    
+
     // parser.add_argument("-l", "--loop", "--looped")
-    //     .help("Loop the media playback")
+    //     .help("Set the video to loop on completion")
     //     .default_value(false)
     //     .implicit_value(true);
-
-
+    
     try {
         parser.parse_args(argc, argv);
     }
@@ -120,6 +119,8 @@ int main(int argc, char** argv)
         bool grayscale = !colors && parser.get<bool>("-g");
         bool background = parser.get<bool>("-b");
         bool dump = parser.get<bool>("-d");
+        // bool is_looped = parser.get<bool>("-l");
+        bool video = parser.get<bool>("-v");
 
         if (dump) {
             dump_file_info(file.c_str());
@@ -193,8 +194,8 @@ int main(int argc, char** argv)
         MediaGUI media_gui;
         media_gui.set_video_output_mode(mode);
 
-        bool video = parser.get<bool>("-v");
         MediaPlayer player(file.c_str(), media_gui);
+        // player.is_looped = is_looped;
         player.start(start_time);
 
         ncurses_uninit();

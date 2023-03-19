@@ -46,9 +46,9 @@ void MediaPlayer::start(double start_time) {
 }
 
 StreamData& MediaData::get_media_stream(enum AVMediaType media_type) {
-    for (int i = 0; i < this->nb_streams; i++) {
-        if (this->media_streams[i]->get_media_type() == media_type) {
-            return *this->media_streams[i];
+    for (int i = 0; i < this->media_streams->size(); i++) {
+        if ((*this->media_streams)[i]->get_media_type() == media_type) {
+            return *(*this->media_streams)[i];
         }
     }
     throw std::runtime_error("Cannot get media stream " + std::string(av_get_media_type_string(media_type)) + " from media data, could not be found");
@@ -69,12 +69,12 @@ int MediaData::fetch_next(int requestedPacketCount) {
 
     while (av_read_frame(this->format_context, reading_packet) == 0) {
        
-        for (int i = 0; i < this->nb_streams; i++) {
-            if (this->media_streams[i]->get_stream_index() == reading_packet->stream_index) {
+        for (int i = 0; i < this->media_streams->size(); i++) {
+            if ((*this->media_streams)[i]->get_stream_index() == reading_packet->stream_index) {
                 AVPacket* saved_packet = av_packet_alloc();
                 av_packet_ref(saved_packet, reading_packet);
                 
-                this->media_streams[i]->packets.push_back(saved_packet);
+                (*this->media_streams)[i]->packets.push_back(saved_packet);
                 packets_read++;
                 break;
             }
@@ -155,18 +155,15 @@ MediaData::MediaData(const char* file_name) {
         throw std::runtime_error("Could not allocate media data of " + std::string(file_name) + " because of error while fetching file format data: " + e.what());
     } 
 
-    enum AVMediaType media_types[2] = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-    this->stream_datas = std::make_unique<StreamDataGroup>(this->format_context, media_types, 2);
+    std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
+    this->media_streams = std::move(get_stream_datas(this->format_context, media_types));
 
     this->allPacketsRead = false;
-    this->nb_streams = this->stream_datas->get_nb_streams();
-
-    for (int i = 0; i < this->nb_streams; i++) {
-        std::unique_ptr<StreamData> media_stream_ptr = std::make_unique<StreamData>( (*this->stream_datas)[i] );
-        this->media_streams.push_back(std::move(media_stream_ptr));
-    }
-
     this->duration = (double)this->format_context->duration / AV_TIME_BASE;
+}
+
+int MediaData::get_nb_media_streams() const {
+    return this->media_streams->size();
 }
 
 MediaData::~MediaData() {
@@ -183,15 +180,19 @@ std::vector<AVFrame*> MediaPlayer::next_video_frames() {
             return decodedFrames;
         }
 
-        
-        int fetch_count = 0;
+        int fetch_count = -1;
         do {
-            fetch_count = this->media_data->fetch_next(10);
+            fetch_count = video_stream.packets.is_empty() ? this->media_data->fetch_next(10) : -1; // -1 means that no fetch request was made
             std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
             if (decodedFrames.size() > 0) {
                 return decodedFrames;
             } 
-        } while (fetch_count > 0);
+        } while (fetch_count != 0);
+
+        // if (this->is_looped) {
+        //     this->jump_to_time(0.0, system_clock_sec());
+        //     return this->next_video_frames();
+        // }
 
         return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
     }
@@ -206,23 +207,26 @@ std::vector<AVFrame*> MediaPlayer::next_audio_frames() {
             return decodedFrames;
         } 
 
-        
-        int fetch_count = 0;
+        int fetch_count = -1;
         do {
-            fetch_count = this->media_data->fetch_next(10);
+            fetch_count = audio_stream.packets.is_empty() ? this->media_data->fetch_next(10) : -1;
             std::vector<AVFrame*> decodedFrames = audio_stream.decode_next();
             if (decodedFrames.size() > 0) {
                 return decodedFrames;
             } 
-        } while (fetch_count > 0);
+        } while (fetch_count != 0);
 
+        // if (this->is_looped) {
+        //     this->jump_to_time(0.0, system_clock_sec());
+        //     return this->next_audio_frames();
+        // }
 
         return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
     }
     throw std::runtime_error("[MediaPlayer::next_audio_frames] Cannot get next audio frames, as no video stream is available to decode from");
 }
 
-void MediaPlayer::load_next_audio_frames(int frames) {
+int MediaPlayer::load_next_audio_frames(int frames) {
     if (!this->has_audio()) {
         throw std::runtime_error("[MediaPlayer::load_next_audio_frames] Cannot load next audio frames, Media Player does not have any audio data to load");
     }
@@ -230,6 +234,7 @@ void MediaPlayer::load_next_audio_frames(int frames) {
         throw std::runtime_error("Cannot load negative frames, (got " + std::to_string(frames) + " ). ");
     }
 
+    int written_samples = 0;
     StreamData& audio_media_stream = this->get_audio_stream();
     AVCodecContext* audio_codec_context = audio_media_stream.get_codec_context();
     AudioResampler audio_resampler(
@@ -243,10 +248,13 @@ void MediaPlayer::load_next_audio_frames(int frames) {
             AVFrame* current_frame = audio_frames[i];
             float* frameData = (float*)(current_frame->data[0]);
             this->cache.audio_stream.write(frameData, current_frame->nb_samples);
+            written_samples += current_frame->nb_samples;
         }
         clear_av_frame_list(next_raw_audio_frames);
         clear_av_frame_list(audio_frames);
     }
+
+    return written_samples;
 }
 
 void MediaPlayer::jump_to_time(double target_time, double current_system_time) {

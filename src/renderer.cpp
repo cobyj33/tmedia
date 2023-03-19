@@ -59,8 +59,12 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex)
         int input = wgetch(inputWindow);
 
         if (player->get_time(system_clock_sec()) >= player->get_duration()) {
-            player->in_use = false;
-            break;
+            if (player->is_looped) {
+                player->jump_to_time(0.0, system_clock_sec());
+            } else {   
+                player->in_use = false;
+                break;
+            }
         }
 
         lock.lock();
@@ -141,7 +145,13 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex)
         {
             double current_playback_time = player->get_time(system_clock_sec());
             double target_time = current_playback_time + batched_jump_time;
-            target_time = clamp(target_time, 0.0, player->get_duration());
+
+            if (player->is_looped) {
+                target_time = target_time < 0 ? player->get_duration() + std::fmod(target_time, player->get_duration()) : std::fmod(target_time, player->get_duration());
+            } else {
+                target_time = clamp(target_time, 0.0, player->get_duration());
+            }
+
             player->jump_to_time(target_time, system_clock_sec());
             batched_jump_time = 0;
         }

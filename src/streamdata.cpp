@@ -85,60 +85,95 @@ std::vector<AVFrame*> StreamData::decode_next() {
 }
 
 StreamData::~StreamData() {
-    if (this->codec_context != nullptr) {
-        avcodec_free_context(&(this->codec_context));
-    }
+    // if (this->codec_context != nullptr) {
+    //     avcodec_free_context(&(this->codec_context));
+    //     this->codec_context = nullptr;
+    // }
 };
 
-/**
- * @brief Construct a new Stream Data Group:: Stream Data Group object
- * BREAKING CHANGE: IF THE MEDIA TYPE IS NOT FOUND, AN ERROR IS THROWN.
- * 
- * @param format_context 
- * @param media_types 
- * @param nb_target_streams 
- */
-StreamDataGroup::StreamDataGroup(AVFormatContext* format_context, const enum AVMediaType* media_types, int nb_target_streams) {
-    for (int i = 0; i < nb_target_streams; i++) {
+std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> get_stream_datas(AVFormatContext* format_context, std::vector<enum AVMediaType>& media_types) {
+    std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> stream_datas = std::make_unique<std::vector<std::unique_ptr<StreamData>>>();
+
+    for (int i = 0; i < media_types.size(); i++) {
         try {
-            std::shared_ptr<StreamData> stream_data_ptr = std::make_shared<StreamData>(format_context, media_types[i]);
-            this->m_datas.push_back(stream_data_ptr);
+            std::unique_ptr<StreamData> stream_data_ptr = std::make_unique<StreamData>(format_context, media_types[i]);
+            stream_datas->push_back(std::move(stream_data_ptr));
         } catch (std::invalid_argument e) {
             continue;
         }
     }
 
-    this->m_format_context = format_context;
-};
+    return std::move(stream_datas);
+}
 
-int StreamDataGroup::get_nb_streams() {
-    return this->m_datas.size();
-};
-
-StreamData& StreamDataGroup::get_av_media_stream(enum AVMediaType media_type) {
-    for (int i = 0; i < this->m_datas.size(); i++) {
-        if (this->m_datas[i]->media_type == media_type) {
-            return *this->m_datas[i];
+StreamData& get_av_media_stream(std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> stream_datas, enum AVMediaType media_type) {
+    for (int i = 0; i < stream_datas->size(); i++) {
+        if ((*stream_datas)[i]->media_type == media_type) {
+            return *(*stream_datas)[i];
         }
     }
 
     throw std::runtime_error("Could not find stream data for media type " + std::string(av_get_media_type_string(media_type)));
 };
 
-bool StreamDataGroup::has_av_media_stream(enum AVMediaType media_type) {
-    for (int i = 0; i < this->m_datas.size(); i++) {
-        if (this->m_datas[i]->media_type == media_type) {
+bool has_av_media_stream(std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> stream_datas, enum AVMediaType media_type) {
+    for (int i = 0; i < stream_datas->size(); i++) {
+        if ((*stream_datas)[i]->media_type == media_type) {
             return true;
         }
     }
     return false;
 };
 
-StreamData& StreamDataGroup::operator[](int index)
-{
-    if (index < 0 || index >= this->m_datas.size()) {
-        throw std::out_of_range("Attempted to access StreamData in StreamDataGroup from out of bounds index: " + std::to_string(index) + " ( length: " + std::to_string(this->m_datas.size())  + " )");
-    }
+// /**
+//  * @brief Construct a new Stream Data Group:: Stream Data Group object
+//  * BREAKING CHANGE: IF THE MEDIA TYPE IS NOT FOUND, AN ERROR IS THROWN.
+//  * 
+//  * @param format_context 
+//  * @param media_types 
+//  * @param nb_target_streams 
+//  */
+// StreamDataGroup::StreamDataGroup(AVFormatContext* format_context, std::vector<enum AVMediaType>& media_types) {
+//     for (int i = 0; i < media_types.size(); i++) {
+//         try {
+//             std::shared_ptr<StreamData> stream_data_ptr = std::make_shared<StreamData>(format_context, media_types[i]);
+//             this->m_datas.push_back(stream_data_ptr);
+//         } catch (std::invalid_argument e) {
+//             continue;
+//         }
+//     }
 
-    return *this->m_datas[index];
-}
+//     this->m_format_context = format_context;
+// };
+
+// int StreamDataGroup::get_nb_streams() {
+//     return this->m_datas.size();
+// };
+
+// StreamData& StreamDataGroup::get_av_media_stream(enum AVMediaType media_type) {
+//     for (int i = 0; i < this->m_datas.size(); i++) {
+//         if (this->m_datas[i]->media_type == media_type) {
+//             return *this->m_datas[i];
+//         }
+//     }
+
+//     throw std::runtime_error("Could not find stream data for media type " + std::string(av_get_media_type_string(media_type)));
+// };
+
+// bool StreamDataGroup::has_av_media_stream(enum AVMediaType media_type) {
+//     for (int i = 0; i < this->m_datas.size(); i++) {
+//         if (this->m_datas[i]->media_type == media_type) {
+//             return true;
+//         }
+//     }
+//     return false;
+// };
+
+// StreamData& StreamDataGroup::operator[](int index)
+// {
+//     if (index < 0 || index >= this->m_datas.size()) {
+//         throw std::out_of_range("Attempted to access StreamData in StreamDataGroup from out of bounds index: " + std::to_string(index) + " ( length: " + std::to_string(this->m_datas.size())  + " )");
+//     }
+
+//     return *this->m_datas[index];
+// }

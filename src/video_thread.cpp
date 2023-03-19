@@ -52,12 +52,12 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     VideoConverter videoConverter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt);
 
     while (player->in_use) {
-        if (!player->playback.is_playing() || !video_stream.packets.can_move_index(10)) { // paused or not enough data
+        if (!player->playback.is_playing()) {
             sleep_quick();
             continue;
         }
-
         mutex_lock.lock();
+
         double frame_duration = avg_frame_time_sec;
         double frame_pts_time_sec = player->get_time(system_clock_sec()) + frame_duration;
         double extra_delay = 0.0;
@@ -78,7 +78,6 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         } catch (std::exception e) {
             PixelData error_image = VideoIcon::ERROR_ICON.pixel_data;
             player->set_current_image(error_image);
-            video_stream.packets.try_step_forward();
         }
 
         double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / player->playback.get_speed() ) );

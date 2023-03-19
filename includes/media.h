@@ -25,47 +25,18 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-// class MediaStream {
-//     private:
-//         StreamData& info;
-
-//     public:
-//         PlayheadList<AVPacket*> packets;
-
-//         MediaStream(StreamData& streamData);
-//         ~MediaStream();
-
-//         /**
-//          * @brief Get the time base object
-//          * 
-//          * 
-//          * @return double 
-//          */
-//         double get_time_base() const;
-//         double get_average_frame_rate_sec() const;
-//         double get_average_frame_time_sec() const;
-//         double get_start_time() const;
-//         int get_stream_index() const;
-//         enum AVMediaType get_media_type() const;
-//         AVCodecContext* get_codec_context() const;
-
-//         std::vector<AVFrame*> decode_next();
-
-//         void flush();
-// };
 
 class MediaData {
     public:
         AVFormatContext* format_context;
-        std::vector<std::unique_ptr<StreamData>> media_streams;
-        std::unique_ptr<StreamDataGroup> stream_datas;
-        int nb_streams;
+        std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> media_streams;
         bool allPacketsRead;
         double duration;
 
         MediaData(const char* file_name);
         ~MediaData();
 
+        int get_nb_media_streams() const;
         StreamData& get_media_stream(enum AVMediaType media_type);
         bool has_media_stream(enum AVMediaType media_type);
         int fetch_next(int requestedPacketCount);
@@ -99,12 +70,13 @@ class MediaPlayer {
         Playback playback;
         const char* file_name;
         bool in_use;
+        bool is_looped;
 
-        MediaPlayer(const char* file_name) : in_use(false), file_name(file_name) {
+        MediaPlayer(const char* file_name) : in_use(false), is_looped(false), file_name(file_name) {
             this->media_data = std::make_unique<MediaData>(file_name);
         }
 
-        MediaPlayer(const char* file_name, MediaGUI starting_media_gui) : in_use(false), file_name(file_name), media_gui(starting_media_gui) {
+        MediaPlayer(const char* file_name, MediaGUI starting_media_gui) : in_use(false), is_looped(false), file_name(file_name), media_gui(starting_media_gui) {
             this->media_data = std::make_unique<MediaData>(file_name);
         }
 
@@ -177,7 +149,7 @@ class MediaPlayer {
         std::vector<AVFrame*> next_video_frames(); 
         std::vector<AVFrame*> next_audio_frames();
 
-        void load_next_audio_frames(int frames);
+        int load_next_audio_frames(int frames);
 
         StreamData& get_video_stream() const;
         StreamData& get_audio_stream() const;

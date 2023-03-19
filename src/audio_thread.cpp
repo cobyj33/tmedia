@@ -66,7 +66,10 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     }
 
     while (!audio_stream.can_read(frameCount)) {
-        data->player->load_next_audio_frames(10);
+        int written_samples = data->player->load_next_audio_frames(10);
+        if (written_samples == 0) {
+            break;
+        }
     }
 
     if (audio_stream.can_read(frameCount)) {
