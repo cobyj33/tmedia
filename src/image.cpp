@@ -29,7 +29,9 @@ extern "C" {
 
 
 PixelData::PixelData(const char* file_name) {
-    AVFormatContext* format_context = open_format_context(std::string(file_name));
+    AVFormatContext* format_context;
+    format_context = open_format_context(std::string(file_name));
+
     std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO };
     std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> media_streams = std::move(get_stream_datas(format_context, media_types));
 
@@ -78,5 +80,6 @@ PixelData::PixelData(const char* file_name) {
 
     av_packet_free((AVPacket**)&packet);
     av_frame_free((AVFrame**)&final_frame);
+    avformat_free_context(format_context);
 }
 
