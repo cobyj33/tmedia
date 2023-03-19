@@ -126,7 +126,7 @@ StreamData& MediaPlayer::get_audio_stream() const {
 double MediaPlayer::get_desync_time(double current_system_time) const {
     if (this->has_audio() && this->has_video()) {
         double current_playback_time = this->get_time(current_system_time);
-        double desync = std::abs(this->cache.audio_stream.get_time() - current_playback_time);
+        double desync = std::abs(this->audio_stream.get_time() - current_playback_time);
         return desync;
     } else { // if there is only a video or audio stream, there can never be desync
         return 0.0;
@@ -134,16 +134,16 @@ double MediaPlayer::get_desync_time(double current_system_time) const {
 }
 
 void MediaPlayer::set_current_frame(PixelData& data) {
-    this->cache.frame = PixelData(data);
+    this->frame = PixelData(data);
 }
 
 void MediaPlayer::set_current_frame(AVFrame* frame) {
-    this->cache.frame = PixelData(frame);
+    this->frame = PixelData(frame);
 }
 
 
 PixelData& MediaPlayer::get_current_frame() {
-    return this->cache.frame;
+    return this->frame;
 }
 
 MediaPlayer::MediaPlayer(const char* file_name) {
@@ -268,7 +268,7 @@ int MediaPlayer::load_next_audio_frames(int frames) {
         for (int i = 0; i < audio_frames.size(); i++) {
             AVFrame* current_frame = audio_frames[i];
             float* frameData = (float*)(current_frame->data[0]);
-            this->cache.audio_stream.write(frameData, current_frame->nb_samples);
+            this->audio_stream.write(frameData, current_frame->nb_samples);
             written_samples += current_frame->nb_samples;
         }
         clear_av_frame_list(next_raw_audio_frames);
@@ -342,7 +342,7 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
         } while (!passed_target_time && frames.size() > 0);
         clear_av_frame_list(frames);
 
-        this->cache.audio_stream.clear_and_restart_at(target_time);
+        this->audio_stream.clear_and_restart_at(target_time);
     }
 
 

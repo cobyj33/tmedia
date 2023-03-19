@@ -25,22 +25,20 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-struct MediaCache {
-    /**
-     * @brief The currently loaded video frame from the given media player
-     */
-    PixelData frame;
-
-    /**
-     * @brief The stream of audio bytes loaded by the media player
-     */
-    AudioStream audio_stream;
-};
 
 
 class MediaPlayer {
     public:
-        MediaCache cache;
+        /**
+         * @brief The currently loaded video frame from the given media player
+         */
+        PixelData frame;
+
+        /**
+         * @brief The stream of audio bytes loaded by the media player
+         */
+        AudioStream audio_stream;
+
         AVFormatContext* format_context;
         std::vector<std::unique_ptr<StreamData>> media_streams;
 

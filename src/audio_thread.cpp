@@ -25,9 +25,9 @@ extern "C" {
 #include <libavutil/audio_fifo.h>
 }
 
-const int MIN_RECOMMENDED_AUDIO_BUFFER_SIZE = 44100; // 1 second
-const int MAX_RECOMMENDED_AUDIO_BUFFER_SIZE = 524288;
-const int RECOMMENDED_AUDIO_BUFFER_SIZE = 220500; // 44100 * 5
+const int MIN_RECOMMENDED_AUDIO_BUFFER_SIZE = 220500; // 5 seconds of audio data at 44100 Hz sample rate
+const int MAX_RECOMMENDED_AUDIO_BUFFER_SIZE = 1323000; // 30 seconds of audio data at 44100 Hz sample rate
+const int RECOMMENDED_AUDIO_BUFFER_SIZE = 661500; // 15 seconds of audio data at 44100 Hz sample rate
 const char* DEBUG_AUDIO_SOURCE = "Audio";
 const char* DEBUG_AUDIO_TYPE = "Debug";
 
@@ -50,9 +50,9 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 {
     CallbackData* data = (CallbackData*)(pDevice->pUserData);
     std::lock_guard<std::mutex> mutex_lock_guard(data->mutex_ref.get());
-    AudioStream& audio_stream = data->player->cache.audio_stream;
+    AudioStream& audio_stream = data->player->audio_stream;
 
-    // AudioStream& audio_stream = player->cache.audio_stream;
+    // AudioStream& audio_stream = player->audio_stream;
     const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
     double current_system_time = system_clock_sec();
     if (data->player->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
@@ -65,7 +65,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     }
 
     while (!audio_stream.can_read(frameCount)) {
-        int written_samples = data->player->load_next_audio_frames(10);
+        int written_samples = data->player->load_next_audio_frames(5);
         if (written_samples == 0) {
             break;
         }
@@ -97,7 +97,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
             &(audio_codec_context->ch_layout), audio_codec_context->sample_fmt, audio_codec_context->sample_rate);
 
-    player->cache.audio_stream.init(nb_channels, audio_codec_context->sample_rate);
+    player->audio_stream.init(nb_channels, audio_codec_context->sample_rate);
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format  = ma_format_f32;
@@ -139,10 +139,14 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             mutex_lock.lock();
         }
 
-        player->load_next_audio_frames(10);
+        if (!player->audio_stream.can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
+            player->load_next_audio_frames(10);
+        }
+
         audio_device.sampleRate = audio_codec_context->sample_rate * player->playback.get_speed();
+        
         mutex_lock.unlock();
-        sleep_for_ms(17);
+        sleep_for_ms(5);
     }
 
 }
