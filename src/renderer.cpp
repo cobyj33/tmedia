@@ -157,7 +157,7 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex)
         }
 
     render:
-        PixelData &image = player->cache.image;
+        PixelData &image = player->cache.frame;
         lock.unlock();
 
         render_movie_screen(image, player->media_gui.get_video_output_mode());

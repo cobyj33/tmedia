@@ -25,20 +25,16 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-class MediaCache {
-    public:
-        PixelData image;
-        PixelData last_rendered_image;
-        PlayheadList<PixelData> image_buffer;
-        AudioStream audio_stream;
-        std::string message;
+struct MediaCache {
+    /**
+     * @brief The currently loaded video frame from the given media player
+     */
+    PixelData frame;
 
-        /**
-         * @brief A stack of the current video symbol and the time it was added to the stack
-         */
-        std::stack<std::tuple<VideoIcon, double>> symbol_stack;
-
-        MediaCache() {}
+    /**
+     * @brief The stream of audio bytes loaded by the media player
+     */
+    AudioStream audio_stream;
 };
 
 
@@ -62,22 +58,22 @@ class MediaPlayer {
         double get_desync_time(double current_system_time) const;
 
         /**
-         * @brief Sets the currently displayed image of the currently playing media according to the PixelData
+         * @brief Sets the currently displayed frame of the currently playing media according to the PixelData
          * @return void 
          */
-        void set_current_image(PixelData& data);
+        void set_current_frame(PixelData& data);
 
         /**
-         * @brief Sets the currently displayed image of the currently playing media according to the AVFrame.
+         * @brief Sets the currently displayed frame of the currently playing media according to the AVFrame.
          * @return void 
          */
-        void set_current_image(AVFrame* frame);
+        void set_current_frame(AVFrame* frame);
 
         /**
-         * @brief Returns the currently displayed image of the currently playing media
+         * @brief Returns the currently displayed frame of the currently playing media
          * @return double 
          */
-        PixelData& get_current_image();
+        PixelData& get_current_frame();
 
         /**
          * @brief Returns the duration in seconds of the currently playing media

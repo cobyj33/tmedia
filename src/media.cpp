@@ -133,17 +133,17 @@ double MediaPlayer::get_desync_time(double current_system_time) const {
     }
 }
 
-void MediaPlayer::set_current_image(PixelData& data) {
-    this->cache.image = PixelData(data);
+void MediaPlayer::set_current_frame(PixelData& data) {
+    this->cache.frame = PixelData(data);
 }
 
-void MediaPlayer::set_current_image(AVFrame* frame) {
-    this->cache.image = PixelData(frame);
+void MediaPlayer::set_current_frame(AVFrame* frame) {
+    this->cache.frame = PixelData(frame);
 }
 
 
-PixelData& MediaPlayer::get_current_image() {
-    return this->cache.image;
+PixelData& MediaPlayer::get_current_frame() {
+    return this->cache.frame;
 }
 
 MediaPlayer::MediaPlayer(const char* file_name) {

@@ -70,14 +70,14 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
                 frame_duration = (double)frame_image->duration * video_stream.get_time_base();
                 frame_pts_time_sec = (double)frame_image->pts * video_stream.get_time_base();
                 extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
-                player->set_current_image(frame_image);
+                player->set_current_frame(frame_image);
                 av_frame_free(&frame_image);
             }
 
             clear_av_frame_list(decoded_frames);
         } catch (std::exception e) {
             PixelData error_image = VideoIcon::ERROR_ICON.pixel_data;
-            player->set_current_image(error_image);
+            player->set_current_frame(error_image);
         }
 
         double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / player->playback.get_speed() ) );
