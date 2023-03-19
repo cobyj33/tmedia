@@ -123,8 +123,8 @@ class MediaPlayer {
 
         int load_next_audio_frames(int frames);
 
-        StreamData& get_video_stream() const;
-        StreamData& get_audio_stream() const;
+        StreamData& get_video_stream_data() const;
+        StreamData& get_audio_stream_data() const;
 
         int get_nb_media_streams() const;
         StreamData& get_media_stream(enum AVMediaType media_type) const;

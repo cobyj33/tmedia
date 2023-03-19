@@ -30,6 +30,8 @@ const int MAX_RECOMMENDED_AUDIO_BUFFER_SIZE = 1323000; // 30 seconds of audio da
 const int RECOMMENDED_AUDIO_BUFFER_SIZE = 661500; // 15 seconds of audio data at 44100 Hz sample rate
 const char* DEBUG_AUDIO_SOURCE = "Audio";
 const char* DEBUG_AUDIO_TYPE = "Debug";
+const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
+const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
 
 typedef struct CallbackData {
     MediaPlayer* player;
@@ -53,16 +55,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     AudioStream& audio_stream = data->player->audio_stream;
 
     // AudioStream& audio_stream = player->audio_stream;
-    const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
-    double current_system_time = system_clock_sec();
-    if (data->player->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
-        double target_resync_time = data->player->get_time(current_system_time);
-        if (audio_stream.is_time_in_bounds(target_resync_time)) {
-            audio_stream.set_time(target_resync_time);
-        } else {
-            data->player->jump_to_time(target_resync_time, current_system_time);
-        }
-    }
+   
 
     while (!audio_stream.can_read(frameCount)) {
         int written_samples = data->player->load_next_audio_frames(5);
@@ -88,8 +81,8 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
     }
 
-    StreamData& audio_media_stream = player->get_audio_stream();
-    AVCodecContext* audio_codec_context = audio_media_stream.get_codec_context();
+    StreamData& audio_stream_data = player->get_audio_stream_data();
+    AVCodecContext* audio_codec_context = audio_stream_data.get_codec_context();
     const int nb_channels = audio_codec_context->ch_layout.nb_channels;
 
 
@@ -116,7 +109,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         throw std::runtime_error("FAILED TO INITIALIZE AUDIO DEVICE: " + std::to_string(miniaudio_log));
     }
 
-    sleep_for_sec(audio_media_stream.get_start_time());
+    sleep_for_sec(audio_stream_data.get_start_time());
     
     while (player->in_use) {
         mutex_lock.lock();
@@ -137,6 +130,30 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
                 throw std::runtime_error("Failed to start playback: Miniaudio Error " + std::to_string(miniaudio_log));
             }
             mutex_lock.lock();
+        }
+
+        double current_system_time = system_clock_sec();
+        if (player->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
+            double target_resync_time = player->get_time(current_system_time);
+
+            if (player->audio_stream.is_time_in_bounds(target_resync_time)) {
+                player->audio_stream.set_time(target_resync_time);
+            } else if (target_resync_time > player->audio_stream.get_time() && target_resync_time < player->audio_stream.get_time() + MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS) {
+
+                int writtenSamples = 0;
+                do {
+                    writtenSamples = player->load_next_audio_frames(20);
+                } while (writtenSamples != 0 && !player->audio_stream.is_time_in_bounds(target_resync_time));
+
+                if (player->audio_stream.is_time_in_bounds(target_resync_time)) {
+                    player->audio_stream.set_time(target_resync_time);
+                } else {
+                    player->jump_to_time(target_resync_time, current_system_time);
+                }
+
+            } else {
+                player->jump_to_time(target_resync_time, current_system_time);
+            }
         }
 
         if (!player->audio_stream.can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {

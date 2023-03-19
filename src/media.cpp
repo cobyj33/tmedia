@@ -34,12 +34,23 @@ void MediaPlayer::start(double start_time) {
 
 
     std::mutex alter_mutex;
+
     std::thread video_thread(video_playback_thread, this, std::ref(alter_mutex));
-    std::thread audio_thread(audio_playback_thread, this, std::ref(alter_mutex));
+    bool audio_thread_initialized = false;
+    std::thread audio_thread;
+
+    if (this->has_audio()) {
+        std::thread initialized_audio_thread(audio_playback_thread, this, std::ref(alter_mutex));
+        audio_thread.swap(initialized_audio_thread);
+        audio_thread_initialized = true;
+    }
+
     render_loop(this, std::ref(alter_mutex));
 
     video_thread.join();
-    audio_thread.join();
+    if (audio_thread_initialized) {
+        audio_thread.join();
+    }
 
     this->playback.stop(system_clock_sec());
     this->in_use = false;
@@ -109,14 +120,14 @@ bool MediaPlayer::has_audio() const {
     return this->has_media_stream(AVMEDIA_TYPE_AUDIO);
 }
 
-StreamData& MediaPlayer::get_video_stream() const {
+StreamData& MediaPlayer::get_video_stream_data() const {
     if (this->has_video()) {
         return this->get_media_stream(AVMEDIA_TYPE_VIDEO);
     }
     throw std::runtime_error("Cannot get video stream from MediaPlayer, no video is available to retrieve");
 }
 
-StreamData& MediaPlayer::get_audio_stream() const {
+StreamData& MediaPlayer::get_audio_stream_data() const {
     if (this->has_audio()) {
         return this->get_media_stream(AVMEDIA_TYPE_AUDIO);
     }
@@ -205,7 +216,7 @@ MediaPlayer::~MediaPlayer() {
 
 std::vector<AVFrame*> MediaPlayer::next_video_frames() {
     if (this->has_video()) {
-        StreamData& video_stream = this->get_video_stream();
+        StreamData& video_stream = this->get_video_stream_data();
         std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
         if (decodedFrames.size() > 0) {
             return decodedFrames;
@@ -227,7 +238,7 @@ std::vector<AVFrame*> MediaPlayer::next_video_frames() {
 
 std::vector<AVFrame*> MediaPlayer::next_audio_frames() {
     if (this->has_audio()) {
-        StreamData& audio_stream = this->get_audio_stream();
+        StreamData& audio_stream = this->get_audio_stream_data();
         std::vector<AVFrame*> decodedFrames = audio_stream.decode_next();
         if (decodedFrames.size() > 0) {
             return decodedFrames;
@@ -256,7 +267,7 @@ int MediaPlayer::load_next_audio_frames(int frames) {
     }
 
     int written_samples = 0;
-    StreamData& audio_media_stream = this->get_audio_stream();
+    StreamData& audio_media_stream = this->get_audio_stream_data();
     AVCodecContext* audio_codec_context = audio_media_stream.get_codec_context();
     AudioResampler audio_resampler(
         &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
@@ -283,68 +294,25 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
         throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time));
     }
 
-    const double EXACT_SEEK_TIME_START_THRESHOLD = 5.0;
-    const double SEEK_TIME_OFFSET = 1.0;
-    double seek_time = target_time > EXACT_SEEK_TIME_START_THRESHOLD ? target_time - SEEK_TIME_OFFSET : target_time;
-
-    //seek_time <= target_time is always true
-
     const double original_time = this->get_time(current_system_time);
-    int ret = avformat_seek_file(this->format_context, -1, 0.0, seek_time * AV_TIME_BASE, seek_time * AV_TIME_BASE, 0);
+    int ret = avformat_seek_file(this->format_context, -1, 0.0, target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
 
     if (ret < 0) {
         throw std::runtime_error("[MediaPlayer::jump_to_time] Failed to seek file");
     }
 
     if (this->has_video()) {
-        StreamData& video_stream = this->get_video_stream();
+        StreamData& video_stream = this->get_video_stream_data();
         video_stream.flush();
         video_stream.clear_queue();
     }
 
     if (this->has_audio()) {
-        StreamData& audio_stream = this->get_audio_stream();
-        audio_stream.flush();
-        audio_stream.clear_queue();
-    }
-
-
-    if (this->has_video()) {
-        StreamData& video_stream = this->get_video_stream();
-        std::vector<AVFrame*> frames;
-        bool passed_target_time = false;
-        do {
-            clear_av_frame_list(frames);
-            frames = this->next_video_frames();
-            for (int i = 0; i < frames.size(); i++) {
-                if (frames[i]->pts * video_stream.get_time_base() >= target_time) {
-                    passed_target_time = true;
-                    break;
-                }
-            }
-        } while (!passed_target_time && frames.size() > 0);
-        clear_av_frame_list(frames);
-    }
-
-    if (this->has_audio()) {
-        StreamData& audio_stream = this->get_audio_stream();
-        std::vector<AVFrame*> frames;
-        bool passed_target_time = false;
-        do {
-            clear_av_frame_list(frames);
-            frames = this->next_audio_frames();
-            for (int i = 0; i < frames.size(); i++) {
-                if (frames[i]->pts * audio_stream.get_time_base() >= target_time) {
-                    passed_target_time = true;
-                    break;
-                }
-            }
-        } while (!passed_target_time && frames.size() > 0);
-        clear_av_frame_list(frames);
-
+        StreamData& audio_media_stream = this->get_audio_stream_data();
+        audio_media_stream.flush();
+        audio_media_stream.clear_queue();
         this->audio_stream.clear_and_restart_at(target_time);
     }
-
 
     this->playback.skip(target_time - original_time); // Update the playback to account for the skipped time
 }
