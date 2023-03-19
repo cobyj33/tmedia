@@ -7,9 +7,9 @@
 #include <memory>
 #include <thread>
 #include <mutex>
+#include <deque>
 
 #include "boiler.h"
-#include "playheadlist.hpp"
 #include "media.h"
 #include "wtime.h"
 #include "wmath.h"
@@ -74,7 +74,7 @@ int MediaPlayer::fetch_next(int requestedPacketCount) {
                 AVPacket* saved_packet = av_packet_alloc();
                 av_packet_ref(saved_packet, reading_packet);
                 
-                this->media_streams[i]->packets.push_back(saved_packet);
+                this->media_streams[i]->packet_queue.push_back(saved_packet);
                 packets_read++;
                 break;
             }
@@ -213,17 +213,12 @@ std::vector<AVFrame*> MediaPlayer::next_video_frames() {
 
         int fetch_count = -1;
         do {
-            fetch_count = video_stream.packets.is_empty() ? this->fetch_next(10) : -1; // -1 means that no fetch request was made
+            fetch_count = video_stream.packet_queue.empty() ? this->fetch_next(10) : -1; // -1 means that no fetch request was made
             std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
             if (decodedFrames.size() > 0) {
                 return decodedFrames;
             } 
         } while (fetch_count != 0);
-
-        // if (this->is_looped) {
-        //     this->jump_to_time(0.0, system_clock_sec());
-        //     return this->next_video_frames();
-        // }
 
         return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
     }
@@ -240,17 +235,12 @@ std::vector<AVFrame*> MediaPlayer::next_audio_frames() {
 
         int fetch_count = -1;
         do {
-            fetch_count = audio_stream.packets.is_empty() ? this->fetch_next(10) : -1;
+            fetch_count = audio_stream.packet_queue.empty() ? this->fetch_next(10) : -1;
             std::vector<AVFrame*> decodedFrames = audio_stream.decode_next();
             if (decodedFrames.size() > 0) {
                 return decodedFrames;
             } 
         } while (fetch_count != 0);
-
-        // if (this->is_looped) {
-        //     this->jump_to_time(0.0, system_clock_sec());
-        //     return this->next_audio_frames();
-        // }
 
         return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
     }
@@ -309,16 +299,15 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     if (this->has_video()) {
         StreamData& video_stream = this->get_video_stream();
         video_stream.flush();
-        clear_playhead_packet_list(video_stream.packets);
+        video_stream.clear_queue();
     }
 
     if (this->has_audio()) {
         StreamData& audio_stream = this->get_audio_stream();
         audio_stream.flush();
-        clear_playhead_packet_list(audio_stream.packets);
+        audio_stream.clear_queue();
     }
 
-    // this->media_data->fetch_next(100);
 
     if (this->has_video()) {
         StreamData& video_stream = this->get_video_stream();
@@ -354,7 +343,6 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
         clear_av_frame_list(frames);
 
         this->cache.audio_stream.clear_and_restart_at(target_time);
-        // this->load_next_audio_frames(80);
     }
 
 
@@ -367,55 +355,4 @@ bool MediaPlayer::only_audio() const {
 
 bool MediaPlayer::only_video() const {
     return this->has_video() && !this->has_audio();
-}
-
-void clear_playhead_packet_list(PlayheadList<AVPacket*>& packets) {
-    if (packets.is_empty()) {
-        return;
-    }
-
-    packets.set_index(0);
-    while (packets.can_step_forward()) {
-        AVPacket* packet = packets.get();
-        av_packet_free(&packet);
-        packets.step_forward();
-    }
-    AVPacket* packet = packets.get();
-    av_packet_free(&packet);
-
-    packets.clear();
-}
-
-void clear_playhead_frame_list(PlayheadList<AVFrame*>& frames) {
-    if (frames.is_empty()) {
-        return;
-    }
-
-    frames.set_index(0);
-    while (frames.can_step_forward()) {
-        AVFrame* frame = frames.get();
-        av_frame_free(&frame);
-        frames.step_forward();
-    }
-
-    AVFrame* frame = frames.get();
-    av_frame_free(&frame);
-
-    frames.clear();
-}
-
-void clear_behind_packet_list(PlayheadList<AVPacket*>& packets) {
-    if (packets.is_empty()) {
-        return;
-    }
-
-    int index = packets.get_index();
-    while (packets.can_step_backward()) {
-        packets.step_backward();
-        AVPacket* packet = packets.get();
-        av_packet_free(&packet);
-    }
-
-    packets.set_index(index);
-    packets.clear_behind();
 }

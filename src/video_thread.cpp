@@ -15,7 +15,6 @@
 #include "ascii.h"
 #include "wmath.h"
 #include "wtime.h"
-#include "playheadlist.hpp"
 #include "videoconverter.h"
 #include "except.h"
 

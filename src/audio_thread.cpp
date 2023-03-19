@@ -2,7 +2,6 @@
 #include "boiler.h"
 #include "decode.h"
 #include "media.h"
-#include "playheadlist.hpp"
 #include "wtime.h"
 #include "audio.h"
 #include "wmath.h"
@@ -34,9 +33,9 @@ const char* DEBUG_AUDIO_TYPE = "Debug";
 
 typedef struct CallbackData {
     MediaPlayer* player;
-    std::reference_wrapper<std::mutex> mutex;
+    std::reference_wrapper<std::mutex> mutex_ref;
 
-    CallbackData(MediaPlayer* player, std::reference_wrapper<std::mutex> mutex) : player(player), mutex(mutex) {}
+    CallbackData(MediaPlayer* player, std::reference_wrapper<std::mutex> mutex) : player(player), mutex_ref(mutex) {}
 } CallbackData;
 
 /**
@@ -50,7 +49,7 @@ typedef struct CallbackData {
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
     CallbackData* data = (CallbackData*)(pDevice->pUserData);
-    std::lock_guard<std::mutex> mutex_lock_guard(data->mutex.get());
+    std::lock_guard<std::mutex> mutex_lock_guard(data->mutex_ref.get());
     AudioStream& audio_stream = data->player->cache.audio_stream;
 
     // AudioStream& audio_stream = player->cache.audio_stream;

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <deque>
 
 extern "C" {
     #include <libavcodec/avcodec.h>
@@ -19,7 +20,7 @@ class StreamData {
         const AVCodec* decoder;
         AVCodecContext* codec_context;
 
-        PlayheadList<AVPacket*> packets;
+        std::deque<AVPacket*> packet_queue;
 
         StreamData(AVFormatContext* format_context, enum AVMediaType media_type);
 
@@ -32,6 +33,7 @@ class StreamData {
         AVCodecContext* get_codec_context() const;
         std::vector<AVFrame*> decode_next();
         void flush();
+        void clear_queue();
 
         ~StreamData();
 };

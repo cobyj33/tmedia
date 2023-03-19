@@ -10,7 +10,6 @@
 #include "audio.h"
 #include "color.h"
 #include "pixeldata.h"
-#include "playheadlist.hpp"
 #include "scale.h"
 #include "ascii.h"
 #include "icons.h"

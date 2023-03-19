@@ -5,7 +5,6 @@
 #include "decode.h"
 #include "boiler.h"
 #include "icons.h"
-#include "playheadlist.hpp"
 #include "color.h"
 #include "playback.h"
 #include "pixeldata.h"
@@ -18,6 +17,7 @@
 #include <stack>
 #include <memory>
 #include <string>
+#include <deque>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -135,12 +135,6 @@ class MediaPlayer {
 
         ~MediaPlayer();
 };
-
-void clear_behind_packet_list(PlayheadList<AVPacket*>& packets);
-
-void clear_playhead_packet_list(PlayheadList<AVPacket*>& packets);
-void clear_playhead_frame_list(PlayheadList<AVFrame*>& frames);
-
 
 
 #endif
