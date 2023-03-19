@@ -253,10 +253,10 @@ void ncurses_init_grayscale_color_palette() {
         throw std::runtime_error("[ncurses_init_grayscale_color_palette] Cannot initialize ncurses grayscale color palette, as current terminal does not support changing colors");
     }
 
-    available_colors = 0;
-    int color_index = 0;
-    int colors_to_add = std::min(COLORS, MAX_TERMINAL_COLORS);
-    for (int i = 0; i < colors_to_add; i++) {
+    available_colors = DEFAULT_TERMINAL_COLOR_COUNT;
+    int color_index = DEFAULT_TERMINAL_COLOR_COUNT;
+    int colors_to_add = std::min(COLORS - DEFAULT_TERMINAL_COLOR_COUNT, MAX_TERMINAL_COLORS - DEFAULT_TERMINAL_COLOR_COUNT);
+    for (int i = DEFAULT_TERMINAL_COLOR_COUNT; i < colors_to_add; i++) {
         short grayscale_value = i * 1000 / colors_to_add;
         init_color(i, grayscale_value, grayscale_value, grayscale_value);
     }

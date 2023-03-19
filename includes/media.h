@@ -9,7 +9,7 @@
 #include "color.h"
 #include "playback.h"
 #include "pixeldata.h"
-#include <streamdata.h>
+#include "streamdata.h"
 
 #include "gui.h"
 
@@ -108,7 +108,7 @@ class MediaPlayer {
             this->media_data = std::make_unique<MediaData>(file_name);
         }
 
-        void start(MediaGUI media_gui, double start_time);
+        void start(double start_time);
         double get_desync_time(double current_system_time) const;
 
         /**

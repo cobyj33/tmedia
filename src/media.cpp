@@ -23,7 +23,7 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-void MediaPlayer::start(MediaGUI media_gui, double start_time) {
+void MediaPlayer::start(double start_time) {
     if (this->in_use) {
         throw std::runtime_error("CANNOT USE MEDIA PLAYER THAT IS ALREADY IN USE");
     }
@@ -36,7 +36,7 @@ void MediaPlayer::start(MediaGUI media_gui, double start_time) {
     std::mutex alter_mutex;
     std::thread video_thread(video_playback_thread, this, std::ref(alter_mutex));
     std::thread audio_thread(audio_playback_thread, this, std::ref(alter_mutex));
-    render_loop(this, std::ref(alter_mutex), media_gui);
+    render_loop(this, std::ref(alter_mutex));
 
     video_thread.join();
     audio_thread.join();
@@ -261,7 +261,7 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     //seek_time <= target_time is always true
 
     const double original_time = this->get_time(current_system_time);
-    int ret = avformat_seek_file(this->media_data->format_context, -1, 0.0, seek_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
+    int ret = avformat_seek_file(this->media_data->format_context, -1, 0.0, seek_time * AV_TIME_BASE, seek_time * AV_TIME_BASE, 0);
 
     if (ret < 0) {
         throw std::runtime_error("[MediaPlayer::jump_to_time] Failed to seek file");
@@ -279,7 +279,7 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
         clear_playhead_packet_list(audio_stream.packets);
     }
 
-    this->media_data->fetch_next(1000);
+    // this->media_data->fetch_next(100);
 
     if (this->has_video()) {
         StreamData& video_stream = this->get_video_stream();
@@ -315,7 +315,7 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
         clear_av_frame_list(frames);
 
         this->cache.audio_stream.clear_and_restart_at(target_time);
-        this->load_next_audio_frames(40);
+        // this->load_next_audio_frames(80);
     }
 
 

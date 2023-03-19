@@ -46,7 +46,7 @@ void Playback::resume(double current_system_time) {
     }
 
     this->m_playing = true;
-    this->m_paused_time += current_system_time - this->m_last_pause_time;
+    this->m_paused_time += current_system_time - this->m_last_pause_system_time;
 };
 
 
@@ -56,7 +56,7 @@ void Playback::stop(double current_system_time) {
     }
 
     this->m_playing = false;
-    this->m_last_pause_time = current_system_time;
+    this->m_last_pause_system_time = current_system_time;
 };
 
 bool Playback::is_playing() const {

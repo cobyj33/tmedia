@@ -57,7 +57,10 @@ int main(int argc, char** argv)
                             "SPACE - Toggle Playback \n" +
                             "Left Arrow - Skip backward 5 seconds\n" +
                             "Right Arrow - Skip forward 5 seconds \n" +
-                            "Escape or Backspace - End Playback \n";
+                            "Escape or Backspace - End Playback \n"
+                            "C - Change to color mode on supported terminals \n"
+                            "G - Change to grayscale mode \n"
+                            "B - Change to Background Mode on supported terminals if in Color or Grayscale mode \n";
 
     parser.add_description(controls);
 
@@ -191,8 +194,8 @@ int main(int argc, char** argv)
         media_gui.set_video_output_mode(mode);
 
         bool video = parser.get<bool>("-v");
-        MediaPlayer player(file.c_str());
-        player.start(media_gui, start_time);
+        MediaPlayer player(file.c_str(), media_gui);
+        player.start(start_time);
 
         ncurses_uninit();
     } else {

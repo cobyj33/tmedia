@@ -11,7 +11,7 @@ class Playback {
         double m_paused_time;
         double m_skipped_time;
 
-        double m_last_pause_time;
+        double m_last_pause_system_time;
 
     public:
 

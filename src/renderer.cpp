@@ -44,7 +44,7 @@ RGBColor get_index_display_color(int index, int length)
     return RGBColor(red, green, blue);
 }
 
-void render_loop(MediaPlayer *player, std::mutex &alter_mutex, MediaGUI media_gui)
+void render_loop(MediaPlayer *player, std::mutex &alter_mutex)
 {
     WINDOW *inputWindow = newwin(0, 0, 1, 1);
     nodelay(inputWindow, true);
@@ -55,25 +55,22 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex, MediaGUI media_gu
     std::unique_lock<std::mutex> lock(alter_mutex, std::defer_lock);
     erase();
 
-    while (player->in_use)
-    {
-
+    while (player->in_use) {
         int input = wgetch(inputWindow);
 
-        lock.lock();
-        if (input == ERR)
-        { // no input coming in, simply render the current image, sleep, and restart loop
-            goto render;
-        }
-
-        if (player->get_time(system_clock_sec()) >= player->get_duration())
-        {
+        if (player->get_time(system_clock_sec()) >= player->get_duration()) {
             player->in_use = false;
             break;
         }
 
-        while (input != ERR)
-        { // Go through and process all the batched input
+        lock.lock();
+
+
+        if (input == ERR) { // no input coming in, simply render the current image, sleep, and restart loop
+            goto render;
+        }
+        while (input != ERR) { // Go through and process all the batched input
+
             if (input == KEY_ESCAPE || input == KEY_BACKSPACE)
             {
                 player->in_use = false;
@@ -84,6 +81,40 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex, MediaGUI media_gu
             {
                 erase();
                 refresh();
+            }
+
+            if (input == 'c' || input == 'C') {
+                if (has_colors() && can_change_color()) {
+                    switch (player->media_gui.get_video_output_mode()) {
+                        case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+                        case VideoOutputMode::GRAYSCALE: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
+                        case VideoOutputMode::TEXT_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
+                        case VideoOutputMode::COLORED: player->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
+                    }
+
+                }
+            }
+
+            if (input == 'g' || input == 'G') {
+                if (has_colors() && can_change_color()) {
+                    switch (player->media_gui.get_video_output_mode()) {
+                        case VideoOutputMode::COLORED_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+                        case VideoOutputMode::COLORED: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
+                        case VideoOutputMode::TEXT_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
+                        case VideoOutputMode::GRAYSCALE: player->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
+                    }
+                }
+            }
+
+            if (input == 'b' || input == 'B') {
+                if (has_colors() && can_change_color()) {
+                    switch (player->media_gui.get_video_output_mode()) {
+                        case VideoOutputMode::COLORED: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+                        case VideoOutputMode::GRAYSCALE: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+                        case VideoOutputMode::COLORED_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
+                        case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
+                    }
+                }
             }
 
             if (input == KEY_LEFT || input == KEY_RIGHT)
@@ -119,7 +150,7 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex, MediaGUI media_gu
         PixelData &image = player->cache.image;
         lock.unlock();
 
-        render_movie_screen(image, media_gui.get_video_output_mode());
+        render_movie_screen(image, player->media_gui.get_video_output_mode());
         refresh();
         sleep_for_ms(41);
     }

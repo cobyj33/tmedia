@@ -3,9 +3,6 @@
 #include "media.h"
 #include <mutex>
 
-#include "gui.h"
-
-
 /**
  * @brief Sleep the current thread for the given number of nanoseconds
  * @param nanoseconds The number of nanoseconds to make the current thread sleep
@@ -61,5 +58,5 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex);
  * @param alter_mutex The mutex used to synchronize the threads 
  * @param media_gui The state of the GUI, usually configured from the command line at program invokation, to use to render.
  */
-void render_loop(MediaPlayer* player, std::mutex& alter_mutex, MediaGUI media_gui);
+void render_loop(MediaPlayer* player, std::mutex& alter_mutex);
 #endif
