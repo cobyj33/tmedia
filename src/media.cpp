@@ -95,7 +95,7 @@ int MediaData::fetch_next(int requestedPacketCount) {
 }
 
 double MediaPlayer::get_duration() const {
-    return this->media_data->duration;
+    return this->media_data->format_context->duration / AV_TIME_BASE;
 }
 
 double MediaPlayer::get_time(double current_system_time) const {
@@ -157,9 +157,6 @@ MediaData::MediaData(const char* file_name) {
 
     std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
     this->media_streams = std::move(get_stream_datas(this->format_context, media_types));
-
-    this->allPacketsRead = false;
-    this->duration = (double)this->format_context->duration / AV_TIME_BASE;
 }
 
 int MediaData::get_nb_media_streams() const {

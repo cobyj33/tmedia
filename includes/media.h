@@ -30,8 +30,6 @@ class MediaData {
     public:
         AVFormatContext* format_context;
         std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> media_streams;
-        bool allPacketsRead;
-        double duration;
 
         MediaData(const char* file_name);
         ~MediaData();
