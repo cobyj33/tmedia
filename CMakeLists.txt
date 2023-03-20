@@ -37,8 +37,15 @@ DESCRIPTION "Terminal video media player")
 
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 
+set(PROJECT_LIB_DIR ./lib)
+
+if (EXISTS ${PROJECT_LIB_DIR}/ncurses-6.4/build/lib)
+    list(APPEND CMAKE_MODULE_PATH "${PROJECT_LIB_DIR}/ncurses-6.4/build/lib")
+endif()
+
 find_package(Curses REQUIRED)
 find_package(PkgConfig REQUIRED)
+
 pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
     libavdevice
     libavfilter
