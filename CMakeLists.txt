@@ -53,10 +53,10 @@ if (ASCII_VIDEO_BUILD_TESTS)
     add_subdirectory(./lib/Catch2)
 endif()
 
-include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio/extras/miniaudio_split ./lib/argparse/include/argparse )
+include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio ./lib/argparse )
 
 set(COMMON_SOURCE_FILES 
-./lib/miniaudio/extras/miniaudio_split/miniaudio.c
+./lib/miniaudio/miniaudio.c
 ./src/audioresampler.cpp
 ./src/videoconverter.cpp
 ./src/streamdata.cpp
