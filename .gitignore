@@ -6,3 +6,6 @@ tags
 blueprints/
 COMMITLOGGING.md
 devscripts/
+
+lib/ncurses-6.4/
+lib/ffmpeg-5.1.2/

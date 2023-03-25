@@ -36,14 +36,19 @@ LANGUAGES CXX C
 DESCRIPTION "Terminal video media player")
 
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
+set(LOCAL_NCURSES_LIBRARIES_PATH ${CMAKE_SOURCE_DIR}/lib/ncurses-6.4/build/lib)
+set(LOCAL_NCURSES_INCLUDE_PATH ${CMAKE_SOURCE_DIR}/lib/ncurses-6.4/build/include)
 
-set(PROJECT_LIB_DIR ./lib)
-
-if (EXISTS ${PROJECT_LIB_DIR}/ncurses-6.4/build/lib)
-    list(APPEND CMAKE_MODULE_PATH "${PROJECT_LIB_DIR}/ncurses-6.4/build/lib")
+if(EXISTS ${LOCAL_NCURSES_LIBRARIES_PATH})
+    message("FOUND LOCAL NCURSES MODULE")
+    set(CURSES_LIBRARIES ${LOCAL_NCURSES_LIBRARIES_PATH}/libncurses.a)
+    set(CURSES_INCLUDE_DIR ${LOCAL_NCURSES_INCLUDE_PATH})
+else()
+    find_package(Curses REQUIRED)
 endif()
 
-find_package(Curses REQUIRED)
+
+
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
