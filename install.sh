@@ -1,89 +1,163 @@
 #!/bin/bash
 # set -xe
 
-project_root=$(pwd)
+SUDO=''
+if (( $EUID != 0 )); then
+    SUDO='sudo'
+fi
 
-if [ ! -d "${project_root}/lib/ncurses-6.4" ] 
+project_root=$(pwd)
+project_lib_folder=${project_root}/lib
+lib_bin=${project_lib_folder}/bin
+
+ncurses_tar=${project_lib_folder}/ncurses-6.4.tar.gz
+ncurses_src=${project_lib_folder}/ncurses-6.4
+ncurses_bin=${lib_bin}/ncurses-6.4
+ncurses_datadir=${ncurses_bin}/data
+
+
+ffmpeg_tar=${project_lib_folder}/ffmpeg-6.0.tar.xz
+ffmpeg_src=${project_lib_folder}/ffmpeg-6.0
+ffmpeg_bin=${lib_bin}/ffmpeg-6.0
+
+ascii_video_build=${project_root}/build
+
+if [ ! -d ${lib_bin} ]
 then
-    tar -xf ${project_root}/lib/ncurses-6.4.tar.gz -C ${project_root}/lib
-    cd ${project_root}/lib/ncurses-6.4 # in ncurses project
-    mkdir ${project_root}/lib/ncurses-6.4/build 
-    mkdir ${project_root}/lib/ncurses-6.4/build/data
-    ./configure --prefix=${project_root}/lib/ncurses-6.4/build --datadir=${project_root}/lib/ncurses-6.4/build/data
+    mkdir ${lib_bin}
+fi
+
+if [ ! -d ${ncurses_bin} ] 
+then
+    if [ ! -d ${ncurses_src} ]
+    then
+        tar -xvf ${ncurses_tar} -C ${project_lib_folder}
+    fi
+
+    cd ${ncurses_src}
+
+    # mkdir ${project_lib_folder}/ncurses-6.4/build 
+    # mkdir ${project_lib_folder}/ncurses-6.4/build/data
+    if [ ! -d ${ncurses_bin} ]
+    then
+        mkdir ${ncurses_bin}
+    fi
+
+    if [ ! -d ${ncurses_datadir} ]
+    then
+        mkdir ${ncurses_datadir}
+    fi
+
+    ./configure \
+    --prefix=${ncurses_bin} \
+    --datadir=${ncurses_datadir}
+
     make -j4
     make install
     cd ${project_root}
+    rm -rf ${ncurses_src}
 fi
 
-# if [ ! -d "${project_root}/lib/ffmpeg-5.1.2" ] 
-# then
-#     sudo apt-get update -qq
+if [ ! -d ${ffmpeg_bin} ] 
+then
 
-#     sudo apt-get -y install \
-#     autoconf \
-#     automake \
-#     build-essential \
-#     cmake \
-#     git-core \
-#     libass-dev \
-#     libfreetype6-dev \
-#     libgnutls28-dev \
-#     libmp3lame-dev \
-#     libsdl2-dev \
-#     libtool \
-#     libva-dev \
-#     libvdpau-dev \
-#     libvorbis-dev \
-#     libxcb1-dev \
-#     libxcb-shm0-dev \
-#     libxcb-xfixes0-dev \
-#     meson \
-#     ninja-build \
-#     pkg-config \
-#     texinfo \
-#     wget \
-#     yasm \
-#     zlib1g-dev \
-#     libunistring-dev \
-#     libaom-dev \
-#     libdav1d-dev
+    mkdir ${ffmpeg_bin}
+    if [ ! -d ${ffmpeg_src} ]
+    then
+        tar -xvf ${ffmpeg_tar} -C ${project_lib_folder}
+    fi
+    cd ${ffmpeg_src}
 
-#     tar -xf ${project_root}/lib/ffmpeg-5.1.2.tar.xz -C ${project_root}/lib
-#     ffmpeg_dir=${project_root}/lib/ffm
-#     ffmpeg_build=${ffmpeg_dir}/ffmpeg-5.1.2
-#     ffmpeg_bin=${ffmpeg_dir}/binpeg_build
+    $SUDO apt-get update -qq
 
-#     mkdir ${ffmpeg_bin}
-#     mkdir ${ffmpeg_build}
+    deps="autoconf \
+    automake \
+    build-essential \
+    cmake \
+    git \
+    libtool \
+    meson \
+    ninja-build \
+    pkg-config \
+    yasm \
+    libva-dev \
+    libvdpau-dev \
+    libvorbis-dev \
+    libxcb1-dev \
+    libxcb-shm0-dev \
+    libxcb-xfixes0-dev \
+    libunistring-dev \
+    libaom-dev \
+    libdav1d-dev"
 
-#     cd ${ffmpeg_dir}
-
-#     PATH="${ffmpeg_bin}:$PATH"
-#     PKG_CONFIG_PATH="${ffmpeg_build}/lib/pkgconfig"
-#     ./configure \
-#     --prefix="${ffmpeg_build}" \
-#     --pkg-config-flags="--static" \
-#     --extra-cflags="-I${ffmpeg_build}/include" \
-#     --extra-ldflags="-L${ffmpeg_build}/lib" \
-#     --extra-libs="-lpthread -lm" \
-#     --ld="g++" \
-#     --bindir="${ffmpeg_bin}" \
-#     --enable-gpl \
-#     --enable-gnutls \
-#     --enable-libaom \
-#     --enable-libass \
-#     --enable-libfreetype \
-#     --enable-libmp3lame \
-#     --enable-libdav1d \
-#     --enable-libvorbis \
-#     --enable-nonfree \
-
-#     PATH="${ffmpeg_dir}/bin:$PATH" 
+    $SUDO apt-get install -y \
+    autoconf \
+    automake \
+    build-essential \
+    cmake \
+    git \
+    libtool \
+    meson \
+    ninja-build \
+    pkg-config \
+    yasm \
+    libva-dev \
+    libvdpau-dev \
+    libvorbis-dev \
+    libxcb1-dev \
+    libxcb-shm0-dev \
+    libxcb-xfixes0-dev \
+    libunistring-dev \
+    libaom-dev \
+    libdav1d-dev
 
 
-#     make -j4
-#     make install
-#     hash -r
-#     sudo apt-get autoremove
-# fi
+    PKG_CONFIG_PATH="${ffmpeg_bin}/lib/pkgconfig"
+    ./configure \
+    --prefix="${ffmpeg_bin}" \
+    --pkg-config-flags="--static" \
+    --extra-cflags="-I${ffmpeg_bin}/include" \
+    --extra-ldflags="-L${ffmpeg_bin}/lib" \
+    --extra-libs="-lpthread -lm" \
+    --ld="g++" \
+    --enable-gpl \
+    --enable-nonfree \
+    --enable-libaom \
+    --enable-libdav1d \
+    --enable-libvorbis \
+    --disable-network \
+    --disable-encoders \
+    --disable-muxers \
+    --enable-static \
+    --disable-shared \
+    --disable-programs \
+    --disable-doc \
+    --disable-filters \
+    --disable-postproc \
+    --disable-avfilter \
+    --disable-avdevice \
+    --disable-protocols \
+    --enable-protocol=file,pipe \
+    --disable-devices
 
+    make -j4
+    make install
+    hash -r
+    rm -rf ${ffmpeg_src}
+    cd ${project_root}
+fi
+
+if [ -d ${ascii_video_build} ]
+then
+    rm -rf ${ascii_video_build}
+fi
+
+mkdir ${ascii_video_build}
+cd ${ascii_video_build}
+cmake ../
+make -j4
+
+
+
+
+    

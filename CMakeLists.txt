@@ -36,13 +36,13 @@ LANGUAGES CXX C
 DESCRIPTION "Terminal video media player")
 
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
-set(LOCAL_NCURSES_LIBRARIES_PATH ${CMAKE_SOURCE_DIR}/lib/ncurses-6.4/build/lib)
-set(LOCAL_NCURSES_INCLUDE_PATH ${CMAKE_SOURCE_DIR}/lib/ncurses-6.4/build/include)
+set(LOCAL_NCURSES_LIBRARIES_PATH ${CMAKE_SOURCE_DIR}/lib/bin/ncurses-6.4/lib)
+set(LOCAL_NCURSES_INCLUDE_PATH ${CMAKE_SOURCE_DIR}/lib/bin/ncurses-6.4/include)
 
 if(EXISTS ${LOCAL_NCURSES_LIBRARIES_PATH})
     message("FOUND LOCAL NCURSES MODULE")
     set(CURSES_LIBRARIES ${LOCAL_NCURSES_LIBRARIES_PATH}/libncurses.a)
-    set(CURSES_INCLUDE_DIR ${LOCAL_NCURSES_INCLUDE_PATH})
+    set(CURSES_INCLUDE_DIR ${LOCAL_NCURSES_INCLUDE_PATH} ${LOCAL_NCURSES_INCLUDE_PATH}/ncurses)
 else()
     find_package(Curses REQUIRED)
 endif()
@@ -51,9 +51,17 @@ endif()
 
 find_package(PkgConfig REQUIRED)
 
+set(LOCAL_FFMPEG ${CMAKE_SOURCE_DIR}/lib/bin/ffmpeg-6.0)
+set(LOCAL_FFMPEG_LIB ${LOCAL_FFMPEG}/lib)
+set(LOCAL_FFMPEG_INCLUDE ${LOCAL_FFMPEG}/include)
+set(LOCAL_FFMPEG_PKG_CONFIG ${LOCAL_FFMPEG_LIB}/pkgconfig)
+
+if(EXISTS ${LOCAL_FFMPEG_PKG_CONFIG})
+    message("FOUND LOCAL FFMPEG PKG CONFIG")
+    set(ENV{PKG_CONFIG_PATH} ${LOCAL_FFMPEG_PKG_CONFIG})
+endif()
+
 pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
-    libavdevice
-    libavfilter
     libavformat
     libavcodec
     libswresample

@@ -8,4 +8,6 @@ COMMITLOGGING.md
 devscripts/
 
 lib/ncurses-6.4/
-lib/ffmpeg-5.1.2/
+lib/ffmpeg-6.0/
+lib/bin
+install
