@@ -79,7 +79,6 @@ set(COMMON_SOURCE_FILES
 ./src/audioresampler.cpp
 ./src/videoconverter.cpp
 ./src/streamdata.cpp
-./src/main.cpp
 ./src/ascii.cpp
 ./src/audiobuffer.cpp
 ./src/audio.cpp
