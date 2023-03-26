@@ -31,3 +31,5 @@ Upon a desync between audio and video, added 3 possibilities for behaviors to re
 - If there are samples loaded into the AudioBuffer which are at the correct timestamp, jump the AudioBuffer to those samples
 - If the audio timestamp is before the correct timestamp and the time until the correct time stamp is less than or equal to MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS, load audio packets into the audio buffer until the audio buffer catches up to the correct time stamp. If this fails, jump to the specified time using MediaPlayer::jump_to_time
 - If these first two conditions are false (If the audio timestamp is after the correct timestamp or the audio timestamp is before the correct time stamp and farther than MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS seconds away), jump to the specified time using MediaPlayer::jump_to_time
+
+Removed includes/aabb.h and includes/aabb.cpp, as they are not planned to be used anytime soon and served no purpose

@@ -97,7 +97,6 @@ set(COMMON_SOURCE_FILES
 ./src/icons.cpp
 ./src/playback.cpp
 ./src/pixeldata.cpp
-./src/aabb.cpp
 ./src/scale.cpp
 ./src/ui/gui.cpp
 ./src/termcolor.cpp
