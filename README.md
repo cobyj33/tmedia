@@ -7,8 +7,8 @@ Just another terminal video player
 
 ## Example Output
 
-![example created in tmux](assets/example-320.gif)
-![example colored output](assets/colored_music_record-160.gif)
+![example created in tmux](assets/readme/example-320.gif)
+![example colored output](assets/readme/colored_music_record-160.gif)
 
 ## Dependencies
 
