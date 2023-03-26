@@ -51,3 +51,10 @@ Moved Example Output in README.md to the top of the file
 Added the main typing-type gif to the bottom and top of README.md
 
 Simplified project description in README.md
+
+Changed install.sh name to build.sh
+
+Added install.sh script. Creates ~/.local/bin if it does not exist. Adds ~/.local/bin to path if it did not exist, and
+copies the ascii_video binary to ~/.local/bin
+
+Updated Ubuntu Install in README.md to adjust to new build scripts

@@ -32,21 +32,11 @@ Currently, I'd recommend using a similar program like MacOS [video-to-ascii](htt
 
 #### Ubuntu Install
 
-On Ubuntu, simply run this command from the cloned repository
-
-```bash
-chmod +x ./build.sh && ./build.sh
-```
+On Ubuntu, simply run ```bash chmod +x ./build.sh && ./build.sh``` from the cloned repository
 
 The binary should then be available inside of the build/ folder after the script finishes
   
-To install globally for the current user, run these 3 commands:
-
-```bash
-[ ! -d ~/.local/bin ] && mkdir ~/.local/bin && echo "export $PATH=$HOME/.local/bin:$PATH" >> ".$(echo $SHELL | sed -nE "s|.*/(.*)\$|\1|p")rc"
-cp -R ./build/ascii_video ~/.local/bin
-hash -r
-```
+To install globally for the current user, run ```bash chmod +x ./install.sh && ./install.sh``` after running the ./build.sh command shown above
 
 On other distros, ascii_video's installation is currently untested. However, this should theoretically work on all Debian Linux distributions.
 
@@ -92,7 +82,7 @@ To see more **colorful** options, call ascii_video with the -h flag
   * Improved syncing, seeking, and robustness of code
   * Much better documented and tested code
   * Added grayscale output support with the -g flag
-  * Added install script to localize dependencies and more easily install
+  * Added build script to localize dependencies and more easily build the program from source
   * Added options to build tests or build as Debug or Release in CMakeList.txt
   * std::this::is::annoying::to::read is back as referred to in 0.3, but behind some more concise functions instead
   * Can skip around in video file, as well as start playing video file at a certain timestamp with the -t 0:00 flag
