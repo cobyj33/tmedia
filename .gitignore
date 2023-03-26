@@ -9,5 +9,5 @@ devscripts/
 
 lib/ncurses-6.4/
 lib/ffmpeg-6.0/
-lib/bin
+lib/build
 install

@@ -29,15 +29,14 @@ endif()
 # set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 
-
 project(ascii_video
 VERSION 0.4.0
 LANGUAGES CXX C
 DESCRIPTION "Terminal video media player")
 
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
-set(LOCAL_NCURSES_LIBRARIES_PATH ${CMAKE_SOURCE_DIR}/lib/bin/ncurses-6.4/lib)
-set(LOCAL_NCURSES_INCLUDE_PATH ${CMAKE_SOURCE_DIR}/lib/bin/ncurses-6.4/include)
+set(LOCAL_NCURSES_LIBRARIES_PATH ${CMAKE_SOURCE_DIR}/lib/build/ncurses-6.4/lib)
+set(LOCAL_NCURSES_INCLUDE_PATH ${CMAKE_SOURCE_DIR}/lib/build/ncurses-6.4/include)
 
 if(EXISTS ${LOCAL_NCURSES_LIBRARIES_PATH})
     message("FOUND LOCAL NCURSES MODULE")
@@ -51,7 +50,7 @@ endif()
 
 find_package(PkgConfig REQUIRED)
 
-set(LOCAL_FFMPEG ${CMAKE_SOURCE_DIR}/lib/bin/ffmpeg-6.0)
+set(LOCAL_FFMPEG ${CMAKE_SOURCE_DIR}/lib/build/ffmpeg-6.0)
 set(LOCAL_FFMPEG_LIB ${LOCAL_FFMPEG}/lib)
 set(LOCAL_FFMPEG_INCLUDE ${LOCAL_FFMPEG}/include)
 set(LOCAL_FFMPEG_PKG_CONFIG ${LOCAL_FFMPEG_LIB}/pkgconfig)

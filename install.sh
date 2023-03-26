@@ -8,26 +8,26 @@ fi
 
 project_root=$(pwd)
 project_lib_folder=${project_root}/lib
-lib_bin=${project_lib_folder}/bin
+lib_build=${project_lib_folder}/build
 
 ncurses_tar=${project_lib_folder}/ncurses-6.4.tar.gz
 ncurses_src=${project_lib_folder}/ncurses-6.4
-ncurses_bin=${lib_bin}/ncurses-6.4
-ncurses_datadir=${ncurses_bin}/data
+ncurses_build=${lib_build}/ncurses-6.4
+ncurses_datadir=${ncurses_build}/data
 
 
 ffmpeg_tar=${project_lib_folder}/ffmpeg-6.0.tar.xz
 ffmpeg_src=${project_lib_folder}/ffmpeg-6.0
-ffmpeg_bin=${lib_bin}/ffmpeg-6.0
+ffmpeg_build=${lib_build}/ffmpeg-6.0
 
 ascii_video_build=${project_root}/build
 
-if [ ! -d ${lib_bin} ]
+if [ ! -d ${lib_build} ]
 then
-    mkdir ${lib_bin}
+    mkdir ${lib_build}
 fi
 
-if [ ! -d ${ncurses_bin} ] 
+if [ ! -d ${ncurses_build} ] 
 then
     if [ ! -d ${ncurses_src} ]
     then
@@ -38,9 +38,9 @@ then
 
     # mkdir ${project_lib_folder}/ncurses-6.4/build 
     # mkdir ${project_lib_folder}/ncurses-6.4/build/data
-    if [ ! -d ${ncurses_bin} ]
+    if [ ! -d ${ncurses_build} ]
     then
-        mkdir ${ncurses_bin}
+        mkdir ${ncurses_build}
     fi
 
     if [ ! -d ${ncurses_datadir} ]
@@ -49,8 +49,12 @@ then
     fi
 
     ./configure \
-    --prefix=${ncurses_bin} \
-    --datadir=${ncurses_datadir}
+    --prefix=${ncurses_build} \
+    --datadir=${ncurses_datadir} \
+    --without-tests \
+    --without-manpages \
+    --without-progs
+
 
     make -j4
     make install
@@ -58,10 +62,10 @@ then
     rm -rf ${ncurses_src}
 fi
 
-if [ ! -d ${ffmpeg_bin} ] 
+if [ ! -d ${ffmpeg_build} ] 
 then
 
-    mkdir ${ffmpeg_bin}
+    mkdir ${ffmpeg_build}
     if [ ! -d ${ffmpeg_src} ]
     then
         tar -xvf ${ffmpeg_tar} -C ${project_lib_folder}
@@ -112,12 +116,12 @@ then
     libdav1d-dev
 
 
-    PKG_CONFIG_PATH="${ffmpeg_bin}/lib/pkgconfig"
+    PKG_CONFIG_PATH="${ffmpeg_build}/lib/pkgconfig"
     ./configure \
-    --prefix="${ffmpeg_bin}" \
+    --prefix="${ffmpeg_build}" \
     --pkg-config-flags="--static" \
-    --extra-cflags="-I${ffmpeg_bin}/include" \
-    --extra-ldflags="-L${ffmpeg_bin}/lib" \
+    --extra-cflags="-I${ffmpeg_build}/include" \
+    --extra-ldflags="-L${ffmpeg_build}/lib" \
     --extra-libs="-lpthread -lm" \
     --ld="g++" \
     --enable-gpl \
