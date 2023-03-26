@@ -52,20 +52,20 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 {
     CallbackData* data = (CallbackData*)(pDevice->pUserData);
     std::lock_guard<std::mutex> mutex_lock_guard(data->mutex_ref.get());
-    AudioStream& audio_stream = data->player->audio_stream;
+    AudioBuffer& audio_buffer = data->player->audio_buffer;
 
-    // AudioStream& audio_stream = player->audio_stream;
+    // AudioBuffer& audio_buffer = player->audio_buffer;
    
 
-    while (!audio_stream.can_read(frameCount)) {
+    while (!audio_buffer.can_read(frameCount)) {
         int written_samples = data->player->load_next_audio_frames(5);
         if (written_samples == 0) {
             break;
         }
     }
 
-    if (audio_stream.can_read(frameCount)) {
-        audio_stream.read_into(frameCount, (float*)pOutput);
+    if (audio_buffer.can_read(frameCount)) {
+        audio_buffer.read_into(frameCount, (float*)pOutput);
     } else {
         float* pFloatOutput = (float*)pOutput;
         for (int i = 0; i < frameCount; i++) {
@@ -90,7 +90,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
             &(audio_codec_context->ch_layout), audio_codec_context->sample_fmt, audio_codec_context->sample_rate);
 
-    player->audio_stream.init(nb_channels, audio_codec_context->sample_rate);
+    player->audio_buffer.init(nb_channels, audio_codec_context->sample_rate);
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format  = ma_format_f32;
@@ -136,17 +136,17 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         if (player->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
             double target_resync_time = player->get_time(current_system_time);
 
-            // if (player->audio_stream.is_time_in_bounds(target_resync_time)) {
-            //     player->audio_stream.set_time(target_resync_time);
-            // } else if (target_resync_time > player->audio_stream.get_time() && target_resync_time < player->audio_stream.get_time() + MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS) {
+            // if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
+            //     player->audio_buffer.set_time(target_resync_time);
+            // } else if (target_resync_time > player->audio_buffer.get_time() && target_resync_time < player->audio_buffer.get_time() + MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS) {
 
             //     int writtenSamples = 0;
             //     do {
             //         writtenSamples = player->load_next_audio_frames(20);
-            //     } while (writtenSamples != 0 && !player->audio_stream.is_time_in_bounds(target_resync_time));
+            //     } while (writtenSamples != 0 && !player->audio_buffer.is_time_in_bounds(target_resync_time));
 
-            //     if (player->audio_stream.is_time_in_bounds(target_resync_time)) {
-            //         player->audio_stream.set_time(target_resync_time);
+            //     if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
+            //         player->audio_buffer.set_time(target_resync_time);
             //     } else {
             //         player->jump_to_time(target_resync_time, current_system_time);
             //     }
@@ -155,8 +155,8 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             //     player->jump_to_time(target_resync_time, current_system_time);
             // }
 
-            // if (player->audio_stream.is_time_in_bounds(target_resync_time)) {
-            //     player->audio_stream.set_time(target_resync_time);
+            // if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
+            //     player->audio_buffer.set_time(target_resync_time);
             // } else {
             //     player->jump_to_time(target_resync_time, current_system_time);
             // }
@@ -165,7 +165,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             
         }
 
-        if (!player->audio_stream.can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
+        if (!player->audio_buffer.can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
             player->load_next_audio_frames(10);
         }
 

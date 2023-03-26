@@ -1,7 +1,7 @@
 #ifndef ASCII_VIDEO_MEDIA
 #define ASCII_VIDEO_MEDIA
 
-#include "audiostream.h"
+#include "audiobuffer.h"
 #include "decode.h"
 #include "boiler.h"
 #include "icons.h"
@@ -35,9 +35,9 @@ class MediaPlayer {
         PixelData frame;
 
         /**
-         * @brief The stream of audio bytes loaded by the media player
+         * @brief The buffer of audio bytes loaded by the media player
          */
-        AudioStream audio_stream;
+        AudioBuffer audio_buffer;
 
         AVFormatContext* format_context;
         std::vector<std::unique_ptr<StreamData>> media_streams;

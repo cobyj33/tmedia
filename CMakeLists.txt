@@ -81,7 +81,7 @@ set(COMMON_SOURCE_FILES
 ./src/streamdata.cpp
 ./src/main.cpp
 ./src/ascii.cpp
-./src/audiostream.cpp
+./src/audiobuffer.cpp
 ./src/audio.cpp
 ./src/audio_thread.cpp
 ./src/decode.cpp
