@@ -136,33 +136,25 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
         if (player->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
             double target_resync_time = player->get_time(current_system_time);
 
-            // if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
-            //     player->audio_buffer.set_time(target_resync_time);
-            // } else if (target_resync_time > player->audio_buffer.get_time() && target_resync_time < player->audio_buffer.get_time() + MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS) {
+            if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
+                player->audio_buffer.set_time(target_resync_time);
+            } else if (target_resync_time > player->audio_buffer.get_time() && target_resync_time <= player->audio_buffer.get_time() + MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS) {
 
-            //     int writtenSamples = 0;
-            //     do {
-            //         writtenSamples = player->load_next_audio_frames(20);
-            //     } while (writtenSamples != 0 && !player->audio_buffer.is_time_in_bounds(target_resync_time));
+                int writtenSamples = 0;
+                do {
+                    writtenSamples = player->load_next_audio_frames(20);
+                } while (writtenSamples != 0 && !player->audio_buffer.is_time_in_bounds(target_resync_time));
 
-            //     if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
-            //         player->audio_buffer.set_time(target_resync_time);
-            //     } else {
-            //         player->jump_to_time(target_resync_time, current_system_time);
-            //     }
+                if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
+                    player->audio_buffer.set_time(target_resync_time);
+                } else {
+                    player->jump_to_time(target_resync_time, current_system_time);
+                }
 
-            // } else {
-            //     player->jump_to_time(target_resync_time, current_system_time);
-            // }
+            } else {
+                player->jump_to_time(target_resync_time, current_system_time);
+            }
 
-            // if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
-            //     player->audio_buffer.set_time(target_resync_time);
-            // } else {
-            //     player->jump_to_time(target_resync_time, current_system_time);
-            // }
-
-            player->jump_to_time(target_resync_time, current_system_time);
-            
         }
 
         if (!player->audio_buffer.can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {

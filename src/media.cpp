@@ -302,9 +302,23 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     }
 
     if (this->has_video()) {
-        StreamData& video_stream = this->get_video_stream_data();
-        video_stream.flush();
-        video_stream.clear_queue();
+        StreamData& video_media_stream = this->get_video_stream_data();
+        video_media_stream.flush();
+        video_media_stream.clear_queue();
+
+        std::vector<AVFrame*> frames;
+        bool passed_target_time = false;
+        do {
+            clear_av_frame_list(frames);
+            frames = this->next_video_frames();
+            for (int i = 0; i < frames.size(); i++) {
+                if (frames[i]->pts * video_media_stream.get_time_base() >= target_time) {
+                    passed_target_time = true;
+                    break;
+                }
+            }
+        } while (!passed_target_time && frames.size() > 0);
+        clear_av_frame_list(frames);
     }
 
     if (this->has_audio()) {
@@ -312,6 +326,20 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
         audio_media_stream.flush();
         audio_media_stream.clear_queue();
         this->audio_buffer.clear_and_restart_at(target_time);
+        
+        std::vector<AVFrame*> frames;
+        bool passed_target_time = false;
+        do {
+            clear_av_frame_list(frames);
+            frames = this->next_audio_frames();
+            for (int i = 0; i < frames.size(); i++) {
+                if (frames[i]->pts * audio_media_stream.get_time_base() >= target_time) {
+                    passed_target_time = true;
+                    break;
+                }
+            }
+        } while (!passed_target_time && frames.size() > 0);
+        clear_av_frame_list(frames);
     }
 
     this->playback.skip(target_time - original_time); // Update the playback to account for the skipped time

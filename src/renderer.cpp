@@ -195,7 +195,7 @@ void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode) {
 
 void print_pixel_data_text(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height) {
     PixelData bounded = pixel_data.bound(bounds_width, bounds_height);
-    const AsciiImage image(bounded, AsciiImage::ASCII_EXTENDED_CHAR_MAP);
+    const AsciiImage image(bounded, AsciiImage::ASCII_STANDARD_CHAR_MAP);
     int image_start_row = bounds_row + std::abs(image.get_height() - bounds_height) / 2;
     int image_start_col = bounds_col + std::abs(image.get_width() - bounds_width) / 2; 
 
@@ -218,7 +218,7 @@ void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int
     }
 
     PixelData bounded = pixel_data.bound(bounds_width, bounds_height);
-    const AsciiImage image(bounded, AsciiImage::ASCII_EXTENDED_CHAR_MAP);
+    const AsciiImage image(bounded, AsciiImage::ASCII_STANDARD_CHAR_MAP);
     int image_start_row = bounds_row + std::abs(image.get_height() - bounds_height) / 2;
     int image_start_col = bounds_col + std::abs(image.get_width() - bounds_width) / 2; 
 
