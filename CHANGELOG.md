@@ -33,3 +33,21 @@ Upon a desync between audio and video, added 3 possibilities for behaviors to re
 - If these first two conditions are false (If the audio timestamp is after the correct timestamp or the audio timestamp is before the correct time stamp and farther than MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS seconds away), jump to the specified time using MediaPlayer::jump_to_time
 
 Removed includes/aabb.h and includes/aabb.cpp, as they are not planned to be used anytime soon and served no purpose
+
+Removed government name from title in README.md
+
+Bumped down all release versions in README.md from 1.x to 0.x, as the API and program capabilities are not consistent as of yet
+
+Scaled all gifs in README.md down, as they were way too big
+
+Removed Description section from README.md that detailed on my motivation to create ascii_video, as it's pretty outdated and I just like this program now
+
+Added links to all dependencies' home pages to README.md
+
+Added Similar Programs section with links to README.md
+
+Moved Example Output in README.md to the top of the file
+
+Added the main typing-type gif to the bottom and top of README.md
+
+Simplified project description in README.md
