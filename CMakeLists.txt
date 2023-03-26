@@ -105,7 +105,7 @@ set(COMMON_SOURCE_FILES
 )
 
 set(TEST_SOURCE_FILES
-./src/tests/test_audiostream.cpp
+./src/tests/test_audiobuffer.cpp
 ./src/tests/test_playback.cpp
 ./src/tests/test_wmath.cpp
 ./src/tests/test_scale.cpp
