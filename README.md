@@ -19,7 +19,7 @@ Just another terminal video player
 * [cmake](https://cmake.org/)
 * Build-essential tools, such as g++, gcc, make, libtool, etc...
 
-> NOTE: The source code for ffmpeg, ncurses, miniaudio, and argparse are already included in this repository and will be compiled along with ascii_video
+> NOTE: **The source code for ffmpeg, ncurses, miniaudio, and argparse are already included in this repository and will be compiled along with ascii_video**
 > Additionally, ascii_video can work with a system-installed ncurses and a system-installed ffmpeg, but will not work with an ffmpeg release version less than 6.0, which
 > is why the source codes of ncurses and ffmpeg are included as tarballs to ensure a proper build
 

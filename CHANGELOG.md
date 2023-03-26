@@ -62,3 +62,5 @@ Updated Ubuntu Install in README.md to adjust to new build scripts
 Fixed README.md dependencies note to talk about how system-installable versions of ncurses and ffmpeg are linked to if they are not built by ascii_video
 
 Optimized gifs README.md using gifsicle and moved them to assets/readme
+
+in README.md, emphasized that dependencies do not have to be manually installed
