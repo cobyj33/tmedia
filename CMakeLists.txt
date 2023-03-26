@@ -72,7 +72,7 @@ if (ASCII_VIDEO_BUILD_TESTS)
     add_subdirectory(./lib/Catch2)
 endif()
 
-include_directories( ${CURSES_INCLUDE_DIR} ./includes ./lib/miniaudio ./lib/argparse )
+include_directories( ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ./lib/argparse )
 
 set(COMMON_SOURCE_FILES 
 ./lib/miniaudio/miniaudio.c
