@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
-set(CXX_STANDARD 17)
-set(CXX_STANDARD_REQUIRED 17)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -9,11 +10,11 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    message(FATAL_ERROR "Building in-source is not supported! Create a build dir and run cmake from there")
+message(FATAL_ERROR "Building in-source is not supported! Create a build dir and run cmake from there")
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 endif()
 
 option(ASCII_VIDEO_BUILD_TESTS "Build Testing Executable for ascii_video" OFF)
@@ -21,12 +22,17 @@ option(ASCII_VIDEO_BUILD_TESTS "Build Testing Executable for ascii_video" OFF)
 message("${CMAKE_SYSTEM_PROGRAM_PATH}")
 
 if (ASCII_VIDEO_BUILD_TESTS)
-    message("Configured to build testing executable")
+message("Configured to build testing executable")
 else()
-    message("Configured to NOT build testing executable")
+message("Configured to NOT build testing executable")
 endif()
 
-# set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+endif(MSVC)
+
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 
 project(ascii_video
@@ -39,14 +45,12 @@ set(LOCAL_NCURSES_LIBRARIES_PATH ${CMAKE_SOURCE_DIR}/lib/build/ncurses-6.4/lib)
 set(LOCAL_NCURSES_INCLUDE_PATH ${CMAKE_SOURCE_DIR}/lib/build/ncurses-6.4/include)
 
 if(EXISTS ${LOCAL_NCURSES_LIBRARIES_PATH})
-    message("FOUND LOCAL NCURSES MODULE")
-    set(CURSES_LIBRARIES ${LOCAL_NCURSES_LIBRARIES_PATH}/libncurses.a)
-    set(CURSES_INCLUDE_DIR ${LOCAL_NCURSES_INCLUDE_PATH} ${LOCAL_NCURSES_INCLUDE_PATH}/ncurses)
+message("FOUND LOCAL NCURSES MODULE")
+set(CURSES_LIBRARIES ${LOCAL_NCURSES_LIBRARIES_PATH}/libncurses.a)
+set(CURSES_INCLUDE_DIR ${LOCAL_NCURSES_INCLUDE_PATH} ${LOCAL_NCURSES_INCLUDE_PATH}/ncurses)
 else()
-    find_package(Curses REQUIRED)
+find_package(Curses REQUIRED)
 endif()
-
-
 
 find_package(PkgConfig REQUIRED)
 
@@ -113,9 +117,11 @@ set(TEST_SOURCE_FILES
 )
 
 add_executable(ascii_video ${COMMON_SOURCE_FILES} ./src/main.cpp)
+target_compile_features(ascii_video PRIVATE cxx_std_17)
 target_link_libraries(ascii_video PkgConfig::LIBAV ${CURSES_LIBRARIES})
 
 if (ASCII_VIDEO_BUILD_TESTS)
     add_executable(tests ${COMMON_SOURCE_FILES} ${TEST_SOURCE_FILES})
+    target_compile_features(tests PRIVATE cxx_std_17)
     target_link_libraries(tests PRIVATE Catch2::Catch2WithMain ${CURSES_LIBRARIES} PkgConfig::LIBAV)
 endif()

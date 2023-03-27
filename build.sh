@@ -27,6 +27,15 @@ then
     mkdir ${lib_build}
 fi
 
+$SUDO apt-get update
+
+$SUDO apt-get install build-essential \
+cmake \
+make \
+autoconf \
+automake \
+libtool
+
 if [ ! -d ${ncurses_build} ] 
 then
     if [ ! -d ${ncurses_src} ]
