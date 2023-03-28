@@ -30,6 +30,8 @@ Just another terminal video player
 Currently, Linux Ubuntu and Debian builds have been tested and should work.
 Windows, Mac O/S, and Non-Debian distributions of Linux are unsupported (we're still in the early stages).
 
+Compilation has been tested with gcc version 11.3.0 and clang 14.0.0
+
 Currently, I'd recommend using a similar program like [video-to-ascii](https://github.com/joelibaceta/video-to-ascii) on Mac or Non-Debian Linux, although the Docker build should be able to work on any platform.
 
 #### Debian/Ubuntu/Debian-Like Linux Install

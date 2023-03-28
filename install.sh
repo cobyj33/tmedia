@@ -1,4 +1,5 @@
 #!/bin/bash
+set -xe
 
 project_root=$(pwd)
 
@@ -42,7 +43,7 @@ add_local_bin_path() {
 
 previously_installed_location="$(whereis ascii_video | sed "s/ascii_video:[ ]*//")"
 
-if [[ ! ${previously_installed_location} = "" ]]
+if [[ ! $previously_installed_location = "" ]]
 then
     prompt_confirm "ascii_video detected to be installed at $previously_installed_location. Would you like to overwrite?"
     if [[ $? -eq 0 ]] 
@@ -67,7 +68,7 @@ user_install_location="$HOME/.local/bin"
 
 [[ $EUID -eq 0 ]]
 is_root=$?
-install_location=$global_install_location
+install_location=$([[ is_root -eq 0 ]] && echo $global_install_location || echo $user_install_location)
 
 if [[ ! is_root -eq 0 ]]
 then
@@ -79,11 +80,12 @@ then
         mkdir -p $user_install_location
     fi
 
-    shell_rc="$HOME/.$( echo $SHELL | sed -nE "s|.*/(.*)\$|\1|p" )rc"
+    shell_name=$( echo $SHELL | sed -nE "s|.*/(.*)\$|\1|p" )
+    shell_rc="$HOME/.${shell_name}rc"
 
-    if [[ -f ${shell_rc} ]]
+    if [[ -f $shell_rc ]]
     then
-        add_local_bin_path $user_install_location ${shell_rc}
+        add_local_bin_path $user_install_location $shell_rc
     elif [[ -f $HOME/.bash_profile ]]
     then
         add_local_bin_path $user_install_location $HOME/.bash_profile
