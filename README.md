@@ -27,18 +27,20 @@ Just another terminal video player
 
 ### Currently Unsupported or Untested
 
-Windows, Mac O/S, and really anything except for Ubuntu 22.04 is currently untested. (we're still in the early stages).
-Currently, I'd recommend using a similar program like MacOS [video-to-ascii](https://github.com/joelibaceta/video-to-ascii) on Mac or Non-Debian Linux, although the Docker build should be able to work on any platform
+Currently, Linux Ubuntu and Debian builds have been tested and should work.
+Windows, Mac O/S, and Non-Debian distributions of Linux are unsupported (we're still in the early stages).
 
-#### Ubuntu Install
+Currently, I'd recommend using a similar program like [video-to-ascii](https://github.com/joelibaceta/video-to-ascii) on Mac or Non-Debian Linux, although the Docker build should be able to work on any platform.
 
-On Ubuntu, simply run ```bash chmod +x ./build.sh && ./build.sh``` from the cloned repository
+#### Debian/Ubuntu/Debian-Like Linux Install
+
+Simply run ```bash chmod +x ./build.sh && ./build.sh``` from the cloned repository
 
 The binary should then be available inside of the build/ folder after the script finishes
   
 To install globally for the current user, run ```bash chmod +x ./install.sh && ./install.sh``` after running the ./build.sh command shown above
 
-On other distros, ascii_video's installation is currently untested. However, this should theoretically work on all Debian Linux distributions.
+On other distros, ascii_video's installation is currently untested.
 
 #### Docker
 
