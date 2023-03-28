@@ -88,7 +88,6 @@ set(COMMON_SOURCE_FILES
 ./src/audio.cpp
 ./src/audio_thread.cpp
 ./src/decode.cpp
-./src/image.cpp
 ./src/media.cpp
 ./src/boiler.cpp
 ./src/threads.cpp
