@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <optional>
+#include <filesystem>
 
 #include "color.h"
 #include "icons.h"
@@ -17,10 +17,13 @@
 
 #include <argparse.hpp>
 
+
 extern "C" {
 #include "ncurses.h"
 #include <libavutil/log.h>
 }
+
+#define ASCII_VIDEO_VERSION "0.4.0"
 
 bool ncurses_initialized = false;
 
@@ -51,7 +54,10 @@ int main(int argc, char** argv)
     av_log_set_level(AV_LOG_QUIET);
     std::set_terminate(on_terminate);
 
-    argparse::ArgumentParser parser("ascii_video", "1.1");
+    argparse::ArgumentParser parser("ascii_video", ASCII_VIDEO_VERSION);
+
+    parser.add_argument("file")
+        .help("The file to be played");
 
     const std::string controls = std::string("-------CONTROLS-----------\n") +
                             "SPACE - Toggle Playback \n" +
@@ -64,11 +70,6 @@ int main(int argc, char** argv)
 
     parser.add_description(controls);
 
-    parser.add_argument("-v", "--video")
-        .default_value(true)
-        .implicit_value(true)
-        .help("Play a video file");
-    
     parser.add_argument("-c", "--color")
         .default_value(false)
         .implicit_value(true)
@@ -84,125 +85,129 @@ int main(int argc, char** argv)
         .implicit_value(true)
         .help("Do not show characters, only the background");
 
-    parser.add_argument("file")
-        .help("The file to be played");
-
     parser.add_argument("-d", "--dump")
         .help("Print metadata about the file")
+        .default_value(false)
+        .implicit_value(true);
+
+    parser.add_argument("-q", "--quiet")
+        .help("Silence any warnings outputted before the beginning of playback")
         .default_value(false)
         .implicit_value(true);
 
     parser.add_argument("-t", "--time")
         .help("Choose the time to start media playback")
         .default_value(std::string("00:00"));
-
-    // parser.add_argument("-l", "--loop", "--looped")
-    //     .help("Set the video to loop on completion")
-    //     .default_value(false)
-    //     .implicit_value(true);
     
     try {
         parser.parse_args(argc, argv);
     }
-        catch (const std::runtime_error& err) {
+    catch (const std::runtime_error& err) {
         std::cerr << err.what() << std::endl;
         std::cerr << parser;
-        std::exit(1);
+        return EXIT_FAILURE;
     }
 
     std::string file = parser.get<std::string>("file");
+    
+    double start_time = 0.0;
+    bool colors = parser.get<bool>("-c");
+    bool grayscale = !colors && parser.get<bool>("-g");
+    bool background = parser.get<bool>("-b");
+    bool dump = parser.get<bool>("-d");
+    bool version = parser.get<bool>("-v");
+    bool quiet = parser.get<bool>("-q");
+    std::string inputted_start_time = parser.get<std::string>("-t");
 
-    if (is_valid_path(file.c_str())) {
-        double start_time = 0.0;
+    if (version) {
+        std::cout << ASCII_VIDEO_VERSION << std::endl;
+        return EXIT_SUCCESS;
+    }
 
-        bool colors = parser.get<bool>("-c");
-        bool grayscale = !colors && parser.get<bool>("-g");
-        bool background = parser.get<bool>("-b");
-        bool dump = parser.get<bool>("-d");
-        // bool is_looped = parser.get<bool>("-l");
-        bool video = parser.get<bool>("-v");
+    if (dump) {
+        dump_file_info(file.c_str());
+        return EXIT_SUCCESS;
+    }
 
-        if (dump) {
-            dump_file_info(file.c_str());
-            return EXIT_SUCCESS;
-        }
-
-        std::string inputted_start_time = parser.get<std::string>("-t");
-
-        if (is_duration(inputted_start_time)) {
-            start_time = parse_duration(inputted_start_time);
-        } else if (inputted_start_time.length() > 0) {
-            if (is_int_str(inputted_start_time)) {
-                start_time = std::stoi(inputted_start_time);
-            } else {
-                std::cerr << "Inputted time must be in seconds, H:MM:SS, or MM:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
-                return EXIT_FAILURE;
-            }
-        }
-
-        double file_duration = get_file_duration(file.c_str());
-        if (start_time < 0) { // Catch errors in out of bounds times
-            std::cerr << "Cannot start file at a negative time ( got time " << double_to_fixed_string(start_time, 2) << "  from input " + inputted_start_time + " )" << std::endl;
-            return EXIT_FAILURE;
-        } else if (start_time >= file_duration) {
-            std::cerr << "Cannot start file at a time greater than duration of media file ( got time " << double_to_fixed_string(start_time, 2) << " seconds from input " << inputted_start_time << ". File ends at " << double_to_fixed_string(file_duration, 2) << " seconds (" << format_duration(file_duration) << ") ) "  << std::endl;
-            return EXIT_FAILURE;
-        }
-
-        ncurses_init();
-        std::string warnings;
-
-        if (colors && grayscale) {
-            warnings += "WARNING: Cannot have both colored (-c, --color) and grayscale (-g, --gray) output. Falling back to colored output\n";
-            grayscale = false;
-        }
-
-        if ( (colors || grayscale) && !has_colors()) {
-            warnings += "WARNING: Terminal does not support colored output\n";
-            colors = false;
-            grayscale = false;
-        }
-
-        if (background && !(colors || grayscale) ) {
-            if (!has_colors()) {
-                warnings += "WARNING: Cannot use background option as colors are not available in this terminal. Falling back to pure text output\n";
-                background = false;
-            } else {
-                warnings += "WARNING: Cannot only show background without either color (-c, --color) or grayscale(-g, --gray, --grayscale) options selected. Falling back to colored output\n";
-                colors = true;
-                grayscale = false;
-            }
-        }
-
-        if ( (grayscale || colors) && has_colors() && !can_change_color()) {
-            warnings += "WARNING: Terminal does not support changing colored output data, colors may not be as accurate as expected\n";
-        }
-
-        if (warnings.length() > 0) {
-            printw("%s", warnings.c_str());
-            printw("%s\n", "Press any key to continue");
-            refresh();
-            getch();
-        }
-        erase();
-
-        VideoOutputMode mode = get_video_output_mode_from_params(colors, grayscale, background);
-
-        if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
-            ncurses_initialize_grayscale_color_palette();
-        }
-        MediaGUI media_gui;
-        media_gui.set_video_output_mode(mode);
-
-        MediaPlayer player(file.c_str(), media_gui);
-        // player.is_looped = is_looped;
-        player.start(start_time);
-
-        ncurses_uninit();
-    } else {
-        std::cerr << "Cannot open invalid path: " + file << std::endl;
+    if (!is_valid_path(file.c_str()) && file.length() > 0) {
+        std::cerr << "[ascii_video] Cannot open invalid path: " << file << std::endl;
         return EXIT_FAILURE;
     }
+
+    const std::filesystem::path path(file);
+    std::error_code ec; // For using the non-throwing overloads of functions below.
+    if (std::filesystem::is_directory(path, ec))
+    { 
+        std::cerr << "[ascii_video] Given path " << file << " is a directory." << std::endl;
+        return EXIT_FAILURE; 
+    }
+
+    if (inputted_start_time.length() > 0) {
+        if (is_duration(inputted_start_time)) {
+            start_time = parse_duration(inputted_start_time);
+        } else if (is_int_str(inputted_start_time)) {
+            start_time = std::stoi(inputted_start_time);
+        } else {
+            std::cerr << "Inputted time must be in seconds, H:MM:SS, or M:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
+            return EXIT_FAILURE;
+        }
+    }
+
+    double file_duration = get_file_duration(file.c_str());
+    if (start_time < 0) { // Catch errors in out of bounds times
+        std::cerr << "Cannot start file at a negative time ( got time " << double_to_fixed_string(start_time, 2) << "  from input " + inputted_start_time + " )" << std::endl;
+        return EXIT_FAILURE;
+    } else if (start_time >= file_duration) {
+        std::cerr << "Cannot start file at a time greater than duration of media file ( got time " << double_to_fixed_string(start_time, 2) << " seconds from input " << inputted_start_time << ". File ends at " << double_to_fixed_string(file_duration, 2) << " seconds (" << format_duration(file_duration) << ") ) "  << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    ncurses_init();
+    std::string warnings;
+
+    if (colors && grayscale) {
+        warnings += "WARNING: Cannot have both colored (-c, --color) and grayscale (-g, --gray) output. Falling back to colored output\n";
+        grayscale = false;
+    }
+
+    if ( (colors || grayscale) && !has_colors()) {
+        warnings += "WARNING: Terminal does not support colored output\n";
+        colors = false;
+        grayscale = false;
+    }
+
+    if (background && !(colors || grayscale) ) {
+        if (!has_colors()) {
+            warnings += "WARNING: Cannot use background option as colors are not available in this terminal. Falling back to pure text output\n";
+            background = false;
+        } else {
+            warnings += "WARNING: Cannot only show background without either color (-c, --color) or grayscale(-g, --gray, --grayscale) options selected. Falling back to colored output\n";
+            colors = true;
+            grayscale = false;
+        }
+    }
+
+    if ( (grayscale || colors) && has_colors() && !can_change_color()) {
+        warnings += "WARNING: Terminal does not support changing colored output data, colors may not be as accurate as expected\n";
+    }
+
+    if (warnings.length() > 0 && !quiet) {
+        printw("%s\n\n%s\n", warnings.c_str(), "Press any key to continue");
+        refresh();
+        getch();
+    }
+    erase();
+
+    VideoOutputMode mode = get_video_output_mode_from_params(colors, grayscale, background);
+
+    if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
+        ncurses_initialize_grayscale_color_palette();
+    }
+    MediaGUI media_gui;
+    media_gui.set_video_output_mode(mode);
+    MediaPlayer player(file.c_str(), media_gui);
+    player.start(start_time);
+    ncurses_uninit();
 
     return EXIT_SUCCESS;
 }
