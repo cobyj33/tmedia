@@ -63,7 +63,6 @@ pkg-config"
 
 ffmpeg_deps="meson \
 ninja-build \
-pkg-config \
 yasm \
 libva-dev \
 libvdpau-dev \
