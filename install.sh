@@ -67,16 +67,18 @@ user_install_location="$HOME/.local/bin"
 
 [[ $EUID -eq 0 ]]
 is_root=$?
-install_location=$([[ $is_root -eq 0 ]] && echo $global_install_location || echo $user_install_location)
+install_location=$global_install_location
 
-if [[ is_root -eq false ]] && [[ ! -d $user_install_location ]]
+if [[ ! is_root -eq 0 ]]
 then
-    echo "$user_install_location could not be found. Creating $user_install_location"
-    mkdir -p $user_install_location
-fi
+    install_location=$user_install_location
 
-if [[ is_root -eq false ]]
-then
+    if [[ ! -d $user_install_location ]]
+    then
+        echo "$user_install_location could not be found. Creating $user_install_location"
+        mkdir -p $user_install_location
+    fi
+
     shell_rc="$HOME/.$( echo $SHELL | sed -nE "s|.*/(.*)\$|\1|p" )rc"
 
     if [[ -f ${shell_rc} ]]
