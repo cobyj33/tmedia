@@ -119,7 +119,7 @@ then
 else
     echo "Could not find a working ncurses6 installation already on system"
 
-    if [[ is_debian -eq 0 ]] && [[ $(prompt_confirm "Would you like to install ncurses6 with apt installer" ) -eq 0 ]] \
+    [[ is_debian -eq 0 ]] && [[ $(prompt_confirm "Would you like to install ncurses6 with apt installer" ) -eq 0 ]] \
     && $SUDO apt-get install ${ncurses_apt} || should_install_ncurses6_locally=true
 fi
 
