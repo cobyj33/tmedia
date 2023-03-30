@@ -11,12 +11,16 @@ extern "C" {
 
 class PixelData {
     private:
-        std::vector< std::vector<RGBColor> > pixels;
+        std::vector<RGBColor> pixels;
+        int m_width;
+        int m_height;
     public:
 
-        PixelData() : pixels(std::vector< std::vector<RGBColor> >()) {}
+        PixelData() : pixels(std::vector<RGBColor>()), m_width(0), m_height(0) {}
         PixelData(std::vector< std::vector<RGBColor> >& raw_rgb_data);
         PixelData(std::vector< std::vector<uint8_t> >& raw_grayscale_data);
+        // PixelData(std::vector< std::vector<RGBColor> >& raw_rgb_data, int width, int height);
+        // PixelData(std::vector<uint8_t>& raw_grayscale_data, int width, int height);
         PixelData(int width, int height);
         PixelData(AVFrame* video_frame);
         PixelData(const char* file_name);
@@ -26,7 +30,6 @@ class PixelData {
         PixelData(const PixelData& pix_data);
 
         bool equals(const PixelData& pix_data) const;
-
         int get_width() const;
         int get_height() const;
 

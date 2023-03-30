@@ -42,22 +42,23 @@ bool is_rectangular_vector_matrix(std::vector<std::vector<T>>& vector_2d) {
     return true;
 }
 
-
 PixelData::PixelData(std::vector<std::vector<RGBColor>>& raw_rgb_data) {
     if (!is_rectangular_vector_matrix(raw_rgb_data)) {
         throw std::runtime_error("Cannot initialize pixel data with non-rectangular matrix");
     }
 
-    for (int row = 0; row < (int)raw_rgb_data.size(); row++) {
-        this->pixels.push_back(std::vector<RGBColor>());
-        for (int col = 0; col < (int)raw_rgb_data[row].size(); col++) {
-            this->pixels[row].push_back(raw_rgb_data[row][col]);
+    this->m_height = raw_rgb_data.size();
+    this->m_width = 0;
+
+    if (raw_rgb_data.size() > 0) {
+        this->m_width = raw_rgb_data[0].size();
+        this->pixels.reserve(raw_rgb_data.size() * raw_rgb_data[0].size());
+        for (int row = 0; row < (int)raw_rgb_data.size(); row++) {
+            for (int col = 0; col < (int)raw_rgb_data[0].size(); col++) {
+                this->pixels.push_back(raw_rgb_data[row][col]);
+            }
         }
     }
-}
-
-bool PixelData::in_bounds(int row, int col) const {
-    return row >= 0 && col >= 0 && row < this->get_height() && col < this->get_width();
 }
 
 PixelData::PixelData(std::vector<std::vector<uint8_t> >& raw_grayscale_data) {
@@ -65,23 +66,32 @@ PixelData::PixelData(std::vector<std::vector<uint8_t> >& raw_grayscale_data) {
         throw std::runtime_error("Cannot initialize pixel data with non-rectangular matrix");
     }
 
-    for (int row = 0; row < (int)raw_grayscale_data.size(); row++) {
-        this->pixels.push_back(std::vector<RGBColor>());
-        for (int col = 0; col < (int)raw_grayscale_data[row].size(); col++) {
-            this->pixels[row].push_back(RGBColor(raw_grayscale_data[row][col]));
+    this->m_height = raw_grayscale_data.size();
+    this->m_width = 0;
+
+    if (raw_grayscale_data.size() > 0) {
+        this->m_width = raw_grayscale_data[0].size();
+        this->pixels.reserve(raw_grayscale_data.size() * raw_grayscale_data[0].size());
+        for (int row = 0; row < (int)raw_grayscale_data.size(); row++) {
+            for (int col = 0; col < (int)raw_grayscale_data[0].size(); col++) {
+                this->pixels.push_back(RGBColor(raw_grayscale_data[row][col]));
+            }
         }
     }
 }
 
 PixelData::PixelData(AVFrame* video_frame) {
+    this->pixels.reserve(video_frame->width * video_frame->height);
+    this->m_width = video_frame->width;
+    this->m_height = video_frame->height;
+
     for (int row = 0; row < video_frame->height; row++) {
-        this->pixels.push_back(std::vector<RGBColor>());
         for (int col = 0; col < video_frame->width; col++) {
             if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_GRAY8) {
-                this->pixels[row].push_back(RGBColor(video_frame->data[0][row * video_frame->width + col]));
+                this->pixels.push_back(RGBColor(video_frame->data[0][row * video_frame->width + col]));
             } else if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_RGB24) {
                 int data_start = row * video_frame->width * 3 + col * 3;
-                this->pixels[row].push_back(RGBColor( video_frame->data[0][data_start], video_frame->data[0][data_start + 1], video_frame->data[0][data_start + 2] ));
+                this->pixels.push_back(RGBColor( video_frame->data[0][data_start], video_frame->data[0][data_start + 1], video_frame->data[0][data_start + 2] ));
             } else {
                 throw std::runtime_error("Passed in AVFrame with unimplemeted format, only supported formats for initializing from AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24");
             }
@@ -91,14 +101,17 @@ PixelData::PixelData(AVFrame* video_frame) {
 
 void PixelData::operator=(AVFrame* video_frame) {
     this->pixels.clear();
+    this->pixels.reserve(video_frame->width * video_frame->height);
+    this->m_width = video_frame->width;
+    this->m_height = video_frame->height;
+
     for (int row = 0; row < video_frame->height; row++) {
-        this->pixels.push_back(std::vector<RGBColor>());
         for (int col = 0; col < video_frame->width; col++) {
             if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_GRAY8) {
-                this->pixels[row].push_back(RGBColor(video_frame->data[0][row * video_frame->width + col]));
+                this->pixels.push_back(RGBColor(video_frame->data[0][row * video_frame->width + col]));
             } else if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_RGB24) {
                 int data_start = row * video_frame->width * 3 + col * 3;
-                this->pixels[row].push_back(RGBColor( video_frame->data[0][data_start], video_frame->data[0][data_start + 1], video_frame->data[0][data_start + 2] ));
+                this->pixels.push_back(RGBColor( video_frame->data[0][data_start], video_frame->data[0][data_start + 1], video_frame->data[0][data_start + 2] ));
             } else {
                 throw std::runtime_error("Passed in AVFrame with unimplemeted format, only supported formats for initializing from AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24");
             }
@@ -106,63 +119,43 @@ void PixelData::operator=(AVFrame* video_frame) {
     }
 }
 
-
-RGBColor PixelData::get_avg_color_from_area(int row, int col, int width, int height) const {
-    if (width * height <= 0) {
-        throw std::runtime_error("Cannot get average color from an area with negative dimensions: " + std::to_string(width) + " x " + std::to_string(height));
-    }
-    if (width * height == 0) {
-        throw std::runtime_error("Cannot get average color from an area with dimension of 0: " + std::to_string(width) + " x " + std::to_string(height));
-    }
-
-    std::vector<RGBColor> colors;
-    for (int curr_row = row; curr_row < row + height; curr_row++) {
-        for (int curr_col = col; curr_col < col + width; curr_col++) {
-            if (this->in_bounds(curr_row, curr_col)) {
-                colors.push_back(this->at(curr_row, curr_col));
-            }
-        }
-    }
-
-    if (colors.size() > 0) {
-        return get_average_color(colors);
-    }
-    return RGBColor::WHITE;
-    // throw std::runtime_error("Cannot get average color of out of bounds area");
-}
-
-RGBColor PixelData::get_avg_color_from_area(double row, double col, double width, double height) const {
-    return this->get_avg_color_from_area((int)std::floor(row), (int)std::floor(col), (int)std::ceil(width), (int)std::ceil(height));
-}
-
 PixelData::PixelData(const PixelData& pix_data) {
+    this->pixels.reserve(pix_data.get_width() * pix_data.get_height());
+    this->m_width = pix_data.get_width();
+    this->m_height = pix_data.get_height();
     for (int row = 0; row < pix_data.get_height(); row++) {
-        this->pixels.push_back(std::vector<RGBColor>());
         for (int col = 0; col < pix_data.get_width(); col++) {
-            this->pixels[row].push_back(pix_data.at(row, col));
+            this->pixels.push_back(pix_data.at(row, col));
         }
     }
 }
 
 void PixelData::operator=(const PixelData& pix_data) {
     this->pixels.clear();
+    this->pixels.reserve(pix_data.get_width() * pix_data.get_height());
+    this->m_width = pix_data.get_width();
+    this->m_height = pix_data.get_height();
     for (int row = 0; row < pix_data.get_height(); row++) {
-        this->pixels.push_back(std::vector<RGBColor>());
         for (int col = 0; col < pix_data.get_width(); col++) {
-            this->pixels[row].push_back(pix_data.at(row, col));
+            this->pixels.push_back(pix_data.at(row, col));
         }
     }
 }
 
+bool PixelData::in_bounds(int row, int col) const {
+    return row >= 0 && col >= 0 && row < this->m_height && col < this->m_width;
+}
+
+RGBColor PixelData::get_avg_color_from_area(double row, double col, double width, double height) const {
+    return this->get_avg_color_from_area((int)std::floor(row), (int)std::floor(col), (int)std::ceil(width), (int)std::ceil(height));
+}
+
 int PixelData::get_width() const {
-    if (this->pixels.size() == 0) {
-        return 0;
-    }
-    return this->pixels[0].size();
+    return this->m_width;
 }
 
 int PixelData::get_height() const {
-    return this->pixels.size();
+    return this->m_height;
 }
 
 PixelData PixelData::scale(double amount) const {
@@ -186,6 +179,7 @@ PixelData PixelData::scale(double amount) const {
             new_pixels[new_row].push_back(color);
         }
     }
+
     return PixelData(new_pixels);
 }
 
@@ -214,7 +208,7 @@ bool PixelData::equals(const PixelData& pix_data) const {
 }
 
 RGBColor PixelData::at(int row, int col) const {
-    return this->pixels[row][col];
+    return this->pixels[row * this->m_width + col];
 }
 
 PixelData::PixelData(const char* file_name) {
@@ -241,8 +235,10 @@ PixelData::PixelData(const char* file_name) {
     std::vector<AVFrame*> original_frame_container;
 
     while (av_read_frame(format_context, packet) == 0) {
-        if (packet->stream_index != imageStream.get_stream_index())
+
+        if (packet->stream_index != imageStream.get_stream_index()) {
             continue;
+        }
 
         try {
             original_frame_container = decode_video_packet(codec_context, packet);
@@ -257,17 +253,41 @@ PixelData::PixelData(const char* file_name) {
                 throw ascii::ffmpeg_error("ERROR WHILE READING PACKET DATA FROM IMAGE FILE: " + std::string(file_name), e.get_averror());
             }
         }
+
     }
 
-    for (int row = 0; row < final_frame->height; row++) {
-        this->pixels.push_back(std::vector<RGBColor>());
-        for (int col = 0; col < final_frame->width; col++) {
-            int data_start = row * final_frame->width * 3 + col * 3;
-            this->pixels[row].push_back(RGBColor( final_frame->data[0][data_start], final_frame->data[0][data_start + 1], final_frame->data[0][data_start + 2] ));
-        }
+    this->pixels.reserve(final_frame->width * final_frame->height * 3);
+    this->m_height = final_frame->height;
+    this->m_width = final_frame->width;
+    for (int i = 0; i < final_frame->width * final_frame->height; i++) {
+        this->pixels.push_back(RGBColor( final_frame->data[0][i * 3], final_frame->data[0][i * 3 + 1], final_frame->data[0][i * 3 + 2] ));
     }
 
     av_packet_free((AVPacket**)&packet);
     av_frame_free((AVFrame**)&final_frame);
     avformat_free_context(format_context);
+}
+
+RGBColor PixelData::get_avg_color_from_area(int row, int col, int width, int height) const {
+    if (width * height <= 0) {
+        throw std::runtime_error("Cannot get average color from an area with negative dimensions: " + std::to_string(width) + " x " + std::to_string(height));
+    }
+    if (width * height == 0) {
+        throw std::runtime_error("Cannot get average color from an area with dimension of 0: " + std::to_string(width) + " x " + std::to_string(height));
+    }
+
+    std::vector<RGBColor> colors;
+    for (int curr_row = row; curr_row < row + height; curr_row++) {
+        for (int curr_col = col; curr_col < col + width; curr_col++) {
+            if (this->in_bounds(curr_row, curr_col)) {
+                colors.push_back(this->at(curr_row, curr_col));
+            }
+        }
+    }
+
+    if (colors.size() > 0) {
+        return get_average_color(colors);
+    }
+    return RGBColor::WHITE;
+    // throw std::runtime_error("Cannot get average color of out of bounds area");
 }
