@@ -74,7 +74,7 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex)
         }
         while (input != ERR) { // Go through and process all the batched input
 
-            if (input == KEY_ESCAPE || input == KEY_BACKSPACE)
+            if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b')
             {
                 player->in_use = false;
                 break;
