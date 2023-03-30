@@ -25,6 +25,8 @@ Added maximum amount of audio buffer data that can trail the current playback to
 
 Changed AudioBuffer::set_time to AudioBuffer::set_time_in_bounds to better reflect the function's requirements before calling
 
+Print player's ending time at exit
+
 ## March 26, 2023
 
 Added install.sh, which builds the ncurses and ffmpeg dependencies for ascii_video as static libraries from the tarballs

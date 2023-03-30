@@ -11,9 +11,11 @@
 #include "scale.h"
 #include "media.h"
 #include "formatting.h"
-
+#include "wtime.h"
 #include "gui.h"
+
 #include <termcolor.h>
+
 
 #include <argparse.hpp>
 
@@ -208,6 +210,8 @@ int main(int argc, char** argv)
     MediaPlayer player(file.c_str(), media_gui);
     player.start(start_time);
     ncurses_uninit();
+
+    std::cout << "Player ended at " << format_duration(player.get_time(system_clock_sec())) << " / " << format_duration(player.get_duration()) << std::endl;
 
     return EXIT_SUCCESS;
 }
