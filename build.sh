@@ -16,6 +16,13 @@ libswscale_min_version="6.8.102"
 
 is_debian=$([[ -f "/etc/debian_version" ]])
 
+n_proc=$(nproc --all)
+make_proc=1
+if [[ n_proc -gt 1 ]]
+then
+    make_proc=$(($n_proc / 2))
+fi
+
 if [[ ! $is_debian -eq 0 ]]; then
    echo "Cannot build $project_name. Project can only currently build \ 
    and is only currently tested to build on Debian-Linux systems. This is in place \
@@ -172,7 +179,7 @@ then
         --without-progs
 
 
-        make -j4
+        make -j$make_proc
         make install
         cd $project_root
         rm -rf $ncurses_src
@@ -219,7 +226,7 @@ then
     --enable-protocol=file,pipe \
     --disable-devices
 
-    make -j4
+    make -j$make_proc
     make install
     hash -r
     rm -rf $ffmpeg_src
@@ -230,4 +237,4 @@ rm -rf $ascii_video_build
 mkdir $ascii_video_build
 cd $ascii_video_build
 cmake ../
-make -j4
+make -j$make_proc
