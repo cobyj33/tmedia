@@ -32,7 +32,7 @@ void ncurses_initialize_color_palette();
  * @note This function should only be used after either ncurses_initialize_color_palette() or ncurses_initialize_grayscale_color_palette() is run
  * @returns The closest registered ncurses color pair attribute index
  */
-int get_closest_ncurses_color_pair(RGBColor& input);
+int get_closest_ncurses_color_pair(const RGBColor& input);
 
 /**
  * @brief Find the closest registered ncurses color integer to the inputted RGBColor.
@@ -42,7 +42,7 @@ int get_closest_ncurses_color_pair(RGBColor& input);
  * @note This function should only be used after either ncurses_initialize_color_palette() or ncurses_initialize_grayscale_color_palette() is run
  * @returns The closest registered ncurses color pair attribute index
  */
-int get_closest_ncurses_color(RGBColor& input);
+int get_closest_ncurses_color(const RGBColor& input);
 
 /**
  * @brief Find the closest registered ncurses grayscale color pair integer to the inputted RGBColor.
@@ -53,7 +53,7 @@ int get_closest_ncurses_color(RGBColor& input);
  * @note This function will return a valid grayscale color pair if either ncurses_initialize_color_palette() or ncurses_initialize_grayscale_color_palette() is run. However, ncurses_initialize_grayscale_color_palette() will allow this function to return a much more accurate grayscale representation of the inputted color
  * @returns The closest registered ncurses color pair attribute index
  */
-int get_closest_ncurses_grayscale_color_pair(RGBColor& input);
+int get_closest_ncurses_grayscale_color_pair(const RGBColor& input);
 
 /**
  * @brief Find the closest registered ncurses color integer to the inputted RGBColor.
@@ -65,6 +65,6 @@ int get_closest_ncurses_grayscale_color_pair(RGBColor& input);
  * @note This function will return a valid grayscale color pair if either ncurses_initialize_color_palette() or ncurses_initialize_grayscale_color_palette() is run. However, ncurses_initialize_grayscale_color_palette() will allow this function to return a much more accurate grayscale representation of the inputted color
  * @returns The closest registered ncurses color pair attribute index
  */
-int get_closest_ncurses_grayscale_color(RGBColor& input);
+int get_closest_ncurses_grayscale_color(const RGBColor& input);
 
 #endif

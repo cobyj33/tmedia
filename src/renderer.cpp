@@ -229,10 +229,10 @@ void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int
 
     for (int row = 0; row < image.get_height(); row++) {
         for (int col = 0; col < image.get_width(); col++) {
-            ColorChar image_color_char = image.at(row, col);
-            ColorChar color_char(background_only ? ' ' : image_color_char.ch, image_color_char.color);
-            int color_pair = grayscale ? get_closest_ncurses_grayscale_color_pair(color_char.color) : get_closest_ncurses_color_pair(color_char.color);
-            mvaddch(image_start_row + row, image_start_col + col, color_char.ch | COLOR_PAIR(color_pair));
+            char target_char = background_only ? ' ' : image.at(row, col).ch;
+            const RGBColor& target_color = image.at(row, col).color;
+            int color_pair = grayscale ? get_closest_ncurses_grayscale_color_pair(target_color) : get_closest_ncurses_color_pair(target_color);
+            mvaddch(image_start_row + row, image_start_col + col, target_char | COLOR_PAIR(color_pair));
         }
     }
 }

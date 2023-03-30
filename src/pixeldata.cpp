@@ -207,7 +207,7 @@ bool PixelData::equals(const PixelData& pix_data) const {
     return true;
 }
 
-RGBColor PixelData::at(int row, int col) const {
+const RGBColor& PixelData::at(int row, int col) const {
     return this->pixels[row * this->m_width + col];
 }
 

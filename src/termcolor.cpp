@@ -147,7 +147,7 @@ void ncurses_initialize_color_pairs() {
     ncurses_init_color_pairs_map();
 }
 
-int get_closest_ncurses_grayscale_color(RGBColor& input) {
+int get_closest_ncurses_grayscale_color(const RGBColor& input) {
     if (!has_colors()) {
         throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
     }
@@ -155,7 +155,7 @@ int get_closest_ncurses_grayscale_color(RGBColor& input) {
     return grayscale_color_map[input.get_grayscale_value()];
 }
 
-int get_closest_ncurses_grayscale_color_pair(RGBColor& input) {
+int get_closest_ncurses_grayscale_color_pair(const RGBColor& input) {
     if (!has_colors()) {
         throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
     }
@@ -165,14 +165,14 @@ int get_closest_ncurses_grayscale_color_pair(RGBColor& input) {
 
 
 
-int get_closest_ncurses_color(RGBColor& input) {
+int get_closest_ncurses_color(const RGBColor& input) {
     if (!has_colors()) {
         throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
     }
     return color_map[input.red * (COLOR_MAP_SIDE - 1) / 255][input.green * (COLOR_MAP_SIDE - 1) / 255][input.blue * (COLOR_MAP_SIDE - 1) / 255];
 }
 
-int get_closest_ncurses_color_pair(RGBColor& input) {
+int get_closest_ncurses_color_pair(const RGBColor& input) {
     if (!has_colors()) {
         throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
     }

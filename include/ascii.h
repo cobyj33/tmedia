@@ -9,11 +9,12 @@
 
 class ColorChar {
     public:
-        char ch;
-        RGBColor color;
-        ColorChar(char ch, RGBColor color) : ch(ch), color(color) {}
+        const char ch;
+        const RGBColor color;
+        ColorChar(char ch, RGBColor& color) : ch(ch), color(color) {}
+        ColorChar(char ch, const RGBColor& color) : ch(ch), color(color) {}
         ColorChar(const ColorChar& color_char) : ch(color_char.ch), color(color_char.color) {}
-        bool equals(ColorChar& color_char) const; 
+        bool equals(const ColorChar& color_char) const; 
 };
 
 class AsciiImage {
@@ -36,7 +37,7 @@ class AsciiImage {
         AsciiImage(const AsciiImage& other);
         AsciiImage(PixelData& pixels, std::string& characters);
 
-        ColorChar at(int row, int column) const;
+        const ColorChar& at(int row, int column) const;
         bool in_bounds(int row, int column) const;
 };
 

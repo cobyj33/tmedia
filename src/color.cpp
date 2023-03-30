@@ -10,7 +10,7 @@ RGBColor RGBColor::BLACK = RGBColor(0, 0, 0);
 RGBColor RGBColor::WHITE = RGBColor(255, 255, 255);
 
 
-double RGBColor::distance_squared(RGBColor& other) const {
+double RGBColor::distance_squared(const RGBColor& other) const {
     // credit to https://www.compuphase.com/cmetric.htm 
     long rmean = ( (long)this->red + (long)other.red ) / 2;
     long r = (long)this->red - (long)other.red;
@@ -19,7 +19,7 @@ double RGBColor::distance_squared(RGBColor& other) const {
     return (((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8);
 }
 
-double RGBColor::distance(RGBColor& other) const {
+double RGBColor::distance(const RGBColor& other) const {
     // credit to https://www.compuphase.com/cmetric.htm 
     return std::sqrt(this->distance_squared(other));
 }
@@ -63,7 +63,7 @@ RGBColor RGBColor::create_grayscale() const {
     return RGBColor(value);
 }
 
-bool RGBColor::equals(RGBColor& other) const {
+bool RGBColor::equals(const RGBColor& other) const {
     return this->red == other.red && this->green == other.green && this->blue == other.blue;
 }
 

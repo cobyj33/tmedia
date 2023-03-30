@@ -36,9 +36,8 @@ class PixelData {
         PixelData scale(double amount) const;
         PixelData bound(int width, int height) const;
 
-        RGBColor at(int row, int column) const;
+        const RGBColor& at(int row, int column) const;
         bool in_bounds(int row, int column) const;
-        RGBColor atArea(int row, int column, int width, int height) const;
         RGBColor get_avg_color_from_area(int row, int col, int width, int height) const;
         RGBColor get_avg_color_from_area(double row, double col, double width, double height) const;
         

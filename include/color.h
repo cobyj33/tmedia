@@ -11,9 +11,9 @@
  */
 class RGBColor {
     public:
-        int red;
-        int green;
-        int blue;
+        const int red;
+        const int green;
+        const int blue;
 
         static RGBColor BLACK;
         static RGBColor WHITE; 
@@ -23,10 +23,10 @@ class RGBColor {
         RGBColor(int red, int green, int blue) : red(red), green(green), blue(blue) {}
         RGBColor(const RGBColor& color) : red(color.red), green(color.green), blue(color.blue) {}
         
-        double distance(RGBColor& other) const;
-        double distance_squared(RGBColor& other) const;
+        double distance(const RGBColor& other) const;
+        double distance_squared(const RGBColor& other) const;
         RGBColor get_complementary() const;
-        bool equals(RGBColor& other) const;
+        bool equals(const RGBColor& other) const;
         bool is_grayscale() const;
         RGBColor create_grayscale() const;
         int get_grayscale_value() const;

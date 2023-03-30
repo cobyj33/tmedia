@@ -17,7 +17,7 @@ std::string AsciiImage::ASCII_EXTENDED_CHAR_MAP = "@MBHENR#KWXDFPQASUZbdehx*8Gm&
 std::string AsciiImage::UNICODE_BOX_CHAR_MAP = "█▉▊▋▌▍▎▏";
 std::string AsciiImage::UNICODE_STIPPLE_CHAR_MAP = "░▒▓";
 
-bool ColorChar::equals(ColorChar& other) const {
+bool ColorChar::equals(const ColorChar& other) const {
     return this->ch == other.ch && this->color.equals(other.color);
 }
 
@@ -53,7 +53,7 @@ AsciiImage::AsciiImage(PixelData& pixels, std::string& characters) {
     }
 }
 
-ColorChar AsciiImage::at(int row, int col) const {
+const ColorChar& AsciiImage::at(int row, int col) const {
     return this->chars[row * this->m_width + col];
 }
 

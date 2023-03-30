@@ -19,6 +19,8 @@ Changed PixelData to internally use a 1D Vector
 
 Changed AsciiImage to internally use a 1D Vector
 
+PixelData::at and AsciiImage::at both return const references instead of values now
+
 ## March 26, 2023
 
 Added install.sh, which builds the ncurses and ffmpeg dependencies for ascii_video as static libraries from the tarballs
