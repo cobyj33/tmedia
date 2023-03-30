@@ -14,22 +14,29 @@
 class AudioBuffer {
     private:
         /**
-         * @brief The actual buffer of bytes used to store the audio data in the audio buffer.
-         * All bytes are stored interleavened, which means one audio sample consists of the same number of bytes.
-         * I chose to store audio data as byte unsigned integers instead of floats because the bytes should take 4x less space in memory than floats. However, the data is converted to a float once it is read by the user
+         * @brief The actual buffer of bytes used to store the audio data in the audio buffer.  
          * 
+         * All bytes are stored interleavened, which means one audio sample consists of the same number of bytes.
+         * 
+         * I chose to store audio data as byte unsigned integers instead of floats because the
+         * bytes should take 4x less space in memory than floats, and I could not notice a real drop in audio quality.
+         * However, the data is converted to a float once it is read by the user
          */
         std::vector<uint8_t> m_buffer;
 
         /** 
          * @brief the starting time that the first sample in the buffer data is at
          * 
-         * This is mainly used in conjunction with the sample rate to find the current time of the playhead in the audio buffer
+         * This is mainly used in conjunction with the sample rate to find the current time of the playhead in the audio buffer.
         */
         float m_start_time;
 
         /**
-         * @brief The current sample of the playhead in the audio buffer's data. This idea of the "playhead" is used so that data can continuosly be requested and given again from where the audio buffer previously stopped.
+         * @brief The current sample of the playhead in the audio buffer's data. 
+         * This idea of the "playhead" is used so that data can continuosly be requested and given again from where the audio buffer previously stopped.
+         * 
+         * @note This playhead index should NOT take into account the number of channels in the audio data, only the offset of samples since the start of the audio buffer.
+         * In order to query into the audio buffer, this value should then be multiplied by the number of audio channels before extracting data
          */
         std::size_t m_playhead;
 
@@ -97,11 +104,34 @@ class AudioBuffer {
         double get_time() const;
 
         /**
-         * @brief Get the current time that the audio buffer is on
-         * @return The current time of the audio buffer in seconds 
+         * @brief Get the current time that the audio buffer is on, relative to the beginning of the audio buffer's storage
+         * @return The current time that has elapsed since the beginning of the audio buffer in seconds
          */
         double get_elapsed_time() const;
-        std::size_t set_time(double time); // returns new playhead position
+
+        /**
+         * @brief Set the time of the audio buffer to a time within the bounds of this audio buffer's loaded time interval
+         * 
+         * @param time A time within the bounds of this audio buffer's loaded time interval
+         * @throws If the time given is not 
+         * @note Query for the current time interval with get_start_time and get_end_time, or test if the given time is inside of the interval with is_time_in_bounds before calling this function
+         */
+        void set_time_in_bounds(double time);
+
+        /**
+         * @brief Leave $time seconds of audio data available behind the current playback position
+         * 
+         * @param time The seconds of audio data that should be left behind the current playback position
+         * @throws If the amount of time requested is greater than the amount of time available behind the current buffer's playback position, or if the amount of time requested is negative
+         * @note Query for the total available time behind the buffer with $get_elapsed_time to ensure no error is thrown through the above conditions
+         */
+        void leave_behind(double time);
+
+        /**
+         * @brief Gets the starting time of the buffer. The starting time is determined by the time given by clear_and_restart_at
+         * @return The time in seconds that the first sample in the buffer represents 
+         */
+        double get_start_time() const;
 
         /**
          * @brief Gets the ending time of the buffer. The ending time is determined by the amount of samples inputted into the buffer and the sample rate of the buffer

@@ -21,6 +21,10 @@ Changed AsciiImage to internally use a 1D Vector
 
 PixelData::at and AsciiImage::at both return const references instead of values now
 
+Added maximum amount of audio buffer data that can trail the current playback to be 1 minute.
+
+Changed AudioBuffer::set_time to AudioBuffer::set_time_in_bounds to better reflect the function's requirements before calling
+
 ## March 26, 2023
 
 Added install.sh, which builds the ncurses and ffmpeg dependencies for ascii_video as static libraries from the tarballs

@@ -28,6 +28,8 @@ extern "C" {
 // const int MIN_RECOMMENDED_AUDIO_BUFFER_SIZE = 220500; // 5 seconds of audio data at 44100 Hz sample rate
 // const int MAX_RECOMMENDED_AUDIO_BUFFER_SIZE = 1323000; // 30 seconds of audio data at 44100 Hz sample rate
 const int RECOMMENDED_AUDIO_BUFFER_SIZE = 661500; // 15 seconds of audio data at 44100 Hz sample rate
+const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 60.0;
+const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 15.0;
 const char* DEBUG_AUDIO_SOURCE = "Audio";
 const char* DEBUG_AUDIO_TYPE = "Debug";
 const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
@@ -135,7 +137,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             double target_resync_time = player->get_time(current_system_time);
 
             if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
-                player->audio_buffer.set_time(target_resync_time);
+                player->audio_buffer.set_time_in_bounds(target_resync_time);
             } else if (target_resync_time > player->audio_buffer.get_time() && target_resync_time <= player->audio_buffer.get_time() + MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS) {
 
                 int writtenSamples = 0;
@@ -144,7 +146,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
                 } while (writtenSamples != 0 && !player->audio_buffer.is_time_in_bounds(target_resync_time));
 
                 if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
-                    player->audio_buffer.set_time(target_resync_time);
+                    player->audio_buffer.set_time_in_bounds(target_resync_time);
                 } else {
                     player->jump_to_time(target_resync_time, current_system_time);
                 }
@@ -153,6 +155,10 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
                 player->jump_to_time(target_resync_time, current_system_time);
             }
 
+        }
+
+        if (player->audio_buffer.get_elapsed_time() > MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS) {
+            player->audio_buffer.leave_behind(RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS);
         }
 
         if (!player->audio_buffer.can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {

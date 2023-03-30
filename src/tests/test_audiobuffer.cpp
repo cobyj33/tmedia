@@ -141,7 +141,7 @@ TEST_CASE("Audio buffer", "[structure]") {
 
         SECTION("Set time") { // Audio buffer already has mock_samples written into it
             const double time_to_set = expected_buffer_time / 2;
-            audio_buffer.set_time(time_to_set);
+            audio_buffer.set_time_in_bounds(time_to_set);
             REQUIRE(audio_buffer.get_nb_channels() == nb_channels);
             REQUIRE(audio_buffer.get_sample_rate() == sample_rate);
 
@@ -177,6 +177,25 @@ TEST_CASE("Audio buffer", "[structure]") {
 
         std::free(mock_samples);
     } // "Reading and Writing"
+
+    SECTION("leave behind") {
+        AudioBuffer audio_buffer(2, 44100);
+        float* mock_samples = get_mock_samples(2, 44100 * 60);
+        audio_buffer.write(mock_samples, 44100 * 60);
+
+        audio_buffer.set_time_in_bounds(50);
+        REQUIRE(audio_buffer.get_elapsed_time() == 50.0);
+        REQUIRE(audio_buffer.get_time() == 50.0);
+        REQUIRE(audio_buffer.get_nb_samples() == 44100 * 60);
+
+        audio_buffer.leave_behind(15);
+        REQUIRE(audio_buffer.get_elapsed_time() == 15.0);
+        REQUIRE(audio_buffer.get_time() == 50.0);
+        REQUIRE(audio_buffer.get_nb_samples() == 44100 * 25);
+
+
+        std::free(mock_samples);
+    }
 
 
 }

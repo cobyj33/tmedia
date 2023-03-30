@@ -81,11 +81,38 @@ double AudioBuffer::get_time() const {
     return this->m_start_time + this->get_elapsed_time();
 };
 
-std::size_t AudioBuffer::set_time(double time) {
-    if (this->get_nb_samples() == 0) return 0.0;
+void AudioBuffer::set_time_in_bounds(double time) {
+    if (this->get_nb_samples() == 0) {
+        throw std::runtime_error("[AudioBuffer::set_time_in_bounds] Cannot set audio buffer time to " + std::to_string(time) + ". The audio buffer is currently empty.");
+    }
+    if (!this->is_time_in_bounds(time)) {
+        throw std::runtime_error("[AudioBuffer::set_time_in_bounds] Cannot set audio buffer time to " + std::to_string(time) + ". The audio buffer is currently only holding data between the times " + std::to_string(this->m_start_time) + " and " + std::to_string(this->get_end_time()));
+    }
+
     this->m_playhead = (std::size_t)(std::min(this->get_nb_samples() - 1, std::max( (std::size_t)0, (std::size_t)(time - this->m_start_time) * this->m_sample_rate  )  )  );
-    return this->m_playhead;
 };
+
+double AudioBuffer::get_start_time() const {
+    return this->m_start_time;
+}
+
+void AudioBuffer::leave_behind(double time) {
+    double time_behind = this->get_elapsed_time();
+    if (time < 0) {
+        throw std::runtime_error("[AudioBuffer::leave_behind] Attempted to leave behind a negative amount of time. ( got: " + std::to_string(time) + " )");
+    }
+    if (time > time_behind) {
+        throw std::runtime_error("[AudioBuffer::leave_behind] Attempted to leave behind more time than available in buffer. ( got: " + std::to_string(time) + " )");
+    } else if (time == time_behind) {
+        return;
+    }
+
+    double target_time = this->get_time() - time;
+    std::size_t offset_sample_from_start = (target_time - this->m_start_time) * this->m_sample_rate;
+    this->m_buffer = std::vector<uint8_t>(this->m_buffer.begin() + offset_sample_from_start * this->m_nb_channels, this->m_buffer.end());
+    this->m_start_time = target_time;
+    this->m_playhead -= offset_sample_from_start;
+}
 
 double AudioBuffer::get_end_time() const {
     return this->m_start_time + ((double)this->get_nb_samples() / this->m_sample_rate);
