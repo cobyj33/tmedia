@@ -9,7 +9,6 @@
 
 class ColorChar {
     public:
-        static const ColorChar EMPTY;
         char ch;
         RGBColor color;
         ColorChar(char ch, RGBColor color) : ch(ch), color(color) {}
@@ -19,7 +18,9 @@ class ColorChar {
 
 class AsciiImage {
     private:
-        std::vector<std::vector<ColorChar>> lines;
+        std::vector<ColorChar> chars;
+        int m_width;
+        int m_height;
 
     public:
 
@@ -31,13 +32,12 @@ class AsciiImage {
         int get_width() const;
         int get_height() const;
 
-        AsciiImage(int width, int height);
+        AsciiImage(): chars(std::vector<ColorChar>()), m_width(0), m_height(0) {}
         AsciiImage(const AsciiImage& other);
         AsciiImage(PixelData& pixels, std::string& characters);
 
         ColorChar at(int row, int column) const;
         bool in_bounds(int row, int column) const;
-        std::vector<ColorChar> get_line(int row) const;
 };
 
 

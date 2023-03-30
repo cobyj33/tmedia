@@ -17,6 +17,8 @@ Removed what() overload from ascii::ffmpeg_error
 
 Changed PixelData to internally use a 1D Vector
 
+Changed AsciiImage to internally use a 1D Vector
+
 ## March 26, 2023
 
 Added install.sh, which builds the ncurses and ffmpeg dependencies for ascii_video as static libraries from the tarballs

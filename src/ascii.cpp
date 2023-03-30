@@ -12,7 +12,6 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-const ColorChar ColorChar::EMPTY = ColorChar(' ', RGBColor::BLACK);
 std::string AsciiImage::ASCII_STANDARD_CHAR_MAP = "@%#*+=-:_.";
 std::string AsciiImage::ASCII_EXTENDED_CHAR_MAP = "@MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry\%1v7l+it[]{}?j|()=~!-/<>\"^_';,:`.";
 std::string AsciiImage::UNICODE_BOX_CHAR_MAP = "█▉▊▋▌▍▎▏";
@@ -22,51 +21,40 @@ bool ColorChar::equals(ColorChar& other) const {
     return this->ch == other.ch && this->color.equals(other.color);
 }
 
-AsciiImage::AsciiImage(int width, int height) {
-    for (int row = 0; row < height; row++) {
-        this->lines.push_back(std::vector<ColorChar>());
-        for (int column = 0; column < width; column++) {
-            this->lines[row].push_back(ColorChar::EMPTY);
-        }
-    }
-}
-
 int AsciiImage::get_width() const {
-    if (this->lines.size() == 0) {
-        return 0;
-    }
-    return this->lines[0].size();
+    return this->m_width;
 }
 
 int AsciiImage::get_height() const {
-    if (this->lines.size() == 0) {
-        return 0;
-    }
-    return this->lines.size();
+    return this->m_height;
 }
 
 AsciiImage::AsciiImage(const AsciiImage& src) {
-    for (int row = 0; row < src.get_height(); row++) {
-        this->lines.push_back(std::vector<ColorChar>());
-        for (int col = 0; col < src.get_width(); col++) {
-            this->lines[row].push_back(src.at(row, col));
+    this->m_width = src.get_width();
+    this->m_height = src.get_height();
+    this->chars.reserve(this->m_width * this->m_height);
+
+    for (int row = 0; row < this->m_height; row++) {
+        for (int col = 0; col < this->m_width; col++) {
+            this->chars.push_back(src.at(row, col));
         }
     }
 }
 
 AsciiImage::AsciiImage(PixelData& pixels, std::string& characters) {
+    this->m_width = pixels.get_width();
+    this->m_height = pixels.get_height();
+    this->chars.reserve(this->m_width * this->m_height);
 
-    for (int row = 0; row < pixels.get_height(); row++) {
-        this->lines.push_back(std::vector<ColorChar>());
-        for (int col = 0; col < pixels.get_width(); col++) {
-            this->lines[row].push_back(ColorChar(get_char_from_value(characters, pixels.at(row, col).get_grayscale_value()), pixels.at(row, col) ));
+    for (int row = 0; row < this->m_height; row++) {
+        for (int col = 0; col < this->m_width; col++) {
+            this->chars.push_back(ColorChar(get_char_from_value(characters, pixels.at(row, col).get_grayscale_value()), pixels.at(row, col) ));
         }
     }
-    
 }
 
 ColorChar AsciiImage::at(int row, int col) const {
-    return this->lines[row][col];
+    return this->chars[row * this->m_width + col];
 }
 
 char get_char_from_value(std::string& characters, uint8_t value) {
