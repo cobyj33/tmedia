@@ -16,7 +16,7 @@ extern "C" {
 }
 
 void clear_av_frame_list(std::vector<AVFrame*>& frame_list) {
-    for (int i = 0; i < frame_list.size(); i++) {
+    for (int i = 0; i < (int)frame_list.size(); i++) {
         av_frame_free(&(frame_list[i]));
     }
     frame_list.clear();
@@ -137,9 +137,9 @@ std::vector<AVFrame*> decode_video_packet_queue(AVCodecContext* video_codec_cont
                 continue;
             }
             return decoded_frames;
-        } catch (ascii::ffmpeg_error e) {
+        } catch (ascii::ffmpeg_error const& e) {
             av_packet_free(&packet);
-            if (!e.is_eagain() || video_packet_queue.empty()) { // if error is fatal, or the packet list is empty
+            if (e.get_averror() != AVERROR(EAGAIN) || video_packet_queue.empty()) { // if error is fatal, or the packet list is empty
                 throw e;
             }
         }
@@ -173,9 +173,9 @@ std::vector<AVFrame*> decode_audio_packet_queue(AVCodecContext* audio_codec_cont
             }
 
             return decoded_frames;
-        } catch (ascii::ffmpeg_error e) {
+        } catch (ascii::ffmpeg_error const& e) {
             av_packet_free(&packet);
-            if (!e.is_eagain() || audio_packet_queue.empty()) { // if error is fatal, or the packet list is empty
+            if (e.get_averror() != AVERROR(EAGAIN) || audio_packet_queue.empty()) { // if error is fatal, or the packet list is empty
                 throw e;
             }
         }

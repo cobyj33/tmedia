@@ -25,8 +25,8 @@ extern "C" {
 #include <libavutil/audio_fifo.h>
 }
 
-const int MIN_RECOMMENDED_AUDIO_BUFFER_SIZE = 220500; // 5 seconds of audio data at 44100 Hz sample rate
-const int MAX_RECOMMENDED_AUDIO_BUFFER_SIZE = 1323000; // 30 seconds of audio data at 44100 Hz sample rate
+// const int MIN_RECOMMENDED_AUDIO_BUFFER_SIZE = 220500; // 5 seconds of audio data at 44100 Hz sample rate
+// const int MAX_RECOMMENDED_AUDIO_BUFFER_SIZE = 1323000; // 30 seconds of audio data at 44100 Hz sample rate
 const int RECOMMENDED_AUDIO_BUFFER_SIZE = 661500; // 15 seconds of audio data at 44100 Hz sample rate
 const char* DEBUG_AUDIO_SOURCE = "Audio";
 const char* DEBUG_AUDIO_TYPE = "Debug";
@@ -54,9 +54,6 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     std::lock_guard<std::mutex> mutex_lock_guard(data->mutex_ref.get());
     AudioBuffer& audio_buffer = data->player->audio_buffer;
 
-    // AudioBuffer& audio_buffer = player->audio_buffer;
-   
-
     while (!audio_buffer.can_read(frameCount)) {
         int written_samples = data->player->load_next_audio_frames(5);
         if (written_samples == 0) {
@@ -68,15 +65,16 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
         audio_buffer.read_into(frameCount, (float*)pOutput);
     } else {
         float* pFloatOutput = (float*)pOutput;
-        for (int i = 0; i < frameCount; i++) {
+        for (ma_uint32 i = 0; i < frameCount; i++) {
             pFloatOutput[i] = 0.0;
         }
     }
+
+    (void)pInput;
 }
 
 void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
-    int result;
     if (!player->has_audio()) {
         throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
     }

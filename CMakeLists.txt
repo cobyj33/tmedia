@@ -8,32 +8,27 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
   message("No Build Type Given, setting build type to Release")
 endif()
+message("Building Build Type \"${CMAKE_BUILD_TYPE}\"")
 
 if (CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported! Create a build dir and run cmake from there")
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-endif()
-
 option(ASCII_VIDEO_BUILD_TESTS "Build Testing Executable for ascii_video" OFF)
 
-message("${CMAKE_SYSTEM_PROGRAM_PATH}")
-
 if (ASCII_VIDEO_BUILD_TESTS)
-message("Configured to build testing executable")
+    message("Configured to build testing executable")
 else()
-message("Configured to NOT build testing executable")
+    message("Configured to NOT build testing executable")
 endif()
 
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17 /W4")
 endif(MSVC)
 
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 project(ascii_video
 VERSION 0.4.0

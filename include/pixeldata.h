@@ -19,10 +19,13 @@ class PixelData {
         PixelData(std::vector< std::vector<uint8_t> >& raw_grayscale_data);
         PixelData(int width, int height);
         PixelData(AVFrame* video_frame);
-        PixelData(const PixelData& other);
         PixelData(const char* file_name);
+        
+        void operator=(const PixelData& pix_data);
+        void operator=(AVFrame* video_frame);
+        PixelData(const PixelData& pix_data);
 
-        bool equals(const PixelData& other) const;
+        bool equals(const PixelData& pix_data) const;
 
         int get_width() const;
         int get_height() const;

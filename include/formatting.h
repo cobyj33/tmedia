@@ -10,7 +10,7 @@ typedef struct DurationData {
     int seconds;
 } DurationData;
 
-std::string get_formatted_string(std::string& format, ...);
+std::string get_formatted_string(std::string format, ...);
 std::string vget_formatted_string(std::string& format, va_list args);
 
 std::string format_duration(double time_in_seconds);

@@ -57,7 +57,7 @@ void MediaPlayer::start(double start_time) {
 }
 
 StreamData& MediaPlayer::get_media_stream(enum AVMediaType media_type) const {
-    for (int i = 0; i < this->media_streams.size(); i++) {
+    for (int i = 0; i < (int)this->media_streams.size(); i++) {
         if (this->media_streams[i]->get_media_type() == media_type) {
             return *this->media_streams[i];
         }
@@ -69,7 +69,7 @@ bool MediaPlayer::has_media_stream(enum AVMediaType media_type) const {
     try {
         this->get_media_stream(media_type);
         return true;
-    } catch (std::runtime_error not_found_error) {
+    } catch (std::runtime_error const& not_found_error) {
         return false;
     }
 }
@@ -80,7 +80,7 @@ int MediaPlayer::fetch_next(int requestedPacketCount) {
 
     while (av_read_frame(this->format_context, reading_packet) == 0) {
        
-        for (int i = 0; i < this->media_streams.size(); i++) {
+        for (int i = 0; i < (int)this->media_streams.size(); i++) {
             if (this->media_streams[i]->get_stream_index() == reading_packet->stream_index) {
                 AVPacket* saved_packet = av_packet_alloc();
                 av_packet_ref(saved_packet, reading_packet);
@@ -145,11 +145,11 @@ double MediaPlayer::get_desync_time(double current_system_time) const {
 }
 
 void MediaPlayer::set_current_frame(PixelData& data) {
-    this->frame = PixelData(data);
+    this->frame = data;
 }
 
 void MediaPlayer::set_current_frame(AVFrame* frame) {
-    this->frame = PixelData(frame);
+    this->frame = frame;
 }
 
 
@@ -165,16 +165,16 @@ MediaPlayer::MediaPlayer(const char* file_name) {
 
     try {
         this->format_context = open_format_context(file_name);
-    } catch (std::runtime_error e) {
+    } catch (std::runtime_error const& e) {
         throw std::runtime_error("Could not allocate media data of " + std::string(file_name) + " because of error while fetching file format data: " + e.what());
     } 
 
     std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-    for (int i = 0; i < media_types.size(); i++) {
+    for (int i = 0; i < (int)media_types.size(); i++) {
         try {
             std::unique_ptr<StreamData> stream_data_ptr = std::make_unique<StreamData>(format_context, media_types[i]);
             this->media_streams.push_back(std::move(stream_data_ptr));
-        } catch (std::invalid_argument e) {
+        } catch (std::invalid_argument const& e) {
             continue;
         }
     }
@@ -189,16 +189,16 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui) {
 
     try {
         this->format_context = open_format_context(file_name);
-    } catch (std::runtime_error e) {
+    } catch (std::runtime_error const& e) {
         throw std::runtime_error("Could not allocate media data of " + std::string(file_name) + " because of error while fetching file format data: " + e.what());
     } 
 
     std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-    for (int i = 0; i < media_types.size(); i++) {
+    for (int i = 0; i < (int)media_types.size(); i++) {
         try {
             std::unique_ptr<StreamData> stream_data_ptr = std::make_unique<StreamData>(format_context, media_types[i]);
             this->media_streams.push_back(std::move(stream_data_ptr));
-        } catch (std::invalid_argument e) {
+        } catch (std::invalid_argument const& e) {
             continue;
         }
     }
@@ -276,7 +276,7 @@ int MediaPlayer::load_next_audio_frames(int frames) {
     for (int i = 0; i < frames; i++) {
         std::vector<AVFrame*> next_raw_audio_frames = this->next_audio_frames();
         std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
-        for (int i = 0; i < audio_frames.size(); i++) {
+        for (int i = 0; i < (int)audio_frames.size(); i++) {
             AVFrame* current_frame = audio_frames[i];
             float* frameData = (float*)(current_frame->data[0]);
             this->audio_buffer.write(frameData, current_frame->nb_samples);
@@ -311,7 +311,7 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
         do {
             clear_av_frame_list(frames);
             frames = this->next_video_frames();
-            for (int i = 0; i < frames.size(); i++) {
+            for (int i = 0; i < (int)frames.size(); i++) {
                 if (frames[i]->pts * video_media_stream.get_time_base() >= target_time) {
                     passed_target_time = true;
                     break;
@@ -332,7 +332,7 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
         do {
             clear_av_frame_list(frames);
             frames = this->next_audio_frames();
-            for (int i = 0; i < frames.size(); i++) {
+            for (int i = 0; i < (int)frames.size(); i++) {
                 if (frames[i]->pts * audio_media_stream.get_time_base() >= target_time) {
                     passed_target_time = true;
                     break;

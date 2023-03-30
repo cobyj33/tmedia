@@ -31,7 +31,7 @@ RGBColor get_average_color(std::vector<RGBColor>& colors) {
     }
 
     int sums[3] = {0, 0, 0};
-    for (int i = 0; i < colors.size(); i++) {
+    for (int i = 0; i < (int)colors.size(); i++) {
         sums[0] += (double)colors[i].red * colors[i].red;
         sums[1] += (double)colors[i].green * colors[i].green;
         sums[2] += (double)colors[i].blue * colors[i].blue;
@@ -74,14 +74,13 @@ RGBColor find_closest_color(RGBColor& input, std::vector<RGBColor>& colors) {
 }
 
 int find_closest_color_index(RGBColor& input, std::vector<RGBColor>& colors) {
-    int best_color;
     if (colors.size() == 0) {
-        return -1;
         throw std::runtime_error("Cannot find closest color index, colors list is empty ");
     }
 
+    int best_color = 0;
     double best_distance = (double)INT32_MAX;
-    for (int i = 0; i < colors.size(); i++) {
+    for (int i = 0; i < (int)colors.size(); i++) {
         double distance = colors[i].distance_squared(input);
         if (distance < best_distance) {
             best_color = i;

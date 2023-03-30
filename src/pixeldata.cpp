@@ -27,13 +27,13 @@ extern "C" {
 
 // Accepts empty matrices
 template <typename T>
-bool is_rectangular_vector_matrix(std::vector<std::vector<T>> vector_2d) {
+bool is_rectangular_vector_matrix(std::vector<std::vector<T>>& vector_2d) {
     if (vector_2d.size() == 0) {
         return true;
     }
-    int width = vector_2d[0].size();
+    std::size_t width = vector_2d[0].size();
 
-    for (int row = 0; row < vector_2d.size(); row++) {
+    for (int row = 0; row < (int)vector_2d.size(); row++) {
         if (vector_2d[row].size() != width) {
             return false;
         }
@@ -43,14 +43,14 @@ bool is_rectangular_vector_matrix(std::vector<std::vector<T>> vector_2d) {
 }
 
 
-PixelData::PixelData(std::vector<std::vector<RGBColor> >& raw_rgb_data) {
+PixelData::PixelData(std::vector<std::vector<RGBColor>>& raw_rgb_data) {
     if (!is_rectangular_vector_matrix(raw_rgb_data)) {
         throw std::runtime_error("Cannot initialize pixel data with non-rectangular matrix");
     }
 
-    for (int row = 0; row < raw_rgb_data.size(); row++) {
+    for (int row = 0; row < (int)raw_rgb_data.size(); row++) {
         this->pixels.push_back(std::vector<RGBColor>());
-        for (int col = 0; col < raw_rgb_data[row].size(); col++) {
+        for (int col = 0; col < (int)raw_rgb_data[row].size(); col++) {
             this->pixels[row].push_back(raw_rgb_data[row][col]);
         }
     }
@@ -65,16 +65,15 @@ PixelData::PixelData(std::vector<std::vector<uint8_t> >& raw_grayscale_data) {
         throw std::runtime_error("Cannot initialize pixel data with non-rectangular matrix");
     }
 
-    for (int row = 0; row < raw_grayscale_data.size(); row++) {
+    for (int row = 0; row < (int)raw_grayscale_data.size(); row++) {
         this->pixels.push_back(std::vector<RGBColor>());
-        for (int col = 0; col < raw_grayscale_data[row].size(); col++) {
+        for (int col = 0; col < (int)raw_grayscale_data[row].size(); col++) {
             this->pixels[row].push_back(RGBColor(raw_grayscale_data[row][col]));
         }
     }
 }
 
 PixelData::PixelData(AVFrame* video_frame) {
-        
     for (int row = 0; row < video_frame->height; row++) {
         this->pixels.push_back(std::vector<RGBColor>());
         for (int col = 0; col < video_frame->width; col++) {
@@ -86,10 +85,25 @@ PixelData::PixelData(AVFrame* video_frame) {
             } else {
                 throw std::runtime_error("Passed in AVFrame with unimplemeted format, only supported formats for initializing from AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24");
             }
-
         }
     }
+}
 
+void PixelData::operator=(AVFrame* video_frame) {
+    this->pixels.clear();
+    for (int row = 0; row < video_frame->height; row++) {
+        this->pixels.push_back(std::vector<RGBColor>());
+        for (int col = 0; col < video_frame->width; col++) {
+            if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_GRAY8) {
+                this->pixels[row].push_back(RGBColor(video_frame->data[0][row * video_frame->width + col]));
+            } else if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_RGB24) {
+                int data_start = row * video_frame->width * 3 + col * 3;
+                this->pixels[row].push_back(RGBColor( video_frame->data[0][data_start], video_frame->data[0][data_start + 1], video_frame->data[0][data_start + 2] ));
+            } else {
+                throw std::runtime_error("Passed in AVFrame with unimplemeted format, only supported formats for initializing from AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24");
+            }
+        }
+    }
 }
 
 
@@ -121,15 +135,24 @@ RGBColor PixelData::get_avg_color_from_area(double row, double col, double width
     return this->get_avg_color_from_area((int)std::floor(row), (int)std::floor(col), (int)std::ceil(width), (int)std::ceil(height));
 }
 
-PixelData::PixelData(const PixelData& other) {
-    for (int row = 0; row < other.get_height(); row++) {
+PixelData::PixelData(const PixelData& pix_data) {
+    for (int row = 0; row < pix_data.get_height(); row++) {
         this->pixels.push_back(std::vector<RGBColor>());
-        for (int col = 0; col < other.get_width(); col++) {
-            this->pixels[row].push_back(other.at(row, col));
+        for (int col = 0; col < pix_data.get_width(); col++) {
+            this->pixels[row].push_back(pix_data.at(row, col));
         }
     }
 }
 
+void PixelData::operator=(const PixelData& pix_data) {
+    this->pixels.clear();
+    for (int row = 0; row < pix_data.get_height(); row++) {
+        this->pixels.push_back(std::vector<RGBColor>());
+        for (int col = 0; col < pix_data.get_width(); col++) {
+            this->pixels[row].push_back(pix_data.at(row, col));
+        }
+    }
+}
 
 int PixelData::get_width() const {
     if (this->pixels.size() == 0) {
@@ -174,15 +197,15 @@ PixelData PixelData::bound(int width, int height) const {
     return this->scale(scale_factor);
 }
 
-bool PixelData::equals(const PixelData& other) const {
-    if (this->get_width() != other.get_width() || this->get_height() != other.get_height()) {
+bool PixelData::equals(const PixelData& pix_data) const {
+    if (this->get_width() != pix_data.get_width() || this->get_height() != pix_data.get_height()) {
         return false;
     }
 
     for (int row = 0; row < this->get_height(); row++) {
         for (int col = 0; col < this->get_width(); col++) {
-            RGBColor other_color = other.at(row, col);
-            if (!this->at(row, col).equals(other_color)) {
+            RGBColor pix_data_color = pix_data.at(row, col);
+            if (!this->at(row, col).equals(pix_data_color)) {
                 return false;
             }
         }
@@ -199,7 +222,7 @@ PixelData::PixelData(const char* file_name) {
     format_context = open_format_context(std::string(file_name));
 
     std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO };
-    std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> media_streams = std::move(get_stream_datas(format_context, media_types));
+    std::vector<std::shared_ptr<StreamData>> media_streams = get_stream_datas(format_context, media_types);
 
     if (!has_av_media_stream(media_streams, AVMEDIA_TYPE_VIDEO)) {
         throw std::runtime_error("[PixelData::PixelData(const char* file_name)] Could not fetch image of file " + std::string(file_name));
@@ -214,7 +237,6 @@ PixelData::PixelData(const char* file_name) {
             );
     AVPacket* packet = av_packet_alloc();
     AVFrame* final_frame = NULL;
-    int result;
 
     std::vector<AVFrame*> original_frame_container;
 
@@ -226,13 +248,13 @@ PixelData::PixelData(const char* file_name) {
             original_frame_container = decode_video_packet(codec_context, packet);
             final_frame = image_converter.convert_video_frame(original_frame_container[0]);
             clear_av_frame_list(original_frame_container);
-        } catch (ascii::ffmpeg_error e) {
+        } catch (ascii::ffmpeg_error const& e) {
             if (e.get_averror() == AVERROR(EAGAIN)) {
                 continue;
             } else {
                 av_packet_free((AVPacket**)&packet);
                 av_frame_free((AVFrame**)&final_frame);
-                throw ascii::ffmpeg_error("ERROR WHILE READING PACKET DATA FROM IMAGE FILE: " + std::string(file_name), result);
+                throw ascii::ffmpeg_error("ERROR WHILE READING PACKET DATA FROM IMAGE FILE: " + std::string(file_name), e.get_averror());
             }
         }
     }

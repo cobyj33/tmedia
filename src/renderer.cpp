@@ -108,15 +108,15 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex)
              * Grayscale Background -> Colored Background (C)
              */
 
-            if (input == 'c' || input == 'C') {
+            if (input == 'c' || input == 'C') { // Change from current video mode to colored version
                 if (has_colors() && can_change_color()) {
                     switch (player->media_gui.get_video_output_mode()) {
                         case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
                         case VideoOutputMode::GRAYSCALE: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
                         case VideoOutputMode::TEXT_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
                         case VideoOutputMode::COLORED: player->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
+                        case VideoOutputMode::COLORED_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
                     }
-
                 }
             }
 
@@ -127,6 +127,7 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex)
                         case VideoOutputMode::COLORED: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
                         case VideoOutputMode::TEXT_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
                         case VideoOutputMode::GRAYSCALE: player->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
+                        case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
                     }
                 }
             }
@@ -138,6 +139,7 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex)
                         case VideoOutputMode::GRAYSCALE: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
                         case VideoOutputMode::COLORED_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
                         case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
+                        case VideoOutputMode::TEXT_ONLY: break;
                     }
                 }
             }
@@ -178,12 +180,12 @@ void render_loop(MediaPlayer *player, std::mutex &alter_mutex)
         }
 
     render:
-        PixelData &image = player->frame;
+        PixelData image(player->frame);
         lock.unlock();
 
         render_movie_screen(image, player->media_gui.get_video_output_mode());
         refresh();
-        sleep_for_ms(41);
+        sleep_for_ms(RENDER_LOOP_SLEEP_TIME_MS);
     }
 
     delwin(inputWindow);
@@ -227,8 +229,8 @@ void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int
 
     for (int row = 0; row < image.get_height(); row++) {
         for (int col = 0; col < image.get_width(); col++) {
-            ColorChar color_char = image.at(row, col);
-            color_char = ColorChar(background_only ? ' ' : color_char.ch, color_char.color);
+            ColorChar image_color_char = image.at(row, col);
+            ColorChar color_char(background_only ? ' ' : image_color_char.ch, image_color_char.color);
             int color_pair = grayscale ? get_closest_ncurses_grayscale_color_pair(color_char.color) : get_closest_ncurses_color_pair(color_char.color);
             mvaddch(image_start_row + row, image_start_col + col, color_char.ch | COLOR_PAIR(color_pair));
         }

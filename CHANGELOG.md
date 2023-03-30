@@ -1,6 +1,20 @@
 
 # ascii_video ChangeLog
 
+## March 29, 2023
+
+CMake now prints the current Build Type upon building
+
+CMake now builds with all compiler warnings enabled
+
+Project now compiles with no warnings invoked by the compiler.  
+Warnings will now remain enabled at all times.
+No warnings tested with gcc version 11.3.0 and clang version 14.0.0 on an ubuntu 22.04 x86 system
+
+set CMAKE_CXX_FLAGS_RELEASE in CMakeLists.txt to be "-O3"
+
+Removed what() overload from ascii::ffmpeg_error
+
 ## March 26, 2023
 
 Added install.sh, which builds the ncurses and ffmpeg dependencies for ascii_video as static libraries from the tarballs

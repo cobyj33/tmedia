@@ -99,34 +99,33 @@ StreamData::~StreamData() {
     // }
 };
 
-std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> get_stream_datas(AVFormatContext* format_context, std::vector<enum AVMediaType>& media_types) {
-    std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> stream_datas = std::make_unique<std::vector<std::unique_ptr<StreamData>>>();
+std::vector<std::shared_ptr<StreamData>> get_stream_datas(AVFormatContext* format_context, std::vector<enum AVMediaType>& media_types) {
+    std::vector<std::shared_ptr<StreamData>> stream_datas;
 
-    for (int i = 0; i < media_types.size(); i++) {
+    for (int i = 0; i < (int)media_types.size(); i++) {
         try {
-            std::unique_ptr<StreamData> stream_data_ptr = std::make_unique<StreamData>(format_context, media_types[i]);
-            stream_datas->push_back(std::move(stream_data_ptr));
-        } catch (std::invalid_argument e) {
+            std::shared_ptr<StreamData> stream_data_ptr = std::make_shared<StreamData>(format_context, media_types[i]);
+            stream_datas.push_back(stream_data_ptr);
+        } catch (std::invalid_argument const& e) {
             continue;
         }
     }
 
-    return std::move(stream_datas);
+    return stream_datas;
 }
 
-StreamData& get_av_media_stream(std::unique_ptr<std::vector<std::unique_ptr<StreamData>>>& stream_datas, enum AVMediaType media_type) {
-    for (int i = 0; i < stream_datas->size(); i++) {
-        if ((*stream_datas)[i]->media_type == media_type) {
-            return *(*stream_datas)[i];
+StreamData& get_av_media_stream(std::vector<std::shared_ptr<StreamData>>& stream_datas, enum AVMediaType media_type) {
+    for (int i = 0; i < (int)stream_datas.size(); i++) {
+        if (stream_datas[i]->media_type == media_type) {
+            return *stream_datas[i];
         }
     }
-
     throw std::runtime_error("Could not find stream data for media type " + std::string(av_get_media_type_string(media_type)));
 };
 
-bool has_av_media_stream(std::unique_ptr<std::vector<std::unique_ptr<StreamData>>>& stream_datas, enum AVMediaType media_type) {
-    for (int i = 0; i < stream_datas->size(); i++) {
-        if ((*stream_datas)[i]->media_type == media_type) {
+bool has_av_media_stream(std::vector<std::shared_ptr<StreamData>>& stream_datas, enum AVMediaType media_type) {
+    for (int i = 0; i < (int)stream_datas.size(); i++) {
+        if (stream_datas[i]->media_type == media_type) {
             return true;
         }
     }

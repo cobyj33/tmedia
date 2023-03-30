@@ -5,8 +5,6 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-constexpr double PI  = 3.14159265359;
-
 float* get_mock_samples(int nb_channels, int nb_samples) {
     float* samples = (float*)std::malloc(sizeof(float) * nb_channels * nb_samples);
     for (int i = 0; i < nb_channels * nb_samples; i++) {
@@ -55,24 +53,24 @@ TEST_CASE("Audio buffer", "[structure]") {
         float* mock_samples = get_mock_samples(2, expected_nb_samples);
         audio_buffer.write(mock_samples, expected_nb_samples);
 
-        REQUIRE(audio_buffer.get_nb_samples() == expected_nb_samples);
+        REQUIRE(audio_buffer.get_nb_samples() == (std::size_t)expected_nb_samples);
         REQUIRE(audio_buffer.get_time() == 0.0);
         REQUIRE(audio_buffer.get_elapsed_time() == 0.0);
         REQUIRE(audio_buffer.get_end_time() == expected_buffer_time);
         REQUIRE(audio_buffer.can_read());
-        REQUIRE(audio_buffer.get_nb_can_read() == expected_nb_samples);
+        REQUIRE(audio_buffer.get_nb_can_read() == (std::size_t)expected_nb_samples);
         REQUIRE(audio_buffer.can_read(audio_buffer.get_nb_can_read()));
 
         SECTION("Multiple Consecutive Writes") { // Audio buffer already has mock_samples written into it
             audio_buffer.write(mock_samples, expected_nb_samples);
             REQUIRE(audio_buffer.get_nb_channels() == nb_channels);
             REQUIRE(audio_buffer.get_sample_rate() == sample_rate);
-            REQUIRE(audio_buffer.get_nb_samples() == expected_nb_samples * 2);
+            REQUIRE(audio_buffer.get_nb_samples() == (std::size_t)expected_nb_samples * 2);
             REQUIRE(audio_buffer.get_time() == 0.0);
             REQUIRE(audio_buffer.get_elapsed_time() == 0.0);
             REQUIRE(audio_buffer.get_end_time() == expected_buffer_time * 2);
             REQUIRE(audio_buffer.can_read());
-            REQUIRE(audio_buffer.get_nb_can_read() == expected_nb_samples * 2);
+            REQUIRE(audio_buffer.get_nb_can_read() == (std::size_t)expected_nb_samples * 2);
         }
 
         SECTION("Clear and restart") { // Audio buffer already has mock_samples written into it
@@ -80,12 +78,12 @@ TEST_CASE("Audio buffer", "[structure]") {
             audio_buffer.write(mock_samples, expected_nb_samples);
             REQUIRE(audio_buffer.get_nb_channels() == nb_channels);
             REQUIRE(audio_buffer.get_sample_rate() == sample_rate);
-            REQUIRE(audio_buffer.get_nb_samples() == expected_nb_samples);
+            REQUIRE(audio_buffer.get_nb_samples() == (std::size_t)expected_nb_samples);
             REQUIRE(audio_buffer.get_time() == 0.0);
             REQUIRE(audio_buffer.get_elapsed_time() == 0.0);
             REQUIRE(audio_buffer.get_end_time() == expected_buffer_time);
             REQUIRE(audio_buffer.can_read());
-            REQUIRE(audio_buffer.get_nb_can_read() == expected_nb_samples);
+            REQUIRE(audio_buffer.get_nb_can_read() == (std::size_t)expected_nb_samples);
         }
 
         SECTION("Clear and restart with time") { // Audio buffer already has mock_samples written into it
@@ -94,12 +92,12 @@ TEST_CASE("Audio buffer", "[structure]") {
             audio_buffer.write(mock_samples, expected_nb_samples);
             REQUIRE(audio_buffer.get_nb_channels() == nb_channels);
             REQUIRE(audio_buffer.get_sample_rate() == sample_rate);
-            REQUIRE(audio_buffer.get_nb_samples() == expected_nb_samples);
+            REQUIRE(audio_buffer.get_nb_samples() == (std::size_t)expected_nb_samples);
             REQUIRE(audio_buffer.get_time() == start_time);
             REQUIRE(audio_buffer.get_elapsed_time() == 0.0);
-            REQUIRE(audio_buffer.get_end_time() == expected_buffer_time + start_time);
+            REQUIRE(audio_buffer.get_end_time() == (std::size_t)expected_buffer_time + start_time);
             REQUIRE(audio_buffer.can_read());
-            REQUIRE(audio_buffer.get_nb_can_read() == expected_nb_samples);
+            REQUIRE(audio_buffer.get_nb_can_read() == (std::size_t)expected_nb_samples);
         }
 
         SECTION("Clear and restart after write with time") { // Audio buffer already has mock_samples written into it
@@ -119,12 +117,12 @@ TEST_CASE("Audio buffer", "[structure]") {
             REQUIRE(audio_buffer.get_nb_channels() == nb_channels);
             REQUIRE(audio_buffer.get_sample_rate() == sample_rate);
 
-            REQUIRE(audio_buffer.get_nb_samples() == expected_nb_samples);
+            REQUIRE(audio_buffer.get_nb_samples() == (std::size_t)expected_nb_samples);
             REQUIRE(audio_buffer.get_time() == start_time);
             REQUIRE(audio_buffer.get_elapsed_time() == 0.0);
             REQUIRE(audio_buffer.get_end_time() == expected_buffer_time + start_time);
             REQUIRE(audio_buffer.can_read());
-            REQUIRE(audio_buffer.get_nb_can_read() == expected_nb_samples);
+            REQUIRE(audio_buffer.get_nb_can_read() == (std::size_t)expected_nb_samples);
         }
 
         SECTION("Clear") { // Audio buffer already has mock_samples written into it
@@ -150,10 +148,10 @@ TEST_CASE("Audio buffer", "[structure]") {
             REQUIRE(audio_buffer.get_elapsed_time() == time_to_set);
             REQUIRE(audio_buffer.get_end_time() == expected_buffer_time);
             REQUIRE(audio_buffer.get_time() == time_to_set);
-            REQUIRE(audio_buffer.get_nb_can_read() == expected_nb_samples / 2);
+            REQUIRE(audio_buffer.get_nb_can_read() == (std::size_t)expected_nb_samples / 2);
             REQUIRE(audio_buffer.can_read());
             REQUIRE(audio_buffer.can_read(1));
-            REQUIRE(audio_buffer.get_nb_samples() == expected_nb_samples);
+            REQUIRE(audio_buffer.get_nb_samples() == (std::size_t)expected_nb_samples);
         }
 
         SECTION("Writing one sample") {

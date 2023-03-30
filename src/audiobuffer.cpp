@@ -124,7 +124,7 @@ bool AudioBuffer::can_read() const {
 };
 
 void AudioBuffer::peek_into(std::size_t nb_samples, float* target) const {
-    for (int i = 0; i < nb_samples * this->m_nb_channels; i++) {
+    for (std::size_t i = 0; i < nb_samples * this->m_nb_channels; i++) {
         target[i] = uint8_sample_to_normalized_float(this->m_buffer[this->m_playhead * this->m_nb_channels + i]);
     }
 };

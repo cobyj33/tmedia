@@ -517,7 +517,9 @@ const VideoIcon VideoIcon::get_digit_icon(int digit) {
 }
 
 const VideoIcon VideoIcon::get_volume_icon(double percentage) {
-    double normalized_volume = clamp(percentage, 0.0, 1.0);
+    if (percentage < 0 || percentage > 1) {
+        throw std::runtime_error("Attempted to grab volume icon with invalid percentage value " + std::to_string(percentage) + ": percentage value must be between 0 and 1 inclusive");
+    }
     
     if (percentage <= 0.0) {
         return VideoIcon::NO_VOLUME_ICON;

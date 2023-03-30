@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <stdexcept>
+#include <string>
 
 #include "wmath.h"
 
@@ -71,5 +72,5 @@ int digit_char_to_int(char num_char) {
     if (num_char >= '0' && num_char <= '9') {
         return (int)num_char - 48;
     }
-    throw std::runtime_error("Attempted to convert non-digit ascii character to number, " + num_char);
+    throw std::runtime_error("Attempted to convert non-digit ascii character to number, " + std::to_string(num_char));
 }

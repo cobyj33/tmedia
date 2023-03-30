@@ -40,7 +40,7 @@ void on_terminate() {
     try {
         std::rethrow_exception(exptr);
     }
-    catch (std::exception &ex) {
+    catch (std::exception const& ex) {
         std::cerr << "Terminated due to exception: " << ex.what() << std::endl;
     }
 
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
     try {
         parser.parse_args(argc, argv);
     }
-    catch (const std::runtime_error& err) {
+    catch (std::runtime_error const& err) {
         std::cerr << err.what() << std::endl;
         std::cerr << parser;
         return EXIT_FAILURE;

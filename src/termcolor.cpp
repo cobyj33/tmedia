@@ -208,7 +208,6 @@ RGBColor rgb1000_to_rgb255(RGBColor& color) {
 RGBColor ncurses_get_color_number_content(int color) {
     short r, g, b;
     color_content(color, &r, &g, &b);
-    double conversion_factor = 255.0 / 1000;
     RGBColor color_1000 = RGBColor(r, g, b); // ncurses colors are in the range 0-1000 instead of the standard 0-255
     return rgb1000_to_rgb255(color_1000);
 }
@@ -254,7 +253,6 @@ void ncurses_init_grayscale_color_palette() {
     }
 
     available_colors = DEFAULT_TERMINAL_COLOR_COUNT;
-    int color_index = DEFAULT_TERMINAL_COLOR_COUNT;
     int colors_to_add = std::min(COLORS - DEFAULT_TERMINAL_COLOR_COUNT, MAX_TERMINAL_COLORS - DEFAULT_TERMINAL_COLOR_COUNT);
     for (int i = DEFAULT_TERMINAL_COLOR_COUNT; i < colors_to_add; i++) {
         short grayscale_value = i * 1000 / colors_to_add;
@@ -332,9 +330,8 @@ int ncurses_find_best_initialized_color_pair(RGBColor& input) {
     double best_distance = (double)INT32_MAX;
     for (int i = 0; i < available_color_pairs; i++) {
         std::pair<RGBColor, RGBColor> color_pair_data = ncurses_get_pair_number_content(i);
-        RGBColor current_fg = color_pair_data.first;
         RGBColor current_bg = color_pair_data.second;
-        double distance = current_bg.distance_squared(input), input;
+        double distance = current_bg.distance_squared(input);
         if (distance < best_distance) {
             best_pair = i;
             best_distance = distance;

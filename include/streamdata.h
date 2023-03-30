@@ -38,8 +38,8 @@ class StreamData {
         ~StreamData();
 };
 
-std::unique_ptr<std::vector<std::unique_ptr<StreamData>>> get_stream_datas(AVFormatContext* format_context, std::vector<enum AVMediaType>& media_types);
-StreamData& get_av_media_stream(std::unique_ptr<std::vector<std::unique_ptr<StreamData>>>& stream_datas, enum AVMediaType media_type);
-bool has_av_media_stream(std::unique_ptr<std::vector<std::unique_ptr<StreamData>>>& stream_datas, enum AVMediaType media_type);
+std::vector<std::shared_ptr<StreamData>> get_stream_datas(AVFormatContext* format_context, std::vector<enum AVMediaType>& media_types);
+StreamData& get_av_media_stream(std::vector<std::shared_ptr<StreamData>>& stream_datas, enum AVMediaType media_type);
+bool has_av_media_stream(std::vector<std::shared_ptr<StreamData>>& stream_datas, enum AVMediaType media_type);
 
 #endif

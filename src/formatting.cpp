@@ -24,7 +24,7 @@ std::string double_to_fixed_string(double num, int decimal_places) {
 }
 
 
-std::string get_formatted_string(std::string& format, ...) {
+std::string get_formatted_string(std::string format, ...) {
     va_list args;
     va_start(args, format);
     std::string string = vget_formatted_string(format, args);
@@ -104,7 +104,7 @@ bool is_h_mm_ss_duration(std::string formatted_duration) {
         const int HH_MM_COLON_POSITION = END - 5;
 
         if (formatted_duration[MM_SS_COLON_POSITION] == ':' && formatted_duration[HH_MM_COLON_POSITION] == ':') {
-            for (int i = 0; i < formatted_duration.length(); i++) {
+            for (int i = 0; i < (int)formatted_duration.length(); i++) {
                 if (!std::isdigit(formatted_duration[i]) && !(i == MM_SS_COLON_POSITION || i == HH_MM_COLON_POSITION )) {
                     return false;
                 }
@@ -155,7 +155,7 @@ bool is_m_ss_duration(std::string formatted_duration) {
         const int COLON_POSITION = END - 2;
 
         if (formatted_duration[COLON_POSITION] == ':') {
-            for (int i = 0; i < formatted_duration.length(); i++) {
+            for (int i = 0; i < (int)formatted_duration.length(); i++) {
                 if (!std::isdigit(formatted_duration[i]) && i != COLON_POSITION) {
                     return false;
                 }
@@ -183,7 +183,7 @@ bool is_int_str(std::string str) {
         return false;
     }
 
-    for (int i = 0; i < str.length(); i++) {
+    for (std::size_t i = 0; i < str.length(); i++) {
         if (str[i] == '-') {
             if (i == 0) {
                 if (str.length() == 1) { // the string is "-"

@@ -72,7 +72,7 @@ void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
             }
 
             clear_av_frame_list(decoded_frames);
-        } catch (std::exception e) {
+        } catch (std::exception const& e) {
             PixelData error_image = VideoIcon::ERROR_ICON.pixel_data;
             player->set_current_frame(error_image);
         }

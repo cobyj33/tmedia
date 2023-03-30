@@ -2,9 +2,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-constexpr double HALF_SECOND = 0.5;
 constexpr int SECOND = 1;
-constexpr int TEN_SECONDS = 10;
 constexpr int HALF_MINUTE = 30;
 constexpr int ONE_MINUTE = 60;
 constexpr int HALF_HOUR = 1800;
