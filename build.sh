@@ -72,13 +72,8 @@ ffmpeg_deps="meson \
 ninja-build \
 yasm \
 libva-dev \
-libvdpau-dev \
 libvorbis-dev \
-libxcb1-dev \
-libxcb-shm0-dev \
-libxcb-xfixes0-dev \
 libunistring-dev \
-libaom-dev \
 libdav1d-dev"
 
 ncurses_apt="libncurses6 \
@@ -208,7 +203,6 @@ then
     --ld="g++" \
     --enable-gpl \
     --enable-nonfree \
-    --enable-libaom \
     --enable-libdav1d \
     --enable-libvorbis \
     --disable-network \
@@ -223,8 +217,11 @@ then
     --disable-avfilter \
     --disable-avdevice \
     --disable-protocols \
+    --disable-lzma \
     --enable-protocol=file,pipe \
-    --disable-devices
+    --disable-devices \
+    --disable-autodetect \
+    --disable-iconv
 
     make -j$make_proc
     make install
