@@ -9,6 +9,7 @@ devscripts/
 
 lib/ncurses-6.4/
 lib/ffmpeg-6.0/
+lib/aom
 lib/build
 install
 test*.sh
