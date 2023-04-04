@@ -7,6 +7,8 @@ Removed libaom from local ffmpeg build
 
 Removed library autodetect from local ffmpeg build
 
+Removed --enable-gpl and --enable-nonfree from local ffmpeg build
+
 ## March 29, 2023
 
 CMake now prints the current Build Type upon building

@@ -5,3 +5,5 @@ contribution in the main file.
 
 This is not always up to date with the most recent commit in the dev branch, but will usually be up to date with the
 master branch.
+
+https://github.com/mackron/miniaudio

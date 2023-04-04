@@ -1,5 +1,5 @@
 #!/bin/bash
-set -xe
+set -xeu
 
 project_root=$(pwd)
 
@@ -22,6 +22,7 @@ prompt_confirm() {
     done  
 }
 
+# Add bin path $1 to file $2
 add_local_bin_path() {
     if [[ -f $2 ]]
     then
