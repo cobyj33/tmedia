@@ -39,11 +39,13 @@ std::string vget_formatted_string(std::string& format, va_list args) {
 
     size_t alloc_size = vsnprintf(NULL, 0, format.c_str(), reading_args);
     va_end(reading_args);
-    char chararr[alloc_size + 1];
+    char* chararr = new char[alloc_size + 1];
 
     vsnprintf(chararr, alloc_size + 1, format.c_str(), writing_args);
     va_end(writing_args);
-    return std::string(chararr);
+    std::string output(chararr);
+    delete[] chararr;
+    return output;
 }
 
 std::string format_duration_time_digit(int time_value) { // not in formatting.h

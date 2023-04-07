@@ -27,12 +27,4 @@ uint8_t normalized_float_sample_to_uint8(float num);
  * @return A normalized float value between -1 and 1 inclusive
  */
 float uint8_sample_to_normalized_float(uint8_t sample);
-
-float** alloc_samples(int linesize[8], int nb_channels, int nb_samples);
-float** copy_samples(float** src, int linesize[8], int nb_channels, int nb_samples);
-void free_samples(float** samples);
-
-float** alter_audio_sample_length(float** original_samples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples);
-float** stretch_audio_samples(float** original_samples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples);
-float** shrink_audio_samples(float** original_samples, int linesize[8], int nb_samples, int nb_channels, int target_nb_samples);
 #endif
