@@ -13,3 +13,9 @@ lib/aom
 lib/build
 install
 test*.sh
+
+lib/ffmpeg/build
+lib/ffmpeg/src
+
+lib/ncurses/build
+lib/ncurses/src

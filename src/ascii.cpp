@@ -13,7 +13,7 @@ extern "C" {
 }
 
 std::string AsciiImage::ASCII_STANDARD_CHAR_MAP = "@%#*+=-:_.";
-std::string AsciiImage::ASCII_EXTENDED_CHAR_MAP = "@MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry\%1v7l+it[]{}?j|()=~!-/<>\"^_';,:`.";
+std::string AsciiImage::ASCII_EXTENDED_CHAR_MAP = "@MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry%%1v7l+it[]{}?j|()=~!-/<>\"^_';,:`.";
 std::string AsciiImage::UNICODE_BOX_CHAR_MAP = "█▉▊▋▌▍▎▏";
 std::string AsciiImage::UNICODE_STIPPLE_CHAR_MAP = "░▒▓";
 
