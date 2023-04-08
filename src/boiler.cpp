@@ -71,3 +71,9 @@ bool avformat_context_is_video(AVFormatContext* format_context) {
     return !avformat_context_is_static_image(format_context) &&
     avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_VIDEO);
 }
+
+bool avformat_context_is_audio_only(AVFormatContext* format_context) {
+    return !avformat_context_is_static_image(format_context) &&
+    !avformat_context_is_video(format_context) &&
+    avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO);
+}

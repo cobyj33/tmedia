@@ -68,10 +68,8 @@ void MediaPlayer::render_loop()
         lock.lock();
 
 
-        if (input == ERR) { // no input coming in, simply render the current image, sleep, and restart loop
-            goto render;
-        }
-        while (input != ERR) { // Go through and process all the batched input
+        while (input != ERR)
+        { // Go through and process all the batched input
 
             if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b')
             {
@@ -84,28 +82,6 @@ void MediaPlayer::render_loop()
                 erase();
                 refresh();
             }
-
-            /**
-             * Defined Video Output Mode Transitions
-             * Starting Mode -> Ending Mode (Key To Press)
-             * 
-             * Colored -> Colored Background (B)
-             * Colored -> Text Only (C)
-             * Colored -> Grayscale (G)
-             * 
-             * Grayscale -> Grayscale Background (B)
-             * Grayscale -> Colored (C)
-             * Grayscale -> Text Only (G)
-             * 
-             * Text Only -> Colored (C)
-             * Text Only -> Grayscale (G)
-             * 
-             * Colored Background -> Colored (B)
-             * Colored Background -> Grayscale Background (G)
-             * 
-             * Grayscale Background -> Grayscale (B)
-             * Grayscale Background -> Colored Background (C)
-             */
 
             if (input == 'c' || input == 'C') { // Change from current video mode to colored version
                 if (has_colors() && can_change_color()) {
@@ -143,7 +119,7 @@ void MediaPlayer::render_loop()
                 }
             }
 
-            if (input == KEY_LEFT || input == KEY_RIGHT)
+            if ((input == KEY_LEFT || input == KEY_RIGHT) && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO))
             {
                 if (input == KEY_LEFT)
                 {
@@ -155,15 +131,15 @@ void MediaPlayer::render_loop()
                 }
             }
 
-            if (input == ' ')
+            if (input == ' ' && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO))
             {
                 this->playback.toggle(system_clock_sec());
             }
 
             input = wgetch(inputWindow);
-        }
+        } // Ending of "while (input != ERR)"
 
-        if (batched_jump_time != 0)
+        if (batched_jump_time != 0 && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO))
         {
             double current_playback_time = this->get_time(system_clock_sec());
             double target_time = current_playback_time + batched_jump_time;
@@ -178,7 +154,6 @@ void MediaPlayer::render_loop()
             batched_jump_time = 0;
         }
 
-    render:
         PixelData image(this->frame);
         lock.unlock();
 

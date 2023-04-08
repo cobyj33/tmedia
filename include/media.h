@@ -26,13 +26,16 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
+enum class MediaType {
+    VIDEO,
+    AUDIO,
+    IMAGE
+};
 
+std::string media_type_to_string(MediaType media_type);
 
 class MediaPlayer {
     private:
-        void start_image();
-        void start_video(double start_time);
-
         /**
          * @brief This loop is responsible for generating and updating the current video frame in the MediaPlayer's cache as the system clock runs.
          * @note This loop should be run in a separate thread
@@ -79,9 +82,12 @@ class MediaPlayer {
         bool in_use;
         bool is_looped;
 
+        MediaType media_type;
+
         MediaPlayer(const char* file_name);
         MediaPlayer(const char* file_name, MediaGUI starting_media_gui);
 
+        void start();
         void start(double start_time);
         double get_desync_time(double current_system_time) const;
 

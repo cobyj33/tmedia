@@ -207,7 +207,7 @@ int main(int argc, char** argv)
     player.start(start_time);
     ncurses_uninit();
 
-    std::cout << "Player ended at " << format_duration(player.get_time(system_clock_sec())) << " / " << format_duration(player.get_duration()) << std::endl;
+    std::cout << media_type_to_string(player.media_type) << " Player ended at " << format_duration(player.get_time(system_clock_sec())) << " / " << format_duration(player.get_duration()) << std::endl;
     return EXIT_SUCCESS;
 }
 

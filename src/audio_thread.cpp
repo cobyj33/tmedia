@@ -84,18 +84,14 @@ void MediaPlayer::audio_playback_thread() {
 
     StreamData& audio_stream_data = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
     AVCodecContext* audio_codec_context = audio_stream_data.get_codec_context();
-    const int nb_channels = audio_codec_context->ch_layout.nb_channels;
-
 
     AudioResampler audio_resampler(
             &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
             &(audio_codec_context->ch_layout), audio_codec_context->sample_fmt, audio_codec_context->sample_rate);
 
-    this->audio_buffer.init(nb_channels, audio_codec_context->sample_rate);
-
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format  = ma_format_f32;
-    config.playback.channels = nb_channels;              
+    config.playback.channels = audio_codec_context->ch_layout.nb_channels;              
     config.sampleRate = audio_codec_context->sample_rate;           
     config.dataCallback = audioDataCallback;   
     config.pUserData = this;   

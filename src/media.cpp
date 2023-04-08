@@ -23,26 +23,117 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-void MediaPlayer::start_image() {
-
+std::string media_type_to_string(MediaType media_type) {
+    switch (media_type) {
+        case MediaType::VIDEO: return "video";
+        case MediaType::AUDIO: return "audio";
+        case MediaType::IMAGE: return "image";
+    }
 }
 
-void MediaPlayer::start_video(double start_time) {
 
+MediaPlayer::MediaPlayer(const char* file_name) {
+    this->in_use = false;
+    this->file_name = file_name;
+    this->is_looped = false;
+    this->media_gui = MediaGUI();
+
+    try {
+        this->format_context = open_format_context(file_name);
+    } catch (std::runtime_error const& e) {
+        throw std::runtime_error("Could not allocate media data of " + std::string(file_name) + " because of error while fetching file format data: " + e.what());
+    } 
+
+    if (avformat_context_is_video(this->format_context)) {
+        this->media_type = MediaType::VIDEO;
+    } else if (avformat_context_is_static_image(this->format_context)) {
+        this->media_type = MediaType::IMAGE;
+    } else if (avformat_context_is_audio_only(this->format_context)) {
+        this->media_type = MediaType::AUDIO;
+    } else {
+        throw std::runtime_error("Could not find matching MediaType for file " + std::string(file_name));
+    }
+
+
+    std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
+    for (int i = 0; i < (int)media_types.size(); i++) {
+        try {
+            std::unique_ptr<StreamData> stream_data_ptr = std::make_unique<StreamData>(format_context, media_types[i]);
+            this->media_streams.push_back(std::move(stream_data_ptr));
+        } catch (std::invalid_argument const& e) {
+            continue;
+        }
+    }
+
+    if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+        StreamData& audio_stream_data = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
+        AVCodecContext* audio_codec_context = audio_stream_data.get_codec_context();
+        this->audio_buffer.init(audio_codec_context->ch_layout.nb_channels, audio_codec_context->sample_rate);
+    }
+}
+
+MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui) {
+    this->in_use = false;
+    this->file_name = file_name;
+    this->is_looped = false;
+    this->media_gui = starting_media_gui;
+
+    try {
+        this->format_context = open_format_context(file_name);
+    } catch (std::runtime_error const& e) {
+        throw std::runtime_error("Could not allocate media data of " + std::string(file_name) + " because of error while fetching file format data: " + e.what());
+    } 
+
+    if (avformat_context_is_video(this->format_context)) {
+        this->media_type = MediaType::VIDEO;
+    } else if (avformat_context_is_static_image(this->format_context)) {
+        this->media_type = MediaType::IMAGE;
+    } else if (avformat_context_is_audio_only(this->format_context)) {
+        this->media_type = MediaType::AUDIO;
+    } else {
+        throw std::runtime_error("Could not find matching MediaType for file " + std::string(file_name));
+    }
+
+
+    std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
+    for (int i = 0; i < (int)media_types.size(); i++) {
+        try {
+            std::unique_ptr<StreamData> stream_data_ptr = std::make_unique<StreamData>(format_context, media_types[i]);
+            this->media_streams.push_back(std::move(stream_data_ptr));
+        } catch (std::invalid_argument const& e) {
+            continue;
+        }
+    }
+
+    if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+        StreamData& audio_stream_data = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
+        AVCodecContext* audio_codec_context = audio_stream_data.get_codec_context();
+        this->audio_buffer.init(audio_codec_context->ch_layout.nb_channels, audio_codec_context->sample_rate);
+    }
+}
+
+void MediaPlayer::start() {
+    this->start(0.0);
 }
 
 void MediaPlayer::start(double start_time) {
     if (this->in_use) {
         throw std::runtime_error("CANNOT USE MEDIA PLAYER THAT IS ALREADY IN USE");
     }
-
     this->in_use = true;
     this->playback.start(system_clock_sec());
     this->jump_to_time(start_time, system_clock_sec());
 
-    std::thread video_thread(&MediaPlayer::video_playback_thread, this);
-    bool audio_thread_initialized = false;
+    std::thread video_thread;
+    bool video_thread_initialized = false;
     std::thread audio_thread;
+    bool audio_thread_initialized = false;
+
+    if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
+        std::thread initialized_video_thread(&MediaPlayer::video_playback_thread, this);
+        video_thread.swap(initialized_video_thread);
+        video_thread_initialized = true;
+    }
 
     if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
         std::thread initialized_audio_thread(&MediaPlayer::audio_playback_thread, this);
@@ -50,13 +141,17 @@ void MediaPlayer::start(double start_time) {
         audio_thread_initialized = true;
     }
 
-    this->render_loop();
-    video_thread.join();
+    this->render_loop(); 
+    if (video_thread_initialized) {
+        video_thread.join();
+    }
     if (audio_thread_initialized) {
         audio_thread.join();
     }
 
-    this->playback.stop(system_clock_sec());
+    if (this->playback.is_playing()) {
+        this->playback.stop(system_clock_sec());
+    }
     this->in_use = false;
 }
 
@@ -138,53 +233,6 @@ void MediaPlayer::set_current_frame(AVFrame* frame) {
 
 PixelData& MediaPlayer::get_current_frame() {
     return this->frame;
-}
-
-MediaPlayer::MediaPlayer(const char* file_name) {
-    this->in_use = false;
-    this->file_name = file_name;
-    this->is_looped = false;
-    this->media_gui = MediaGUI();
-
-    try {
-        this->format_context = open_format_context(file_name);
-    } catch (std::runtime_error const& e) {
-        throw std::runtime_error("Could not allocate media data of " + std::string(file_name) + " because of error while fetching file format data: " + e.what());
-    } 
-
-    std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-    for (int i = 0; i < (int)media_types.size(); i++) {
-        try {
-            std::unique_ptr<StreamData> stream_data_ptr = std::make_unique<StreamData>(format_context, media_types[i]);
-            this->media_streams.push_back(std::move(stream_data_ptr));
-        } catch (std::invalid_argument const& e) {
-            continue;
-        }
-    }
-
-}
-
-MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui) {
-    this->in_use = false;
-    this->file_name = file_name;
-    this->is_looped = false;
-    this->media_gui = starting_media_gui;
-
-    try {
-        this->format_context = open_format_context(file_name);
-    } catch (std::runtime_error const& e) {
-        throw std::runtime_error("Could not allocate media data of " + std::string(file_name) + " because of error while fetching file format data: " + e.what());
-    } 
-
-    std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-    for (int i = 0; i < (int)media_types.size(); i++) {
-        try {
-            std::unique_ptr<StreamData> stream_data_ptr = std::make_unique<StreamData>(format_context, media_types[i]);
-            this->media_streams.push_back(std::move(stream_data_ptr));
-        } catch (std::invalid_argument const& e) {
-            continue;
-        }
-    }
 }
 
 int MediaPlayer::get_nb_media_streams() const {
