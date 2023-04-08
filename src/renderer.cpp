@@ -43,24 +43,24 @@ RGBColor get_index_display_color(int index, int length)
     return RGBColor(red, green, blue);
 }
 
-void render_loop(MediaPlayer *player)
+void MediaPlayer::render_loop()
 {
     WINDOW *inputWindow = newwin(0, 0, 1, 1);
     nodelay(inputWindow, true);
     keypad(inputWindow, true);
     double batched_jump_time = 0;
     const int RENDER_LOOP_SLEEP_TIME_MS = 41;
-    std::unique_lock<std::mutex> lock(player->alter_mutex, std::defer_lock);
+    std::unique_lock<std::mutex> lock(this->alter_mutex, std::defer_lock);
     erase();
 
-    while (player->in_use) {
+    while (this->in_use) {
         int input = wgetch(inputWindow);
 
-        if (player->get_time(system_clock_sec()) >= player->get_duration()) {
-            if (player->is_looped) {
-                player->jump_to_time(0.0, system_clock_sec());
+        if (this->get_time(system_clock_sec()) >= this->get_duration()) {
+            if (this->is_looped) {
+                this->jump_to_time(0.0, system_clock_sec());
             } else {   
-                player->in_use = false;
+                this->in_use = false;
                 break;
             }
         }
@@ -75,7 +75,7 @@ void render_loop(MediaPlayer *player)
 
             if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b')
             {
-                player->in_use = false;
+                this->in_use = false;
                 break;
             }
 
@@ -109,35 +109,35 @@ void render_loop(MediaPlayer *player)
 
             if (input == 'c' || input == 'C') { // Change from current video mode to colored version
                 if (has_colors() && can_change_color()) {
-                    switch (player->media_gui.get_video_output_mode()) {
-                        case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-                        case VideoOutputMode::GRAYSCALE: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
-                        case VideoOutputMode::TEXT_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
-                        case VideoOutputMode::COLORED: player->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
-                        case VideoOutputMode::COLORED_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
+                    switch (this->media_gui.get_video_output_mode()) {
+                        case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+                        case VideoOutputMode::GRAYSCALE: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
+                        case VideoOutputMode::TEXT_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
+                        case VideoOutputMode::COLORED: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
+                        case VideoOutputMode::COLORED_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
                     }
                 }
             }
 
             if (input == 'g' || input == 'G') {
                 if (has_colors() && can_change_color()) {
-                    switch (player->media_gui.get_video_output_mode()) {
-                        case VideoOutputMode::COLORED_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-                        case VideoOutputMode::COLORED: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
-                        case VideoOutputMode::TEXT_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
-                        case VideoOutputMode::GRAYSCALE: player->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
-                        case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
+                    switch (this->media_gui.get_video_output_mode()) {
+                        case VideoOutputMode::COLORED_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+                        case VideoOutputMode::COLORED: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
+                        case VideoOutputMode::TEXT_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
+                        case VideoOutputMode::GRAYSCALE: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
+                        case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
                     }
                 }
             }
 
             if (input == 'b' || input == 'B') {
                 if (has_colors() && can_change_color()) {
-                    switch (player->media_gui.get_video_output_mode()) {
-                        case VideoOutputMode::COLORED: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-                        case VideoOutputMode::GRAYSCALE: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-                        case VideoOutputMode::COLORED_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
-                        case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: player->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
+                    switch (this->media_gui.get_video_output_mode()) {
+                        case VideoOutputMode::COLORED: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+                        case VideoOutputMode::GRAYSCALE: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+                        case VideoOutputMode::COLORED_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
+                        case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
                         case VideoOutputMode::TEXT_ONLY: break;
                     }
                 }
@@ -157,7 +157,7 @@ void render_loop(MediaPlayer *player)
 
             if (input == ' ')
             {
-                player->playback.toggle(system_clock_sec());
+                this->playback.toggle(system_clock_sec());
             }
 
             input = wgetch(inputWindow);
@@ -165,24 +165,24 @@ void render_loop(MediaPlayer *player)
 
         if (batched_jump_time != 0)
         {
-            double current_playback_time = player->get_time(system_clock_sec());
+            double current_playback_time = this->get_time(system_clock_sec());
             double target_time = current_playback_time + batched_jump_time;
 
-            if (player->is_looped) {
-                target_time = target_time < 0 ? player->get_duration() + std::fmod(target_time, player->get_duration()) : std::fmod(target_time, player->get_duration());
+            if (this->is_looped) {
+                target_time = target_time < 0 ? this->get_duration() + std::fmod(target_time, this->get_duration()) : std::fmod(target_time, this->get_duration());
             } else {
-                target_time = clamp(target_time, 0.0, player->get_duration());
+                target_time = clamp(target_time, 0.0, this->get_duration());
             }
 
-            player->jump_to_time(target_time, system_clock_sec());
+            this->jump_to_time(target_time, system_clock_sec());
             batched_jump_time = 0;
         }
 
     render:
-        PixelData image(player->frame);
+        PixelData image(this->frame);
         lock.unlock();
 
-        render_movie_screen(image, player->media_gui.get_video_output_mode());
+        render_movie_screen(image, this->media_gui.get_video_output_mode());
         refresh();
         sleep_for_ms(RENDER_LOOP_SLEEP_TIME_MS);
     }

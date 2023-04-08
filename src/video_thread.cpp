@@ -32,13 +32,13 @@ const char* DEBUG_VIDEO_SOURCE = "video";
 const char* DEBUG_VIDEO_TYPE = "debug";
 
 
-void video_playback_thread(MediaPlayer* player) {
-    std::unique_lock<std::mutex> mutex_lock(player->alter_mutex, std::defer_lock);
-    if (!player->has_video()) {
+void MediaPlayer::video_playback_thread() {
+    std::unique_lock<std::mutex> mutex_lock(this->alter_mutex, std::defer_lock);
+    if (!this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
         throw std::runtime_error("Could not playback video data: Could not find video stream in media player");
     }
 
-    StreamData& video_stream_data = player->get_video_stream_data();
+    StreamData& video_stream_data = this->get_media_stream(AVMEDIA_TYPE_VIDEO);
     double avg_frame_time_sec = video_stream_data.get_average_frame_time_sec();
     AVCodecContext* video_codec_context = video_stream_data.get_codec_context();
 
@@ -48,39 +48,39 @@ void video_playback_thread(MediaPlayer* player) {
 
     VideoConverter videoConverter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt);
 
-    while (player->in_use) {
-        if (!player->playback.is_playing()) {
+    while (this->in_use) {
+        if (!this->playback.is_playing()) {
             sleep_quick();
             continue;
         }
         mutex_lock.lock();
 
         double frame_duration = avg_frame_time_sec;
-        double frame_pts_time_sec = player->get_time(system_clock_sec()) + frame_duration;
+        double frame_pts_time_sec = this->get_time(system_clock_sec()) + frame_duration;
         double extra_delay = 0.0;
 
         try {
-            std::vector<AVFrame*> decoded_frames = player->next_video_frames();
+            std::vector<AVFrame*> decoded_frames = this->next_video_frames();
 
             if (decoded_frames.size() > 0) {
                 AVFrame* frame_image = videoConverter.convert_video_frame(decoded_frames[0]);
                 frame_duration = (double)frame_image->duration * video_stream_data.get_time_base();
                 frame_pts_time_sec = (double)frame_image->pts * video_stream_data.get_time_base();
                 extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
-                player->set_current_frame(frame_image);
+                this->set_current_frame(frame_image);
                 av_frame_free(&frame_image);
             }
 
             clear_av_frame_list(decoded_frames);
         } catch (std::exception const& e) {
             PixelData error_image = VideoIcon::ERROR_ICON.pixel_data;
-            player->set_current_frame(error_image);
+            this->set_current_frame(error_image);
         }
 
-        double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / player->playback.get_speed() ) );
-        player->playback.skip(frame_speed_skip_time_sec);
+        double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / this->playback.get_speed() ) );
+        this->playback.skip(frame_speed_skip_time_sec);
 
-        const double current_time = player->get_time(system_clock_sec());
+        const double current_time = this->get_time(system_clock_sec());
         double waitDuration = frame_pts_time_sec - current_time + extra_delay - frame_speed_skip_time_sec;
 
         mutex_lock.unlock();

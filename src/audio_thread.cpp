@@ -76,13 +76,13 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     (void)pInput;
 }
 
-void audio_playback_thread(MediaPlayer* player) {
-    std::unique_lock<std::mutex> mutex_lock(player->alter_mutex, std::defer_lock);
-    if (!player->has_audio()) {
+void MediaPlayer::audio_playback_thread() {
+    std::unique_lock<std::mutex> mutex_lock(this->alter_mutex, std::defer_lock);
+    if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
         throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
     }
 
-    StreamData& audio_stream_data = player->get_audio_stream_data();
+    StreamData& audio_stream_data = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
     AVCodecContext* audio_codec_context = audio_stream_data.get_codec_context();
     const int nb_channels = audio_codec_context->ch_layout.nb_channels;
 
@@ -91,14 +91,14 @@ void audio_playback_thread(MediaPlayer* player) {
             &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
             &(audio_codec_context->ch_layout), audio_codec_context->sample_fmt, audio_codec_context->sample_rate);
 
-    player->audio_buffer.init(nb_channels, audio_codec_context->sample_rate);
+    this->audio_buffer.init(nb_channels, audio_codec_context->sample_rate);
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format  = ma_format_f32;
     config.playback.channels = nb_channels;              
     config.sampleRate = audio_codec_context->sample_rate;           
     config.dataCallback = audioDataCallback;   
-    config.pUserData = player;   
+    config.pUserData = this;   
 
     ma_result miniaudio_log;
     ma_device audio_device;
@@ -110,10 +110,10 @@ void audio_playback_thread(MediaPlayer* player) {
 
     sleep_for_sec(audio_stream_data.get_start_time());
     
-    while (player->in_use) {
+    while (this->in_use) {
         mutex_lock.lock();
 
-        if (player->playback.is_playing() == false && ma_device_get_state(&audio_device) == ma_device_state_started) {
+        if (this->playback.is_playing() == false && ma_device_get_state(&audio_device) == ma_device_state_started) {
             mutex_lock.unlock();
             miniaudio_log = ma_device_stop(&audio_device);
             if (miniaudio_log != MA_SUCCESS) {
@@ -121,7 +121,7 @@ void audio_playback_thread(MediaPlayer* player) {
                 throw std::runtime_error("Failed to stop playback: Miniaudio Error " + std::to_string(miniaudio_log));
             }
             mutex_lock.lock();
-        } else if (player->playback.is_playing() && ma_device_get_state(&audio_device) == ma_device_state_stopped) {
+        } else if (this->playback.is_playing() && ma_device_get_state(&audio_device) == ma_device_state_stopped) {
             mutex_lock.unlock();
             miniaudio_log = ma_device_start(&audio_device);
             if (miniaudio_log != MA_SUCCESS) {
@@ -132,39 +132,39 @@ void audio_playback_thread(MediaPlayer* player) {
         }
 
         double current_system_time = system_clock_sec();
-        if (player->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
-            double target_resync_time = player->get_time(current_system_time);
+        if (this->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
+            double target_resync_time = this->get_time(current_system_time);
 
-            if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
-                player->audio_buffer.set_time_in_bounds(target_resync_time);
-            } else if (target_resync_time > player->audio_buffer.get_time() && target_resync_time <= player->audio_buffer.get_time() + MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS) {
+            if (this->audio_buffer.is_time_in_bounds(target_resync_time)) {
+                this->audio_buffer.set_time_in_bounds(target_resync_time);
+            } else if (target_resync_time > this->audio_buffer.get_time() && target_resync_time <= this->audio_buffer.get_time() + MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS) {
 
                 int writtenSamples = 0;
                 do {
-                    writtenSamples = player->load_next_audio_frames(20);
-                } while (writtenSamples != 0 && !player->audio_buffer.is_time_in_bounds(target_resync_time));
+                    writtenSamples = this->load_next_audio_frames(20);
+                } while (writtenSamples != 0 && !this->audio_buffer.is_time_in_bounds(target_resync_time));
 
-                if (player->audio_buffer.is_time_in_bounds(target_resync_time)) {
-                    player->audio_buffer.set_time_in_bounds(target_resync_time);
+                if (this->audio_buffer.is_time_in_bounds(target_resync_time)) {
+                    this->audio_buffer.set_time_in_bounds(target_resync_time);
                 } else {
-                    player->jump_to_time(target_resync_time, current_system_time);
+                    this->jump_to_time(target_resync_time, current_system_time);
                 }
 
             } else {
-                player->jump_to_time(target_resync_time, current_system_time);
+                this->jump_to_time(target_resync_time, current_system_time);
             }
 
         }
 
-        if (player->audio_buffer.get_elapsed_time() > MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS) {
-            player->audio_buffer.leave_behind(RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS);
+        if (this->audio_buffer.get_elapsed_time() > MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS) {
+            this->audio_buffer.leave_behind(RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS);
         }
 
-        if (!player->audio_buffer.can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
-            player->load_next_audio_frames(10);
+        if (!this->audio_buffer.can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
+            this->load_next_audio_frames(10);
         }
 
-        audio_device.sampleRate = audio_codec_context->sample_rate * player->playback.get_speed();
+        audio_device.sampleRate = audio_codec_context->sample_rate * this->playback.get_speed();
         
         mutex_lock.unlock();
         sleep_for_ms(5);

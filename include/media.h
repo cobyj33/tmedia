@@ -32,6 +32,29 @@ class MediaPlayer {
     private:
         void start_image();
         void start_video(double start_time);
+
+        /**
+         * @brief This loop is responsible for generating and updating the current video frame in the MediaPlayer's cache as the system clock runs.
+         * @note This loop should be run in a separate thread
+         * @note This loop should not output anything toward the stdout stream in any way
+         * @param player The MediaPlayer to generate and update video frames for
+         */
+        void video_playback_thread();
+
+        /**
+         * @brief This loop is responsible for managing audio playback and synchronizing audio playback with the current MediaPlayer's timer
+         * @note This loop should be run in a separate thread
+         * @note This loop should not output anything toward the stdout stream in any way
+         * @param player The MediaPlayer to generate and update video frames for
+         */
+        void audio_playback_thread();
+
+        /**
+         * @brief Some responsibilites of this thread are to process terminal input, render frames, and detect when the MediaPlayer has finished and send a notification in some way for other threads to end.
+         * @note This loop should be run in the **main** thread, as output streams toward stdout with ncurses and iostream are not thread-safe. 
+         * @param player The MediaPlayer to render toward the terminal
+         */
+        void render_loop();
     public:
         /**
          * @brief The currently loaded video frame from the given media player
@@ -105,33 +128,10 @@ class MediaPlayer {
          */
         void jump_to_time(double target_time, double current_system_time);
 
-        /**
-         * @brief Dictates whether this media player has an available video stream
-         */
-        bool has_video() const;
-
-        /**
-         * @brief Dictates whether this media player has an available audio stream
-         */
-        bool has_audio() const;
-
-        /**
-         * @brief Dictates whether this media player has only an available video media stream and no other available types of media streams
-         */
-        bool only_video() const;
-
-        /**
-         * @brief Dictates whether this media player has only an available audio media stream and no other available types of media streams
-         */
-        bool only_audio() const;
 
         std::vector<AVFrame*> next_video_frames(); 
         std::vector<AVFrame*> next_audio_frames();
-
         int load_next_audio_frames(int frames);
-
-        StreamData& get_video_stream_data() const;
-        StreamData& get_audio_stream_data() const;
 
         int get_nb_media_streams() const;
         StreamData& get_media_stream(enum AVMediaType media_type) const;
@@ -141,39 +141,6 @@ class MediaPlayer {
         ~MediaPlayer();
 };
 
-/**
- * @brief This loop is responsible for generating and updating the current video frame in the MediaPlayer's cache as the system clock runs.
- * 
- * @note This loop should be run in a separate thread
- * @note This loop should not output anything toward the stdout stream in any way
- * 
- * @param player The MediaPlayer to generate and update video frames for
- * @param alter_mutex The mutex used to synchronize the threads 
- */
-void video_playback_thread(MediaPlayer* player);
-
-/**
- * @brief This loop is responsible for managing audio playback and synchronizing audio playback with the current MediaPlayer's timer
- * 
- * @note This loop should be run in a separate thread
- * @note This loop should not output anything toward the stdout stream in any way
- * 
- * @param player The MediaPlayer to generate and update video frames for
- * @param alter_mutex The mutex used to synchronize the threads 
- */
-void audio_playback_thread(MediaPlayer* player);
-
-/**
- * 
- * @brief Some responsibilites of this thread are to process terminal input, render frames, and detect when the MediaPlayer has finished and send a notification in some way for other threads to end.
- * 
- * @note This loop should be run in the **main** thread, as output streams toward stdout with ncurses and iostream are not thread-safe. 
- * 
- * @param player The MediaPlayer to render toward the terminal
- * @param alter_mutex The mutex used to synchronize the threads 
- * @param media_gui The state of the GUI, usually configured from the command line at program invokation, to use to render.
- */
-void render_loop(MediaPlayer* player);
 
 
 #endif
