@@ -120,13 +120,14 @@ class MediaPlayer {
 
         /**
          * @brief Moves the MediaPlayer's playback to a certain time (including video and audio streams)
-         * @note The caller is responsible for making sure the time to jump to is in the bounds of the video's playtime
+         * @note The caller is responsible for making sure the time to jump to is in the bounds of the video's playtime. 
+         * The video's duration could be found with the MediaPlayer::get_duration() function
          * 
          * @param target_time The target time to jump the playback to (must be reachable)
          * @param current_system_time The current system time
-         * @throws 
+         * @throws If the target time is not in the boudns of the video's playtime
          */
-        void jump_to_time(double target_time, double current_system_time);
+        int jump_to_time(double target_time, double current_system_time);
 
 
         std::vector<AVFrame*> next_video_frames(); 

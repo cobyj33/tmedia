@@ -272,7 +272,7 @@ int MediaPlayer::load_next_audio_frames(int frames) {
     return written_samples;
 }
 
-void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
+int MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     if (target_time < 0.0 || target_time > this->get_duration()) {
         throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time));
     }
@@ -281,7 +281,7 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     int ret = avformat_seek_file(this->format_context, -1, 0.0, target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
 
     if (ret < 0) {
-        throw std::runtime_error("[MediaPlayer::jump_to_time] Failed to seek file");
+        return ret;
     }
 
     if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
@@ -326,4 +326,5 @@ void MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     }
 
     this->playback.skip(target_time - original_time); // Update the playback to account for the skipped time
+    return ret;
 }
