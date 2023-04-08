@@ -32,8 +32,8 @@ const char* DEBUG_VIDEO_SOURCE = "video";
 const char* DEBUG_VIDEO_TYPE = "debug";
 
 
-void video_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
-    std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
+void video_playback_thread(MediaPlayer* player) {
+    std::unique_lock<std::mutex> mutex_lock(player->alter_mutex, std::defer_lock);
     if (!player->has_video()) {
         throw std::runtime_error("Could not playback video data: Could not find video stream in media player");
     }

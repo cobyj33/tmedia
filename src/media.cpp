@@ -23,6 +23,14 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
+void MediaPlayer::start_image() {
+
+}
+
+void MediaPlayer::start_video(double start_time) {
+
+}
+
 void MediaPlayer::start(double start_time) {
     if (this->in_use) {
         throw std::runtime_error("CANNOT USE MEDIA PLAYER THAT IS ALREADY IN USE");
@@ -34,18 +42,17 @@ void MediaPlayer::start(double start_time) {
 
 
     std::mutex alter_mutex;
-
-    std::thread video_thread(video_playback_thread, this, std::ref(alter_mutex));
+    std::thread video_thread(video_playback_thread, this);
     bool audio_thread_initialized = false;
     std::thread audio_thread;
 
     if (this->has_audio()) {
-        std::thread initialized_audio_thread(audio_playback_thread, this, std::ref(alter_mutex));
+        std::thread initialized_audio_thread(audio_playback_thread, this);
         audio_thread.swap(initialized_audio_thread);
         audio_thread_initialized = true;
     }
 
-    render_loop(this, std::ref(alter_mutex));
+    render_loop(this);
 
     video_thread.join();
     if (audio_thread_initialized) {

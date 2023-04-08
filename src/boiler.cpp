@@ -51,3 +51,23 @@ double get_file_duration(const char* file_path) {
     avformat_close_input(&format_context);
     return duration_seconds;
 }
+
+bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVMediaType media_type) {
+    for (unsigned int i = 0; i < format_context->nb_streams; i++) {
+        if (format_context->streams[i]->codecpar->codec_type == media_type) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool avformat_context_is_static_image(AVFormatContext* format_context) {
+    return avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_VIDEO) &&
+    (format_context->duration == AV_NOPTS_VALUE || format_context->duration == 0) &&
+    (format_context->start_time == AV_NOPTS_VALUE || format_context->start_time == 0);
+}
+
+bool avformat_context_is_video(AVFormatContext* format_context) {
+    return !avformat_context_is_static_image(format_context) &&
+    avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_VIDEO);
+}

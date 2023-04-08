@@ -35,12 +35,12 @@ const char* DEBUG_AUDIO_TYPE = "Debug";
 const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
 const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
 
-typedef struct CallbackData {
-    MediaPlayer* player;
-    std::reference_wrapper<std::mutex> mutex_ref;
+// typedef struct CallbackData {
+//     MediaPlayer* player;
+//     std::reference_wrapper<std::mutex> mutex_ref;
 
-    CallbackData(MediaPlayer* player, std::reference_wrapper<std::mutex> mutex) : player(player), mutex_ref(mutex) {}
-} CallbackData;
+//     CallbackData(MediaPlayer* player, std::reference_wrapper<std::mutex> mutex) : player(player), mutex_ref(mutex) {}
+// } CallbackData;
 
 /**
  * @brief The callback called by miniaudio once the 
@@ -52,12 +52,13 @@ typedef struct CallbackData {
  */
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
-    CallbackData* data = (CallbackData*)(pDevice->pUserData);
-    std::lock_guard<std::mutex> mutex_lock_guard(data->mutex_ref.get());
-    AudioBuffer& audio_buffer = data->player->audio_buffer;
+    // CallbackData* data = (CallbackData*)(pDevice->pUserData);
+    MediaPlayer* player = (MediaPlayer*)(pDevice->pUserData);
+    std::lock_guard<std::mutex> mutex_lock_guard(player->alter_mutex);
+    AudioBuffer& audio_buffer = player->audio_buffer;
 
     while (!audio_buffer.can_read(frameCount)) {
-        int written_samples = data->player->load_next_audio_frames(5);
+        int written_samples = player->load_next_audio_frames(5);
         if (written_samples == 0) {
             break;
         }
@@ -75,8 +76,8 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     (void)pInput;
 }
 
-void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
-    std::unique_lock<std::mutex> mutex_lock(alter_mutex, std::defer_lock);
+void audio_playback_thread(MediaPlayer* player) {
+    std::unique_lock<std::mutex> mutex_lock(player->alter_mutex, std::defer_lock);
     if (!player->has_audio()) {
         throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
     }
@@ -97,9 +98,7 @@ void audio_playback_thread(MediaPlayer* player, std::mutex& alter_mutex) {
     config.playback.channels = nb_channels;              
     config.sampleRate = audio_codec_context->sample_rate;           
     config.dataCallback = audioDataCallback;   
-
-    CallbackData userData(player, std::ref(alter_mutex)); 
-    config.pUserData = &userData;   
+    config.pUserData = player;   
 
     ma_result miniaudio_log;
     ma_device audio_device;

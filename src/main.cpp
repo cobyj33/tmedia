@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     parser.add_argument("-t", "--time")
         .help("Choose the time to start media playback")
         .default_value(std::string("00:00"));
-    
+
     try {
         parser.parse_args(argc, argv);
     }
@@ -117,14 +117,8 @@ int main(int argc, char** argv)
     bool grayscale = !colors && parser.get<bool>("-g");
     bool background = parser.get<bool>("-b");
     bool dump = parser.get<bool>("-d");
-    bool version = parser.get<bool>("-v");
     bool quiet = parser.get<bool>("-q");
     std::string inputted_start_time = parser.get<std::string>("-t");
-
-    if (version) {
-        std::cout << ASCII_VIDEO_VERSION << std::endl;
-        return EXIT_SUCCESS;
-    }
 
     if (dump) {
         dump_file_info(file.c_str());
@@ -135,6 +129,7 @@ int main(int argc, char** argv)
         std::cerr << "[ascii_video] Cannot open invalid path: " << file << std::endl;
         return EXIT_FAILURE;
     }
+
 
     const std::filesystem::path path(file);
     std::error_code ec; // For using the non-throwing overloads of functions below.
@@ -150,7 +145,7 @@ int main(int argc, char** argv)
         } else if (is_int_str(inputted_start_time)) {
             start_time = std::stoi(inputted_start_time);
         } else {
-            std::cerr << "Inputted time must be in seconds, H:MM:SS, or M:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
+            std::cerr << "[ascii_video] Inputted time must be in seconds, H:MM:SS, or M:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
             return EXIT_FAILURE;
         }
     }
@@ -205,6 +200,7 @@ int main(int argc, char** argv)
     if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
         ncurses_initialize_grayscale_color_palette();
     }
+
     MediaGUI media_gui;
     media_gui.set_video_output_mode(mode);
     MediaPlayer player(file.c_str(), media_gui);
@@ -212,7 +208,6 @@ int main(int argc, char** argv)
     ncurses_uninit();
 
     std::cout << "Player ended at " << format_duration(player.get_time(system_clock_sec())) << " / " << format_duration(player.get_duration()) << std::endl;
-
     return EXIT_SUCCESS;
 }
 

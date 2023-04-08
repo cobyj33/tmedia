@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <deque>
+#include <mutex>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -28,6 +29,9 @@ extern "C" {
 
 
 class MediaPlayer {
+    private:
+        void start_image();
+        void start_video(double start_time);
     public:
         /**
          * @brief The currently loaded video frame from the given media player
@@ -40,7 +44,10 @@ class MediaPlayer {
         AudioBuffer audio_buffer;
 
         AVFormatContext* format_context;
+
         std::vector<std::unique_ptr<StreamData>> media_streams;
+
+        std::mutex alter_mutex;
 
         MediaGUI media_gui;
 
@@ -133,6 +140,40 @@ class MediaPlayer {
 
         ~MediaPlayer();
 };
+
+/**
+ * @brief This loop is responsible for generating and updating the current video frame in the MediaPlayer's cache as the system clock runs.
+ * 
+ * @note This loop should be run in a separate thread
+ * @note This loop should not output anything toward the stdout stream in any way
+ * 
+ * @param player The MediaPlayer to generate and update video frames for
+ * @param alter_mutex The mutex used to synchronize the threads 
+ */
+void video_playback_thread(MediaPlayer* player);
+
+/**
+ * @brief This loop is responsible for managing audio playback and synchronizing audio playback with the current MediaPlayer's timer
+ * 
+ * @note This loop should be run in a separate thread
+ * @note This loop should not output anything toward the stdout stream in any way
+ * 
+ * @param player The MediaPlayer to generate and update video frames for
+ * @param alter_mutex The mutex used to synchronize the threads 
+ */
+void audio_playback_thread(MediaPlayer* player);
+
+/**
+ * 
+ * @brief Some responsibilites of this thread are to process terminal input, render frames, and detect when the MediaPlayer has finished and send a notification in some way for other threads to end.
+ * 
+ * @note This loop should be run in the **main** thread, as output streams toward stdout with ncurses and iostream are not thread-safe. 
+ * 
+ * @param player The MediaPlayer to render toward the terminal
+ * @param alter_mutex The mutex used to synchronize the threads 
+ * @param media_gui The state of the GUI, usually configured from the command line at program invokation, to use to render.
+ */
+void render_loop(MediaPlayer* player);
 
 
 #endif
