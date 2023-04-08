@@ -56,7 +56,7 @@ void MediaPlayer::render_loop()
     while (this->in_use) {
         int input = wgetch(inputWindow);
 
-        if (this->get_time(system_clock_sec()) >= this->get_duration()) {
+        if (this->media_type != MediaType::IMAGE && this->get_time(system_clock_sec()) >= this->get_duration() ) {
             if (this->is_looped) {
                 this->jump_to_time(0.0, system_clock_sec());
             } else {   

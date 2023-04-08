@@ -101,6 +101,11 @@ int main(int argc, char** argv)
         .help("Choose the time to start media playback")
         .default_value(std::string("00:00"));
 
+    // parser.add_argument("-i", "--image")
+    //     .help("Consume the media as an image")
+    //     .default_value(false)
+    //     .implicit_value(true);
+
     try {
         parser.parse_args(argc, argv);
     }
@@ -154,7 +159,7 @@ int main(int argc, char** argv)
     if (start_time < 0) { // Catch errors in out of bounds times
         std::cerr << "Cannot start file at a negative time ( got time " << double_to_fixed_string(start_time, 2) << "  from input " + inputted_start_time + " )" << std::endl;
         return EXIT_FAILURE;
-    } else if (start_time >= file_duration) {
+    } else if (start_time >= file_duration && file_duration >= 0.0) { 
         std::cerr << "Cannot start file at a time greater than duration of media file ( got time " << double_to_fixed_string(start_time, 2) << " seconds from input " << inputted_start_time << ". File ends at " << double_to_fixed_string(file_duration, 2) << " seconds (" << format_duration(file_duration) << ") ) "  << std::endl;
         return EXIT_FAILURE;
     }
@@ -207,7 +212,9 @@ int main(int argc, char** argv)
     player.start(start_time);
     ncurses_uninit();
 
-    std::cout << media_type_to_string(player.media_type) << " Player ended at " << format_duration(player.get_time(system_clock_sec())) << " / " << format_duration(player.get_duration()) << std::endl;
+    if (player.media_type == MediaType::VIDEO || player.media_type == MediaType::AUDIO) {
+        std::cout << media_type_to_string(player.media_type) << " Player ended at " << format_duration(player.get_time(system_clock_sec())) << " / " << format_duration(player.get_duration()) << std::endl;
+    }
     return EXIT_SUCCESS;
 }
 

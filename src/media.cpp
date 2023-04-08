@@ -84,10 +84,10 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui) {
         throw std::runtime_error("Could not allocate media data of " + std::string(file_name) + " because of error while fetching file format data: " + e.what());
     } 
 
-    if (avformat_context_is_video(this->format_context)) {
-        this->media_type = MediaType::VIDEO;
-    } else if (avformat_context_is_static_image(this->format_context)) {
+    if (avformat_context_is_static_image(this->format_context)) {
         this->media_type = MediaType::IMAGE;
+    } else if (avformat_context_is_video(this->format_context)) {
+        this->media_type = MediaType::VIDEO;
     } else if (avformat_context_is_audio_only(this->format_context)) {
         this->media_type = MediaType::AUDIO;
     } else {
@@ -121,15 +121,20 @@ void MediaPlayer::start(double start_time) {
         throw std::runtime_error("CANNOT USE MEDIA PLAYER THAT IS ALREADY IN USE");
     }
     this->in_use = true;
-    this->playback.start(system_clock_sec());
-    this->jump_to_time(start_time, system_clock_sec());
+
+    if (this->media_type == MediaType::IMAGE) {
+        this->frame = PixelData(this->file_name);
+    } else if (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO) {
+        this->playback.start(system_clock_sec());
+        this->jump_to_time(start_time, system_clock_sec());
+    }
 
     std::thread video_thread;
     bool video_thread_initialized = false;
     std::thread audio_thread;
     bool audio_thread_initialized = false;
 
-    if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
+    if (this->has_media_stream(AVMEDIA_TYPE_VIDEO) && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
         std::thread initialized_video_thread(&MediaPlayer::video_playback_thread, this);
         video_thread.swap(initialized_video_thread);
         video_thread_initialized = true;
