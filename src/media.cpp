@@ -19,7 +19,7 @@
 #include "audioresampler.h"
 
 extern "C" {
-#include "ncurses.h"
+#include "curses.h"
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 }

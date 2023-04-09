@@ -8,7 +8,7 @@
 
 
 extern "C" {
-#include <ncurses.h>
+#include <curses.h>
 }
 
 /**

@@ -23,7 +23,7 @@
 
 extern "C"
 {
-#include "ncurses.h"
+#include "curses.h"
 #include <libavutil/avutil.h>
 }
 
