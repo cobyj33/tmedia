@@ -17,10 +17,10 @@ class AudioResampler {
         SwrContext* m_context;
         int m_src_sample_rate;
         int m_src_sample_fmt;
-        AVChannelLayout* m_src_ch_layout;
+        AVChannelLayout m_src_ch_layout;
         int m_dst_sample_rate;
         int m_dst_sample_fmt;
-        AVChannelLayout* m_dst_ch_layout;
+        AVChannelLayout m_dst_ch_layout;
     public:
         AudioResampler(AVChannelLayout* dst_ch_layout,
                         enum AVSampleFormat dst_sample_fmt,

@@ -33,16 +33,26 @@ AudioResampler::AudioResampler(AVChannelLayout* dst_ch_layout, enum AVSampleForm
     }
 
     this->m_context = context;
+
     this->m_src_sample_rate = src_sample_rate;
     this->m_src_sample_fmt = src_sample_fmt;
-    this->m_src_ch_layout = src_ch_layout;
+    result = av_channel_layout_copy(&this->m_src_ch_layout, src_ch_layout);
+    if (result < 0) {
+        throw ascii::ffmpeg_error("[AudioResampler::AudioResampler] Failed to copy source AVChannelLayout data into internal field", result);
+    }
+
     this->m_dst_sample_rate = dst_sample_rate;
     this->m_dst_sample_fmt = dst_sample_fmt;
-    this->m_dst_ch_layout = dst_ch_layout;
+    result = av_channel_layout_copy(&this->m_dst_ch_layout, dst_ch_layout);
+    if (result < 0) {
+        throw ascii::ffmpeg_error("[AudioResampler::AudioResampler] Failed to copy destination AVChannelLayout data into internal field", result);
+    }
 }
 
 AudioResampler::~AudioResampler() {
     swr_free(&(this->m_context));
+    av_channel_layout_uninit(&this->m_dst_ch_layout);
+    av_channel_layout_uninit(&this->m_src_ch_layout);
 }
 
 std::vector<AVFrame*> AudioResampler::resample_audio_frames(std::vector<AVFrame*>& originals) {
@@ -64,8 +74,12 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
         }
 
         resampled_frame->sample_rate = this->m_dst_sample_rate;
-        resampled_frame->ch_layout = *(this->m_dst_ch_layout);
         resampled_frame->format = this->m_dst_sample_fmt;
+        result = av_channel_layout_copy(&resampled_frame->ch_layout, &this->m_dst_ch_layout);
+        if (result < 0) {
+            throw ascii::ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to copy destination audio channel layout", result);
+        }
+
         resampled_frame->pts = original->pts;
         resampled_frame->duration = original->duration;
 
@@ -74,7 +88,7 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
             if (resampled_frame != nullptr) {
                 av_frame_free(&resampled_frame);
             }
-            throw ascii::ffmpeg_error("Unable to resample audio frame ", result);
+            throw ascii::ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to resample audio frame", result);
         }
 
         return resampled_frame;
