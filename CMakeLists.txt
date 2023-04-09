@@ -5,10 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(ASCII_VIDEO_VERSION_STRING "0.4.0")
 set(ASCII_VIDEO_VERSION_MAJOR 0)
 set(ASCII_VIDEO_VERSION_MINOR 4)
 set(ASCII_VIDEO_VERSION_PATCH 0)
+set(ASCII_VIDEO_VERSION "${ASCII_VIDEO_VERSION_MAJOR}.${ASCII_VIDEO_VERSION_MINOR}.${ASCII_VIDEO_VERSION_PATCH}")
 
 set(ASCII_VIDEO_SUPPORTED_LANGUAGES CXX C)
 if (APPLE)
@@ -26,7 +26,7 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 endif()
 
 project(ascii_video
-VERSION 0.4.0
+VERSION ${ASCII_VIDEO_VERSION}
 LANGUAGES ${ASCII_VIDEO_SUPPORTED_LANGUAGES}
 DESCRIPTION "Terminal video media player")
 
@@ -66,6 +66,8 @@ endif()
 
 add_library(miniaudio STATIC ./lib/miniaudio/miniaudio.c)
 target_include_directories(miniaudio PRIVATE ./lib/miniaudio)
+
+configure_file(${CMAKE_SOURCE_DIR}/include/version.h.in ${CMAKE_BINARY_DIR}/include/version.h @ONLY)
     
 set(COMMON_SOURCE_FILES 
 ./src/audioresampler.cpp
@@ -97,7 +99,7 @@ message("Curses Libraries found at " ${CURSES_LIBRARIES})
 
 add_executable(ascii_video ${COMMON_SOURCE_FILES} ./src/main.cpp)
 target_compile_features(ascii_video PRIVATE cxx_std_17)
-target_include_directories(ascii_video PRIVATE ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ./lib/argparse )
+target_include_directories(ascii_video PRIVATE ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ./lib/argparse ${CMAKE_CURRENT_BINARY_DIR}/include )
 target_link_libraries(ascii_video PRIVATE PkgConfig::LIBAV ${CURSES_LIBRARIES} miniaudio)
 add_dependencies(ascii_video PkgConfig::LIBAV)
 

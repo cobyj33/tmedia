@@ -13,6 +13,7 @@
 #include "formatting.h"
 #include "wtime.h"
 #include "gui.h"
+#include "version.h"
 
 #include <termcolor.h>
 
@@ -24,8 +25,6 @@ extern "C" {
 #include "curses.h"
 #include <libavutil/log.h>
 }
-
-#define ASCII_VIDEO_VERSION "0.4.0"
 
 bool ncurses_initialized = false;
 
