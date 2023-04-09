@@ -16,6 +16,7 @@
 #include "except.h"
 #include "formatting.h"
 #include "threads.h"
+#include "audioresampler.h"
 
 extern "C" {
 #include "ncurses.h"
@@ -29,6 +30,7 @@ std::string media_type_to_string(MediaType media_type) {
         case MediaType::AUDIO: return "audio";
         case MediaType::IMAGE: return "image";
     }
+    throw std::runtime_error("Attempted to get Media Type string from unimplemented Media Type. Please implement all MediaType's to return a valid string. This is a developer error and bug.");
 }
 
 

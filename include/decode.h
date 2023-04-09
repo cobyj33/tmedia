@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <deque>
-#include "audioresampler.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>

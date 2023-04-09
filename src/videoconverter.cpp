@@ -13,7 +13,7 @@ VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat
             SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
 
     if (this->m_context == nullptr) {
-        throw std::runtime_error("Allocation of internal SwsContext of AudioResampler failed. Aborting...");
+        throw std::runtime_error("Allocation of internal SwsContext of Video Converter failed. Aborting...");
     }
     
     this->m_dst_width = dst_width;

@@ -7,7 +7,6 @@
 
 #include "decode.h"
 #include "except.h"
-#include "audioresampler.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
