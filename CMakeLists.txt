@@ -65,7 +65,10 @@ if(ASCII_VIDEO_BUILD_TESTS)
 endif()
 
 add_library(miniaudio STATIC ./lib/miniaudio/miniaudio.c)
-target_include_directories(miniaudio PRIVATE ./lib/miniaudio)
+target_include_directories(miniaudio PUBLIC ./lib/miniaudio)
+
+add_library(argparse INTERFACE)
+target_include_directories(argparse INTERFACE ./lib/argparse)
 
 configure_file(${CMAKE_SOURCE_DIR}/include/version.h.in ${CMAKE_BINARY_DIR}/include/version.h @ONLY)
     
@@ -99,8 +102,8 @@ message("Curses Libraries found at " ${CURSES_LIBRARIES})
 
 add_executable(ascii_video ${COMMON_SOURCE_FILES} ./src/main.cpp)
 target_compile_features(ascii_video PRIVATE cxx_std_17)
-target_include_directories(ascii_video PRIVATE ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ./lib/argparse ${CMAKE_CURRENT_BINARY_DIR}/include )
-target_link_libraries(ascii_video PRIVATE PkgConfig::LIBAV ${CURSES_LIBRARIES} miniaudio)
+target_include_directories(ascii_video PRIVATE ${CURSES_INCLUDE_DIR} ./include ${CMAKE_CURRENT_BINARY_DIR}/include )
+target_link_libraries(ascii_video PRIVATE PkgConfig::LIBAV ${CURSES_LIBRARIES} miniaudio argparse)
 add_dependencies(ascii_video PkgConfig::LIBAV)
 
 if(MSVC)
@@ -126,7 +129,7 @@ if (ASCII_VIDEO_BUILD_TESTS)
     else()
         target_compile_options(ascii_tests PRIVATE -Wall -Wextra -Wpedantic)# Consider adding -Werror back
     endif()
-    target_include_directories(ascii_tests PRIVATE ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ./lib/argparse )
+    target_include_directories(ascii_tests PRIVATE ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio)
     target_compile_features(ascii_tests PRIVATE cxx_std_17)
     target_link_libraries(ascii_tests PRIVATE Catch2::Catch2WithMain ${CURSES_LIBRARIES} PkgConfig::LIBAV miniaudio)
 endif()
