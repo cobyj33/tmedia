@@ -111,8 +111,9 @@ void MediaPlayer::audio_playback_thread() {
     
     while (this->in_use) {
         mutex_lock.lock();
+        ma_device_state audio_device_state = ma_device_get_state(&audio_device);
 
-        if ((this->playback.is_playing() == false || this->muted) && ma_device_get_state(&audio_device) == ma_device_state_started) {
+        if ((this->playback.is_playing() == false || this->muted) && audio_device_state == ma_device_state_started) {
             mutex_lock.unlock();
             miniaudio_log = ma_device_stop(&audio_device);
             if (miniaudio_log != MA_SUCCESS) {
@@ -120,7 +121,7 @@ void MediaPlayer::audio_playback_thread() {
                 throw std::runtime_error("Failed to stop playback: Miniaudio Error " + std::to_string(miniaudio_log));
             }
             mutex_lock.lock();
-        } else if ((this->playback.is_playing() && !this->muted) && ma_device_get_state(&audio_device) == ma_device_state_stopped) {
+        } else if ((this->playback.is_playing() && !this->muted) && audio_device_state == ma_device_state_stopped) {
             mutex_lock.unlock();
             miniaudio_log = ma_device_start(&audio_device);
             if (miniaudio_log != MA_SUCCESS) {
@@ -128,6 +129,13 @@ void MediaPlayer::audio_playback_thread() {
                 throw std::runtime_error("Failed to start playback: Miniaudio Error " + std::to_string(miniaudio_log));
             }
             mutex_lock.lock();
+        }
+
+        audio_device_state = ma_device_get_state(&audio_device);
+        if (audio_device_state == ma_device_state_stopped || audio_device_state == ma_device_state_stopping) {
+            mutex_lock.unlock();
+            sleep_quick();
+            continue;
         }
 
         double current_system_time = system_clock_sec();
@@ -164,6 +172,7 @@ void MediaPlayer::audio_playback_thread() {
         }
 
         audio_device.sampleRate = audio_codec_context->sample_rate * this->playback.get_speed();
+
         
         mutex_lock.unlock();
         sleep_for_ms(5);
