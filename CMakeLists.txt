@@ -39,6 +39,7 @@ option(FIND_CURSES "Find Curses Libraries on system rather than build NCurses al
 option(FFMPEG_ENABLE_GPL "Enable GPL Licensing on the built FFmpeg libraries" OFF)
 option(FFMPEG_ENABLE_NONFREE "Enable Proprietary Licensing on the built FFmpeg libraries" OFF)
 option(FFMPEG_ENABLE_LGPL_THREE "Enable LGPL3 Licensing on the built FFmpeg Libraries" OFF)
+option(FFMPEG_DISABLE_AUTODETECT "Disable FFmpeg from autodetecting utility libraries and hardware accelerators" OFF)
 option(ADD_GDB_FLAG_ON_CBTD "Compile dependencies with the -g flag for gdb if CMAKE_BUILD_TYPE is Debug and the compiler is gcc or clang" ON)
 
 message("Options: ASCII_VIDEO_BUILD_TESTS: " ${ASCII_VIDEO_BUILD_TESTS})
@@ -48,6 +49,7 @@ message("Options: FFMPEG_ENABLE_GPL: " ${FFMPEG_ENABLE_GPL})
 message("Options: FFMPEG_ENABLE_NONFREE: " ${FFMPEG_ENABLE_NONFREE})
 message("Options: FFMPEG_ENABLE_LGPL_THREE: " ${FFMPEG_ENABLE_LGPL_THREE})
 message("Options: ADD_GDB_FLAG_ON_CBTD: " ${ADD_GDB_FLAG_ON_CBTD})
+message("Options: FFMPEG_DISABLE_AUTODETECT: " ${FFMPEG_DISABLE_AUTODETECT})
 
 set(NCURSES_EXTRA_CONFIGURE_FLAGS "")
 set(FFMPEG_EXTRA_CONFIGURE_FLAGS "")
@@ -165,6 +167,11 @@ else()
     if(FFMPEG_ENABLE_NONFREE)
         message("Appending --enable-nonfree to FFmpeg configure options")
         list(APPEND FFMPEG_BUILD_OPTIONS --enable-nonfree)
+    endif()
+
+    if(FFMPEG_DISABLE_AUTODETECT)
+        message("Appending --disable-autodetect to FFMpeg configure options")
+        list(APPEND FFMPEG_BUILD_OPTIONS --disable-autodetect)
     endif()
 
     if(NOT FFMPEG_EXTRA_CONFIGURE_FLAGS STREQUAL "")
