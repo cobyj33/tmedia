@@ -17,6 +17,7 @@
 #include "wtime.h"
 #include "videoconverter.h"
 #include "except.h"
+#include "avguard.h"
 
 extern "C" {
 #include <libavutil/version.h>
@@ -62,7 +63,7 @@ void MediaPlayer::video_playback_thread() {
 
             if (decoded_frames.size() > 0) {
                 AVFrame* frame_image = videoConverter.convert_video_frame(decoded_frames[0]);
-                #if LIBAVUTIL_VERSION_MAJOR > 57 || (LIBAVUTIL_VERSION_MAJOR == 57 && LIBAVUTIL_VERSION_MINOR > 30) || LIBAVUTIL_VERSION_MAJOR == 57 && LIBAVUTIL_VERSION_MINOR == 30 && LIBAVUTIL_VERSION_PATCH >= 100
+                #if HAS_AVFRAME_DURATION
                 frame_duration = (double)frame_image->duration * video_stream_data.get_time_base();
                 #endif
                 frame_pts_time_sec = (double)frame_image->pts * video_stream_data.get_time_base();

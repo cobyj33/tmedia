@@ -82,7 +82,7 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
         }
 
         resampled_frame->pts = original->pts;
-        #if LIBAVUTIL_VERSION_MAJOR > 57 || (LIBAVUTIL_VERSION_MAJOR == 57 && LIBAVUTIL_VERSION_MINOR > 30) || LIBAVUTIL_VERSION_MAJOR == 57 && LIBAVUTIL_VERSION_MINOR == 30 && LIBAVUTIL_VERSION_PATCH >= 100
+        
         resampled_frame->duration = original->duration;
         #endif
 

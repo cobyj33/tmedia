@@ -206,10 +206,7 @@ else()
         FFmpeg
         SOURCE_DIR              ${LOCAL_FFMPEG_LIB}/src
         BINARY_DIR              ${LOCAL_FFMPEG_LIB}/build
-        GIT_REPOSITORY          https://git.ffmpeg.org/ffmpeg.git
-        GIT_SHALLOW             ON
-        UPDATE_DISCONNECTED     ON
-        STEP_TARGETS            update
+        URL                     https://ffmpeg.org/releases/ffmpeg-5.0.3.tar.xz
         CONFIGURE_COMMAND       ${LOCAL_FFMPEG_LIB}/src/configure ${FFMPEG_BUILD_OPTIONS}
         PREFIX                  ${CMAKE_BINARY_DIR}
         INSTALL_DIR             ${CMAKE_BINARY_DIR}
