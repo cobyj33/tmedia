@@ -1,6 +1,10 @@
 
 # ascii_video ChangeLog
 
+## April 12, 2023
+
+ascii_video now builds ffmpeg and ncurses completely from CMake with ExternalProject
+
 ## April 1, 2023
 
 Removed libaom from local ffmpeg build
