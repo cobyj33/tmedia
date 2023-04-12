@@ -108,10 +108,6 @@ int main(int argc, char** argv)
         .help("Choose the time to start media playback")
         .default_value(std::string("00:00"));
 
-    parser.add_argument("--ffmpeg-version")
-        .help("Print the version of linked ffmpeg libraries")
-        .default_value(false)
-        .implicit_value(true);
 
     parser.add_argument("-m", "--mute")
         .help("Mute the audio playback")
@@ -120,6 +116,17 @@ int main(int argc, char** argv)
 
     parser.add_argument("--no-audio")
         .help("Remove all audio playback from the player")
+        .default_value(false)
+        .implicit_value(true);
+
+    parser.add_argument("--ffmpeg-version")
+        .help("Print the version of linked FFmpeg libraries")
+        .default_value(false)
+        .implicit_value(true);
+
+
+    parser.add_argument("--curses-version")
+        .help("Print the version of linked Curses libraries")
         .default_value(false)
         .implicit_value(true);
 
@@ -147,6 +154,7 @@ int main(int argc, char** argv)
     bool quiet = parser.get<bool>("-q");
     bool mute = parser.get<bool>("-m");
     bool print_ffmpeg_version = parser.get<bool>("--ffmpeg-version");
+    bool print_curses_version = parser.get<bool>("--curses-version");
     bool audio_enabled = !parser.get<bool>("--no-audio");
     std::string inputted_start_time = parser.get<std::string>("-t");
 
@@ -158,6 +166,12 @@ int main(int argc, char** argv)
         std::cout << "libswscale: " << LIBSWSCALE_VERSION_MAJOR << ":" << LIBSWSCALE_VERSION_MINOR << ":" << LIBSWSCALE_VERSION_MICRO << std::endl;
         return EXIT_SUCCESS;
     }
+
+    if (print_curses_version) {
+        std::cout << curses_version() << std::endl;
+        return EXIT_SUCCESS;
+    }
+
 
     if (file_inputs.size() == 0) {
         std::cerr << "Error: 1 media file input expected. 0 provided." << std::endl;
