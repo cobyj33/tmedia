@@ -4,6 +4,7 @@
 extern "C" {
     #include <libavutil/frame.h>
     #include <libswscale/swscale.h>
+    #include <libavutil/version.h>
 }
 
 VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat dst_pix_fmt, int src_width, int src_height, enum AVPixelFormat src_pix_fmt) {
@@ -39,7 +40,9 @@ AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
     resized_video_frame->height = this->m_dst_height;
     resized_video_frame->pts = original->pts;
     resized_video_frame->repeat_pict = original->repeat_pict;
+    #if LIBAVUTIL_VERSION_MAJOR > 57 || (LIBAVUTIL_VERSION_MAJOR == 57 && LIBAVUTIL_VERSION_MINOR > 30) || LIBAVUTIL_VERSION_MAJOR == 57 && LIBAVUTIL_VERSION_MINOR == 30 && LIBAVUTIL_VERSION_PATCH >= 100
     resized_video_frame->duration = original->duration;
+    #endif
     av_frame_get_buffer(resized_video_frame, 1); //watch this alignment
     sws_scale(this->m_context, (uint8_t const * const *)original->data, original->linesize, 0, original->height, resized_video_frame->data, resized_video_frame->linesize);
 

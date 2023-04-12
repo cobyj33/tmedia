@@ -78,6 +78,9 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
 void MediaPlayer::audio_playback_thread() {
     std::unique_lock<std::mutex> mutex_lock(this->alter_mutex, std::defer_lock);
+    if (!this->audio_enabled) {
+        throw std::runtime_error("Cannot play audio playback, Audio playback is not available in the current MediaPlayer instance");
+    }
     if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
         throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
     }
@@ -109,7 +112,7 @@ void MediaPlayer::audio_playback_thread() {
     while (this->in_use) {
         mutex_lock.lock();
 
-        if (this->playback.is_playing() == false && ma_device_get_state(&audio_device) == ma_device_state_started) {
+        if ((this->playback.is_playing() == false || this->muted) && ma_device_get_state(&audio_device) == ma_device_state_started) {
             mutex_lock.unlock();
             miniaudio_log = ma_device_stop(&audio_device);
             if (miniaudio_log != MA_SUCCESS) {
@@ -117,7 +120,7 @@ void MediaPlayer::audio_playback_thread() {
                 throw std::runtime_error("Failed to stop playback: Miniaudio Error " + std::to_string(miniaudio_log));
             }
             mutex_lock.lock();
-        } else if (this->playback.is_playing() && ma_device_get_state(&audio_device) == ma_device_state_stopped) {
+        } else if ((this->playback.is_playing() && !this->muted) && ma_device_get_state(&audio_device) == ma_device_state_stopped) {
             mutex_lock.unlock();
             miniaudio_log = ma_device_start(&audio_device);
             if (miniaudio_log != MA_SUCCESS) {

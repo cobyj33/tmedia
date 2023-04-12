@@ -136,6 +136,10 @@ void MediaPlayer::render_loop()
                 this->playback.toggle(system_clock_sec());
             }
 
+            if (input == 'm' || input == 'M') {
+                this->muted = !this->muted;
+            }
+
             input = wgetch(inputWindow);
         } // Ending of "while (input != ERR)"
 

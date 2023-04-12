@@ -32,6 +32,12 @@ enum class MediaType {
     IMAGE
 };
 
+struct MediaPlayerConfig {
+    bool audio_enabled;
+
+    MediaPlayerConfig(bool audio_enabled) : audio_enabled(audio_enabled) {}
+};
+
 std::string media_type_to_string(MediaType media_type);
 
 class MediaPlayer {
@@ -43,6 +49,8 @@ class MediaPlayer {
          * @param player The MediaPlayer to generate and update video frames for
          */
         void video_playback_thread();
+
+        bool audio_enabled;
 
         /**
          * @brief This loop is responsible for managing audio playback and synchronizing audio playback with the current MediaPlayer's timer
@@ -81,11 +89,11 @@ class MediaPlayer {
         const char* file_name;
         bool in_use;
         bool is_looped;
+        bool muted;
 
         MediaType media_type;
 
-        MediaPlayer(const char* file_name);
-        MediaPlayer(const char* file_name, MediaGUI starting_media_gui);
+        MediaPlayer(const char* file_name, MediaGUI starting_media_gui, MediaPlayerConfig config);
 
         void start();
         void start(double start_time);
@@ -144,6 +152,7 @@ class MediaPlayer {
         StreamData& get_media_stream(enum AVMediaType media_type) const;
         bool has_media_stream(enum AVMediaType media_type) const;
         int fetch_next(int requestedPacketCount);
+        bool is_audio_enabled() const;
 
         ~MediaPlayer();
 };

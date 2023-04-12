@@ -7,6 +7,7 @@
 extern "C" {
     #include <libswresample/swresample.h>
     #include <libavutil/frame.h>
+    #include <libavutil/version.h>
 }
 
 AudioResampler::AudioResampler(AVChannelLayout* dst_ch_layout, enum AVSampleFormat dst_sample_fmt, int dst_sample_rate, AVChannelLayout* src_ch_layout, enum AVSampleFormat src_sample_fmt, int src_sample_rate) {
@@ -81,7 +82,9 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
         }
 
         resampled_frame->pts = original->pts;
+        #if LIBAVUTIL_VERSION_MAJOR > 57 || (LIBAVUTIL_VERSION_MAJOR == 57 && LIBAVUTIL_VERSION_MINOR > 30) || LIBAVUTIL_VERSION_MAJOR == 57 && LIBAVUTIL_VERSION_MINOR == 30 && LIBAVUTIL_VERSION_PATCH >= 100
         resampled_frame->duration = original->duration;
+        #endif
 
         result = swr_convert_frame(this->m_context, resampled_frame, original);
         if (result != 0) {

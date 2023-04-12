@@ -14,6 +14,32 @@ set(ASCII_VIDEO_VERSION "${ASCII_VIDEO_VERSION_MAJOR}.${ASCII_VIDEO_VERSION_MINO
 set(LOCAL_NCURSES_LIB ${CMAKE_SOURCE_DIR}/lib/ncurses)
 set(LOCAL_FFMPEG_LIB ${CMAKE_SOURCE_DIR}/lib/ffmpeg)
 
+set(COMMON_SOURCE_FILES 
+./src/audioresampler.cpp
+./src/videoconverter.cpp
+./src/streamdata.cpp
+./src/ascii.cpp
+./src/audiobuffer.cpp
+./src/audio.cpp
+./src/audio_thread.cpp
+./src/decode.cpp
+./src/media.cpp
+./src/boiler.cpp
+./src/threads.cpp
+./src/video_thread.cpp
+./src/formatting.cpp
+./src/wmath.cpp
+./src/renderer.cpp
+./src/wtime.cpp
+./src/color.cpp
+./src/icons.cpp
+./src/playback.cpp
+./src/pixeldata.cpp
+./src/scale.cpp
+./src/ui/gui.cpp
+./src/termcolor.cpp
+)
+
 set(ASCII_VIDEO_SUPPORTED_LANGUAGES CXX C)
 if (APPLE)
     list (APPEND ASCII_VIDEO_SUPPORTED_LANGUAGES OBJC OBJCXX)
@@ -58,6 +84,8 @@ project(ascii_video
 VERSION ${ASCII_VIDEO_VERSION}
 LANGUAGES ${ASCII_VIDEO_SUPPORTED_LANGUAGES}
 DESCRIPTION "Terminal video media player")
+
+add_executable(ascii_video ${COMMON_SOURCE_FILES} ./src/main.cpp)
 
 set(NCURSES_CONFIGURE_OPTIONS --prefix=${CMAKE_BINARY_DIR}
 --datadir=${CMAKE_BINARY_DIR}/data
@@ -139,14 +167,8 @@ if(FIND_FFMPEG)
     libswscale
     )
 
-    get_target_property(FFMPEG_LIBS PkgConfig::LIBAV INTERFACE_LINK_LIBRARIES)
-    get_target_property(FFMPEG_INCLUDE_DIR PkgConfig::LIBAV INTERFACE_INCLUDE_DIRECTORIES)
-    get_target_property(FFMPEG_LINK_OPTIONS PkgConfig::LIBAV INTERFACE_LINK_OPTIONS)
-    get_target_property(FFMPEG_COMPILE_OPTIONS PkgConfig::LIBAV INTERFACE_COMPILE_OPTIONS)
-    message("FFmpeg LINK OPTIONS: " ${FFMPEG_LINK_OPTIONS})
-    message("FFmpeg COMPILE OPTIONS: " ${FFMPEG_COMPILE_OPTIONS})
+    target_link_libraries(ascii_video PRIVATE PkgConfig::LIBAV)
 else()
-
     if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU") AND ADD_GDB_FLAG_ON_CBTD)
         message("Appending -g flag to FFmpeg configure cflags")
         list(APPEND FFMPEG_BUILD_OPTIONS --extra-cflags=-g)
@@ -200,7 +222,6 @@ else()
     ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}avutil${CMAKE_SHARED_LIBRARY_SUFFIX}
     ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}swresample${CMAKE_SHARED_LIBRARY_SUFFIX}
     ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}swscale${CMAKE_SHARED_LIBRARY_SUFFIX})
-
     set(FFMPEG_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
 endif()
 
@@ -212,39 +233,12 @@ add_library(argparse INTERFACE)
 target_include_directories(argparse INTERFACE ./lib/argparse)
 
 configure_file(${CMAKE_SOURCE_DIR}/include/version.h.in ${CMAKE_BINARY_DIR}/include/version.h @ONLY)
-    
-set(COMMON_SOURCE_FILES 
-./src/audioresampler.cpp
-./src/videoconverter.cpp
-./src/streamdata.cpp
-./src/ascii.cpp
-./src/audiobuffer.cpp
-./src/audio.cpp
-./src/audio_thread.cpp
-./src/decode.cpp
-./src/media.cpp
-./src/boiler.cpp
-./src/threads.cpp
-./src/video_thread.cpp
-./src/formatting.cpp
-./src/wmath.cpp
-./src/renderer.cpp
-./src/wtime.cpp
-./src/color.cpp
-./src/icons.cpp
-./src/playback.cpp
-./src/pixeldata.cpp
-./src/scale.cpp
-./src/ui/gui.cpp
-./src/termcolor.cpp
-)
 
 message("Curses Libraries: ${CURSES_LIBRARIES}")
 message("Curses Include Directories: ${CURSES_INCLUDE_DIR}")
 message("FFmpeg Libraries: ${FFMPEG_LIBS}")
 message("FFmpeg Include Directories: ${FFMPEG_INCLUDE_DIR}")
 
-add_executable(ascii_video ${COMMON_SOURCE_FILES} ./src/main.cpp)
 target_compile_features(ascii_video PRIVATE cxx_std_17)
 target_include_directories(ascii_video PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
 target_link_libraries(ascii_video PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> argparse ${CMAKE_DL_LIBS})
@@ -257,9 +251,10 @@ if(NOT FIND_CURSES)
     add_dependencies(ascii_video ncurses6)
 endif()
 
-set_target_properties(ascii_video PROPERTIES INSTALL_RPATH ${CMAKE_BINARY_DIR}/lib)
+set(ASCII_VIDEO_RPATH ${CMAKE_BINARY_DIR}/lib /usr/local/lib)
+set_target_properties(ascii_video PROPERTIES INSTALL_RPATH "'$ORIGIN'/lib;${ASCII_VIDEO_RPATH}")
 set_target_properties(ascii_video PROPERTIES BUILD_WITH_INSTALL_RPATH ON)
-target_compile_options(ascii_video PRIVATE -Wl,-rpath,'$ORIGIN'/lib)
+# target_compile_options(ascii_video PRIVATE -Wl,-rpath,'$ORIGIN'/lib)
 
 if(MSVC)
     target_compile_options(ascii_video PRIVATE /std:c++17 /W4 /WX)
@@ -299,8 +294,8 @@ if (ASCII_VIDEO_BUILD_TESTS)
     target_include_directories(ascii_tests PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio)
     target_compile_features(ascii_tests PRIVATE cxx_std_17)
     target_link_libraries(ascii_tests PRIVATE Catch2::Catch2WithMain ${FFMPEG_LIBS} ${CURSES_LIBRARIES} PkgConfig::LIBAV $<TARGET_OBJECTS:miniaudio> ${CMAKE_DL_LIBS})
-    set_target_properties(ascii_tests PROPERTIES INSTALL_RPATH ${CMAKE_BINARY_DIR}/lib)
-    set_target_properties(ascii_tests PROPERTIES BUILD_WITH_INSTALL_RPATH ON)
+    # set_target_properties(ascii_tests PROPERTIES INSTALL_RPATH ${CMAKE_BINARY_DIR}/lib)
+    # set_target_properties(ascii_tests PROPERTIES BUILD_WITH_INSTALL_RPATH ON)
 
     if(not FIND_FFMPEG)
         add_dependencies(ascii_tests FFmpeg)

@@ -33,51 +33,13 @@ std::string media_type_to_string(MediaType media_type) {
     throw std::runtime_error("Attempted to get Media Type string from unimplemented Media Type. Please implement all MediaType's to return a valid string. This is a developer error and bug.");
 }
 
-
-MediaPlayer::MediaPlayer(const char* file_name) {
+MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, MediaPlayerConfig config) {
     this->in_use = false;
     this->file_name = file_name;
     this->is_looped = false;
-    this->media_gui = MediaGUI();
-
-    try {
-        this->format_context = open_format_context(file_name);
-    } catch (std::runtime_error const& e) {
-        throw std::runtime_error("Could not allocate media data of " + std::string(file_name) + " because of error while fetching file format data: " + e.what());
-    } 
-
-    if (avformat_context_is_video(this->format_context)) {
-        this->media_type = MediaType::VIDEO;
-    } else if (avformat_context_is_static_image(this->format_context)) {
-        this->media_type = MediaType::IMAGE;
-    } else if (avformat_context_is_audio_only(this->format_context)) {
-        this->media_type = MediaType::AUDIO;
-    } else {
-        throw std::runtime_error("Could not find matching MediaType for file " + std::string(file_name));
-    }
-
-    std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-    for (int i = 0; i < (int)media_types.size(); i++) {
-        try {
-            std::unique_ptr<StreamData> stream_data_ptr = std::make_unique<StreamData>(format_context, media_types[i]);
-            this->media_streams.push_back(std::move(stream_data_ptr));
-        } catch (std::invalid_argument const& e) {
-            continue;
-        }
-    }
-
-    if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-        StreamData& audio_stream_data = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
-        AVCodecContext* audio_codec_context = audio_stream_data.get_codec_context();
-        this->audio_buffer.init(audio_codec_context->ch_layout.nb_channels, audio_codec_context->sample_rate);
-    }
-}
-
-MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui) {
-    this->in_use = false;
-    this->file_name = file_name;
-    this->is_looped = false;
+    this->muted = false;
     this->media_gui = starting_media_gui;
+    this->audio_enabled = config.audio_enabled;
 
     try {
         this->format_context = open_format_context(file_name);
@@ -140,13 +102,13 @@ void MediaPlayer::start(double start_time) {
         video_thread_initialized = true;
     }
 
-    if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    if (this->has_media_stream(AVMEDIA_TYPE_AUDIO) && this->audio_enabled) {
         std::thread initialized_audio_thread(&MediaPlayer::audio_playback_thread, this);
         audio_thread.swap(initialized_audio_thread);
         audio_thread_initialized = true;
     }
 
-    this->render_loop(); 
+    this->render_loop();
     if (video_thread_initialized) {
         video_thread.join();
     }
@@ -244,6 +206,10 @@ int MediaPlayer::get_nb_media_streams() const {
     return this->media_streams.size();
 }
 
+bool MediaPlayer::is_audio_enabled() const { 
+    return this->audio_enabled;
+}
+
 MediaPlayer::~MediaPlayer() {
     avformat_close_input(&(this->format_context));
     avformat_free_context(this->format_context);
@@ -296,7 +262,7 @@ std::vector<AVFrame*> MediaPlayer::next_audio_frames() {
 
 int MediaPlayer::load_next_audio_frames(int frames) {
     if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-        throw std::runtime_error("[MediaPlayer::load_next_audio_frames] Cannot load next audio frames, Media Player does not have any audio data to load");
+        throw std::runtime_error("[MediaPlayer::load_next_audio_frames] Cannot load next audio frames, Media Player does not have any audio stream to load data from");
     }
     if (frames < 0) {
         throw std::runtime_error("Cannot load negative frames, (got " + std::to_string(frames) + " ). ");

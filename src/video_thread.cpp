@@ -19,11 +19,9 @@
 #include "except.h"
 
 extern "C" {
-#include <libavutil/pixfmt.h>
+#include <libavutil/version.h>
 #include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/avutil.h>
-#include <libswscale/swscale.h>
+#include <libavutil/frame.h>
 }
 
 const int MAX_FRAME_WIDTH = 27 * 16;
@@ -64,7 +62,9 @@ void MediaPlayer::video_playback_thread() {
 
             if (decoded_frames.size() > 0) {
                 AVFrame* frame_image = videoConverter.convert_video_frame(decoded_frames[0]);
+                #if LIBAVUTIL_VERSION_MAJOR > 57 || (LIBAVUTIL_VERSION_MAJOR == 57 && LIBAVUTIL_VERSION_MINOR > 30) || LIBAVUTIL_VERSION_MAJOR == 57 && LIBAVUTIL_VERSION_MINOR == 30 && LIBAVUTIL_VERSION_PATCH >= 100
                 frame_duration = (double)frame_image->duration * video_stream_data.get_time_base();
+                #endif
                 frame_pts_time_sec = (double)frame_image->pts * video_stream_data.get_time_base();
                 extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
                 this->set_current_frame(frame_image);
