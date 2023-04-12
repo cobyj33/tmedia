@@ -7,15 +7,15 @@ blueprints/
 COMMITLOGGING.md
 devscripts/
 
-lib/ncurses-6.4/
-lib/ffmpeg-6.0/
 lib/aom
 lib/build
 install
 test*.sh
 
-lib/ffmpeg/build
-lib/ffmpeg/src
+lib/ffmpeg/build/
+lib/ffmpeg/src/
 
-lib/ncurses/build
-lib/ncurses/src
+lib/ncurses/build/
+lib/ncurses/src/
+
+ignore/

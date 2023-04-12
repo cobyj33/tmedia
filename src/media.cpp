@@ -56,7 +56,6 @@ MediaPlayer::MediaPlayer(const char* file_name) {
         throw std::runtime_error("Could not find matching MediaType for file " + std::string(file_name));
     }
 
-
     std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
     for (int i = 0; i < (int)media_types.size(); i++) {
         try {
@@ -86,17 +85,6 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui) {
         throw std::runtime_error("Could not allocate media data of " + std::string(file_name) + " because of error while fetching file format data: " + e.what());
     } 
 
-    if (avformat_context_is_static_image(this->format_context)) {
-        this->media_type = MediaType::IMAGE;
-    } else if (avformat_context_is_video(this->format_context)) {
-        this->media_type = MediaType::VIDEO;
-    } else if (avformat_context_is_audio_only(this->format_context)) {
-        this->media_type = MediaType::AUDIO;
-    } else {
-        throw std::runtime_error("Could not find matching MediaType for file " + std::string(file_name));
-    }
-
-
     std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
     for (int i = 0; i < (int)media_types.size(); i++) {
         try {
@@ -105,6 +93,16 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui) {
         } catch (std::invalid_argument const& e) {
             continue;
         }
+    }
+
+    if (avformat_context_is_static_image(this->format_context)) {
+        this->media_type = MediaType::IMAGE;
+    } else if (avformat_context_is_video(this->format_context)) {
+        this->media_type = MediaType::VIDEO;
+    } else if (avformat_context_is_audio_only(this->format_context)) {
+        this->media_type = MediaType::AUDIO;
+    } else {
+        throw std::runtime_error("Could not find matching MediaType for file " + std::string(file_name));
     }
 
     if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {

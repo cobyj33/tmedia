@@ -28,7 +28,7 @@ AVFormatContext* open_format_context(std::string file_path) {
         if (format_context != nullptr) {
             avformat_free_context(format_context);
         }
-        throw std::runtime_error("Failed to find stream info for " + file_path);
+        throw ascii::ffmpeg_error("Failed to find stream info for " + file_path, result);
     }
 
     if (format_context != nullptr) {

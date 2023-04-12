@@ -24,6 +24,13 @@
 extern "C" {
 #include "curses.h"
 #include <libavutil/log.h>
+#include <libavformat/version.h>
+#include <libavutil/version.h>
+#include <libavcodec/version.h>
+#include <libswresample/version.h>
+#include <libswscale/version.h>
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
 }
 
 bool ncurses_initialized = false;
@@ -57,8 +64,9 @@ int main(int argc, char** argv)
 
     argparse::ArgumentParser parser("ascii_video", ASCII_VIDEO_VERSION);
 
-    parser.add_argument("file")
-        .help("The file to be played");
+    parser.add_argument("file")   
+        .help("The file to be played")
+        .nargs(0, 1);
 
     const std::string controls = std::string("-------CONTROLS-----------\n") +
                             "SPACE - Toggle Playback \n" +
@@ -100,6 +108,11 @@ int main(int argc, char** argv)
         .help("Choose the time to start media playback")
         .default_value(std::string("00:00"));
 
+    parser.add_argument("--ffmpeg-version")
+        .help("Print the version of linked ffmpeg libraries")
+        .default_value(false)
+        .implicit_value(true);
+
     // parser.add_argument("-i", "--image")
     //     .help("Consume the media as an image")
     //     .default_value(false)
@@ -114,7 +127,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    std::string file = parser.get<std::string>("file");
+    std::vector<std::string> file_inputs = parser.get<std::vector<std::string>>("file");
     
     double start_time = 0.0;
     bool colors = parser.get<bool>("-c");
@@ -122,7 +135,25 @@ int main(int argc, char** argv)
     bool background = parser.get<bool>("-b");
     bool dump = parser.get<bool>("-d");
     bool quiet = parser.get<bool>("-q");
+    bool print_ffmpeg_version = parser.get<bool>("--ffmpeg-version");
     std::string inputted_start_time = parser.get<std::string>("-t");
+
+    if (print_ffmpeg_version) {
+        std::cout << "libavformat: " << LIBAVFORMAT_VERSION_MAJOR << ":" << LIBAVFORMAT_VERSION_MINOR << ":" << LIBAVFORMAT_VERSION_MICRO << std::endl;
+        std::cout << "libavcodec: " << LIBAVCODEC_VERSION_MAJOR << ":" << LIBAVCODEC_VERSION_MINOR << ":" << LIBAVCODEC_VERSION_MICRO << std::endl;
+        std::cout << "libavutil: " << LIBAVUTIL_VERSION_MAJOR << ":" << LIBAVUTIL_VERSION_MINOR << ":" << LIBAVUTIL_VERSION_MICRO << std::endl;
+        std::cout << "libswresample: " << LIBSWRESAMPLE_VERSION_MAJOR << ":" << LIBSWRESAMPLE_VERSION_MINOR << ":" << LIBSWRESAMPLE_VERSION_MICRO << std::endl;
+        std::cout << "libswscale: " << LIBSWSCALE_VERSION_MAJOR << ":" << LIBSWSCALE_VERSION_MINOR << ":" << LIBSWSCALE_VERSION_MICRO << std::endl;
+        return EXIT_SUCCESS;
+    }
+
+    if (file_inputs.size() == 0) {
+        std::cerr << "Error: 1 media file input expected. 0 provided." << std::endl;
+        std::cerr << parser << std::endl;
+        return EXIT_FAILURE;
+    }
+    std::string file = file_inputs[0];
+
 
     if (dump) {
         dump_file_info(file.c_str());
@@ -133,7 +164,6 @@ int main(int argc, char** argv)
         std::cerr << "[ascii_video] Cannot open invalid path: " << file << std::endl;
         return EXIT_FAILURE;
     }
-
 
     const std::filesystem::path path(file);
     std::error_code ec; // For using the non-throwing overloads of functions below.
