@@ -141,10 +141,8 @@ if(FIND_FFMPEG)
     get_target_property(FFMPEG_INCLUDE_DIR PkgConfig::LIBAV INTERFACE_INCLUDE_DIRECTORIES)
     get_target_property(FFMPEG_LINK_OPTIONS PkgConfig::LIBAV INTERFACE_LINK_OPTIONS)
     get_target_property(FFMPEG_COMPILE_OPTIONS PkgConfig::LIBAV INTERFACE_COMPILE_OPTIONS)
-    # message(STATUS ${FFMPEG_LIBS})
-    # message(PkgConfig::LIBAV)
-    message("FFMPEG LINK OPTIONS: " ${FFMPEG_LINK_OPTIONS})
-    message("FFMPEG COMPILE OPTIONS: " ${FFMPEG_COMPILE_OPTIONS})
+    message("FFmpeg LINK OPTIONS: " ${FFMPEG_LINK_OPTIONS})
+    message("FFmpeg COMPILE OPTIONS: " ${FFMPEG_COMPILE_OPTIONS})
 else()
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU") AND ADD_GDB_FLAG_ON_CBTD)
@@ -263,8 +261,15 @@ else()
 endif()
 
 if (ASCII_VIDEO_BUILD_TESTS)
-    add_subdirectory(./lib/Catch2)
     message("Configured to build testing executable")
+    Include(FetchContent)
+    FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v3.0.1 # or a later release
+    )
+
+    FetchContent_MakeAvailable(Catch2)
 
     set(TEST_SOURCE_FILES
     ./src/tests/test_audiobuffer.cpp
