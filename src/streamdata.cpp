@@ -4,6 +4,7 @@
 #include "decode.h"
 #include "streamdata.h"
 #include "except.h"
+#include "avguard.h"
 
 extern "C" {
     #include <libavcodec/avcodec.h>
@@ -11,7 +12,12 @@ extern "C" {
 }
 
 StreamData::StreamData(AVFormatContext* format_context, enum AVMediaType media_type) {
+    #if AV_FIND_BEST_STREAM_CONST_DECODER
     const AVCodec* decoder;
+    #else
+    AVCodec* decoder;
+    #endif
+    
     int stream_index = -1;
     stream_index = av_find_best_stream(format_context, media_type, -1, -1, &decoder, 0);
     if (stream_index < 0) {
