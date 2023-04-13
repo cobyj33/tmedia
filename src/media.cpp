@@ -85,7 +85,14 @@ void MediaPlayer::start() {
 
 void MediaPlayer::start(double start_time) {
     if (this->in_use) {
-        throw std::runtime_error("CANNOT USE MEDIA PLAYER THAT IS ALREADY IN USE");
+        throw std::runtime_error("[MediaPlayer::start] Cannot use a MediaPlayer that is already in use");
+    }
+
+    if (start_time < 0) {
+        throw std::runtime_error("[MediaPlayer::start] Cannot start a MediaPlayer at a negative time ( got " + std::to_string(start_time) +  ")");
+    }
+    if (start_time > this->get_duration()) {
+        throw std::runtime_error("[MediaPlayer::start] Cannot start a MediaPlayer at a time greater than the stream duration ( got " + std::to_string(start_time) +  " seconds. Stream ends at " + std::to_string(this->get_duration()) + " seconds)");
     }
     this->in_use = true;
 
@@ -93,7 +100,9 @@ void MediaPlayer::start(double start_time) {
         this->frame = PixelData(this->file_name);
     } else if (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO) {
         this->playback.start(system_clock_sec());
-        this->jump_to_time(start_time, system_clock_sec());
+        if (start_time != 0) {
+            this->jump_to_time(start_time, system_clock_sec());
+        }
     }
 
     std::thread video_thread;

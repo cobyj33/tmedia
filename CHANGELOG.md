@@ -1,6 +1,16 @@
 
 # ascii_video ChangeLog
 
+## April 13, 2023
+
+Building working with FFmpeg version 3.4
+
+MediaPlayer::start does not jump to the start_time if the start_time is 0.
+
+MediaPlayer::start catches invalid start times with errors.
+
+MediaPlayer::MediaPlayer only has one constructor instead of two.
+
 ## April 12, 2023
 
 ascii_video now builds ffmpeg and ncurses completely from CMake with ExternalProject

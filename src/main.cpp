@@ -14,6 +14,7 @@
 #include "wtime.h"
 #include "gui.h"
 #include "version.h"
+#include "avguard.h"
 
 #include <termcolor.h>
 
@@ -58,6 +59,13 @@ void on_terminate() {
 
 int main(int argc, char** argv)
 {
+    #if USE_AV_REGISTER_ALL
+    av_register_all();
+    #endif
+    #if USE_AVCODEC_REGISTER_ALL
+    avcodec_register_all();
+    #endif
+    
     srand(time(nullptr));
     av_log_set_level(AV_LOG_QUIET);
     std::set_terminate(on_terminate);
