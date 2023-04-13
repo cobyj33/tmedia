@@ -5,6 +5,15 @@
 
 ascii_video now builds ffmpeg and ncurses completely from CMake with ExternalProject
 
+Building working on FFmpeg version 5.0
+
+Added avguard.h to define ffmpeg versions of specific features and APIs
+
+Added DEPS_ALREADY_COMPILED CMake flag to force prevent recompilation of
+library dependencies when those dependencies are already met
+
+Catch2 now through FetchContent rather than subdirectory
+
 ## April 1, 2023
 
 Removed libaom from local ffmpeg build

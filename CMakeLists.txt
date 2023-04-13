@@ -67,6 +67,7 @@ option(FFMPEG_ENABLE_NONFREE "Enable Proprietary Licensing on the built FFmpeg l
 option(FFMPEG_ENABLE_LGPL_THREE "Enable LGPL3 Licensing on the built FFmpeg Libraries" OFF)
 option(FFMPEG_DISABLE_AUTODETECT "Disable FFmpeg from autodetecting utility libraries and hardware accelerators" OFF)
 option(ADD_GDB_FLAG_ON_CBTD "Compile dependencies with the -g flag for gdb if CMAKE_BUILD_TYPE is Debug and the compiler is gcc or clang" ON)
+option(DEPS_ALREADY_COMPILED "Do not recompile dependencies because they have already been compiled and are available in the build directory" OFF)
 
 message("Options: ASCII_VIDEO_BUILD_TESTS: " ${ASCII_VIDEO_BUILD_TESTS})
 message("Options: FIND_FFMPEG: " ${FIND_FFMPEG})
@@ -76,6 +77,7 @@ message("Options: FFMPEG_ENABLE_NONFREE: " ${FFMPEG_ENABLE_NONFREE})
 message("Options: FFMPEG_ENABLE_LGPL_THREE: " ${FFMPEG_ENABLE_LGPL_THREE})
 message("Options: ADD_GDB_FLAG_ON_CBTD: " ${ADD_GDB_FLAG_ON_CBTD})
 message("Options: FFMPEG_DISABLE_AUTODETECT: " ${FFMPEG_DISABLE_AUTODETECT})
+message("Options: DEPS_ALREADY_COMPILED: " ${DEPS_ALREADY_COMPILED})
 
 set(NCURSES_EXTRA_CONFIGURE_FLAGS "")
 set(FFMPEG_EXTRA_CONFIGURE_FLAGS "")
@@ -102,32 +104,35 @@ include(ExternalProject)
 if(FIND_CURSES)
     find_package(Curses REQUIRED)
 elseif(NOT FIND_CURSES AND (UNIX OR APPLE OR MINGW OR CYGWIN))
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU") AND ADD_GDB_FLAG_ON_CBTD)
-        message("Appending -g flag to ncurses configure cflags")
-        list(APPEND NCURSES_CONFIGURE_OPTIONS --with-build-cflags=-g)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT ADD_GDB_FLAG_ON_CBTD)
-        message("Not appending -g flag to ncurses configure cflags: gdb debugging build of ncurses has been disabled through the ADD_GDB_FLAG_ON_CBTD option")
-    endif()
 
-    if(NOT NCURSES_EXTRA_CONFIGURE_FLAGS STREQUAL "")
-        message("Appending extra ncurses configure flags: ${NCURSES_EXTRA_CONFIGURE_FLAGS}")
-        list(APPEND NCURSES_CONFIGURE_OPTIONS ${NCURSES_EXTRA_CONFIGURE_FLAGS})
-    endif()
+    if(NOT DEPS_ALREADY_COMPILED)
+        if (CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU") AND ADD_GDB_FLAG_ON_CBTD)
+            message("Appending -g flag to ncurses configure cflags")
+            list(APPEND NCURSES_CONFIGURE_OPTIONS --with-build-cflags=-g)
+        elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT ADD_GDB_FLAG_ON_CBTD)
+            message("Not appending -g flag to ncurses configure cflags: gdb debugging build of ncurses has been disabled through the ADD_GDB_FLAG_ON_CBTD option")
+        endif()
 
-    message("Curses configure options: ${NCURSES_CONFIGURE_OPTIONS}")
-    ExternalProject_Add(
-        ncurses6
-        SOURCE_DIR        ${LOCAL_NCURSES_LIB}/src
-        BINARY_DIR        ${LOCAL_NCURSES_LIB}/build
-        PREFIX            ${CMAKE_BINARY_DIR}
-        INSTALL_DIR       ${CMAKE_BINARY_DIR}
-        CONFIGURE_COMMAND ${LOCAL_NCURSES_LIB}/src/configure ${NCURSES_CONFIGURE_OPTIONS}
-        BUILD_COMMAND     make
-        INSTALL_COMMAND   make install
-        BUILD_IN_SOURCE   OFF
-        URL               https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.4.tar.gz
-        TLS_VERIFY        ON
-    )
+        if(NOT NCURSES_EXTRA_CONFIGURE_FLAGS STREQUAL "")
+            message("Appending extra ncurses configure flags: ${NCURSES_EXTRA_CONFIGURE_FLAGS}")
+            list(APPEND NCURSES_CONFIGURE_OPTIONS ${NCURSES_EXTRA_CONFIGURE_FLAGS})
+        endif()
+
+        message("Curses configure options: ${NCURSES_CONFIGURE_OPTIONS}")
+        ExternalProject_Add(
+            ncurses6
+            SOURCE_DIR        ${LOCAL_NCURSES_LIB}/src
+            BINARY_DIR        ${LOCAL_NCURSES_LIB}/build
+            PREFIX            ${CMAKE_BINARY_DIR}
+            INSTALL_DIR       ${CMAKE_BINARY_DIR}
+            CONFIGURE_COMMAND ${LOCAL_NCURSES_LIB}/src/configure ${NCURSES_CONFIGURE_OPTIONS}
+            BUILD_COMMAND     make
+            INSTALL_COMMAND   make install
+            BUILD_IN_SOURCE   OFF
+            URL               https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.4.tar.gz
+            TLS_VERIFY        ON
+        )
+    endif()
 
     set(CURSES_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}ncurses${CMAKE_SHARED_LIBRARY_SUFFIX}
     ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}form${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -169,51 +174,57 @@ if(FIND_FFMPEG)
 
     target_link_libraries(ascii_video PRIVATE PkgConfig::LIBAV)
 else()
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU") AND ADD_GDB_FLAG_ON_CBTD)
-        message("Appending -g flag to FFmpeg configure cflags")
-        list(APPEND FFMPEG_BUILD_OPTIONS --extra-cflags=-g)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT ADD_GDB_FLAG_ON_CBTD)
-        message("Not appending -g flag to FFmpeg configure cflags: gdb debugging build of FFmpeg has been disabled through the ADD_GDB_FLAG_ON_CBTD option")
+    if(NOT DEPS_ALREADY_COMPILED)
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU") AND ADD_GDB_FLAG_ON_CBTD)
+            message("Appending -g flag to FFmpeg configure cflags")
+            list(APPEND FFMPEG_BUILD_OPTIONS --extra-cflags=-g)
+        elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT ADD_GDB_FLAG_ON_CBTD)
+            message("Not appending -g flag to FFmpeg configure cflags: gdb debugging build of FFmpeg has been disabled through the ADD_GDB_FLAG_ON_CBTD option")
+        endif()
+
+        if(FFMPEG_ENABLE_GPL) 
+            message("Appending --enable-gpl to FFmpeg configure options")
+            list(APPEND FFMPEG_BUILD_OPTIONS --enable-gpl)
+        endif()
+
+        if(FFMPEG_ENABLE_LGPL_THREE)
+            message("Appending --enable-version3 to FFmpeg configure options")
+            list(APPEND FFMPEG_BUILD_OPTIONS --enable-version3)
+        endif()
+
+        if(FFMPEG_ENABLE_NONFREE)
+            message("Appending --enable-nonfree to FFmpeg configure options")
+            list(APPEND FFMPEG_BUILD_OPTIONS --enable-nonfree)
+        endif()
+
+        if(FFMPEG_DISABLE_AUTODETECT)
+            message("Appending --disable-autodetect to FFMpeg configure options")
+            list(APPEND FFMPEG_BUILD_OPTIONS --disable-autodetect)
+        endif()
+
+        if(NOT FFMPEG_EXTRA_CONFIGURE_FLAGS STREQUAL "")
+            message("Appending extra FFmpeg configure flags: ${FFMPEG_EXTRA_CONFIGURE_FLAGS}")
+            list(APPEND FFMPEG_BUILD_OPTIONS ${FFMPEG_EXTRA_CONFIGURE_FLAGS})
+        endif()
+
+        message("FFMPEG Build Options: ${FFMPEG_BUILD_OPTIONS}")
+        ExternalProject_Add(
+            FFmpeg
+            SOURCE_DIR              ${LOCAL_FFMPEG_LIB}/src
+            BINARY_DIR              ${LOCAL_FFMPEG_LIB}/build
+            GIT_REPOSITORY          https://git.ffmpeg.org/ffmpeg.git
+            GIT_SHALLOW             ON
+            UPDATE_DISCONNECTED     ON
+            STEP_TARGETS            update
+            CONFIGURE_COMMAND       ${LOCAL_FFMPEG_LIB}/src/configure ${FFMPEG_BUILD_OPTIONS}
+            PREFIX                  ${CMAKE_BINARY_DIR}
+            INSTALL_DIR             ${CMAKE_BINARY_DIR}
+            BUILD_COMMAND           make
+            BUILD_IN_SOURCE         OFF
+            INSTALL_COMMAND         make install
+        )
     endif()
 
-    if(FFMPEG_ENABLE_GPL) 
-        message("Appending --enable-gpl to FFmpeg configure options")
-        list(APPEND FFMPEG_BUILD_OPTIONS --enable-gpl)
-    endif()
-
-    if(FFMPEG_ENABLE_LGPL_THREE)
-        message("Appending --enable-version3 to FFmpeg configure options")
-        list(APPEND FFMPEG_BUILD_OPTIONS --enable-version3)
-    endif()
-
-    if(FFMPEG_ENABLE_NONFREE)
-        message("Appending --enable-nonfree to FFmpeg configure options")
-        list(APPEND FFMPEG_BUILD_OPTIONS --enable-nonfree)
-    endif()
-
-    if(FFMPEG_DISABLE_AUTODETECT)
-        message("Appending --disable-autodetect to FFMpeg configure options")
-        list(APPEND FFMPEG_BUILD_OPTIONS --disable-autodetect)
-    endif()
-
-    if(NOT FFMPEG_EXTRA_CONFIGURE_FLAGS STREQUAL "")
-        message("Appending extra FFmpeg configure flags: ${FFMPEG_EXTRA_CONFIGURE_FLAGS}")
-        list(APPEND FFMPEG_BUILD_OPTIONS ${FFMPEG_EXTRA_CONFIGURE_FLAGS})
-    endif()
-
-    message("FFMPEG Build Options: ${FFMPEG_BUILD_OPTIONS}")
-    ExternalProject_Add(
-        FFmpeg
-        SOURCE_DIR              ${LOCAL_FFMPEG_LIB}/src
-        BINARY_DIR              ${LOCAL_FFMPEG_LIB}/build
-        URL                     https://ffmpeg.org/releases/ffmpeg-5.0.3.tar.xz
-        CONFIGURE_COMMAND       ${LOCAL_FFMPEG_LIB}/src/configure ${FFMPEG_BUILD_OPTIONS}
-        PREFIX                  ${CMAKE_BINARY_DIR}
-        INSTALL_DIR             ${CMAKE_BINARY_DIR}
-        BUILD_COMMAND           make
-        BUILD_IN_SOURCE         OFF
-        INSTALL_COMMAND         make install
-    )
     set(FFMPEG_LIBS ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}avcodec${CMAKE_SHARED_LIBRARY_SUFFIX}
     ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}avformat${CMAKE_SHARED_LIBRARY_SUFFIX}
     ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}avutil${CMAKE_SHARED_LIBRARY_SUFFIX}
@@ -240,11 +251,11 @@ target_compile_features(ascii_video PRIVATE cxx_std_17)
 target_include_directories(ascii_video PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
 target_link_libraries(ascii_video PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> argparse ${CMAKE_DL_LIBS})
 
-if(NOT FIND_FFMPEG)
+if(NOT FIND_FFMPEG AND NOT DEPS_ALREADY_COMPILED)
     add_dependencies(ascii_video FFmpeg)
 endif()
 
-if(NOT FIND_CURSES)
+if(NOT FIND_CURSES AND NOT DEPS_ALREADY_COMPILED)
     add_dependencies(ascii_video ncurses6)
 endif()
 
@@ -294,11 +305,11 @@ if (ASCII_VIDEO_BUILD_TESTS)
     # set_target_properties(ascii_tests PROPERTIES INSTALL_RPATH ${CMAKE_BINARY_DIR}/lib)
     # set_target_properties(ascii_tests PROPERTIES BUILD_WITH_INSTALL_RPATH ON)
 
-    if(not FIND_FFMPEG)
+    if(NOT FIND_FFMPEG AND NOT DEPS_ALREADY_COMPILED)
         add_dependencies(ascii_tests FFmpeg)
     endif()
 
-    if(not FIND_CURSES)
+    if(NOT FIND_CURSES AND NOT DEPS_ALREADY_COMPILED)
         add_dependencies(ascii_tests ncurses6)
     endif()
 else()

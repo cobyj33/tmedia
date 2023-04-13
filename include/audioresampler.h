@@ -2,10 +2,12 @@
 #define ASCII_VIDEO_AUDIO_RESAMPLER_INCLUDE
 
 #include <vector>
+#include "avguard.h"
 
 extern "C" {
     #include <libavutil/frame.h>
     #include <libswresample/swresample.h>
+    #include <libavutil/channel_layout.h>
 }
 
 /**
@@ -16,18 +18,33 @@ class AudioResampler {
     private:
         SwrContext* m_context;
         int m_src_sample_rate;
-        int m_src_sample_fmt;
-        AVChannelLayout m_src_ch_layout;
         int m_dst_sample_rate;
+
+        int m_src_sample_fmt;
         int m_dst_sample_fmt;
+        #if HAS_AVCHANNEL_LAYOUT
+        AVChannelLayout m_src_ch_layout;
         AVChannelLayout m_dst_ch_layout;
+        #else
+        int64_t m_src_ch_layout;
+        int64_t m_dst_ch_layout;
+        #endif
     public:
+        #if HAS_AVCHANNEL_LAYOUT
         AudioResampler(AVChannelLayout* dst_ch_layout,
                         enum AVSampleFormat dst_sample_fmt,
                         int dst_sample_rate,
                         AVChannelLayout* src_ch_layout,
                         enum AVSampleFormat src_sample_fmt,
                         int src_sample_rate);
+        #else
+        AudioResampler(int64_t dst_ch_layout,
+                        enum AVSampleFormat dst_sample_fmt,
+                        int dst_sample_rate,
+                        int64_t src_ch_layout,
+                        enum AVSampleFormat src_sample_fmt,
+                        int src_sample_rate);
+        #endif
 
         int get_src_sample_rate();
         int get_src_sample_fmt();

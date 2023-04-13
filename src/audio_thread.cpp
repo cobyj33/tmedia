@@ -9,6 +9,7 @@
 #include "pixeldata.h"
 #include "threads.h"
 #include "audioresampler.h"
+#include "avguard.h"
 
 #include <cstdlib>
 #include <memory>
@@ -88,13 +89,15 @@ void MediaPlayer::audio_playback_thread() {
     StreamData& audio_stream_data = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
     AVCodecContext* audio_codec_context = audio_stream_data.get_codec_context();
 
-    AudioResampler audio_resampler(
-            &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
-            &(audio_codec_context->ch_layout), audio_codec_context->sample_fmt, audio_codec_context->sample_rate);
-
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format  = ma_format_f32;
+
+    #if HAS_AVCHANNEL_LAYOUT
     config.playback.channels = audio_codec_context->ch_layout.nb_channels;              
+    #else
+    config.playback.channels = audio_codec_context->channels;
+    #endif
+    
     config.sampleRate = audio_codec_context->sample_rate;           
     config.dataCallback = audioDataCallback;   
     config.pUserData = this;   

@@ -17,6 +17,7 @@
 #include "formatting.h"
 #include "threads.h"
 #include "audioresampler.h"
+#include "avguard.h"
 
 extern "C" {
 #include "curses.h"
@@ -70,7 +71,11 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, Med
     if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
         StreamData& audio_stream_data = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
         AVCodecContext* audio_codec_context = audio_stream_data.get_codec_context();
+        #if HAS_AVCHANNEL_LAYOUT
         this->audio_buffer.init(audio_codec_context->ch_layout.nb_channels, audio_codec_context->sample_rate);
+        #else
+        this->audio_buffer.init(audio_codec_context->channels, audio_codec_context->sample_rate);
+        #endif
     }
 }
 
@@ -271,9 +276,15 @@ int MediaPlayer::load_next_audio_frames(int frames) {
     int written_samples = 0;
     StreamData& audio_media_stream = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
     AVCodecContext* audio_codec_context = audio_media_stream.get_codec_context();
+    #if HAS_AVCHANNEL_LAYOUT
     AudioResampler audio_resampler(
         &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
         &(audio_codec_context->ch_layout), audio_codec_context->sample_fmt, audio_codec_context->sample_rate);
+    #else
+    AudioResampler audio_resampler(
+        audio_codec_context->channel_layout, AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
+        audio_codec_context->channel_layout, audio_codec_context->sample_fmt, audio_codec_context->sample_rate);
+    #endif
 
     for (int i = 0; i < frames; i++) {
         std::vector<AVFrame*> next_raw_audio_frames = this->next_audio_frames();
