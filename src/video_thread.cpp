@@ -10,7 +10,7 @@
 #include "media.h"
 #include "boiler.h"
 #include "decode.h"
-#include "threads.h"
+#include "sleep.h"
 #include "icons.h"
 #include "ascii.h"
 #include "wmath.h"
