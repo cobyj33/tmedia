@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
+function(printlist list)
+    foreach(line IN LISTS list)
+        message("${line}")
+    endforeach()
+endfunction()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -62,16 +68,20 @@ endif()
 option(ASCII_VIDEO_BUILD_TESTS "Build Testing Executable for ascii_video" OFF)
 option(FIND_FFMPEG "Find FFmpeg Libraries on system rather than build FFmpeg alongside ascii_video" OFF)
 option(FIND_CURSES "Find Curses Libraries on system rather than build NCurses alongside ascii_video" OFF)
+option(FFMPEG_SHARED "Compile FFmpeg Libraries as shared libraries" OFF)
+option(CURSES_SHARED "Compile Curses libraries as shared libraries" OFF)
 option(FFMPEG_ENABLE_GPL "Enable GPL Licensing on the built FFmpeg libraries" OFF)
 option(FFMPEG_ENABLE_NONFREE "Enable Proprietary Licensing on the built FFmpeg libraries" OFF)
 option(FFMPEG_ENABLE_LGPL_THREE "Enable LGPL3 Licensing on the built FFmpeg Libraries" OFF)
 option(FFMPEG_DISABLE_AUTODETECT "Disable FFmpeg from autodetecting utility libraries and hardware accelerators" OFF)
-option(ADD_GDB_FLAG_ON_CBTD "Compile dependencies with the -g flag for gdb if CMAKE_BUILD_TYPE is Debug and the compiler is gcc or clang" ON)
+option(ADD_GDB_FLAG_ON_CBTD "\"Add GDB Flag on CMAKE_BUILD_TYPE=Debug\" Compile dependencies with the -g flag for gdb if CMAKE_BUILD_TYPE is Debug and the compiler is gcc or clang" ON)
 option(DEPS_ALREADY_COMPILED "Do not recompile dependencies because they have already been compiled and are available in the build directory" OFF)
 
 message("Options: ASCII_VIDEO_BUILD_TESTS: " ${ASCII_VIDEO_BUILD_TESTS})
 message("Options: FIND_FFMPEG: " ${FIND_FFMPEG})
 message("Options: FIND_CURSES: " ${FIND_CURSES})
+message("Options: FFMPEG_SHARED: " ${FFMPEG_SHARED})
+message("Options: CURSES_SHARED: " ${CURSES_SHARED})
 message("Options: FFMPEG_ENABLE_GPL: " ${FFMPEG_ENABLE_GPL})
 message("Options: FFMPEG_ENABLE_NONFREE: " ${FFMPEG_ENABLE_NONFREE})
 message("Options: FFMPEG_ENABLE_LGPL_THREE: " ${FFMPEG_ENABLE_LGPL_THREE})
@@ -94,8 +104,6 @@ set(NCURSES_CONFIGURE_OPTIONS --prefix=${CMAKE_BINARY_DIR}
 --without-tests
 --without-manpages
 --without-progs
---with-shared
---without-normal
 --without-debug
 )
 
@@ -113,12 +121,22 @@ elseif(NOT FIND_CURSES AND (UNIX OR APPLE OR MINGW OR CYGWIN))
             message("Not appending -g flag to ncurses configure cflags: gdb debugging build of ncurses has been disabled through the ADD_GDB_FLAG_ON_CBTD option")
         endif()
 
+        if(CURSES_SHARED)
+            message("CURSES_SHARED set to ${CURSES_SHARED}, adding --with-shared and --without-normal flags to NCurses configuration")
+            list(APPEND NCURSES_CONFIGURE_OPTIONS --with-shared --without-normal)
+        else()
+            message("CURSES_SHARED set to ${CURSES_SHARED}, Not compiling shared libraries")
+        endif()
+
         if(NOT NCURSES_EXTRA_CONFIGURE_FLAGS STREQUAL "")
             message("Appending extra ncurses configure flags: ${NCURSES_EXTRA_CONFIGURE_FLAGS}")
             list(APPEND NCURSES_CONFIGURE_OPTIONS ${NCURSES_EXTRA_CONFIGURE_FLAGS})
         endif()
 
-        message("Curses configure options: ${NCURSES_CONFIGURE_OPTIONS}")
+
+        message("\nNCurses configure options:")
+        printlist("${NCURSES_CONFIGURE_OPTIONS}")
+
         ExternalProject_Add(
             ncurses6
             SOURCE_DIR        ${LOCAL_NCURSES_LIB}/src
@@ -148,8 +166,6 @@ set(FFMPEG_BUILD_OPTIONS --prefix=${CMAKE_BINARY_DIR}
 --extra-libs=-lpthread
 --extra-libs=-lm
 --enable-rpath
---enable-shared
---disable-static
 --disable-network
 --disable-encoders
 --disable-muxers
@@ -162,6 +178,8 @@ set(FFMPEG_BUILD_OPTIONS --prefix=${CMAKE_BINARY_DIR}
 --disable-protocols
 --disable-devices
 --enable-protocol=file,pipe)
+
+
 
 if(FIND_FFMPEG)
     find_package(PkgConfig REQUIRED)
@@ -180,6 +198,14 @@ else()
             list(APPEND FFMPEG_BUILD_OPTIONS --extra-cflags=-g)
         elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT ADD_GDB_FLAG_ON_CBTD)
             message("Not appending -g flag to FFmpeg configure cflags: gdb debugging build of FFmpeg has been disabled through the ADD_GDB_FLAG_ON_CBTD option")
+        endif()
+
+        if(FFMPEG_SHARED)
+            message("FFMPEG_SHARED set to ${FFMPEG_SHARED}, adding --disable-static and --enable-shared flags to FFMmpeg configuration")
+            list(APPEND FFMPEG_BUILD_OPTIONS --disable-static --enable-shared)
+        else()
+            message("FFMPEG_SHARED set to ${FFMPEG_SHARED}, adding --enable-static and --disable-shared flags to FFMmpeg configuration")
+            list(APPEND FFMPEG_BUILD_OPTIONS --enable-static --disable-shared)
         endif()
 
         if(FFMPEG_ENABLE_GPL) 
@@ -207,7 +233,9 @@ else()
             list(APPEND FFMPEG_BUILD_OPTIONS ${FFMPEG_EXTRA_CONFIGURE_FLAGS})
         endif()
 
-        message("FFMPEG Build Options: ${FFMPEG_BUILD_OPTIONS}")
+        message("\nFFMPEG Build Options:")
+        printlist("${FFMPEG_BUILD_OPTIONS}")
+
         ExternalProject_Add(
             FFmpeg
             SOURCE_DIR              ${LOCAL_FFMPEG_LIB}/src
@@ -242,10 +270,23 @@ target_include_directories(argparse INTERFACE ./lib/argparse)
 
 configure_file(${CMAKE_SOURCE_DIR}/include/version.h.in ${CMAKE_BINARY_DIR}/include/version.h @ONLY)
 
-message("Curses Libraries: ${CURSES_LIBRARIES}")
-message("Curses Include Directories: ${CURSES_INCLUDE_DIR}")
-message("FFmpeg Libraries: ${FFMPEG_LIBS}")
-message("FFmpeg Include Directories: ${FFMPEG_INCLUDE_DIR}")
+if(FIND_CURSES)
+    message("Using Curses Global Configuration")
+endif()
+
+message("\nCurses Libraries:")
+printlist("${CURSES_LIBRARIES}")
+message("\nCurses Include Directories:")
+printlist("${CURSES_INCLUDE_DIR}")
+
+if(NOT FIND_FFMPEG)
+    message("\nFFmpeg Libraries:")
+    printlist("${FFMPEG_LIBS}")
+    message("\nFFmpeg Include Directories:")
+    printlist("${FFMPEG_INCLUDE_DIR}")
+else()
+    message("\nUsing FFmpeg Global Configuration")
+endif()
 
 target_compile_features(ascii_video PRIVATE cxx_std_17)
 target_include_directories(ascii_video PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
@@ -260,6 +301,7 @@ if(NOT FIND_CURSES AND NOT DEPS_ALREADY_COMPILED)
 endif()
 
 set(ASCII_VIDEO_RPATH ${CMAKE_BINARY_DIR}/lib /usr/local/lib)
+
 set_target_properties(ascii_video PROPERTIES INSTALL_RPATH "'$ORIGIN'/lib;${ASCII_VIDEO_RPATH}")
 set_target_properties(ascii_video PROPERTIES BUILD_WITH_INSTALL_RPATH ON)
 # target_compile_options(ascii_video PRIVATE -Wl,-rpath,'$ORIGIN'/lib)
