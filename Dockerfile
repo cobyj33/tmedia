@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 RUN apt-get update 
-RUN apt-get install -y build-essential cmake pkg-config
+RUN apt-get install -y build-essential cmake pkg-config git libtool
 
 RUN mkdir ascii_video
 WORKDIR /ascii_video
@@ -12,12 +12,14 @@ RUN rm -rf lib/bin
 COPY assets assets
 COPY CMakeLists.txt CMakeLists.txt
 
-COPY install.sh install.sh
-RUN chmod +x ./install.sh
-RUN ./install.sh
-RUN apt-get autoremove -y
+RUN mkdir build
+WORKDIR /ascii_video/build
+RUN cmake ../
+RUN make -j2
 
 ENTRYPOINT ["/ascii_video/build/ascii_video"]
 
-# Ubuntu Command: sudo docker run --device /dev/snd --rm -v <video>:/video -it ascii_video /video
-# Change <video> to a video path on your machine
+# Ubuntu Command: docker run --rm -it --device=/dev/snd -v=<PATH TO VIDEO>:/video.mp4 ascii_video -v /video.mp4
+# Note that the above command may need "sudo" prefixed in front
+# to run on debian systems, or some other alternative
+# Change <PATH TO VIDEO> to a video path on your machine

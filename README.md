@@ -5,6 +5,13 @@
 
 Just another terminal video player
 
+Written in C++ 17
+
+> **ascii_video is still very much in testing stages, and is not guaranteed to**
+> **run perfectly on non-Ubuntu 22.04 systems. Additionally, no pre-compiled**
+> **binaries are currently provided, but a simple build command is**
+> **compiled to be ran**
+
 ## Example Output
 
 ![example created in tmux](assets/readme/example-320.gif)
@@ -18,100 +25,139 @@ Just another terminal video player
 * [FFmpeg](https://ffmpeg.org/)
 * [miniaudio](https://miniaud.io/)
 * [cmake](https://cmake.org/)
-* Build-essential tools, such as g++, gcc, make, libtool, etc...
 
-> NOTE: **The source code for ffmpeg, ncurses, miniaudio, and argparse are already included in this repository and will be compiled along with ascii_video**
-> Additionally, ascii_video can work with a system-installed ncurses and a system-installed ffmpeg, but will not work with an ffmpeg release version less than 6.0, which
-> is why the source codes of ncurses and ffmpeg are included as tarballs to ensure a proper build
+Building:  
+g++, gcc, libtool, make, cmake, pkg-config, yasm (on x86 or x86_64 cpu
+architectures), git
+
+> NOTE: **The source code for all non-building dependencies listed above**
+> **are already included and will be compiled along with ascii_video**
 
 ## Installing
 
-### Currently Unsupported or Untested
-
 Currently, Linux Ubuntu and Debian builds have been tested and should work.
-Windows, Mac O/S, and Non-Debian distributions of Linux are unsupported (we're still in the early stages).
 
-Compilation has been tested with gcc version 11.3.0 and clang 14.0.0
+Non-Debian distributions of Linux are unsupported.
 
-Currently, I'd recommend using a similar program like [video-to-ascii](https://github.com/joelibaceta/video-to-ascii) on Mac or Non-Debian Linux, although the Docker build should be able to work on any platform.
+Windows and Mac O/S are unsupported.
 
-#### Debian/Ubuntu/Debian-Like Linux Install
+Compilation has been tested with gcc version 11.3.0 and clang 14.0.0, and needs
+a C++ 17 compiler to work
 
-Simply run ```bash chmod +x ./build.sh && ./build.sh``` from the cloned repository
+Currently, I'd recommend using a similar program like
+[video-to-ascii](https://github.com/joelibaceta/video-to-ascii) on Mac or
+Non-Debian Linux.
 
-The binary should then be available inside of the build/ folder after the script finishes
-  
-To install globally for the current user, run ```bash chmod +x ./install.sh && ./install.sh``` after running the ./build.sh command shown above
+### Ubuntu Install
+
+For Ubuntu, these building dependencies must be installed
+
+```bash
+sudo apt-get update
+sudo apt-get install build-essential cmake pkg-config git libtool
+```
+
+Additionally, if on a x86, x86_64, or x64 architecture, ```yasm and nasm```
+must be installed through ```sudo apt-get install nasm yasm```.
+The architecture could be checked with the command ```uname -m```.
+
+run these 4 commands in the terminal, starting from
+the root of the repository:
+
+```bash
+mkdir build
+cd build
+cmake ../
+make -j2
+```
+
+The file "ascii_video" should appear once the build finishes, and can be copied
+to an area on your path such as "usr/local/bin" or "$HOME/bin" to be used from
+anywhere
 
 On other distros, ascii_video's installation is currently untested.
 
-#### Docker
+> Additionally, ascii_video can work with a system-installed ncurses and a
+> system-installed ffmpeg, but will not work with an ffmpeg libraries under
+> release version less than 3.4. However, it is recommended to compile with
+> the statically linked new ffmpeg versions for now.
 
-This is only really recommended if you're familiar with Docker by the way, because I can see how it could be a pain for newcomers
-
-First, [docker must be installed](https://docs.docker.com/engine/install/)
-
-This git repo ships with a Dockerfile which can be built with
-
-``` docker build -t ascii_video ```  
-  
-Then, after the image is built, the program can be run with  
-```docker run --rm -it --device=/dev/snd -v=<PATH TO VIDEO>:/video.mp4 ascii_video -v /video.mp4```  
-Where ```<PATH TO VIDEO>``` is an actual file path to a video on your local machine
-
-> Note: /dev/snd is used on here as it is the path for the standard sound device files on linux devices  
-> Note: May need to grant admin privileges to docker commands using ```sudo``` before all commands, or ```sudo```'s alternative on your distro
+Additional CMake options and configurations can be seen in the CMakeLists.txt
+file for more advanced users accustomed to using CMake and building software.
 
 ### Uninstall
 
-Just delete wherever the binary is. It's fully self-contained.
+To uninstall, simply delete wherever the binary file has been placed.
 
 ## Executing program
 
-> use -h, --help, or simply call the binary with no arguments in order to see the help message
+> use -h, --help, or simply call the binary
+> with no arguments in order to see the help message
 
-Essentially, pass in a video file and it'll start playing. Keeping it simple.
-To see more **colorful** options, call ascii_video with the -h flag
+Essentially, pass in a video file and that video will begin playback.
 
-## Help
+I would be glad to help anything that is not working in an open issue
 
-* Open an issue or run ```bash <path-to-executable> -h```
-* Will be glad to help anything that is not working
+## Other Notes
+
+While it is by no means required, ascii_video will run faster in GPU accelerated
+terminals like [alacritty](https://github.com/alacritty/alacritty) and
+[kitty](https://github.com/kovidgoyal/kitty).
 
 ## Version History
+
+Currently working toward version 0.5
 
 * 0.4
   * Migration from C back to C++ for compatibility reasons
   * Addition of Catch2 for unit-testing and argparse for cli argument parsing
-  * Removal of some features during rewrite such as visualizing audio channels and visualizing debug data. This was done to focus on more reliable playback
+  * Removal of some features during rewrite such as visualizing audio channels
+    and visualizing debug data. This was done to focus on more reliable playback
   * Improved syncing, seeking, and robustness of code
   * Much better documented and tested code
   * Added grayscale output support with the -g flag
-  * Added build script to localize dependencies and more easily build the program from source
+  * Added build script to localize dependencies and more easily build the
+    program from source
   * Added options to build tests or build as Debug or Release in CMakeList.txt
-  * std::this::is::annoying::to::read is back as referred to in 0.3, but behind some more concise functions instead
-  * Can skip around in video file, as well as start playing video file at a certain timestamp with the -t 0:00 flag
-  * Much better, standardized, and flexible cli parsing with [argparse](https://github.com/p-ranav/argparse)
+  * std::this::is::annoying::to::read is back as referred to in 0.3, but behind
+    some more concise functions instead
+  * Can skip around in video file, as well as start playing video file at a
+    certain timestamp with the -t 0:00 flag
+  * Much better, standardized, and flexible cli parsing with
+    [argparse](https://github.com/p-ranav/argparse)
 * 0.3
   * Migration from C++ to fully C
   * Cleaner audio output, all media streams now share one single time state
   * Much more concise code, no more std::this::is::annoying::to::read
 * 0.2
-  * Added support for colored output with the -c flag before entering the file path
-    * At most, uses 256 unique colors
+  * Added support for colored output with the -c flag
+    before entering the file path
+  * At most, uses 256 unique colors
 * 0.1
-  * Mostly personal refactoring of the code to be more readable by separating the VideoState class into multiple Media classes
+  * Mostly personal refactoring of the code to be more readable by
+    separating the VideoState class into multiple Media classes
   * Removed Delay on changing video time
   * Fixed (although not in the best way) ending of the video files
   * Goals
-    * Add Subtitle Support, where they will be printed in their own section at the bottom of the screen
-    * If you look at the code, it is very C-ish, so I plan to turn it into a fully C program soon
-    * Improve Debugging by adding different screen views to see the current program data, similar to the the "Stats for Nerds" section on Youtube
-    * Make audio more smooth, as it sometimes crackles and is more apparent with higher volume
-    * A way to jump to a specific time in the video, as well as a playback bar to see the current time of the video relative to the video's duration
+    * Add Subtitle Support, where they will be printed in their own
+      section at the bottom of the screen
+    * If you look at the code, it is very C-ish, so I plan to turn
+      it into a fully C program soon
+    * Improve Debugging by adding different screen views to see the
+      current program data, similar to the the "Stats for Nerds"
+      section on Youtube
+    * Make audio more smooth, as it sometimes crackles and is
+      more apparent with higher volume
+    * A way to jump to a specific time in the video, as well as a playback
+      bar to see the current time of the video relative to the video's duration
 * 0.0
-  * Initial Release, Experimenting with speeding up and slowing down video, as well as changing video time dynamically. Video and image displays great and audio and video are synced, although audio may be a little scratchy from time to time
-  * Plans for change: Moving all code out of a single monolithic, concrete class. Currently, the structure of the code makes it difficult to create new features as everything is so tightly coupled
+  * Initial Release, Experimenting with speeding up and slowing down video,
+    as well as changing video time dynamically. Video and image displays great
+    and audio and video are synced, although audio may be a little scratchy
+    from time to time
+  * Plans for change: Moving all code out of a single monolithic,
+    concrete class. Currently, the structure of the code makes it difficult
+    to create new features as everything is so tightly coupled
 
 ## Acknowledgments
 
@@ -123,7 +169,8 @@ Inspiration, code snippets, etc.
 * [Coding Video into Text by The Coding Train on Youtube](https://www.youtube.com/watch?v=55iwMYv8tGI)
   * [The Coding Train](https://www.youtube.com/c/TheCodingTrain)
 * [How to Write a Video Player in Less Than 1000 Lines](http://dranger.com/ffmpeg/)
-  * Somewhat outdated but still a great resource for understanding the workings of a video decoding program
+  * Outdated toward current ffmpeg standards but still a great resource
+    for understanding the workings of a video decoding program
 
 ## Similar Programs
 
