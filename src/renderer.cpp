@@ -14,7 +14,7 @@
 #include "ascii.h"
 #include "icons.h"
 #include "media.h"
-#include "threads.h"
+#include "sleep.h"
 #include "wmath.h"
 #include "wtime.h"
 #include "termcolor.h"

@@ -31,7 +31,7 @@ set(COMMON_SOURCE_FILES
 ./src/decode.cpp
 ./src/media.cpp
 ./src/boiler.cpp
-./src/threads.cpp
+./src/sleep.cpp
 ./src/video_thread.cpp
 ./src/formatting.cpp
 ./src/wmath.cpp

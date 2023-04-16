@@ -7,7 +7,7 @@
 #include "wmath.h"
 #include "except.h"
 #include "pixeldata.h"
-#include "threads.h"
+#include "sleep.h"
 #include "audioresampler.h"
 #include "avguard.h"
 

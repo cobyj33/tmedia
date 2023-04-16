@@ -15,7 +15,7 @@
 #include "wmath.h"
 #include "except.h"
 #include "formatting.h"
-#include "threads.h"
+#include "sleep.h"
 #include "audioresampler.h"
 #include "avguard.h"
 
