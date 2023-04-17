@@ -57,26 +57,44 @@ void MediaPlayer::video_playback_thread() {
         double frame_duration = avg_frame_time_sec;
         double frame_pts_time_sec = this->get_time(system_clock_sec()) + frame_duration;
         double extra_delay = 0.0;
+        std::vector<AVFrame*> decoded_frames;
 
         try {
-            std::vector<AVFrame*> decoded_frames = this->next_video_frames();
+            decoded_frames = this->next_video_frames();
 
-            if (decoded_frames.size() > 0) {
-                AVFrame* frame_image = videoConverter.convert_video_frame(decoded_frames[0]);
-                #if HAS_AVFRAME_DURATION
-                frame_duration = (double)frame_image->duration * video_stream_data.get_time_base();
-                #endif
-                frame_pts_time_sec = (double)frame_image->pts * video_stream_data.get_time_base();
-                extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
-                this->set_current_frame(frame_image);
-                av_frame_free(&frame_image);
+            if (decoded_frames.size() > 0 && decoded_frames[0] != nullptr) {
+                mutex_lock.unlock();
+                AVFrame* frame_image = nullptr;
+                try {
+                    frame_image = videoConverter.convert_video_frame(decoded_frames[0]);
+                    this->set_current_frame(frame_image);
+                } catch (std::exception const& e) {
+                    frame_image = decoded_frames[0];
+                    try {
+                        PixelData frame(decoded_frames[0]);
+                        PixelData boundedFrames = frame.bound(output_frame_width, output_frame_height);
+                        this->set_current_frame(boundedFrames);
+                    } catch (std::runtime_error const& e) {
+                        // if it gets here, something is really wrong
+                    }
+                }
+                mutex_lock.lock();
+
+                if (frame_image != nullptr) {
+                    #if HAS_AVFRAME_DURATION
+                    frame_duration = (double)frame_image->duration * video_stream_data.get_time_base();
+                    #endif
+                    frame_pts_time_sec = (double)frame_image->pts * video_stream_data.get_time_base();
+                    extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
+                    av_frame_free(&frame_image);
+                }
             }
 
-            clear_av_frame_list(decoded_frames);
         } catch (std::exception const& e) {
             PixelData error_image = VideoIcon::ERROR_ICON.pixel_data;
             this->set_current_frame(error_image);
         }
+        clear_av_frame_list(decoded_frames);
 
         double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / this->playback.get_speed() ) );
         this->playback.skip(frame_speed_skip_time_sec);
