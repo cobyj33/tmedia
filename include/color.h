@@ -10,26 +10,26 @@
  * 
  */
 class RGBColor {
-    public:
-        const int red;
-        const int green;
-        const int blue;
+  public:
+    const int red;
+    const int green;
+    const int blue;
 
-        static RGBColor BLACK;
-        static RGBColor WHITE; 
+    static RGBColor BLACK;
+    static RGBColor WHITE; 
 
-        RGBColor() : red(0), green(0), blue(0) {}
-        RGBColor(int gray) : red(gray), green(gray), blue(gray) {}
-        RGBColor(int red, int green, int blue) : red(red), green(green), blue(blue) {}
-        RGBColor(const RGBColor& color) : red(color.red), green(color.green), blue(color.blue) {}
-        
-        double distance(const RGBColor& other) const;
-        double distance_squared(const RGBColor& other) const;
-        RGBColor get_complementary() const;
-        bool equals(const RGBColor& other) const;
-        bool is_grayscale() const;
-        RGBColor create_grayscale() const;
-        int get_grayscale_value() const;
+    RGBColor() : red(0), green(0), blue(0) {}
+    RGBColor(int gray) : red(gray), green(gray), blue(gray) {}
+    RGBColor(int red, int green, int blue) : red(red), green(green), blue(blue) {}
+    RGBColor(const RGBColor& color) : red(color.red), green(color.green), blue(color.blue) {}
+    
+    double distance(const RGBColor& other) const;
+    double distance_squared(const RGBColor& other) const;
+    RGBColor get_complementary() const;
+    bool equals(const RGBColor& other) const;
+    bool is_grayscale() const;
+    RGBColor create_grayscale() const;
+    int get_grayscale_value() const;
 };
 
 

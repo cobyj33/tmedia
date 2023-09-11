@@ -2,9 +2,9 @@
 #define ASCII_VIDEO_AVGUARD
 
 extern "C" {
-    #include <libavutil/version.h>
-    #include <libavformat/version.h>
-    #include <libavcodec/version.h>
+  #include <libavutil/version.h>
+  #include <libavformat/version.h>
+  #include <libavcodec/version.h>
 }
 
 /** AVFrame.duration introduced in libavutil version 57.30.100 */

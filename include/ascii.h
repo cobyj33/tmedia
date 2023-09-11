@@ -8,37 +8,37 @@
 #include "pixeldata.h"
 
 class ColorChar {
-    public:
-        const char ch;
-        const RGBColor color;
-        ColorChar(char ch, RGBColor& color) : ch(ch), color(color) {}
-        ColorChar(char ch, const RGBColor& color) : ch(ch), color(color) {}
-        ColorChar(const ColorChar& color_char) : ch(color_char.ch), color(color_char.color) {}
-        bool equals(const ColorChar& color_char) const; 
+  public:
+    const char ch;
+    const RGBColor color;
+    ColorChar(char ch, RGBColor& color) : ch(ch), color(color) {}
+    ColorChar(char ch, const RGBColor& color) : ch(ch), color(color) {}
+    ColorChar(const ColorChar& color_char) : ch(color_char.ch), color(color_char.color) {}
+    bool equals(const ColorChar& color_char) const; 
 };
 
 class AsciiImage {
-    private:
-        std::vector<ColorChar> chars;
-        int m_width;
-        int m_height;
+  private:
+    std::vector<ColorChar> chars;
+    int m_width;
+    int m_height;
 
-    public:
+  public:
 
-        static std::string ASCII_STANDARD_CHAR_MAP;
-        static std::string ASCII_EXTENDED_CHAR_MAP;
-        static std::string UNICODE_BOX_CHAR_MAP;
-        static std::string UNICODE_STIPPLE_CHAR_MAP;
+    static std::string ASCII_STANDARD_CHAR_MAP;
+    static std::string ASCII_EXTENDED_CHAR_MAP;
+    static std::string UNICODE_BOX_CHAR_MAP;
+    static std::string UNICODE_STIPPLE_CHAR_MAP;
 
-        int get_width() const;
-        int get_height() const;
+    int get_width() const;
+    int get_height() const;
 
-        AsciiImage(): chars(std::vector<ColorChar>()), m_width(0), m_height(0) {}
-        AsciiImage(const AsciiImage& other);
-        AsciiImage(PixelData& pixels, std::string& characters);
+    AsciiImage(): chars(std::vector<ColorChar>()), m_width(0), m_height(0) {}
+    AsciiImage(const AsciiImage& other);
+    AsciiImage(PixelData& pixels, std::string& characters);
 
-        const ColorChar& at(int row, int column) const;
-        bool in_bounds(int row, int column) const;
+    const ColorChar& at(int row, int column) const;
+    bool in_bounds(int row, int column) const;
 };
 
 

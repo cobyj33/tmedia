@@ -108,76 +108,76 @@ int available_color_pairs = 0;
 // --------------------------------------------------------------
 
 void ncurses_initialize_grayscale_color_palette() {
-    if (!has_colors()) {
-        throw std::runtime_error("Cannot initialize ncurses grayscale colors, The current terminal does not support colors");
-    }
+  if (!has_colors()) {
+    throw std::runtime_error("Cannot initialize ncurses grayscale colors, The current terminal does not support colors");
+  }
 
-    available_colors = DEFAULT_TERMINAL_COLOR_COUNT;
-    if (can_change_color()) {
-        ncurses_init_grayscale_color_palette();
-    }
+  available_colors = DEFAULT_TERMINAL_COLOR_COUNT;
+  if (can_change_color()) {
+    ncurses_init_grayscale_color_palette();
+  }
 }
 
 void ncurses_initialize_color_palette() {
-    if (!has_colors()) {
-        throw std::runtime_error("Cannot initialize ncurses colors, The current terminal does not support colors");
-    }
+  if (!has_colors()) {
+    throw std::runtime_error("Cannot initialize ncurses colors, The current terminal does not support colors");
+  }
 
 
-    available_colors = DEFAULT_TERMINAL_COLOR_COUNT;
-    if (can_change_color()) {
-        ncurses_init_default_color_palette();
-    }
+  available_colors = DEFAULT_TERMINAL_COLOR_COUNT;
+  if (can_change_color()) {
+    ncurses_init_default_color_palette();
+  }
 }
 
 void ncurses_initialize_color_pairs() {
-    if (!has_colors()) {
-        throw std::runtime_error("Cannot initialize color pairs in terminal, terminal does not support colors");
-    }
+  if (!has_colors()) {
+    throw std::runtime_error("Cannot initialize color pairs in terminal, terminal does not support colors");
+  }
 
-    available_color_pairs = 0;
-    for (int i = 0; i < available_colors; i++) {
-        erase();
-        RGBColor color = ncurses_get_color_number_content(i);
-        RGBColor complementary = color.get_complementary();
-        init_pair(i, get_closest_ncurses_color(complementary), i);
-        available_color_pairs++;
-    }
+  available_color_pairs = 0;
+  for (int i = 0; i < available_colors; i++) {
+    erase();
+    RGBColor color = ncurses_get_color_number_content(i);
+    RGBColor complementary = color.get_complementary();
+    init_pair(i, get_closest_ncurses_color(complementary), i);
+    available_color_pairs++;
+  }
 
-    ncurses_init_color_pairs_map();
+  ncurses_init_color_pairs_map();
 }
 
 int get_closest_ncurses_grayscale_color(const RGBColor& input) {
-    if (!has_colors()) {
-        throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
-    }
+  if (!has_colors()) {
+    throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
+  }
 
-    return grayscale_color_map[input.get_grayscale_value()];
+  return grayscale_color_map[input.get_grayscale_value()];
 }
 
 int get_closest_ncurses_grayscale_color_pair(const RGBColor& input) {
-    if (!has_colors()) {
-        throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
-    }
+  if (!has_colors()) {
+    throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
+  }
 
-    return grayscale_color_pairs_map[input.get_grayscale_value()];
+  return grayscale_color_pairs_map[input.get_grayscale_value()];
 }
 
 
 
 int get_closest_ncurses_color(const RGBColor& input) {
-    if (!has_colors()) {
-        throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
-    }
-    return color_map[input.red * (COLOR_MAP_SIDE - 1) / 255][input.green * (COLOR_MAP_SIDE - 1) / 255][input.blue * (COLOR_MAP_SIDE - 1) / 255];
+  if (!has_colors()) {
+    throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
+  }
+  return color_map[input.red * (COLOR_MAP_SIDE - 1) / 255][input.green * (COLOR_MAP_SIDE - 1) / 255][input.blue * (COLOR_MAP_SIDE - 1) / 255];
 }
 
 int get_closest_ncurses_color_pair(const RGBColor& input) {
-    if (!has_colors()) {
-        throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
-    }
+  if (!has_colors()) {
+    throw std::runtime_error("Cannot find closest ncurses color pair, terminal does not support colors");
+  }
 
-    return color_pairs_map[input.red * (COLOR_MAP_SIDE - 1) / 255][input.green * (COLOR_MAP_SIDE - 1) / 255][input.blue * (COLOR_MAP_SIDE - 1) / 255];
+  return color_pairs_map[input.red * (COLOR_MAP_SIDE - 1) / 255][input.green * (COLOR_MAP_SIDE - 1) / 255][input.blue * (COLOR_MAP_SIDE - 1) / 255];
 }
 
 // --------------------------------------------------------------
@@ -189,155 +189,155 @@ int get_closest_ncurses_color_pair(const RGBColor& input) {
 // --------------------------------------------------------------
 
 int rgb255_to_rgb1000_single(int val) {
-    return val * 1000 / 255; 
+  return val * 1000 / 255; 
 }
 
 int rgb1000_to_rgb255_single(int val) {
-    return val * 255 / 1000; 
+  return val * 255 / 1000; 
 }
 
 RGBColor rgb255_to_rgb1000(RGBColor& color) {
-    return RGBColor(rgb255_to_rgb1000_single(color.red), rgb255_to_rgb1000_single(color.green), rgb255_to_rgb1000_single(color.blue));
+  return RGBColor(rgb255_to_rgb1000_single(color.red), rgb255_to_rgb1000_single(color.green), rgb255_to_rgb1000_single(color.blue));
 }
 
 RGBColor rgb1000_to_rgb255(RGBColor& color) {
-    return RGBColor(rgb1000_to_rgb255_single(color.red), rgb1000_to_rgb255_single(color.green), rgb1000_to_rgb255_single(color.blue));
+  return RGBColor(rgb1000_to_rgb255_single(color.red), rgb1000_to_rgb255_single(color.green), rgb1000_to_rgb255_single(color.blue));
 }
 
 
 RGBColor ncurses_get_color_number_content(int color) {
-    short r, g, b;
-    color_content(color, &r, &g, &b);
-    RGBColor color_1000 = RGBColor(r, g, b); // ncurses colors are in the range 0-1000 instead of the standard 0-255
-    return rgb1000_to_rgb255(color_1000);
+  short r, g, b;
+  color_content(color, &r, &g, &b);
+  RGBColor color_1000 = RGBColor(r, g, b); // ncurses colors are in the range 0-1000 instead of the standard 0-255
+  return rgb1000_to_rgb255(color_1000);
 }
 
 std::pair<RGBColor, RGBColor> ncurses_get_pair_number_content(int pair) {
-    short fgi, bgi;
-    pair_content(pair, &fgi, &bgi);
-    return std::make_pair<RGBColor, RGBColor>(ncurses_get_color_number_content(fgi), ncurses_get_color_number_content(bgi));
+  short fgi, bgi;
+  pair_content(pair, &fgi, &bgi);
+  return std::make_pair<RGBColor, RGBColor>(ncurses_get_color_number_content(fgi), ncurses_get_color_number_content(bgi));
 }
 
 void ncurses_init_default_color_palette() {
-    if (!has_colors()) {
-        throw std::runtime_error("[ncurses_init_default_color_palette] Cannot initialize default ncurses color palette, as current terminal does not support colored output");
-    }
-    if (!can_change_color()) {
-        throw std::runtime_error("[ncurses_init_default_color_palette] Cannot initialize default ncurses color palette, as current terminal does not support changing colors");
-    }
+  if (!has_colors()) {
+    throw std::runtime_error("[ncurses_init_default_color_palette] Cannot initialize default ncurses color palette, as current terminal does not support colored output");
+  }
+  if (!can_change_color()) {
+    throw std::runtime_error("[ncurses_init_default_color_palette] Cannot initialize default ncurses color palette, as current terminal does not support changing colors");
+  }
 
-    available_colors = DEFAULT_TERMINAL_COLOR_COUNT;
-    int color_index = DEFAULT_TERMINAL_COLOR_COUNT;
-    int colors_to_add = std::min(COLORS - DEFAULT_TERMINAL_COLOR_COUNT, MAX_TERMINAL_COLORS - DEFAULT_TERMINAL_COLOR_COUNT);
-    double box_size = 255 / std::cbrt(colors_to_add);
-    for (double r = 0; r < 255; r += box_size) {
-        for (double g = 0; g < 255; g += box_size) {
-            for (double b = 0; b < 255; b += box_size) {
-                init_color(color_index, r * 1000 / 255, g * 1000 / 255, b * 1000 / 255);
-                color_index++;
-            }
-        }
+  available_colors = DEFAULT_TERMINAL_COLOR_COUNT;
+  int color_index = DEFAULT_TERMINAL_COLOR_COUNT;
+  int colors_to_add = std::min(COLORS - DEFAULT_TERMINAL_COLOR_COUNT, MAX_TERMINAL_COLORS - DEFAULT_TERMINAL_COLOR_COUNT);
+  double box_size = 255 / std::cbrt(colors_to_add);
+  for (double r = 0; r < 255; r += box_size) {
+    for (double g = 0; g < 255; g += box_size) {
+      for (double b = 0; b < 255; b += box_size) {
+        init_color(color_index, r * 1000 / 255, g * 1000 / 255, b * 1000 / 255);
+        color_index++;
+      }
     }
+  }
 
-    available_colors += colors_to_add;
-    ncurses_init_color_map();
-    ncurses_initialize_color_pairs();
+  available_colors += colors_to_add;
+  ncurses_init_color_map();
+  ncurses_initialize_color_pairs();
 }
 
 void ncurses_init_grayscale_color_palette() {
-    if (!has_colors()) {
-        throw std::runtime_error("[ncurses_init_grayscale_color_palette] Cannot initialize ncurses grayscale color palette, as current terminal does not support colored output");
-    }
-    if (!can_change_color()) {
-        throw std::runtime_error("[ncurses_init_grayscale_color_palette] Cannot initialize ncurses grayscale color palette, as current terminal does not support changing colors");
-    }
+  if (!has_colors()) {
+    throw std::runtime_error("[ncurses_init_grayscale_color_palette] Cannot initialize ncurses grayscale color palette, as current terminal does not support colored output");
+  }
+  if (!can_change_color()) {
+    throw std::runtime_error("[ncurses_init_grayscale_color_palette] Cannot initialize ncurses grayscale color palette, as current terminal does not support changing colors");
+  }
 
-    available_colors = DEFAULT_TERMINAL_COLOR_COUNT;
-    int colors_to_add = std::min(COLORS - DEFAULT_TERMINAL_COLOR_COUNT, MAX_TERMINAL_COLORS - DEFAULT_TERMINAL_COLOR_COUNT);
-    for (int i = DEFAULT_TERMINAL_COLOR_COUNT; i < colors_to_add; i++) {
-        short grayscale_value = i * 1000 / colors_to_add;
-        init_color(i, grayscale_value, grayscale_value, grayscale_value);
-    }
+  available_colors = DEFAULT_TERMINAL_COLOR_COUNT;
+  int colors_to_add = std::min(COLORS - DEFAULT_TERMINAL_COLOR_COUNT, MAX_TERMINAL_COLORS - DEFAULT_TERMINAL_COLOR_COUNT);
+  for (int i = DEFAULT_TERMINAL_COLOR_COUNT; i < colors_to_add; i++) {
+    short grayscale_value = i * 1000 / colors_to_add;
+    init_color(i, grayscale_value, grayscale_value, grayscale_value);
+  }
 
-    available_colors += colors_to_add;
-    ncurses_init_color_map();
-    ncurses_initialize_color_pairs();
+  available_colors += colors_to_add;
+  ncurses_init_color_map();
+  ncurses_initialize_color_pairs();
 }
 
 
 void ncurses_init_color_map() {
-    for (int r = 0; r < COLOR_MAP_SIDE; r++) {
-        for (int g = 0; g < COLOR_MAP_SIDE; g++) {
-            for (int b = 0; b < COLOR_MAP_SIDE; b++) {
-                RGBColor color( r * 255 / (COLOR_MAP_SIDE - 1), g * 255 / (COLOR_MAP_SIDE - 1), b * 255 / (COLOR_MAP_SIDE - 1) );
-                color_map[r][g][b] = ncurses_find_best_initialized_color_number(color);
-            }
-        }
+  for (int r = 0; r < COLOR_MAP_SIDE; r++) {
+    for (int g = 0; g < COLOR_MAP_SIDE; g++) {
+      for (int b = 0; b < COLOR_MAP_SIDE; b++) {
+        RGBColor color( r * 255 / (COLOR_MAP_SIDE - 1), g * 255 / (COLOR_MAP_SIDE - 1), b * 255 / (COLOR_MAP_SIDE - 1) );
+        color_map[r][g][b] = ncurses_find_best_initialized_color_number(color);
+      }
     }
+  }
 
-    for (int i = 0; i < GRAYSCALE_MAP_SIZE; i++) {
-        int grayscale_value = i * 256 / GRAYSCALE_MAP_SIZE;
-        RGBColor color = RGBColor(grayscale_value);
-        grayscale_color_map[grayscale_value] = ncurses_find_best_initialized_color_number(color);
-    }
+  for (int i = 0; i < GRAYSCALE_MAP_SIZE; i++) {
+    int grayscale_value = i * 256 / GRAYSCALE_MAP_SIZE;
+    RGBColor color = RGBColor(grayscale_value);
+    grayscale_color_map[grayscale_value] = ncurses_find_best_initialized_color_number(color);
+  }
 }
 
 void ncurses_init_color_pairs_map() {
-    for (int r = 0; r < COLOR_MAP_SIDE; r++) {
-        for (int g = 0; g < COLOR_MAP_SIDE; g++) {
-            for (int b = 0; b < COLOR_MAP_SIDE; b++) {
-                RGBColor color( r * 255 / (COLOR_MAP_SIDE - 1), g * 255 / (COLOR_MAP_SIDE - 1), b * 255 / (COLOR_MAP_SIDE - 1) );
-                color_pairs_map[r][g][b] = ncurses_find_best_initialized_color_pair(color);
-            }
-        }
+  for (int r = 0; r < COLOR_MAP_SIDE; r++) {
+    for (int g = 0; g < COLOR_MAP_SIDE; g++) {
+      for (int b = 0; b < COLOR_MAP_SIDE; b++) {
+        RGBColor color( r * 255 / (COLOR_MAP_SIDE - 1), g * 255 / (COLOR_MAP_SIDE - 1), b * 255 / (COLOR_MAP_SIDE - 1) );
+        color_pairs_map[r][g][b] = ncurses_find_best_initialized_color_pair(color);
+      }
     }
+  }
 
-    for (int i = 0; i < GRAYSCALE_MAP_SIZE; i++) {
-        int grayscale_value = i * 256 / GRAYSCALE_MAP_SIZE;
-        RGBColor color = RGBColor(grayscale_value);
-        grayscale_color_pairs_map[grayscale_value] = ncurses_find_best_initialized_color_pair(color);
-    }
+  for (int i = 0; i < GRAYSCALE_MAP_SIZE; i++) {
+    int grayscale_value = i * 256 / GRAYSCALE_MAP_SIZE;
+    RGBColor color = RGBColor(grayscale_value);
+    grayscale_color_pairs_map[grayscale_value] = ncurses_find_best_initialized_color_pair(color);
+  }
 }
 
 
 int ncurses_find_best_initialized_color_number(RGBColor& input) {
-    if (!has_colors()) {
-        throw std::runtime_error("Cannot find best color number in terminal, terminal does not support colors");
-    }
+  if (!has_colors()) {
+    throw std::runtime_error("Cannot find best color number in terminal, terminal does not support colors");
+  }
 
-    int best_color = -1;
-    double best_distance = (double)INT32_MAX;
-    for (int i = 0; i < available_colors; i++) {
-        RGBColor current_color = ncurses_get_color_number_content(i);
-        double distance = current_color.distance_squared(input);
-        if (distance < best_distance) {
-            best_color = i;
-            best_distance = distance;
-        }
+  int best_color = -1;
+  double best_distance = (double)INT32_MAX;
+  for (int i = 0; i < available_colors; i++) {
+    RGBColor current_color = ncurses_get_color_number_content(i);
+    double distance = current_color.distance_squared(input);
+    if (distance < best_distance) {
+      best_color = i;
+      best_distance = distance;
     }
+  }
 
-    return best_color;
+  return best_color;
 }
 
 
 
 int ncurses_find_best_initialized_color_pair(RGBColor& input) {
-    if (!has_colors()) {
-        return -1;
-    }
+  if (!has_colors()) {
+    return -1;
+  }
 
-    int best_pair = -1;
-    double best_distance = (double)INT32_MAX;
-    for (int i = 0; i < available_color_pairs; i++) {
-        std::pair<RGBColor, RGBColor> color_pair_data = ncurses_get_pair_number_content(i);
-        RGBColor current_bg = color_pair_data.second;
-        double distance = current_bg.distance_squared(input);
-        if (distance < best_distance) {
-            best_pair = i;
-            best_distance = distance;
-        }
+  int best_pair = -1;
+  double best_distance = (double)INT32_MAX;
+  for (int i = 0; i < available_color_pairs; i++) {
+    std::pair<RGBColor, RGBColor> color_pair_data = ncurses_get_pair_number_content(i);
+    RGBColor current_bg = color_pair_data.second;
+    double distance = current_bg.distance_squared(input);
+    if (distance < best_distance) {
+      best_pair = i;
+      best_distance = distance;
     }
+  }
 
-    return best_pair;
+  return best_pair;
 }
 

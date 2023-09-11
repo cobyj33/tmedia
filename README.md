@@ -112,52 +112,52 @@ Currently working toward version 0.5
   * Migration from C back to C++ for compatibility reasons
   * Addition of Catch2 for unit-testing and argparse for cli argument parsing
   * Removal of some features during rewrite such as visualizing audio channels
-    and visualizing debug data. This was done to focus on more reliable playback
+  and visualizing debug data. This was done to focus on more reliable playback
   * Improved syncing, seeking, and robustness of code
   * Much better documented and tested code
   * Added grayscale output support with the -g flag
   * Added build script to localize dependencies and more easily build the
-    program from source
+  program from source
   * Added options to build tests or build as Debug or Release in CMakeList.txt
   * std::this::is::annoying::to::read is back as referred to in 0.3, but behind
-    some more concise functions instead
+  some more concise functions instead
   * Can skip around in video file, as well as start playing video file at a
-    certain timestamp with the -t 0:00 flag
+  certain timestamp with the -t 0:00 flag
   * Much better, standardized, and flexible cli parsing with
-    [argparse](https://github.com/p-ranav/argparse)
+  [argparse](https://github.com/p-ranav/argparse)
 * 0.3
   * Migration from C++ to fully C
   * Cleaner audio output, all media streams now share one single time state
   * Much more concise code, no more std::this::is::annoying::to::read
 * 0.2
   * Added support for colored output with the -c flag
-    before entering the file path
+  before entering the file path
   * At most, uses 256 unique colors
 * 0.1
   * Mostly personal refactoring of the code to be more readable by
-    separating the VideoState class into multiple Media classes
+  separating the VideoState class into multiple Media classes
   * Removed Delay on changing video time
   * Fixed (although not in the best way) ending of the video files
   * Goals
-    * Add Subtitle Support, where they will be printed in their own
-      section at the bottom of the screen
-    * If you look at the code, it is very C-ish, so I plan to turn
-      it into a fully C program soon
-    * Improve Debugging by adding different screen views to see the
-      current program data, similar to the the "Stats for Nerds"
-      section on Youtube
-    * Make audio more smooth, as it sometimes crackles and is
-      more apparent with higher volume
-    * A way to jump to a specific time in the video, as well as a playback
-      bar to see the current time of the video relative to the video's duration
+  * Add Subtitle Support, where they will be printed in their own
+    section at the bottom of the screen
+  * If you look at the code, it is very C-ish, so I plan to turn
+    it into a fully C program soon
+  * Improve Debugging by adding different screen views to see the
+    current program data, similar to the the "Stats for Nerds"
+    section on Youtube
+  * Make audio more smooth, as it sometimes crackles and is
+    more apparent with higher volume
+  * A way to jump to a specific time in the video, as well as a playback
+    bar to see the current time of the video relative to the video's duration
 * 0.0
   * Initial Release, Experimenting with speeding up and slowing down video,
-    as well as changing video time dynamically. Video and image displays great
-    and audio and video are synced, although audio may be a little scratchy
-    from time to time
+  as well as changing video time dynamically. Video and image displays great
+  and audio and video are synced, although audio may be a little scratchy
+  from time to time
   * Plans for change: Moving all code out of a single monolithic,
-    concrete class. Currently, the structure of the code makes it difficult
-    to create new features as everything is so tightly coupled
+  concrete class. Currently, the structure of the code makes it difficult
+  to create new features as everything is so tightly coupled
 
 ## Acknowledgments
 
@@ -170,7 +170,7 @@ Inspiration, code snippets, etc.
   * [The Coding Train](https://www.youtube.com/c/TheCodingTrain)
 * [How to Write a Video Player in Less Than 1000 Lines](http://dranger.com/ffmpeg/)
   * Outdated toward current ffmpeg standards but still a great resource
-    for understanding the workings of a video decoding program
+  for understanding the workings of a video decoding program
 
 ## Similar Programs
 

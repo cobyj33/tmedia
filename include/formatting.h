@@ -5,9 +5,9 @@
 #include <cstdarg>
 
 typedef struct DurationData {
-    int hours;
-    int minutes;
-    int seconds;
+  int hours;
+  int minutes;
+  int seconds;
 } DurationData;
 
 std::string get_formatted_string(std::string format, ...);
