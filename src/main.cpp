@@ -314,5 +314,9 @@ void ncurses_uninit() {
         throw std::runtime_error("ncurses attempted to be uninitialized although it has never been initialized");
     }
     ncurses_initialized = false;
+    use_default_colors();
+    keypad(stdscr, false);
+    nocbreak();
+    echo();
     endwin();
 }
