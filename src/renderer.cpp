@@ -53,28 +53,32 @@ void MediaPlayer::render_loop()
     std::unique_lock<std::mutex> lock(this->alter_mutex, std::defer_lock);
     erase();
 
-    while (this->in_use) {
+    while (inputWindow != NULL) {
         int input = wgetch(inputWindow);
+
+        lock.lock();
+        if (!this->in_use)
+        {
+          lock.unlock();
+          break;
+        }
 
         if (this->media_type != MediaType::IMAGE && this->get_time(system_clock_sec()) >= this->get_duration() ) {
             if (this->is_looped) {
                 this->jump_to_time(0.0, system_clock_sec());
             } else {   
                 this->in_use = false;
+                lock.unlock();
                 break;
             }
         }
 
-        lock.lock();
-
-
-        while (input != ERR)
+        while (input != ERR && this->in_use)
         { // Go through and process all the batched input
 
             if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b')
             {
-                this->in_use = false;
-                break;
+              this->in_use = false;
             }
 
             if (input == KEY_RESIZE)
@@ -143,25 +147,30 @@ void MediaPlayer::render_loop()
             input = wgetch(inputWindow);
         } // Ending of "while (input != ERR)"
 
-        if (batched_jump_time != 0 && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO))
+        if (this->in_use)
         {
-            double current_playback_time = this->get_time(system_clock_sec());
-            double target_time = current_playback_time + batched_jump_time;
+          if (batched_jump_time != 0 && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO))
+          {
+              double current_playback_time = this->get_time(system_clock_sec());
+              double target_time = current_playback_time + batched_jump_time;
 
-            if (this->is_looped) {
-                target_time = target_time < 0 ? this->get_duration() + std::fmod(target_time, this->get_duration()) : std::fmod(target_time, this->get_duration());
-            } else {
-                target_time = clamp(target_time, 0.0, this->get_duration());
-            }
+              if (this->is_looped) {
+                  target_time = target_time < 0 ? this->get_duration() + std::fmod(target_time, this->get_duration()) : std::fmod(target_time, this->get_duration());
+              } else {
+                  target_time = clamp(target_time, 0.0, this->get_duration());
+              }
 
-            this->jump_to_time(target_time, system_clock_sec());
-            batched_jump_time = 0;
-        }
+              this->jump_to_time(target_time, system_clock_sec());
+              batched_jump_time = 0;
+          }
+        } // end of "if (this->in_use)"
+
 
         PixelData image(this->frame);
+        VideoOutputMode vom = this->media_gui.get_video_output_mode();
         lock.unlock();
 
-        render_movie_screen(image, this->media_gui.get_video_output_mode());
+        render_movie_screen(image, vom);
         refresh();
         sleep_for_ms(RENDER_LOOP_SLEEP_TIME_MS);
     }

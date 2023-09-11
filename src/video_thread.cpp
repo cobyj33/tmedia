@@ -47,12 +47,19 @@ void MediaPlayer::video_playback_thread() {
 
     VideoConverter videoConverter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt);
 
-    while (this->in_use) {
-        if (!this->playback.is_playing()) {
-            sleep_quick();
-            continue;
-        }
+    while (1) {
         mutex_lock.lock();
+        if (!this->in_use)
+        {
+          mutex_lock.unlock();
+          break;
+        }
+
+        if (!this->playback.is_playing()) {
+          mutex_lock.unlock();
+          sleep_quick();
+          continue;
+        }
 
         double frame_duration = avg_frame_time_sec;
         double frame_pts_time_sec = this->get_time(system_clock_sec()) + frame_duration;
@@ -70,14 +77,11 @@ void MediaPlayer::video_playback_thread() {
                     this->set_current_frame(frame_image);
                 } catch (std::exception const& e) {
                     frame_image = decoded_frames[0];
-                    try {
-                        PixelData frame(decoded_frames[0]);
-                        PixelData boundedFrames = frame.bound(output_frame_width, output_frame_height);
-                        this->set_current_frame(boundedFrames);
-                    } catch (std::runtime_error const& e) {
-                        // if it gets here, something is really wrong
-                    }
+                    PixelData frame(decoded_frames[0]);
+                    PixelData boundedFrames = frame.bound(output_frame_width, output_frame_height);
+                    this->set_current_frame(boundedFrames);
                 }
+
                 mutex_lock.lock();
 
                 if (frame_image != nullptr) {
@@ -94,6 +98,7 @@ void MediaPlayer::video_playback_thread() {
             PixelData error_image = VideoIcon::ERROR_ICON.pixel_data;
             this->set_current_frame(error_image);
         }
+
         clear_av_frame_list(decoded_frames);
 
         double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / this->playback.get_speed() ) );

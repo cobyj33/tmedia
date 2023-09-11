@@ -112,8 +112,14 @@ void MediaPlayer::audio_playback_thread() {
 
     sleep_for_sec(audio_stream_data.get_start_time());
     
-    while (this->in_use) {
+    while (true) {
         mutex_lock.lock();
+        if (!this->in_use)
+        {
+          mutex_lock.unlock();
+          break;
+        }
+        
         ma_device_state audio_device_state = ma_device_get_state(&audio_device);
 
         if ((this->playback.is_playing() == false || this->muted) && audio_device_state == ma_device_state_started) {
