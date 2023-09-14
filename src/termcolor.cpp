@@ -11,6 +11,9 @@ extern "C" {
 #include <curses.h>
 }
 
+typedef int curses_color_pair_t;
+typedef int curses_color_t;
+
 /**
  * @brief Converts an integer value in the range 0-255 to an equal value in the range 0-1000 
  * 
@@ -69,24 +72,26 @@ const int DEFAULT_TERMINAL_COLOR_COUNT = 8;
 
 bool color_maps_initialized = false;
 
+int terminal_default_colors[MAX_TERMINAL_COLORS];
+
 /**
  * @brief A RGB mapping of NCURSES color pairs to a 3D Discrete Color space, where each side of the color space is COLOR_MAP_SIDE steps long
  * To index into the map, take each channel's ratio against 255 and multiply it against COLOR_MAP_SIDE (ex: (int)(red / 255.0 * COLOR_MAP_SIZE))
  * Additionally, the backgrounds of all colors should be a certain color, while the foreground is that color's complementary value
  */
-int color_pairs_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
+curses_color_pair_t color_pairs_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
 
 /**
  * @brief A RGB mapping of NCURSES color pairs to a 1D Discrete Color space, where the 1 dimension represents a grayscale value
  * To index into the map, take the ratio between the color's grayscale value and 255, then multiply by the GRAYSCALE_MAP_SIZE (ex: (int)(gray / 255.0 * COLOR_MAP_SIZE))
  * Additionally, the backgrounds of all colors should be a certain color, while the foreground is that color's complementary value
  */
-int grayscale_color_pairs_map[GRAYSCALE_MAP_SIZE];
+curses_color_pair_t grayscale_color_pairs_map[GRAYSCALE_MAP_SIZE];
 
 /**
  * @brief A mapping of NCURSES colors to a 3D Color space, where each side of the color space is COLOR_MAP_SIDE steps long and maps to [red / 255][green / 255][blue / 255]
  */
-int color_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
+curses_color_t color_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
 int grayscale_color_map[GRAYSCALE_MAP_SIZE];
 
 /**
