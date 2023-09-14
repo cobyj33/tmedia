@@ -302,6 +302,7 @@ void ncurses_init() {
   ncurses_initialized = true;
   initscr();
   start_color();
+  use_default_colors();
   ncurses_initialize_color_palette();
   cbreak();
   noecho();
@@ -314,7 +315,7 @@ void ncurses_uninit() {
     throw std::runtime_error("ncurses attempted to be uninitialized although it has never been initialized");
   }
   ncurses_initialized = false;
-  use_default_colors();
+  start_color();
   keypad(stdscr, false);
   nocbreak();
   echo();
