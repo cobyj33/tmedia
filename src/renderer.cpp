@@ -123,20 +123,16 @@ void MediaPlayer::render_loop()
         }
       }
 
-      if ((input == KEY_LEFT || input == KEY_RIGHT) && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO))
-      {
-        if (input == KEY_LEFT)
-        {
+      if ((input == KEY_LEFT || input == KEY_RIGHT) && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+        if (input == KEY_LEFT) {
           batched_jump_time -= 5;
         }
-        else if (input == KEY_RIGHT)
-        {
+        else if (input == KEY_RIGHT) {
           batched_jump_time += 5;
         }
       }
 
-      if (input == ' ' && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO))
-      {
+      if (input == ' ' && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
         this->playback.toggle(system_clock_sec());
       }
 
@@ -211,14 +207,13 @@ void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int
   int image_start_row = bounds_row + std::abs(image.get_height() - bounds_height) / 2;
   int image_start_col = bounds_col + std::abs(image.get_width() - bounds_width) / 2; 
 
-  bool grayscale = output_mode == VideoOutputMode::GRAYSCALE || output_mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY;
   bool background_only = output_mode == VideoOutputMode::COLORED_BACKGROUND_ONLY || output_mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY;
 
   for (int row = 0; row < image.get_height(); row++) {
     for (int col = 0; col < image.get_width(); col++) {
-      char target_char = background_only ? ' ' : image.at(row, col).ch;
+      const char target_char = background_only ? ' ' : image.at(row, col).ch;
       const RGBColor& target_color = image.at(row, col).color;
-      int color_pair = grayscale ? get_closest_ncurses_grayscale_color_pair(target_color) : get_closest_ncurses_color_pair(target_color);
+      const int color_pair = get_closest_ncurses_color_pair(target_color);
       mvaddch(image_start_row + row, image_start_col + col, target_char | COLOR_PAIR(color_pair));
     }
   }

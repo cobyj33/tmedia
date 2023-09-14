@@ -265,10 +265,6 @@ int main(int argc, char** argv)
 
   VideoOutputMode mode = get_video_output_mode_from_params(colors, grayscale, background);
 
-  if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
-    ncurses_initialize_grayscale_color_palette();
-  }
-
   MediaGUI media_gui;
   media_gui.set_video_output_mode(mode);
   MediaPlayerConfig config(audio_enabled);
@@ -301,9 +297,8 @@ void ncurses_init() {
   }
   ncurses_initialized = true;
   initscr();
-  start_color();
-  use_default_colors();
-  ncurses_initialize_color_palette();
+  ncurses_init_color();
+  ncurses_set_color_palette(AVNCursesColorPalette::RGB);
   cbreak();
   noecho();
   curs_set(0);
@@ -315,7 +310,7 @@ void ncurses_uninit() {
     throw std::runtime_error("ncurses attempted to be uninitialized although it has never been initialized");
   }
   ncurses_initialized = false;
-  start_color();
+  ncurses_uninit_color();
   keypad(stdscr, false);
   nocbreak();
   echo();
