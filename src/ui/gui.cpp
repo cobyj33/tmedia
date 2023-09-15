@@ -7,11 +7,11 @@ void MediaGUI::set_video_output_mode(VideoOutputMode mode) {
   if (mode == this->m_video_output_mode)
     return;
 
-  if (mode == VideoOutputMode::COLORED || mode == VideoOutputMode::COLORED_BACKGROUND_ONLY) {
-    ncurses_set_color_palette(AVNCursesColorPalette::RGB);
-  } else if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
-    ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
-  }
+  // if (mode == VideoOutputMode::COLORED || mode == VideoOutputMode::COLORED_BACKGROUND_ONLY) {
+  //   ncurses_set_color_palette(AVNCursesColorPalette::RGB);
+  // } else if (mode == VideoOutputMode::GRAYSCALE || mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY) {
+  //   ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
+  // }
 
   this->m_video_output_mode = mode;
 }
