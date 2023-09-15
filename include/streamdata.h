@@ -14,7 +14,6 @@ extern "C" {
 
 class StreamData {
   public:
-    AVFormatContext* format_context;
     enum AVMediaType media_type;
     AVStream* stream;
     const AVCodec* decoder;

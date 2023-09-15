@@ -99,10 +99,10 @@ std::vector<AVFrame*> StreamData::decode_next() {
 }
 
 StreamData::~StreamData() {
-  // if (this->codec_context != nullptr) {
-  //   avcodec_free_context(&(this->codec_context));
-  //   this->codec_context = nullptr;
-  // }
+  this->clear_queue();
+  if (this->codec_context != nullptr) {
+    avcodec_free_context(&(this->codec_context));
+  }
 };
 
 std::vector<std::shared_ptr<StreamData>> get_stream_datas(AVFormatContext* format_context, std::vector<enum AVMediaType>& media_types) {
