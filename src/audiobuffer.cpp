@@ -32,40 +32,30 @@ std::size_t AudioBuffer::get_nb_samples() const {
 
 void AudioBuffer::init(int nb_channels, int sample_rate) {
   if (nb_channels <= 0) {
-    std::invalid_argument("Attemped to initialize audio buffer with " + std::to_string(nb_channels) + " channels. Number of channels must be an integer greater than 0");
+    std::invalid_argument("[AudioBuffer::init] Attemped to initialize audio "
+    "buffer with " + std::to_string(nb_channels) + " channels. Number of channels"
+    "must be an integer greater than 0");
   }
 
   if (sample_rate <= 0) {
-    throw std::invalid_argument("Attemped to initialize audio buffer with a sample rate of " + std::to_string(sample_rate) + ". Sample rate must be an integer greater than 0");
+    throw std::invalid_argument("[AudioBuffer::init] Attemped to initialize audio "
+    "buffer with a sample rate of " + std::to_string(sample_rate) + ". Sample"
+    "rate must be an integer greater than 0");
   }
 
   this->m_buffer.clear();
-  this->m_buffer.shrink_to_fit();
-
-
 
   this->m_nb_channels = nb_channels;
   this->m_start_time = 0.0;
   this->m_sample_rate = sample_rate;
   this->m_playhead = 0;
-  if (nb_channels > 0 && sample_rate > 0) {
-    this->m_initialized = true;
-  } else {
-    if (nb_channels <= 0 && sample_rate <= 0) {
-      throw std::invalid_argument("Cannot initialize audio buffer, nb_channels ( " + std::to_string(nb_channels) + " ) and sample rate ( " + std::to_string(sample_rate) + "  must be positive integers ");
-    } else if (nb_channels <= 0) {
-      throw std::invalid_argument("Cannot initialize audio buffer, nb_channels ( " + std::to_string(nb_channels) + " ) must be a positive integer ");
-    } else if (sample_rate <= 0) {
-      throw std::invalid_argument("Cannot initialize audio buffer, sample rate ( " + std::to_string(sample_rate) + "  must be a positive integer ");
-    }
-  }
+  this->m_initialized = true;
 };
 
 // NOTE: Am I supposed to also clear the start_time? 
 
 void AudioBuffer::clear() { // Note: No longer takes in a clear capacity
   this->m_buffer.clear();
-  this->m_buffer.shrink_to_fit();
   this->m_playhead = 0;
 };
 
@@ -89,7 +79,7 @@ void AudioBuffer::set_time_in_bounds(double time) {
     throw std::runtime_error("[AudioBuffer::set_time_in_bounds] Cannot set audio buffer time to " + std::to_string(time) + ". The audio buffer is currently only holding data between the times " + std::to_string(this->m_start_time) + " and " + std::to_string(this->get_end_time()));
   }
 
-  this->m_playhead = (std::size_t)(std::min(this->get_nb_samples() - 1, std::max( (std::size_t)0, (std::size_t)(time - this->m_start_time) * this->m_sample_rate  )  )  );
+  this->m_playhead = (std::size_t)(std::min(this->get_nb_samples() - 1, std::max( (std::size_t)0, (std::size_t)((time - this->m_start_time) * this->m_sample_rate  ))  )  );
 };
 
 double AudioBuffer::get_start_time() const {
