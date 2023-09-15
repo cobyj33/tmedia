@@ -217,45 +217,23 @@ MediaPlayer::~MediaPlayer() {
   avformat_free_context(this->format_context);
 }
 
+std::vector<AVFrame*> MediaPlayer::next_frames(enum AVMediaType media_type)
+{
+  if (!this->has_media_stream(media_type))
+    throw std::runtime_error("[MediaPlayer::next_frames] Cannot get next " +
+    std::string(av_get_media_type_string(media_type)) + " frames, as no video stream is " 
+    "available to decode from");
 
-std::vector<AVFrame*> MediaPlayer::next_video_frames() {
-  if (!this->has_media_stream(AVMEDIA_TYPE_VIDEO))
-    throw std::runtime_error("[MediaPlayer::next_video_frames] Cannot get next "
-    "video frames, as no video stream is available to decode from");
-
-  StreamData& video_stream = this->get_media_stream(AVMEDIA_TYPE_VIDEO);
-  std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
+  StreamData& stream = this->get_media_stream(media_type);
+  std::vector<AVFrame*> decodedFrames = stream.decode_next();
   if (decodedFrames.size() > 0) {
     return decodedFrames;
   }
 
   int fetch_count = -1;
   do {
-    fetch_count = video_stream.packet_queue.empty() ? this->fetch_next(10) : -1; // -1 means that no fetch request was made
-    std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
-    if (decodedFrames.size() > 0) {
-      return decodedFrames;
-    } 
-  } while (fetch_count != 0);
-
-  return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
-}
-
-std::vector<AVFrame*> MediaPlayer::next_audio_frames() {
-  if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO))
-    throw std::runtime_error("[MediaPlayer::next_audio_frames] Cannot get next "
-    "audio frames, as no video stream is available to decode from");
-
-  StreamData& audio_stream = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
-  std::vector<AVFrame*> decodedFrames = audio_stream.decode_next();
-  if (decodedFrames.size() > 0) {
-    return decodedFrames;
-  } 
-
-  int fetch_count = -1;
-  do {
-    fetch_count = audio_stream.packet_queue.empty() ? this->fetch_next(10) : -1;
-    std::vector<AVFrame*> decodedFrames = audio_stream.decode_next();
+    fetch_count = stream.packet_queue.empty() ? this->fetch_next(10) : -1; // -1 means that no fetch request was made
+    std::vector<AVFrame*> decodedFrames = stream.decode_next();
     if (decodedFrames.size() > 0) {
       return decodedFrames;
     } 
@@ -287,7 +265,7 @@ int MediaPlayer::load_next_audio_frames(int frames) {
   #endif
 
   for (int i = 0; i < frames; i++) {
-    std::vector<AVFrame*> next_raw_audio_frames = this->next_audio_frames();
+    std::vector<AVFrame*> next_raw_audio_frames = this->next_frames(AVMEDIA_TYPE_AUDIO);
     std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
     for (int i = 0; i < (int)audio_frames.size(); i++) {
       AVFrame* current_frame = audio_frames[i];
@@ -324,7 +302,7 @@ int MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     bool passed_target_time = false;
     do {
       clear_av_frame_list(frames);
-      frames = this->next_video_frames();
+      frames = this->next_frames(AVMEDIA_TYPE_VIDEO);
       for (int i = 0; i < (int)frames.size(); i++) {
         if (frames[i]->pts * video_media_stream.get_time_base() >= target_time) {
           passed_target_time = true;
@@ -345,7 +323,7 @@ int MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     bool passed_target_time = false;
     do {
       clear_av_frame_list(frames);
-      frames = this->next_audio_frames();
+      frames = this->next_frames(AVMEDIA_TYPE_AUDIO);
       for (int i = 0; i < (int)frames.size(); i++) {
         if (frames[i]->pts * audio_media_stream.get_time_base() >= target_time) {
           passed_target_time = true;

@@ -145,8 +145,9 @@ class MediaPlayer {
     int jump_to_time(double target_time, double current_system_time);
 
 
-    std::vector<AVFrame*> next_video_frames(); 
-    std::vector<AVFrame*> next_audio_frames();
+    // std::vector<AVFrame*> next_video_frames(); 
+    // std::vector<AVFrame*> next_audio_frames();
+    std::vector<AVFrame*> next_frames(enum AVMediaType media_type);
     int load_next_audio_frames(int frames);
 
     int get_nb_media_streams() const;

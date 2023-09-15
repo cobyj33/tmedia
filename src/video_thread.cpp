@@ -67,7 +67,7 @@ void MediaPlayer::video_playback_thread() {
     std::vector<AVFrame*> decoded_frames;
 
     try {
-      decoded_frames = this->next_video_frames();
+      decoded_frames = this->next_frames(AVMEDIA_TYPE_VIDEO);
 
       if (decoded_frames.size() > 0 && decoded_frames[0] != nullptr) {
         mutex_lock.unlock();
