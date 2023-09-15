@@ -1,3 +1,4 @@
+#include <map>
 #include <memory>
 #include <stdexcept>
 
@@ -105,13 +106,15 @@ StreamData::~StreamData() {
   }
 };
 
-std::vector<std::shared_ptr<StreamData>> get_stream_datas(AVFormatContext* format_context, std::vector<enum AVMediaType>& media_types) {
-  std::vector<std::shared_ptr<StreamData>> stream_datas;
+std::map<enum AVMediaType, std::shared_ptr<StreamData>> get_stream_datas(AVFormatContext* format_context) {
+  const int NUM_OF_MEDIA_TYPES_TO_SEARCH = 2;
+  enum AVMediaType MEDIA_TYPES_TO_SEARCH[NUM_OF_MEDIA_TYPES_TO_SEARCH] = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
+  std::map<enum AVMediaType, std::shared_ptr<StreamData>> stream_datas;
 
-  for (int i = 0; i < (int)media_types.size(); i++) {
+  for (int i = 0; i < NUM_OF_MEDIA_TYPES_TO_SEARCH; i++) {
     try {
-      std::shared_ptr<StreamData> stream_data_ptr = std::make_shared<StreamData>(format_context, media_types[i]);
-      stream_datas.push_back(stream_data_ptr);
+      std::shared_ptr<StreamData> stream_data_ptr = std::make_shared<StreamData>(format_context, MEDIA_TYPES_TO_SEARCH[i]);
+      stream_datas[MEDIA_TYPES_TO_SEARCH[i]] = stream_data_ptr;
     } catch (std::invalid_argument const& e) {
       continue;
     }
@@ -119,21 +122,3 @@ std::vector<std::shared_ptr<StreamData>> get_stream_datas(AVFormatContext* forma
 
   return stream_datas;
 }
-
-StreamData& get_av_media_stream(std::vector<std::shared_ptr<StreamData>>& stream_datas, enum AVMediaType media_type) {
-  for (int i = 0; i < (int)stream_datas.size(); i++) {
-    if (stream_datas[i]->media_type == media_type) {
-      return *stream_datas[i];
-    }
-  }
-  throw std::runtime_error("Could not find stream data for media type " + std::string(av_get_media_type_string(media_type)));
-};
-
-bool has_av_media_stream(std::vector<std::shared_ptr<StreamData>>& stream_datas, enum AVMediaType media_type) {
-  for (int i = 0; i < (int)stream_datas.size(); i++) {
-    if (stream_datas[i]->media_type == media_type) {
-      return true;
-    }
-  }
-  return false;
-};

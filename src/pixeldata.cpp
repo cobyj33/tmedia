@@ -215,14 +215,13 @@ PixelData::PixelData(const char* file_name) {
   AVFormatContext* format_context;
   format_context = open_format_context(std::string(file_name));
 
-  std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO };
-  std::vector<std::shared_ptr<StreamData>> media_streams = get_stream_datas(format_context, media_types);
+  std::map<enum AVMediaType, std::shared_ptr<StreamData>> media_streams = get_stream_datas(format_context);
 
-  if (!has_av_media_stream(media_streams, AVMEDIA_TYPE_VIDEO)) {
+  if (!(media_streams.count(AVMEDIA_TYPE_VIDEO) == 1)) {
     throw std::runtime_error("[PixelData::PixelData(const char* file_name)] Could not fetch image of file " + std::string(file_name));
   }
   
-  StreamData& imageStream = get_av_media_stream(media_streams, AVMEDIA_TYPE_VIDEO);
+  StreamData& imageStream = *(media_streams.at(AVMEDIA_TYPE_VIDEO));
 
   AVCodecContext* codec_context = imageStream.get_codec_context();
   VideoConverter image_converter(

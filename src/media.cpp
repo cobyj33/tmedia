@@ -18,6 +18,7 @@
 #include "sleep.h"
 #include "audioresampler.h"
 #include "avguard.h"
+#include "streamdata.h"
 
 extern "C" {
 #include "curses.h"
@@ -49,14 +50,7 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, Med
   } 
 
   std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-  for (int i = 0; i < (int)media_types.size(); i++) {
-    try {
-      std::unique_ptr<StreamData> stream_data_ptr = std::make_unique<StreamData>(format_context, media_types[i]);
-      this->media_streams.push_back(std::move(stream_data_ptr));
-    } catch (std::invalid_argument const& e) {
-      continue;
-    }
-  }
+  this->media_streams = get_stream_datas(this->format_context);
 
   if (avformat_context_is_static_image(this->format_context)) {
     this->media_type = MediaType::IMAGE;
@@ -137,21 +131,15 @@ void MediaPlayer::start(double start_time) {
 }
 
 StreamData& MediaPlayer::get_media_stream(enum AVMediaType media_type) const {
-  for (int i = 0; i < (int)this->media_streams.size(); i++) {
-    if (this->media_streams[i]->get_media_type() == media_type) {
-      return *this->media_streams[i];
-    }
+  if (this->media_streams.count(media_type) == 1)
+  {
+    return *(this->media_streams.at(media_type));
   }
   throw std::runtime_error("Cannot get media stream " + std::string(av_get_media_type_string(media_type)) + " from media data, could not be found");
 }
 
 bool MediaPlayer::has_media_stream(enum AVMediaType media_type) const {
-  for (int i = 0; i < (int)this->media_streams.size(); i++) {
-    if (this->media_streams[i]->get_media_type() == media_type) {
-      return true;
-    }
-  }
-  return false;
+  return this->media_streams.count(media_type) == 1;
 }
 
 int MediaPlayer::fetch_next(int requestedPacketCount) {
@@ -160,12 +148,12 @@ int MediaPlayer::fetch_next(int requestedPacketCount) {
 
   while (av_read_frame(this->format_context, reading_packet) == 0) {
      
-    for (int i = 0; i < (int)this->media_streams.size(); i++) {
-      if (this->media_streams[i]->get_stream_index() == reading_packet->stream_index) {
+    for (std::map<enum AVMediaType, std::shared_ptr<StreamData>>::iterator i = this->media_streams.begin(); i != this->media_streams.end(); i++) {
+      if (i->second->get_stream_index() == reading_packet->stream_index) {
         AVPacket* saved_packet = av_packet_alloc();
         av_packet_ref(saved_packet, reading_packet);
         
-        this->media_streams[i]->packet_queue.push_back(saved_packet);
+        i->second->packet_queue.push_back(saved_packet);
         packets_read++;
         break;
       }

@@ -14,6 +14,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <map>
 #include <stack>
 #include <memory>
 #include <string>
@@ -79,7 +80,7 @@ class MediaPlayer {
 
     AVFormatContext* format_context;
 
-    std::vector<std::unique_ptr<StreamData>> media_streams;
+    std::map<enum AVMediaType, std::shared_ptr<StreamData>> media_streams;
 
     std::mutex alter_mutex;
 
