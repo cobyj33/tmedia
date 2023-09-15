@@ -14,11 +14,13 @@
 
 #include "color.h"
 
+typedef short curses_color_pair_t;
+typedef short curses_color_t;
+
 enum class AVNCursesColorPalette {  
   RGB,
   GRAYSCALE
 };
-
 
 void ncurses_init_color();
 void ncurses_uninit_color();
@@ -36,7 +38,7 @@ void ncurses_set_color_palette(AVNCursesColorPalette);
  * @note This function should only be used after either ncurses_initialize_color_palette() or ncurses_initialize_grayscale_color_palette() is run
  * @returns The closest registered ncurses color pair attribute index
  */
-int get_closest_ncurses_color_pair(const RGBColor& input);
+curses_color_pair_t get_closest_ncurses_color_pair(const RGBColor& input);
 
 /**
  * @brief Find the closest registered ncurses color integer to the inputted RGBColor.
@@ -46,6 +48,6 @@ int get_closest_ncurses_color_pair(const RGBColor& input);
  * @note This function should only be used after either ncurses_initialize_color_palette() or ncurses_initialize_grayscale_color_palette() is run
  * @returns The closest registered ncurses color pair attribute index
  */
-int get_closest_ncurses_color(const RGBColor& input);
+curses_color_t get_closest_ncurses_color(const RGBColor& input);
 
 #endif
