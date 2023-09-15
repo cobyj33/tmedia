@@ -2,12 +2,14 @@
 #include <stdexcept>
 #include <cmath>
 #include <string>
+#include <vector>
 
 #define ASCII_VIDEO_TERMCOLOR_INTERNAL_IMPLEMENTATION
 #include "color.h"
 #include "termcolor.h"
 #include "internal/termcolor_internal.h"
 #include "wmath.h"
+
 
 extern "C" {
 #include <curses.h>
@@ -21,9 +23,7 @@ const int DEFAULT_TERMINAL_COLOR_COUNT = 8;
 bool curses_color_maps_initialized = false;
 bool curses_colors_initialized = false;
 
-
-RGBColor terminal_default_colors[MAX_TERMINAL_COLORS];
-ColorPair terminal_default_color_pairs[MAX_TERMINAL_COLORS];
+std::vector<RGBColor> terminal_default_colors;
 
 /**
  * @brief A RGB mapping of NCURSES color pairs to a 3D Discrete Color space, where each side of the color space is COLOR_MAP_SIDE steps long
@@ -51,12 +51,23 @@ void ncurses_init_color() {
 
   start_color();
   use_default_colors();
+
+  const curses_color_t COLORS_AVAILABLE = std::min(COLORS, MAX_TERMINAL_COLORS);
+  for (curses_color_t i = 0; i < COLORS_AVAILABLE; i++)
+    terminal_default_colors.push_back(ncurses_get_color_number_content(i));
+
   curses_colors_initialized = true;
   curses_color_maps_initialized = false;
 }
 
 void ncurses_uninit_color() {
   start_color();
+  for (size_t i = 0; i < terminal_default_colors.size(); i++)
+  {
+    RGBColor color = terminal_default_colors[i];
+    init_color(i, color.red * 1000 / 255, color.green * 1000 / 255, color.blue * 1000 / 255);
+  }
+
   curses_colors_initialized = false;
   curses_color_maps_initialized = false;
 }

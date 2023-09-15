@@ -9,7 +9,6 @@
 RGBColor RGBColor::BLACK = RGBColor(0, 0, 0);
 RGBColor RGBColor::WHITE = RGBColor(255, 255, 255);
 
-
 double RGBColor::distance_squared(const RGBColor& other) const {
   // credit to https://www.compuphase.com/cmetric.htm 
   long rmean = ( (long)this->red + (long)other.red ) / 2;
