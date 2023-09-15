@@ -89,14 +89,14 @@ void StreamData::clear_queue() {
 
 std::vector<AVFrame*> StreamData::decode_next() {
   if (this->media_type == AVMEDIA_TYPE_VIDEO) {
-    std::vector<AVFrame*> decoded_frames = decode_video_packet_queue(this->codec_context, this->packet_queue);
-    return decoded_frames;
+    return decode_video_packet_queue(this->codec_context, this->packet_queue);
   } else if (this->media_type == AVMEDIA_TYPE_AUDIO) {
-    std::vector<AVFrame*> decoded_frames = decode_audio_packet_queue(this->codec_context, this->packet_queue);
-    return decoded_frames;
+    return decode_audio_packet_queue(this->codec_context, this->packet_queue);
   }
 
-  throw std::runtime_error("[StreamData::decode_next] Could not decode next video packet, Media type " + std::string(av_get_media_type_string(this->media_type)) + " is currently unsupported");
+  throw std::runtime_error("[StreamData::decode_next] Could not decode next "
+  "video packet, Media type " + std::string(av_get_media_type_string(this->media_type)) + 
+  " is currently unsupported");
 }
 
 StreamData::~StreamData() {

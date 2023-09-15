@@ -219,52 +219,55 @@ MediaPlayer::~MediaPlayer() {
 
 
 std::vector<AVFrame*> MediaPlayer::next_video_frames() {
-  if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
-    StreamData& video_stream = this->get_media_stream(AVMEDIA_TYPE_VIDEO);
+  if (!this->has_media_stream(AVMEDIA_TYPE_VIDEO))
+    throw std::runtime_error("[MediaPlayer::next_video_frames] Cannot get next "
+    "video frames, as no video stream is available to decode from");
+
+  StreamData& video_stream = this->get_media_stream(AVMEDIA_TYPE_VIDEO);
+  std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
+  if (decodedFrames.size() > 0) {
+    return decodedFrames;
+  }
+
+  int fetch_count = -1;
+  do {
+    fetch_count = video_stream.packet_queue.empty() ? this->fetch_next(10) : -1; // -1 means that no fetch request was made
     std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
     if (decodedFrames.size() > 0) {
       return decodedFrames;
-    }
+    } 
+  } while (fetch_count != 0);
 
-    int fetch_count = -1;
-    do {
-      fetch_count = video_stream.packet_queue.empty() ? this->fetch_next(10) : -1; // -1 means that no fetch request was made
-      std::vector<AVFrame*> decodedFrames = video_stream.decode_next();
-      if (decodedFrames.size() > 0) {
-        return decodedFrames;
-      } 
-    } while (fetch_count != 0);
-
-    return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
-  }
-  throw std::runtime_error("[MediaPlayer::next_video_frames] Cannot get next video frames, as no video stream is available to decode from");
+  return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
 }
 
 std::vector<AVFrame*> MediaPlayer::next_audio_frames() {
-  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    StreamData& audio_stream = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
+  if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO))
+    throw std::runtime_error("[MediaPlayer::next_audio_frames] Cannot get next "
+    "audio frames, as no video stream is available to decode from");
+
+  StreamData& audio_stream = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
+  std::vector<AVFrame*> decodedFrames = audio_stream.decode_next();
+  if (decodedFrames.size() > 0) {
+    return decodedFrames;
+  } 
+
+  int fetch_count = -1;
+  do {
+    fetch_count = audio_stream.packet_queue.empty() ? this->fetch_next(10) : -1;
     std::vector<AVFrame*> decodedFrames = audio_stream.decode_next();
     if (decodedFrames.size() > 0) {
       return decodedFrames;
     } 
+  } while (fetch_count != 0);
 
-    int fetch_count = -1;
-    do {
-      fetch_count = audio_stream.packet_queue.empty() ? this->fetch_next(10) : -1;
-      std::vector<AVFrame*> decodedFrames = audio_stream.decode_next();
-      if (decodedFrames.size() > 0) {
-        return decodedFrames;
-      } 
-    } while (fetch_count != 0);
-
-    return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
-  }
-  throw std::runtime_error("[MediaPlayer::next_audio_frames] Cannot get next audio frames, as no video stream is available to decode from");
+  return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
 }
 
 int MediaPlayer::load_next_audio_frames(int frames) {
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error("[MediaPlayer::load_next_audio_frames] Cannot load next audio frames, Media Player does not have any audio stream to load data from");
+    throw std::runtime_error("[MediaPlayer::load_next_audio_frames] Cannot load "
+    "next audio frames, Media Player does not have any audio stream to load data from");
   }
   if (frames < 0) {
     throw std::runtime_error("Cannot load negative frames, (got " + std::to_string(frames) + " ). ");
@@ -301,7 +304,8 @@ int MediaPlayer::load_next_audio_frames(int frames) {
 
 int MediaPlayer::jump_to_time(double target_time, double current_system_time) {
   if (target_time < 0.0 || target_time > this->get_duration()) {
-    throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time));
+    throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + 
+    ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time));
   }
 
   const double original_time = this->get_time(current_system_time);
