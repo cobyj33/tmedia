@@ -67,20 +67,25 @@ class MediaPlayer {
      * @param player The MediaPlayer to render toward the terminal
      */
     void render_loop();
-  public:
+
     /**
      * @brief The currently loaded video frame from the given media player
      */
     PixelData frame;
 
+
+    AVFormatContext* format_context;
+
+    std::map<enum AVMediaType, std::shared_ptr<StreamData>> media_streams;
+
+
+  public:
+  
     /**
      * @brief The buffer of audio bytes loaded by the media player
      */
     AudioBuffer audio_buffer;
 
-    AVFormatContext* format_context;
-
-    std::map<enum AVMediaType, std::shared_ptr<StreamData>> media_streams;
 
     std::mutex alter_mutex;
 
