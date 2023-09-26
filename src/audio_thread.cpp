@@ -79,9 +79,6 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
 void MediaPlayer::audio_playback_thread() {
   std::unique_lock<std::mutex> mutex_lock(this->alter_mutex, std::defer_lock);
-  if (!this->audio_enabled) {
-    throw std::runtime_error("Cannot play audio playback, Audio playback is not available in the current MediaPlayer instance");
-  }
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
   }

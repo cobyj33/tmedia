@@ -119,11 +119,6 @@ int main(int argc, char** argv)
     .default_value(false)
     .implicit_value(true);
 
-  parser.add_argument("--no-audio")
-    .help("Remove all audio playback from the player")
-    .default_value(false)
-    .implicit_value(true);
-
   parser.add_argument("--ffmpeg-version")
     .help("Print the version of linked FFmpeg libraries")
     .default_value(false)
@@ -155,7 +150,6 @@ int main(int argc, char** argv)
   bool mute = parser.get<bool>("-m");
   bool print_ffmpeg_version = parser.get<bool>("--ffmpeg-version");
   bool print_curses_version = parser.get<bool>("--curses-version");
-  bool audio_enabled = !parser.get<bool>("--no-audio");
   std::string inputted_start_time = parser.get<std::string>("-t");
 
   if (print_ffmpeg_version) {
@@ -259,9 +253,8 @@ int main(int argc, char** argv)
 
   MediaGUI media_gui;
   media_gui.set_video_output_mode(mode);
-  MediaPlayerConfig config(audio_enabled);
+  MediaPlayerConfig config(mute);
   MediaPlayer player(file.c_str(), media_gui, config);
-  player.muted = mute;
   player.start(start_time);
   ncurses_uninit();
 

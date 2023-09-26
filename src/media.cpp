@@ -39,9 +39,8 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, Med
   this->in_use = false;
   this->file_name = file_name;
   this->is_looped = false;
-  this->muted = false;
+  this->muted = config.muted;
   this->media_gui = starting_media_gui;
-  this->audio_enabled = config.audio_enabled;
 
   try {
     this->format_context = open_format_context(file_name);
@@ -110,7 +109,7 @@ void MediaPlayer::start(double start_time) {
     video_thread_initialized = true;
   }
 
-  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO) && this->audio_enabled) {
+  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     std::thread initialized_audio_thread(&MediaPlayer::audio_playback_thread, this);
     audio_thread.swap(initialized_audio_thread);
     audio_thread_initialized = true;

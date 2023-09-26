@@ -34,9 +34,9 @@ enum class MediaType {
 };
 
 struct MediaPlayerConfig {
-  bool audio_enabled;
+  bool muted;
 
-  MediaPlayerConfig(bool audio_enabled) : audio_enabled(audio_enabled) {}
+  MediaPlayerConfig(bool muted) : muted(muted) {}
 };
 
 std::string media_type_to_string(MediaType media_type);
@@ -50,8 +50,6 @@ class MediaPlayer {
      * @param player The MediaPlayer to generate and update video frames for
      */
     void video_playback_thread();
-
-    bool audio_enabled;
 
     /**
      * @brief This loop is responsible for managing audio playback and synchronizing audio playback with the current MediaPlayer's timer
