@@ -4,16 +4,52 @@
 #include <string>
 #include <vector>
 
-#define ASCII_VIDEO_TERMCOLOR_INTERNAL_IMPLEMENTATION
 #include "color.h"
-#include "termcolor.h"
-#include "internal/termcolor_internal.h"
+#include "avcurses.h"
 #include "wmath.h"
+
+#define ASCII_VIDEO_TERMCOLOR_INTERNAL_IMPLEMENTATION
+#include "internal/termcolor_internal.h"
+#undef ASCII_VIDEO_TERMCOLOR_INTERNAL_IMPLEMENTATION
+
 
 
 extern "C" {
 #include <curses.h>
 }
+
+bool ncurses_initialized = false;
+
+void ncurses_init() {
+  if (ncurses_initialized) {
+    throw std::runtime_error("ncurses attempted to be initialized although it has already been initialized");
+  }
+  ncurses_initialized = true;
+  initscr();
+  ncurses_init_color();
+  ncurses_set_color_palette(AVNCursesColorPalette::RGB);
+  cbreak();
+  noecho();
+  curs_set(0);
+  keypad(stdscr, true);
+}
+
+bool ncurses_is_initialized() {
+  return ncurses_initialized;
+}
+
+void ncurses_uninit() {
+  if (!ncurses_initialized) {
+    throw std::runtime_error("ncurses attempted to be uninitialized although it has never been initialized");
+  }
+  ncurses_initialized = false;
+  ncurses_uninit_color();
+  keypad(stdscr, false);
+  nocbreak();
+  echo();
+  endwin();
+}
+
 
 const int COLOR_MAP_SIDE = 7;
 const int MAX_TERMINAL_COLORS = 256;
@@ -264,5 +300,3 @@ curses_color_pair_t ncurses_find_best_initialized_color_pair(RGBColor& input) {
 
   return best_pair;
 }
-
-#undef ASCII_VIDEO_TERMCOLOR_INTERNAL_IMPLEMENTATION

@@ -1,8 +1,5 @@
 #include "gui.h"
 
-#include <termcolor.h>
-
-
 void MediaGUI::set_video_output_mode(VideoOutputMode mode) {
   if (mode == this->m_video_output_mode)
     return;

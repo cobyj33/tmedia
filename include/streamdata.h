@@ -13,11 +13,13 @@ extern "C" {
 }
 
 class StreamData {
-  public:
+  private:
     enum AVMediaType media_type;
     AVStream* stream;
     const AVCodec* decoder;
     AVCodecContext* codec_context;
+    
+  public:
 
     std::deque<AVPacket*> packet_queue;
 
@@ -30,6 +32,7 @@ class StreamData {
     int get_stream_index() const;
     enum AVMediaType get_media_type() const;
     AVCodecContext* get_codec_context() const;
+
     std::vector<AVFrame*> decode_next();
     void flush();
     void clear_queue();

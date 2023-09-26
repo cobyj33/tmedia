@@ -73,10 +73,11 @@ class MediaPlayer {
      */
     PixelData frame;
 
-
     AVFormatContext* format_context;
 
     std::map<enum AVMediaType, std::shared_ptr<StreamData>> media_streams;
+
+    std::vector<AVFrame*> next_frames(enum AVMediaType media_type);
 
 
   public:
@@ -101,8 +102,8 @@ class MediaPlayer {
 
     MediaPlayer(const char* file_name, MediaGUI starting_media_gui, MediaPlayerConfig config);
 
-    void start();
     void start(double start_time);
+
     double get_desync_time(double current_system_time) const;
 
     /**
@@ -150,16 +151,11 @@ class MediaPlayer {
     int jump_to_time(double target_time, double current_system_time);
 
 
-    // std::vector<AVFrame*> next_video_frames(); 
-    // std::vector<AVFrame*> next_audio_frames();
-    std::vector<AVFrame*> next_frames(enum AVMediaType media_type);
     int load_next_audio_frames(int frames);
 
-    int get_nb_media_streams() const;
     StreamData& get_media_stream(enum AVMediaType media_type) const;
     bool has_media_stream(enum AVMediaType media_type) const;
     int fetch_next(int requestedPacketCount);
-    bool is_audio_enabled() const;
 
     ~MediaPlayer();
 };

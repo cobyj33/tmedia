@@ -22,12 +22,13 @@ set(LOCAL_FFMPEG_LIB ${CMAKE_SOURCE_DIR}/lib/ffmpeg)
 
 set(COMMON_SOURCE_FILES 
 ./src/audioresampler.cpp
+./src/avcurses.cpp
+./src/audio.cpp
+./src/audio_thread.cpp
 ./src/videoconverter.cpp
 ./src/streamdata.cpp
 ./src/ascii.cpp
 ./src/audiobuffer.cpp
-./src/audio.cpp
-./src/audio_thread.cpp
 ./src/decode.cpp
 ./src/media.cpp
 ./src/boiler.cpp
@@ -43,7 +44,6 @@ set(COMMON_SOURCE_FILES
 ./src/pixeldata.cpp
 ./src/scale.cpp
 ./src/ui/gui.cpp
-./src/termcolor.cpp
 )
 
 set(ASCII_VIDEO_SUPPORTED_LANGUAGES CXX C)

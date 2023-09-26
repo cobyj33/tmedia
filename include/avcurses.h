@@ -1,9 +1,9 @@
 #ifndef ASCII_VIDEO_TERM_COLOR
 #define ASCII_VIDEO_TERM_COLOR
 /**
- * @file termcolor.h
+ * @file avcyrses.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
- * @brief NCurses routines to pre-load color maps and to quickly fetch colors based on RGB Values
+ * @brief NCurses routines initialize curses, to pre-load color maps, and to quickly fetch colors based on RGB Values
  * @version 0.1
  * @date 2023-03-15
  * 
@@ -22,8 +22,11 @@ enum class AVNCursesColorPalette {
   GRAYSCALE
 };
 
-void ncurses_init_color();
-void ncurses_uninit_color();
+void ncurses_init();
+bool ncurses_is_initialized();
+void ncurses_uninit();
+
+
 
 /**
  * @brief Initialize ncurses's color palette for a given enum

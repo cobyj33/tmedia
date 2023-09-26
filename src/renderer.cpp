@@ -17,7 +17,7 @@
 #include "sleep.h"
 #include "wmath.h"
 #include "wtime.h"
-#include "termcolor.h"
+#include "avcurses.h"
 
 #include "gui.h"
 

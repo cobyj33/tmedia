@@ -2,14 +2,15 @@
 #define ASCII_VIDEO_TERMCOLOR_INTERNAL_H
 
 #ifndef ASCII_VIDEO_TERMCOLOR_INTERNAL_IMPLEMENTATION
-#error "Cannot include internal termcolor implementation details in public api. Include exposed functions through termcolor.h instead"
+#error "Cannot include internal termcolor implementation details in public api. Include exposed functions through avcurses.h instead"
 #endif
 
 #include "color.h"
-#include "termcolor.h"
+#include "avcurses.h"
 #include <string>
 
-
+void ncurses_init_color();
+void ncurses_uninit_color();
 
 struct ColorPair {
   RGBColor fg;

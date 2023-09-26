@@ -73,21 +73,21 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, Med
   }
 }
 
-void MediaPlayer::start() {
-  this->start(0.0);
-}
-
 void MediaPlayer::start(double start_time) {
   if (this->in_use) {
-    throw std::runtime_error("[MediaPlayer::start] Cannot use a MediaPlayer that is already in use");
+    throw std::runtime_error("[MediaPlayer::start] Cannot use a MediaPlayer "
+    "that is already in use");
   }
-
   if (start_time < 0) {
-    throw std::runtime_error("[MediaPlayer::start] Cannot start a MediaPlayer at a negative time ( got " + std::to_string(start_time) +  ")");
+    throw std::runtime_error("[MediaPlayer::start] Cannot start a MediaPlayer "
+    "at a negative time ( got " + std::to_string(start_time) +  ")");
   }
   if (start_time > this->get_duration()) {
-    throw std::runtime_error("[MediaPlayer::start] Cannot start a MediaPlayer at a time greater than the stream duration ( got " + std::to_string(start_time) +  " seconds. Stream ends at " + std::to_string(this->get_duration()) + " seconds)");
+    throw std::runtime_error("[MediaPlayer::start] Cannot start a MediaPlayer at"
+    "a time greater than the stream duration ( got " + std::to_string(start_time) +  
+    " seconds. Stream ends at " + std::to_string(this->get_duration()) + " seconds)");
   }
+
   this->in_use = true;
 
   if (this->media_type == MediaType::IMAGE) {
@@ -135,7 +135,9 @@ StreamData& MediaPlayer::get_media_stream(enum AVMediaType media_type) const {
   {
     return *(this->media_streams.at(media_type));
   }
-  throw std::runtime_error("Cannot get media stream " + std::string(av_get_media_type_string(media_type)) + " from media data, could not be found");
+  throw std::runtime_error("Cannot get media stream " +
+  std::string(av_get_media_type_string(media_type)) +
+  " from media data, could not be found");
 }
 
 bool MediaPlayer::has_media_stream(enum AVMediaType media_type) const {
@@ -148,7 +150,7 @@ int MediaPlayer::fetch_next(int requestedPacketCount) {
 
   while (av_read_frame(this->format_context, reading_packet) == 0) {
      
-    for (std::map<enum AVMediaType, std::shared_ptr<StreamData>>::iterator i = this->media_streams.begin(); i != this->media_streams.end(); i++) {
+    for (auto i = this->media_streams.begin(); i != this->media_streams.end(); i++) {
       if (i->second->get_stream_index() == reading_packet->stream_index) {
         AVPacket* saved_packet = av_packet_alloc();
         av_packet_ref(saved_packet, reading_packet);
@@ -199,18 +201,10 @@ void MediaPlayer::set_current_frame(AVFrame* frame) {
   this->frame = frame;
 }
 
-
 PixelData& MediaPlayer::get_current_frame() {
   return this->frame;
 }
 
-int MediaPlayer::get_nb_media_streams() const {
-  return this->media_streams.size();
-}
-
-bool MediaPlayer::is_audio_enabled() const { 
-  return this->audio_enabled;
-}
 
 MediaPlayer::~MediaPlayer() {
   avformat_close_input(&(this->format_context));

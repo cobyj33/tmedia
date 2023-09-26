@@ -16,7 +16,7 @@
 #include "version.h"
 #include "avguard.h"
 
-#include <termcolor.h>
+#include <avcurses.h>
 
 
 #include <argparse.hpp>
@@ -34,14 +34,11 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
-bool ncurses_initialized = false;
 
 bool is_valid_path(const char* path);
-void ncurses_init();
-void ncurses_uninit();
 
 void on_terminate() {
-  if (ncurses_initialized) {
+  if (ncurses_is_initialized()) {
     ncurses_uninit();
   }
 
@@ -137,11 +134,6 @@ int main(int argc, char** argv)
     .help("Print the version of linked Curses libraries")
     .default_value(false)
     .implicit_value(true);
-
-  // parser.add_argument("-i", "--image")
-  //   .help("Consume the media as an image")
-  //   .default_value(false)
-  //   .implicit_value(true);
 
   try {
     parser.parse_args(argc, argv);
@@ -291,28 +283,3 @@ bool is_valid_path(const char* path) {
   return false;
 }
 
-void ncurses_init() {
-  if (ncurses_initialized) {
-    throw std::runtime_error("ncurses attempted to be initialized although it has already been initialized");
-  }
-  ncurses_initialized = true;
-  initscr();
-  ncurses_init_color();
-  ncurses_set_color_palette(AVNCursesColorPalette::RGB);
-  cbreak();
-  noecho();
-  curs_set(0);
-  keypad(stdscr, true);
-}
-
-void ncurses_uninit() {
-  if (!ncurses_initialized) {
-    throw std::runtime_error("ncurses attempted to be uninitialized although it has never been initialized");
-  }
-  ncurses_initialized = false;
-  ncurses_uninit_color();
-  keypad(stdscr, false);
-  nocbreak();
-  echo();
-  endwin();
-}
