@@ -58,7 +58,7 @@ const ColorChar& AsciiImage::at(int row, int col) const {
 }
 
 char get_char_from_value(std::string& characters, uint8_t value) {
-  return characters[ (int)value * (characters.length() - 1) / 255 ];
+  return characters[ (size_t)value * (characters.length() - 1) / 255 ];
 }
 
 RGBColor get_rgb_from_char(std::string& characters, char ch) {

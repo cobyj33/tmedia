@@ -92,7 +92,7 @@ void MediaPlayer::start(double start_time) {
   if (this->media_type == MediaType::IMAGE) {
     this->frame = PixelData(this->file_name);
   } else if (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO) {
-    this->playback.start(system_clock_sec());
+    this->clock.start(system_clock_sec());
     if (start_time != 0) {
       this->jump_to_time(start_time, system_clock_sec());
     }
@@ -123,8 +123,8 @@ void MediaPlayer::start(double start_time) {
     audio_thread.join();
   }
 
-  if (this->playback.is_playing()) {
-    this->playback.stop(system_clock_sec());
+  if (this->clock.is_playing()) {
+    this->clock.stop(system_clock_sec());
   }
   this->in_use = false;
 }
@@ -154,7 +154,7 @@ int MediaPlayer::fetch_next(int requestedPacketCount) {
         AVPacket* saved_packet = av_packet_alloc();
         av_packet_ref(saved_packet, reading_packet);
         
-        i->second->packet_queue.push_back(saved_packet);
+        i->second->push_back_packet(saved_packet);
         packets_read++;
         break;
       }
@@ -179,7 +179,7 @@ double MediaPlayer::get_duration() const {
 }
 
 double MediaPlayer::get_time(double current_system_time) const {
-  return this->playback.get_time(current_system_time);
+  return this->clock.get_time(current_system_time);
 }
 
 double MediaPlayer::get_desync_time(double current_system_time) const {
@@ -187,9 +187,8 @@ double MediaPlayer::get_desync_time(double current_system_time) const {
     double current_playback_time = this->get_time(current_system_time);
     double desync = std::abs(this->audio_buffer.get_time() - current_playback_time);
     return desync;
-  } else { // if there is only a video or audio stream, there can never be desync
-    return 0.0;
   }
+  return 0.0;
 }
 
 void MediaPlayer::set_current_frame(PixelData& data) {
@@ -225,7 +224,7 @@ std::vector<AVFrame*> MediaPlayer::next_frames(enum AVMediaType media_type)
 
   int fetch_count = -1;
   do {
-    fetch_count = stream.packet_queue.empty() ? this->fetch_next(10) : -1; // -1 means that no fetch request was made
+    fetch_count = !stream.has_packets() ? this->fetch_next(10) : -1; // -1 means that no fetch request was made
     std::vector<AVFrame*> decodedFrames = stream.decode_next();
     if (decodedFrames.size() > 0) {
       return decodedFrames;
@@ -275,8 +274,8 @@ int MediaPlayer::load_next_audio_frames(int frames) {
 
 int MediaPlayer::jump_to_time(double target_time, double current_system_time) {
   if (target_time < 0.0 || target_time > this->get_duration()) {
-    throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + 
-    ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time));
+    throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(target_time) + " seconds ) "
+    ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(this->get_duration()) + " seconds )");
   }
 
   const double original_time = this->get_time(current_system_time);
@@ -327,6 +326,6 @@ int MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     clear_av_frame_list(frames);
   }
 
-  this->playback.skip(target_time - original_time); // Update the playback to account for the skipped time
+  this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time
   return ret;
 }

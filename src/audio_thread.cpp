@@ -119,7 +119,7 @@ void MediaPlayer::audio_playback_thread() {
     
     ma_device_state audio_device_state = ma_device_get_state(&audio_device);
 
-    if ((this->playback.is_playing() == false || this->muted) && audio_device_state == ma_device_state_started) {
+    if ((this->clock.is_playing() == false || this->muted) && audio_device_state == ma_device_state_started) {
       mutex_lock.unlock();
       miniaudio_log = ma_device_stop(&audio_device);
       if (miniaudio_log != MA_SUCCESS) {
@@ -127,7 +127,7 @@ void MediaPlayer::audio_playback_thread() {
         throw std::runtime_error("Failed to stop playback: Miniaudio Error " + std::to_string(miniaudio_log));
       }
       mutex_lock.lock();
-    } else if ((this->playback.is_playing() && !this->muted) && audio_device_state == ma_device_state_stopped) {
+    } else if ((this->clock.is_playing() && !this->muted) && audio_device_state == ma_device_state_stopped) {
       mutex_lock.unlock();
       miniaudio_log = ma_device_start(&audio_device);
       if (miniaudio_log != MA_SUCCESS) {
@@ -135,6 +135,13 @@ void MediaPlayer::audio_playback_thread() {
         throw std::runtime_error("Failed to start playback: Miniaudio Error " + std::to_string(miniaudio_log));
       }
       mutex_lock.lock();
+    }
+
+    // check again, as since we unlock and relock
+    if (!this->in_use)
+    {
+      mutex_lock.unlock();
+      break;
     }
 
     audio_device_state = ma_device_get_state(&audio_device);
@@ -147,6 +154,12 @@ void MediaPlayer::audio_playback_thread() {
     double current_system_time = system_clock_sec();
     if (this->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
       double target_resync_time = this->get_time(current_system_time);
+      
+      if (target_resync_time > this->get_duration()) {
+        this->in_use = false;
+        mutex_lock.unlock();
+        break;
+      }
 
       if (this->audio_buffer.is_time_in_bounds(target_resync_time)) {
         this->audio_buffer.set_time_in_bounds(target_resync_time);
@@ -177,7 +190,7 @@ void MediaPlayer::audio_playback_thread() {
       this->load_next_audio_frames(10);
     }
 
-    audio_device.sampleRate = audio_codec_context->sample_rate * this->playback.get_speed();
+    audio_device.sampleRate = audio_codec_context->sample_rate * this->clock.get_speed();
 
     
     mutex_lock.unlock();

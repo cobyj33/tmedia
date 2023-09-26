@@ -31,7 +31,6 @@ const int KEY_ESCAPE = 27;
 
 void render_movie_screen(PixelData& pixel_data, VideoOutputMode media_gui);
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
-void print_pixel_data_text(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height);
 
 RGBColor get_index_display_color(int index, int length)
 {
@@ -57,13 +56,12 @@ void MediaPlayer::render_loop()
     int input = wgetch(inputWindow);
 
     lock.lock();
-    if (!this->in_use)
-    {
+    if (!this->in_use) {
       lock.unlock();
       break;
     }
 
-    if (this->media_type != MediaType::IMAGE && this->get_time(system_clock_sec()) >= this->get_duration() ) {
+    if (this->media_type != MediaType::IMAGE && this->get_time(system_clock_sec()) >= this->get_duration()) {
       if (this->is_looped) {
         this->jump_to_time(0.0, system_clock_sec());
       } else {   
@@ -73,53 +71,44 @@ void MediaPlayer::render_loop()
       }
     }
 
-    while (input != ERR && this->in_use)
-    { // Go through and process all the batched input
-
-      if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b')
-      {
+    while (input != ERR) { // Go through and process all the batched input
+      if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b') {
         this->in_use = false;
+        break; // break out of input != ERR
       }
 
-      if (input == KEY_RESIZE)
-      {
+      if (input == KEY_RESIZE) {
         erase();
         refresh();
       }
 
-      if (input == 'c' || input == 'C') { // Change from current video mode to colored version
-        if (has_colors() && can_change_color()) {
-          switch (this->media_gui.get_video_output_mode()) {
-            case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-            case VideoOutputMode::GRAYSCALE: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
-            case VideoOutputMode::TEXT_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
-            case VideoOutputMode::COLORED: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
-            case VideoOutputMode::COLORED_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
-          }
+      if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version
+        switch (this->media_gui.get_video_output_mode()) {
+          case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+          case VideoOutputMode::GRAYSCALE: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
+          case VideoOutputMode::TEXT_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
+          case VideoOutputMode::COLORED: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
+          case VideoOutputMode::COLORED_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
         }
       }
 
-      if (input == 'g' || input == 'G') {
-        if (has_colors() && can_change_color()) {
-          switch (this->media_gui.get_video_output_mode()) {
-            case VideoOutputMode::COLORED_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-            case VideoOutputMode::COLORED: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
-            case VideoOutputMode::TEXT_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
-            case VideoOutputMode::GRAYSCALE: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
-            case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
-          }
+      if ((input == 'g' || input == 'G') && has_colors() && can_change_color()) {
+        switch (this->media_gui.get_video_output_mode()) {
+          case VideoOutputMode::COLORED_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+          case VideoOutputMode::COLORED: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
+          case VideoOutputMode::TEXT_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
+          case VideoOutputMode::GRAYSCALE: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
+          case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
         }
       }
 
-      if (input == 'b' || input == 'B') {
-        if (has_colors() && can_change_color()) {
-          switch (this->media_gui.get_video_output_mode()) {
-            case VideoOutputMode::COLORED: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-            case VideoOutputMode::GRAYSCALE: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-            case VideoOutputMode::COLORED_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
-            case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
-            case VideoOutputMode::TEXT_ONLY: break;
-          }
+      if ((input == 'b' || input == 'B') && has_colors() && can_change_color()) {
+        switch (this->media_gui.get_video_output_mode()) {
+          case VideoOutputMode::COLORED: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+          case VideoOutputMode::GRAYSCALE: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+          case VideoOutputMode::COLORED_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
+          case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
+          case VideoOutputMode::TEXT_ONLY: break;
         }
       }
 
@@ -133,7 +122,7 @@ void MediaPlayer::render_loop()
       }
 
       if (input == ' ' && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
-        this->playback.toggle(system_clock_sec());
+        this->clock.toggle(system_clock_sec());
       }
 
       if (input == 'm' || input == 'M') {
@@ -178,27 +167,9 @@ void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode) {
   print_pixel_data(pixel_data, 0, 0, COLS, LINES, output_mode);
 }
 
-void print_pixel_data_text(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height) {
-  PixelData bounded = pixel_data.bound(bounds_width, bounds_height);
-  const AsciiImage image(bounded, AsciiImage::ASCII_STANDARD_CHAR_MAP);
-  int image_start_row = bounds_row + std::abs(image.get_height() - bounds_height) / 2;
-  int image_start_col = bounds_col + std::abs(image.get_width() - bounds_width) / 2; 
-
-  for (int row = 0; row < image.get_height(); row++) {
-    for (int col = 0; col < image.get_width(); col++) {
-      mvaddch(image_start_row + row, image_start_col + col, image.at(row, col).ch);
-    } 
-  }
-}
-
 
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode) {
-  if (output_mode == VideoOutputMode::TEXT_ONLY) {
-    print_pixel_data_text(pixel_data, bounds_row, bounds_col, bounds_width, bounds_height);
-    return;
-  }
-  
-  if (!has_colors()) {
+  if (output_mode != VideoOutputMode::TEXT_ONLY && !has_colors()) {
     throw std::runtime_error("Attempted to print colored text in terminal that does not support color");
   }
 
@@ -211,10 +182,17 @@ void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int
 
   for (int row = 0; row < image.get_height(); row++) {
     for (int col = 0; col < image.get_width(); col++) {
-      const char target_char = background_only ? ' ' : image.at(row, col).ch;
-      const RGBColor& target_color = image.at(row, col).color;
-      const int color_pair = get_closest_ncurses_color_pair(target_color);
-      mvaddch(image_start_row + row, image_start_col + col, target_char | COLOR_PAIR(color_pair));
+
+      if (output_mode == VideoOutputMode::TEXT_ONLY) {
+        mvaddch(image_start_row + row, image_start_col + col, image.at(row, col).ch);
+      } else {
+        const char target_char = background_only ? ' ' : image.at(row, col).ch;
+        const RGBColor& target_color = image.at(row, col).color;
+        const int color_pair = get_closest_ncurses_color_pair(target_color);
+        mvaddch(image_start_row + row, image_start_col + col, target_char | COLOR_PAIR(color_pair));
+      }
+
     }
   }
+
 }

@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_TERM_COLOR
-#define ASCII_VIDEO_TERM_COLOR
+#ifndef ASCII_VIDEO_AV_CURSES
+#define ASCII_VIDEO_AV_CURSES
 /**
  * @file avcyrses.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)

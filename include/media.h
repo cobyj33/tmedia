@@ -6,7 +6,7 @@
 #include "boiler.h"
 #include "icons.h"
 #include "color.h"
-#include "playback.h"
+#include "mediaclock.h"
 #include "pixeldata.h"
 #include "streamdata.h"
 
@@ -90,7 +90,7 @@ class MediaPlayer {
 
     MediaGUI media_gui;
 
-    Playback playback;
+    MediaClock clock;
     const char* file_name;
     bool in_use;
     bool is_looped;

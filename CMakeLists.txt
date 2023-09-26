@@ -40,7 +40,7 @@ set(COMMON_SOURCE_FILES
 ./src/wtime.cpp
 ./src/color.cpp
 ./src/icons.cpp
-./src/playback.cpp
+./src/mediaclock.cpp
 ./src/pixeldata.cpp
 ./src/scale.cpp
 ./src/ui/gui.cpp

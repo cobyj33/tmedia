@@ -106,6 +106,14 @@ StreamData::~StreamData() {
   }
 };
 
+bool StreamData::has_packets() {
+  return !this->packet_queue.empty();
+}
+
+void StreamData::push_back_packet(AVPacket* packet) {
+  this->packet_queue.push_back(packet);
+}
+
 std::map<enum AVMediaType, std::shared_ptr<StreamData>> get_stream_datas(AVFormatContext* format_context) {
   const int NUM_OF_MEDIA_TYPES_TO_SEARCH = 2;
   enum AVMediaType MEDIA_TYPES_TO_SEARCH[NUM_OF_MEDIA_TYPES_TO_SEARCH] = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };

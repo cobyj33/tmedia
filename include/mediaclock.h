@@ -1,7 +1,7 @@
-#ifndef ASCII_VIDEO_PLAYBACK_INCLUDED
-#define ASCII_VIDEO_PLAYBACK_INCLUDED
+#ifndef ASCII_VIDEO_MEDIA_CLOCK
+#define ASCII_VIDEO_MEDIA_CLOCK
 
-class Playback {
+class MediaClock {
   private:
     bool m_playing;
     double m_speed;
@@ -15,11 +15,11 @@ class Playback {
 
   public:
 
-    Playback();
+    MediaClock();
 
 
     /**
-     * @brief Get the current time (in seconds) of the playback. This time takes into account total time paused, skipped, and played
+     * @brief Get the current time (in seconds) of the clock. This time takes into account total time paused, skipped, and played
      * @return double
      */
     double get_time(double current_system_time) const;
@@ -32,7 +32,7 @@ class Playback {
 
     /**
      * @brief 
-     * @note **Do not use the start function if you are simply trying to resume the playback stream, use the resume function instead**. The start function assumes that the playback is beginning one again at the specified time
+     * @note **Do not use the start function if you are simply trying to resume the clock stream, use the resume function instead**. The start function assumes that the clock is beginning one again at the specified time
      * 
      * @param current_system_time 
      */

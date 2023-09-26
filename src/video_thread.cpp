@@ -55,7 +55,7 @@ void MediaPlayer::video_playback_thread() {
       break;
     }
 
-    if (!this->playback.is_playing()) {
+    if (!this->clock.is_playing()) {
       mutex_lock.unlock();
       sleep_quick();
       continue;
@@ -101,8 +101,8 @@ void MediaPlayer::video_playback_thread() {
 
     clear_av_frame_list(decoded_frames);
 
-    double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / this->playback.get_speed() ) );
-    this->playback.skip(frame_speed_skip_time_sec);
+    double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / this->clock.get_speed() ) );
+    this->clock.skip(frame_speed_skip_time_sec);
 
     const double current_time = this->get_time(system_clock_sec());
     double waitDuration = frame_pts_time_sec - current_time + extra_delay - frame_speed_skip_time_sec;

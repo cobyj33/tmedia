@@ -41,14 +41,14 @@ void dump_file_info(const char* file_path) {
   av_log_set_level(AV_LOG_INFO);
   AVFormatContext* format_context = open_format_context(file_path);
   av_dump_format(format_context, 0, file_path, 0);
-  avformat_close_input(&format_context);
+  avformat_free_context(format_context);
 }
 
 double get_file_duration(const char* file_path) {
   AVFormatContext* format_context = open_format_context(file_path);
   int64_t duration = format_context->duration;
   double duration_seconds = (double)duration / AV_TIME_BASE;
-  avformat_close_input(&format_context);
+  avformat_free_context(format_context);
   return duration_seconds;
 }
 
