@@ -4,16 +4,23 @@
 #include <cstdint>
 #include <vector>
 #include "color.h"
+#include <functional>
 
 extern "C" {
 #include <libavutil/frame.h>
 }
+
+typedef RGBColor FillFunction(int row, int col);
 
 class PixelData {
   private:
     std::vector<RGBColor> pixels;
     int m_width;
     int m_height;
+
+    template <typename T>
+    void init_from_source(int width, int height, T&& fill);
+    void init_from_avframe(AVFrame* video_frame);
   public:
 
     PixelData() : pixels(std::vector<RGBColor>()), m_width(0), m_height(0) {}

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <memory>
+#include <functional>
 
 #include "pixeldata.h"
 #include "ascii.h"
@@ -28,18 +29,43 @@ extern "C" {
 // Accepts empty matrices
 template <typename T>
 bool is_rectangular_vector_matrix(std::vector<std::vector<T>>& vector_2d) {
-  if (vector_2d.size() == 0) {
+  if (vector_2d.size() == 0)
     return true;
-  }
-  std::size_t width = vector_2d[0].size();
 
-  for (int row = 0; row < (int)vector_2d.size(); row++) {
-    if (vector_2d[row].size() != width) {
+  std::size_t width = vector_2d[0].size();
+  for (int row = 0; row < (int)vector_2d.size(); row++)
+    if (vector_2d[row].size() != width)
       return false;
-    }
-  }
 
   return true;
+}
+
+template <typename T>
+void PixelData::init_from_source(int width, int height, T&& fill) {
+  this->pixels.clear();
+  this->pixels.reserve(width * height);
+  this->m_width = width;
+  this->m_height = height;
+
+  for (int row = 0; row < height; row++) {
+    for (int col = 0; col < width; col++) {
+      this->pixels.push_back(fill(row, col));
+    }
+  }
+}
+
+void PixelData::init_from_avframe(AVFrame* video_frame) {
+  this->init_from_source(video_frame->width, video_frame->height,
+  [video_frame](int row, int col) {
+    switch ((AVPixelFormat)video_frame->format) {
+      case AV_PIX_FMT_GRAY8: return RGBColor(video_frame->data[0][row * video_frame->width + col]);
+      case AV_PIX_FMT_RGB24: return RGBColor( video_frame->data[0][row * video_frame->width * 3 + col * 3],
+      video_frame->data[0][row * video_frame->width * 3 + col * 3 + 1],
+      video_frame->data[0][row * video_frame->width * 3 + col * 3 + 2] );
+      default: throw std::runtime_error("Passed in AVFrame with unimplemeted format, "
+      "only supported formats for initializing from AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24");
+    }
+  });
 }
 
 PixelData::PixelData(std::vector<std::vector<RGBColor>>& raw_rgb_data) {
@@ -49,15 +75,8 @@ PixelData::PixelData(std::vector<std::vector<RGBColor>>& raw_rgb_data) {
 
   this->m_height = raw_rgb_data.size();
   this->m_width = 0;
-
   if (raw_rgb_data.size() > 0) {
-    this->m_width = raw_rgb_data[0].size();
-    this->pixels.reserve(raw_rgb_data.size() * raw_rgb_data[0].size());
-    for (int row = 0; row < (int)raw_rgb_data.size(); row++) {
-      for (int col = 0; col < (int)raw_rgb_data[0].size(); col++) {
-        this->pixels.push_back(raw_rgb_data[row][col]);
-      }
-    }
+    this->init_from_source((int)raw_rgb_data[0].size(), (int)raw_rgb_data.size(), [raw_rgb_data](int row, int col) { return raw_rgb_data[row][col]; });
   }
 }
 
@@ -68,78 +87,26 @@ PixelData::PixelData(std::vector<std::vector<uint8_t> >& raw_grayscale_data) {
 
   this->m_height = raw_grayscale_data.size();
   this->m_width = 0;
-
   if (raw_grayscale_data.size() > 0) {
-    this->m_width = raw_grayscale_data[0].size();
-    this->pixels.reserve(raw_grayscale_data.size() * raw_grayscale_data[0].size());
-    for (int row = 0; row < (int)raw_grayscale_data.size(); row++) {
-      for (int col = 0; col < (int)raw_grayscale_data[0].size(); col++) {
-        this->pixels.push_back(RGBColor(raw_grayscale_data[row][col]));
-      }
-    }
+    this->init_from_source(raw_grayscale_data[0].size(), raw_grayscale_data.size(), [raw_grayscale_data](int row, int col) { return RGBColor(raw_grayscale_data[row][col]);  });
   }
 }
 
-PixelData::PixelData(AVFrame* video_frame) {
-  this->pixels.reserve(video_frame->width * video_frame->height);
-  this->m_width = video_frame->width;
-  this->m_height = video_frame->height;
 
-  for (int row = 0; row < video_frame->height; row++) {
-    for (int col = 0; col < video_frame->width; col++) {
-      if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_GRAY8) {
-        this->pixels.push_back(RGBColor(video_frame->data[0][row * video_frame->width + col]));
-      } else if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_RGB24) {
-        int data_start = row * video_frame->width * 3 + col * 3;
-        this->pixels.push_back(RGBColor( video_frame->data[0][data_start], video_frame->data[0][data_start + 1], video_frame->data[0][data_start + 2] ));
-      } else {
-        throw std::runtime_error("Passed in AVFrame with unimplemeted format, only supported formats for initializing from AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24");
-      }
-    }
-  }
+PixelData::PixelData(AVFrame* video_frame) {
+  this->init_from_avframe(video_frame);
 }
 
 void PixelData::operator=(AVFrame* video_frame) {
-  this->pixels.clear();
-  this->pixels.reserve(video_frame->width * video_frame->height);
-  this->m_width = video_frame->width;
-  this->m_height = video_frame->height;
-
-  for (int row = 0; row < video_frame->height; row++) {
-    for (int col = 0; col < video_frame->width; col++) {
-      if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_GRAY8) {
-        this->pixels.push_back(RGBColor(video_frame->data[0][row * video_frame->width + col]));
-      } else if ((AVPixelFormat)video_frame->format == AV_PIX_FMT_RGB24) {
-        int data_start = row * video_frame->width * 3 + col * 3;
-        this->pixels.push_back(RGBColor( video_frame->data[0][data_start], video_frame->data[0][data_start + 1], video_frame->data[0][data_start + 2] ));
-      } else {
-        throw std::runtime_error("Passed in AVFrame with unimplemeted format, only supported formats for initializing from AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24");
-      }
-    }
-  }
+  this->init_from_avframe(video_frame);
 }
 
 PixelData::PixelData(const PixelData& pix_data) {
-  this->pixels.reserve(pix_data.get_width() * pix_data.get_height());
-  this->m_width = pix_data.get_width();
-  this->m_height = pix_data.get_height();
-  for (int row = 0; row < pix_data.get_height(); row++) {
-    for (int col = 0; col < pix_data.get_width(); col++) {
-      this->pixels.push_back(pix_data.at(row, col));
-    }
-  }
+  this->init_from_source(pix_data.get_width(), pix_data.get_height(), [&pix_data](int row, int col) { return RGBColor(pix_data.at(row, col)); });
 }
 
 void PixelData::operator=(const PixelData& pix_data) {
-  this->pixels.clear();
-  this->pixels.reserve(pix_data.get_width() * pix_data.get_height());
-  this->m_width = pix_data.get_width();
-  this->m_height = pix_data.get_height();
-  for (int row = 0; row < pix_data.get_height(); row++) {
-    for (int col = 0; col < pix_data.get_width(); col++) {
-      this->pixels.push_back(pix_data.at(row, col));
-    }
-  }
+  this->init_from_source(pix_data.get_width(), pix_data.get_height(), [&pix_data](int row, int col) { return RGBColor(pix_data.at(row, col)); });
 }
 
 bool PixelData::in_bounds(int row, int col) const {
