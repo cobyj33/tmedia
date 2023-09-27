@@ -45,8 +45,8 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 endif()
 
 option(ASCII_VIDEO_BUILD_TESTS "Build Testing Executable for ascii_video" OFF)
-option(FIND_FFMPEG "Find FFmpeg Libraries on system rather than build FFmpeg alongside ascii_video" OFF)
-option(FIND_CURSES "Find Curses Libraries on system rather than build NCurses alongside ascii_video" OFF)
+option(FIND_FFMPEG "Find FFmpeg Libraries on system rather than build FFmpeg alongside ascii_video" ON)
+option(FIND_CURSES "Find Curses Libraries on system rather than build NCurses alongside ascii_video" ON)
 
 message("Options: ASCII_VIDEO_BUILD_TESTS: " ${ASCII_VIDEO_BUILD_TESTS})
 message("Options: FIND_FFMPEG: " ${FIND_FFMPEG})
@@ -243,7 +243,10 @@ endif()
 target_compile_features(ascii_video PRIVATE cxx_std_17)
 target_include_directories(ascii_video PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
 target_link_libraries(ascii_video PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> argparse ${CMAKE_DL_LIBS})
-add_dependencies(ascii_video ${TARGET_DEPENDENCIES})
+
+if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
+  add_dependencies(ascii_video ${TARGET_DEPENDENCIES})
+endif()
 
 target_compile_options(ascii_video PRIVATE ${ASV_COMPILE_OPTIONS})
 
@@ -264,7 +267,11 @@ if (ASCII_VIDEO_BUILD_TESTS)
   target_include_directories(ascii_tests PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio)
   target_compile_features(ascii_tests PRIVATE cxx_std_17)
   target_link_libraries(ascii_tests PRIVATE Catch2::Catch2WithMain ${FFMPEG_LIBS} ${CURSES_LIBRARIES} PkgConfig::LIBAV $<TARGET_OBJECTS:miniaudio> ${CMAKE_DL_LIBS})
-  add_dependencies(ascii_tests ${TARGET_DEPENDENCIES})
+
+  if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
+    add_dependencies(ascii_tests ${TARGET_DEPENDENCIES})
+  endif()
+
 else()
   message("Configured to NOT build testing executable")
 endif()
