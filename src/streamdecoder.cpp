@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "decode.h"
+#include "boiler.h"
 #include "streamdecoder.h"
 #include "except.h"
 #include "avguard.h"
@@ -22,7 +23,7 @@ StreamDecoder::StreamDecoder(AVFormatContext* format_context, enum AVMediaType m
   int stream_index = -1;
   stream_index = av_find_best_stream(format_context, media_type, -1, -1, &decoder, 0);
   if (stream_index < 0) {
-    throw std::invalid_argument("Cannot find media type for type " + std::string(av_get_media_type_string(media_type)));
+    throw std::runtime_error("Cannot find media type for type " + std::string(av_get_media_type_string(media_type)));
   }
 
   this->decoder = decoder;
@@ -30,19 +31,19 @@ StreamDecoder::StreamDecoder(AVFormatContext* format_context, enum AVMediaType m
   this->codec_context = avcodec_alloc_context3(this->decoder);
 
   if (this->codec_context == nullptr) {
-    throw std::invalid_argument("Could not create codec context from decoder: " + std::string(decoder->long_name));
+    throw std::runtime_error("Could not create codec context from decoder: " + std::string(decoder->long_name));
   }
 
   this->media_type = media_type;
 
   int result = avcodec_parameters_to_context(this->codec_context, this->stream->codecpar);
   if (result < 0) {
-    throw std::invalid_argument("Could not move AVCodec parameters into context: AVERROR error code " + std::to_string(AVERROR(result)));
+    throw std::runtime_error("Could not move AVCodec parameters into context: AVERROR error code " + av_strerror_string(result));
   }
 
   result = avcodec_open2(this->codec_context, this->decoder, NULL);
   if (result < 0) {
-    throw std::invalid_argument("Could not initialize AVCodecContext with AVCodec decoder: AVERROR error code " + std::to_string(AVERROR(result)));
+    throw std::runtime_error("Could not initialize AVCodecContext with AVCodec decoder: AVERROR error code " + av_strerror_string(result));
   }
 };
 
@@ -55,6 +56,9 @@ double StreamDecoder::get_average_frame_time_sec() const {
 }
 
 double StreamDecoder::get_start_time() const {
+  if (this->stream->start_time == AV_NOPTS_VALUE)
+    return 0.0;
+  
   return this->stream->start_time * this->get_time_base();
 }
 
@@ -75,8 +79,7 @@ AVCodecContext* StreamDecoder::get_codec_context() const {
 }
 
 void StreamDecoder::reset() {
-  AVCodecContext* codec_context = this->get_codec_context();
-  avcodec_flush_buffers(codec_context);
+  avcodec_flush_buffers(this->codec_context);
 
   while (!this->packet_queue.empty()) {
     AVPacket* packet = this->packet_queue.front();
@@ -133,3 +136,4 @@ std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> get_stream_decoders(A
 
   return stream_decoders;
 }
+

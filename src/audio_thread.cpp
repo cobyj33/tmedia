@@ -72,20 +72,11 @@ void MediaPlayer::audio_playback_thread() {
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
   }
-
-  StreamDecoder& audio_stream_decoder = this->get_stream_decoder(AVMEDIA_TYPE_AUDIO);
-  AVCodecContext* audio_codec_context = audio_stream_decoder.get_codec_context();
-
   ma_device_config config = ma_device_config_init(ma_device_type_playback);
   config.playback.format  = ma_format_f32;
 
-  #if HAS_AVCHANNEL_LAYOUT
-  config.playback.channels = audio_codec_context->ch_layout.nb_channels;        
-  #else
-  config.playback.channels = audio_codec_context->channels;
-  #endif
-  
-  config.sampleRate = audio_codec_context->sample_rate;       
+  config.playback.channels = this->media_decoder->get_nb_channels();
+  config.sampleRate = this->media_decoder->get_sample_rate();       
   config.dataCallback = audioDataCallback;   
   config.pUserData = this;   
 
@@ -97,7 +88,7 @@ void MediaPlayer::audio_playback_thread() {
     throw std::runtime_error("FAILED TO INITIALIZE AUDIO DEVICE: " + std::to_string(miniaudio_log));
   }
 
-  sleep_for_sec(audio_stream_decoder.get_start_time());
+  sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
   
   while (true) {
     mutex_lock.lock();
@@ -179,7 +170,7 @@ void MediaPlayer::audio_playback_thread() {
       this->load_next_audio_frames(AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT);
     }
 
-    audio_device.sampleRate = audio_codec_context->sample_rate * this->clock.get_speed();
+    audio_device.sampleRate = this->media_decoder->get_sample_rate() * this->clock.get_speed();
     
     mutex_lock.unlock();
     sleep_for_ms(5);

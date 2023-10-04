@@ -78,6 +78,8 @@ set(COMMON_SOURCE_FILES
 ./src/color.cpp
 ./src/icons.cpp
 ./src/mediaclock.cpp
+./src/mediadecoder.cpp
+./src/mediatype.cpp
 ./src/pixeldata.cpp
 ./src/scale.cpp
 ./src/ui/gui.cpp)

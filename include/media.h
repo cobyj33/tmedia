@@ -8,7 +8,7 @@
 #include "color.h"
 #include "mediaclock.h"
 #include "pixeldata.h"
-#include "streamdecoder.h"
+#include "mediadecoder.h"
 
 #include "gui.h"
 
@@ -27,19 +27,12 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-enum class MediaType {
-  VIDEO,
-  AUDIO,
-  IMAGE
-};
 
 struct MediaPlayerConfig {
   bool muted;
 
   MediaPlayerConfig(bool muted) : muted(muted) {}
 };
-
-std::string media_type_to_string(MediaType media_type);
 
 class MediaPlayer {
   private:
@@ -71,11 +64,14 @@ class MediaPlayer {
      */
     PixelData frame;
 
-    AVFormatContext* format_context;
+    std::shared_ptr<MediaDecoder> media_decoder;
 
-    std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> stream_decoders;
+    // AVFormatContext* format_context;
 
-    std::vector<AVFrame*> next_frames(enum AVMediaType media_type);
+    // std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> stream_decoders;
+
+    // std::vector<AVFrame*> next_frames(enum AVMediaType media_type);
+    // int fetch_next(int requested_packet_count);
 
   public:
   
@@ -150,11 +146,9 @@ class MediaPlayer {
 
     int load_next_audio_frames(int frames);
 
-    StreamDecoder& get_stream_decoder(enum AVMediaType media_type) const;
+    // StreamDecoder& get_stream_decoder(enum AVMediaType media_type) const;
     bool has_media_stream(enum AVMediaType media_type) const;
-    int fetch_next(int requestedPacketCount);
 
-    ~MediaPlayer();
 };
 
 
