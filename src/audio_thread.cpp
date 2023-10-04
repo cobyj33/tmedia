@@ -31,6 +31,7 @@ const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 120.0;
 const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 15.0;
 const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
 const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
+const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 10;
 
 /**
  * @brief The callback called by miniaudio once the connected audio device requests audio data
@@ -48,7 +49,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
   AudioBuffer& audio_buffer = player->audio_buffer;
 
   while (!audio_buffer.can_read(sampleCount)) {
-    int written_samples = player->load_next_audio_frames(5);
+    int written_samples = player->load_next_audio_frames(AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT);
     if (written_samples == 0) {
       break;
     }
@@ -155,7 +156,7 @@ void MediaPlayer::audio_playback_thread() {
 
         int writtenSamples = 0;
         do {
-          writtenSamples = this->load_next_audio_frames(20);
+          writtenSamples = this->load_next_audio_frames(AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT);
         } while (writtenSamples != 0 && !this->audio_buffer.is_time_in_bounds(target_resync_time));
 
         if (this->audio_buffer.is_time_in_bounds(target_resync_time)) {
@@ -175,7 +176,7 @@ void MediaPlayer::audio_playback_thread() {
     }
 
     if (!this->audio_buffer.can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
-      this->load_next_audio_frames(10);
+      this->load_next_audio_frames(AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT);
     }
 
     audio_device.sampleRate = audio_codec_context->sample_rate * this->clock.get_speed();
