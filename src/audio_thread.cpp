@@ -26,50 +26,39 @@ extern "C" {
 #include <libavutil/audio_fifo.h>
 }
 
-// const int MIN_RECOMMENDED_AUDIO_BUFFER_SIZE = 220500; // 5 seconds of audio data at 44100 Hz sample rate
-// const int MAX_RECOMMENDED_AUDIO_BUFFER_SIZE = 1323000; // 30 seconds of audio data at 44100 Hz sample rate
-const int RECOMMENDED_AUDIO_BUFFER_SIZE = 661500; // 15 seconds of audio data at 44100 Hz sample rate
-const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 60.0;
+const int RECOMMENDED_AUDIO_BUFFER_SIZE = 44100 * 15; // 15 seconds of audio data at 44100 Hz sample rate
+const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 120.0;
 const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 15.0;
-const char* DEBUG_AUDIO_SOURCE = "Audio";
-const char* DEBUG_AUDIO_TYPE = "Debug";
 const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
 const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
 
-// typedef struct CallbackData {
-//   MediaPlayer* player;
-//   std::reference_wrapper<std::mutex> mutex_ref;
-
-//   CallbackData(MediaPlayer* player, std::reference_wrapper<std::mutex> mutex) : player(player), mutex_ref(mutex) {}
-// } CallbackData;
-
 /**
- * @brief The callback called by miniaudio once the 
+ * @brief The callback called by miniaudio once the connected audio device requests audio data
  * 
- * @param pDevice 
- * @param pOutput 
- * @param pInput 
- * @param frameCount 
+ * @param pDevice The miniaudio audio device representation
+ * @param pOutput The memory buffer to write frameCount samples into
+ * @param pInput Irrelevant for us :)
+ * @param sampleCount The number of samples requested by miniaudio
  */
-void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 sampleCount)
 {
   // CallbackData* data = (CallbackData*)(pDevice->pUserData);
   MediaPlayer* player = (MediaPlayer*)(pDevice->pUserData);
   std::lock_guard<std::mutex> mutex_lock_guard(player->alter_mutex);
   AudioBuffer& audio_buffer = player->audio_buffer;
 
-  while (!audio_buffer.can_read(frameCount)) {
+  while (!audio_buffer.can_read(sampleCount)) {
     int written_samples = player->load_next_audio_frames(5);
     if (written_samples == 0) {
       break;
     }
   }
 
-  if (audio_buffer.can_read(frameCount)) {
-    audio_buffer.read_into(frameCount, (float*)pOutput);
+  if (audio_buffer.can_read(sampleCount)) {
+    audio_buffer.read_into(sampleCount, (float*)pOutput);
   } else {
     float* pFloatOutput = (float*)pOutput;
-    for (ma_uint32 i = 0; i < frameCount; i++) {
+    for (ma_uint32 i = 0; i < sampleCount; i++) {
       pFloatOutput[i] = 0.0;
     }
   }
@@ -111,15 +100,14 @@ void MediaPlayer::audio_playback_thread() {
   
   while (true) {
     mutex_lock.lock();
-    if (!this->in_use)
-    {
+    if (!this->in_use) {
       mutex_lock.unlock();
       break;
     }
     
     ma_device_state audio_device_state = ma_device_get_state(&audio_device);
 
-    if ((this->clock.is_playing() == false || this->muted) && audio_device_state == ma_device_state_started) {
+    if ((this->clock.is_playing() == false || this->muted) && audio_device_state == ma_device_state_started) { // audio stop and start handling
       mutex_lock.unlock();
       miniaudio_log = ma_device_stop(&audio_device);
       if (miniaudio_log != MA_SUCCESS) {
@@ -152,7 +140,7 @@ void MediaPlayer::audio_playback_thread() {
     }
 
     double current_system_time = system_clock_sec();
-    if (this->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) {
+    if (this->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) { // desync handling
       double target_resync_time = this->get_time(current_system_time);
       
       if (target_resync_time > this->get_duration()) {
@@ -180,7 +168,7 @@ void MediaPlayer::audio_playback_thread() {
         this->jump_to_time(target_resync_time, current_system_time);
       }
 
-    }
+    } // end of desync handling
 
     if (this->audio_buffer.get_elapsed_time() > MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS) {
       this->audio_buffer.leave_behind(RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS);
@@ -191,7 +179,6 @@ void MediaPlayer::audio_playback_thread() {
     }
 
     audio_device.sampleRate = audio_codec_context->sample_rate * this->clock.get_speed();
-
     
     mutex_lock.unlock();
     sleep_for_ms(5);

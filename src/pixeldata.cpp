@@ -236,10 +236,8 @@ PixelData::PixelData(const char* file_name) {
 
 RGBColor PixelData::get_avg_color_from_area(int row, int col, int width, int height) const {
   if (width * height <= 0) {
-    throw std::runtime_error("Cannot get average color from an area with negative dimensions: " + std::to_string(width) + " x " + std::to_string(height));
-  }
-  if (width * height == 0) {
-    throw std::runtime_error("Cannot get average color from an area with dimension of 0: " + std::to_string(width) + " x " + std::to_string(height));
+    throw std::runtime_error("Cannot get average color from an area with dimensions: " + 
+    std::to_string(width) + " x " + std::to_string(height) + " Dimensions must be positive");
   }
 
   std::vector<RGBColor> colors;

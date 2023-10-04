@@ -49,7 +49,7 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, Med
   } 
 
   std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-  this->media_streams = get_stream_decoders(this->format_context);
+  this->stream_decoders = get_stream_decoders(this->format_context);
 
   if (avformat_context_is_static_image(this->format_context)) {
     this->media_type = MediaType::IMAGE;
@@ -130,9 +130,9 @@ void MediaPlayer::start(double start_time) {
 }
 
 StreamDecoder& MediaPlayer::get_stream_decoder(enum AVMediaType media_type) const {
-  if (this->media_streams.count(media_type) == 1)
+  if (this->stream_decoders.count(media_type) == 1)
   {
-    return *(this->media_streams.at(media_type));
+    return *(this->stream_decoders.at(media_type));
   }
   throw std::runtime_error("Cannot get media stream " +
   std::string(av_get_media_type_string(media_type)) +
@@ -140,7 +140,7 @@ StreamDecoder& MediaPlayer::get_stream_decoder(enum AVMediaType media_type) cons
 }
 
 bool MediaPlayer::has_media_stream(enum AVMediaType media_type) const {
-  return this->media_streams.count(media_type) == 1;
+  return this->stream_decoders.count(media_type) == 1;
 }
 
 int MediaPlayer::fetch_next(int requestedPacketCount) {
@@ -149,12 +149,12 @@ int MediaPlayer::fetch_next(int requestedPacketCount) {
 
   while (av_read_frame(this->format_context, reading_packet) == 0) {
      
-    for (auto i = this->media_streams.begin(); i != this->media_streams.end(); i++) {
-      if (i->second->get_stream_index() == reading_packet->stream_index) {
+    for (auto decoder_pair = this->stream_decoders.begin(); decoder_pair != this->stream_decoders.end(); decoder_pair++) {
+      if (decoder_pair->second->get_stream_index() == reading_packet->stream_index) {
         AVPacket* saved_packet = av_packet_alloc();
         av_packet_ref(saved_packet, reading_packet);
         
-        i->second->push_back_packet(saved_packet);
+        decoder_pair->second->push_back_packet(saved_packet);
         packets_read++;
         break;
       }
@@ -185,10 +185,10 @@ double MediaPlayer::get_time(double current_system_time) const {
 double MediaPlayer::get_desync_time(double current_system_time) const {
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO) && this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
     double current_playback_time = this->get_time(current_system_time);
-    double desync = std::abs(this->audio_buffer.get_time() - current_playback_time);
+    double desync = std::abs(this->audio_buffer.get_time() - current_playback_time); // in our implementation, only the audio buffer can really get desynced from our MediaClock
     return desync;
   }
-  return 0.0;
+  return 0.0; // if there is only one stream, there cannot be desync 
 }
 
 void MediaPlayer::set_current_frame(PixelData& data) {
@@ -228,7 +228,7 @@ std::vector<AVFrame*> MediaPlayer::next_frames(enum AVMediaType media_type)
     std::vector<AVFrame*> decodedFrames = stream.decode_next();
     if (decodedFrames.size() > 0) {
       return decodedFrames;
-    } 
+    }
   } while (fetch_count != 0);
 
   return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
@@ -290,7 +290,7 @@ int MediaPlayer::jump_to_time(double target_time, double current_system_time) {
     video_stream_decoder.reset();
     std::vector<AVFrame*> frames;
     bool passed_target_time = false;
-    
+
     do {
       clear_av_frame_list(frames);
       frames = this->next_frames(AVMEDIA_TYPE_VIDEO);

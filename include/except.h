@@ -2,11 +2,13 @@
 #define ASCII_VIDEO_EXCEPT_INCLUDE
 
 #include <stdexcept>
+#include <string>
 
 extern "C" {
   #include <libavutil/error.h>
 }
 
+std::string av_strerror_string(int errnum);
 
 namespace ascii {
   class ffmpeg_error : public std::runtime_error {

@@ -73,10 +73,10 @@ class MediaPlayer {
 
     AVFormatContext* format_context;
 
-    std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> media_streams;
+    std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> stream_decoders;
 
     std::vector<AVFrame*> next_frames(enum AVMediaType media_type);
-    
+
   public:
   
     /**

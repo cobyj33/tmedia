@@ -16,6 +16,8 @@ enum class MediaScreen {
   AUDIO
 };
 
+VideoOutputMode get_video_output_mode_from_params(bool colors, bool grayscale, bool background);
+
 class MediaGUI {
   private:
     VideoOutputMode m_video_output_mode = VideoOutputMode::TEXT_ONLY;
@@ -30,6 +32,5 @@ class MediaGUI {
     void set_video_output_mode(VideoOutputMode mode);
 };
 
-VideoOutputMode get_video_output_mode_from_params(bool colors, bool grayscale, bool background);
 
 #endif

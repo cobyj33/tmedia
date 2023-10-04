@@ -99,7 +99,7 @@ void AudioBuffer::leave_behind(double time) {
 
   double target_time = this->get_time() - time;
   std::size_t offset_sample_from_start = (target_time - this->m_start_time) * this->m_sample_rate;
-  this->m_buffer = std::vector<uint8_t>(this->m_buffer.begin() + offset_sample_from_start * this->m_nb_channels, this->m_buffer.end());
+  this->m_buffer = std::move(std::vector<uint8_t>(this->m_buffer.begin() + offset_sample_from_start * this->m_nb_channels, this->m_buffer.end()));
   this->m_start_time = target_time;
   this->m_playhead -= offset_sample_from_start;
 }

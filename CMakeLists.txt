@@ -65,6 +65,7 @@ set(COMMON_SOURCE_FILES
 ./src/streamdecoder.cpp
 ./src/ascii.cpp
 ./src/audiobuffer.cpp
+./src/except.cpp
 ./src/decode.cpp
 ./src/media.cpp
 ./src/boiler.cpp

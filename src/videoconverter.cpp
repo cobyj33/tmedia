@@ -44,7 +44,14 @@ AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
   #if HAS_AVFRAME_DURATION
   resized_video_frame->duration = original->duration;
   #endif
-  av_frame_get_buffer(resized_video_frame, 1); //watch this alignment
+  
+  int err = av_frame_get_buffer(resized_video_frame, 1); //watch this alignment
+  
+  if (err) {
+    throw std::runtime_error("[VideoConverter::convert_video_frame] Failure on "
+    "allocating buffers for resized video frame" + av_strerror_string(err));
+  }
+
   sws_scale(this->m_context, (uint8_t const * const *)original->data, original->linesize, 0, original->height, resized_video_frame->data, resized_video_frame->linesize);
 
   return resized_video_frame;
