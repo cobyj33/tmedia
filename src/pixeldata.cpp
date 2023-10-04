@@ -17,7 +17,7 @@
 #include "boiler.h"
 #include "videoconverter.h"
 #include "except.h"
-#include "streamdata.h"
+#include "streamdecoder.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -182,13 +182,13 @@ PixelData::PixelData(const char* file_name) {
   AVFormatContext* format_context;
   format_context = open_format_context(std::string(file_name));
 
-  std::map<enum AVMediaType, std::shared_ptr<StreamData>> media_streams = get_stream_datas(format_context);
+  std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> stream_decoders = get_stream_decoders(format_context);
 
-  if (!(media_streams.count(AVMEDIA_TYPE_VIDEO) == 1)) {
+  if (!(stream_decoders.count(AVMEDIA_TYPE_VIDEO) == 1)) {
     throw std::runtime_error("[PixelData::PixelData(const char* file_name)] Could not fetch image of file " + std::string(file_name));
   }
   
-  StreamData& imageStream = *(media_streams.at(AVMEDIA_TYPE_VIDEO));
+  StreamDecoder& imageStream = *(stream_decoders.at(AVMEDIA_TYPE_VIDEO));
 
   AVCodecContext* codec_context = imageStream.get_codec_context();
   VideoConverter image_converter(

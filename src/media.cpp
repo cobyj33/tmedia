@@ -18,7 +18,7 @@
 #include "sleep.h"
 #include "audioresampler.h"
 #include "avguard.h"
-#include "streamdata.h"
+#include "streamdecoder.h"
 
 extern "C" {
 #include "curses.h"
@@ -49,7 +49,7 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, Med
   } 
 
   std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-  this->media_streams = get_stream_datas(this->format_context);
+  this->media_streams = get_stream_decoders(this->format_context);
 
   if (avformat_context_is_static_image(this->format_context)) {
     this->media_type = MediaType::IMAGE;
@@ -62,8 +62,8 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, Med
   }
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    StreamData& audio_stream_data = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
-    AVCodecContext* audio_codec_context = audio_stream_data.get_codec_context();
+    StreamDecoder& audio_stream_decoder = this->get_stream_decoder(AVMEDIA_TYPE_AUDIO);
+    AVCodecContext* audio_codec_context = audio_stream_decoder.get_codec_context();
     #if HAS_AVCHANNEL_LAYOUT
     this->audio_buffer.init(audio_codec_context->ch_layout.nb_channels, audio_codec_context->sample_rate);
     #else
@@ -129,7 +129,7 @@ void MediaPlayer::start(double start_time) {
   this->in_use = false;
 }
 
-StreamData& MediaPlayer::get_media_stream(enum AVMediaType media_type) const {
+StreamDecoder& MediaPlayer::get_stream_decoder(enum AVMediaType media_type) const {
   if (this->media_streams.count(media_type) == 1)
   {
     return *(this->media_streams.at(media_type));
@@ -216,7 +216,7 @@ std::vector<AVFrame*> MediaPlayer::next_frames(enum AVMediaType media_type)
     std::string(av_get_media_type_string(media_type)) + " frames, as no video stream is " 
     "available to decode from");
 
-  StreamData& stream = this->get_media_stream(media_type);
+  StreamDecoder& stream = this->get_stream_decoder(media_type);
   std::vector<AVFrame*> decodedFrames = stream.decode_next();
   if (decodedFrames.size() > 0) {
     return decodedFrames;
@@ -244,8 +244,8 @@ int MediaPlayer::load_next_audio_frames(int frames) {
   }
 
   int written_samples = 0;
-  StreamData& audio_media_stream = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
-  AVCodecContext* audio_codec_context = audio_media_stream.get_codec_context();
+  StreamDecoder& audio_stream_decoder = this->get_stream_decoder(AVMEDIA_TYPE_AUDIO);
+  AVCodecContext* audio_codec_context = audio_stream_decoder.get_codec_context();
   #if HAS_AVCHANNEL_LAYOUT
   AudioResampler audio_resampler(
     &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
@@ -286,43 +286,44 @@ int MediaPlayer::jump_to_time(double target_time, double current_system_time) {
   }
 
   if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
-    StreamData& video_media_stream = this->get_media_stream(AVMEDIA_TYPE_VIDEO);
-    video_media_stream.flush();
-    video_media_stream.clear_queue();
-
+    StreamDecoder& video_stream_decoder = this->get_stream_decoder(AVMEDIA_TYPE_VIDEO);
+    video_stream_decoder.reset();
     std::vector<AVFrame*> frames;
     bool passed_target_time = false;
+    
     do {
       clear_av_frame_list(frames);
       frames = this->next_frames(AVMEDIA_TYPE_VIDEO);
       for (int i = 0; i < (int)frames.size(); i++) {
-        if (frames[i]->pts * video_media_stream.get_time_base() >= target_time) {
+        if (frames[i]->pts * video_stream_decoder.get_time_base() >= target_time) {
           passed_target_time = true;
           break;
         }
       }
     } while (!passed_target_time && frames.size() > 0);
+    
     clear_av_frame_list(frames);
   }
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    StreamData& audio_media_stream = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
-    audio_media_stream.flush();
-    audio_media_stream.clear_queue();
     this->audio_buffer.clear_and_restart_at(target_time);
-    
+
+    StreamDecoder& audio_stream_decoder = this->get_stream_decoder(AVMEDIA_TYPE_AUDIO);
+    audio_stream_decoder.reset();
     std::vector<AVFrame*> frames;
     bool passed_target_time = false;
+
     do {
       clear_av_frame_list(frames);
       frames = this->next_frames(AVMEDIA_TYPE_AUDIO);
       for (int i = 0; i < (int)frames.size(); i++) {
-        if (frames[i]->pts * audio_media_stream.get_time_base() >= target_time) {
+        if (frames[i]->pts * audio_stream_decoder.get_time_base() >= target_time) {
           passed_target_time = true;
           break;
         }
       }
     } while (!passed_target_time && frames.size() > 0);
+    
     clear_av_frame_list(frames);
   }
 

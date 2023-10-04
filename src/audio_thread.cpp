@@ -83,8 +83,8 @@ void MediaPlayer::audio_playback_thread() {
     throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
   }
 
-  StreamData& audio_stream_data = this->get_media_stream(AVMEDIA_TYPE_AUDIO);
-  AVCodecContext* audio_codec_context = audio_stream_data.get_codec_context();
+  StreamDecoder& audio_stream_decoder = this->get_stream_decoder(AVMEDIA_TYPE_AUDIO);
+  AVCodecContext* audio_codec_context = audio_stream_decoder.get_codec_context();
 
   ma_device_config config = ma_device_config_init(ma_device_type_playback);
   config.playback.format  = ma_format_f32;
@@ -107,7 +107,7 @@ void MediaPlayer::audio_playback_thread() {
     throw std::runtime_error("FAILED TO INITIALIZE AUDIO DEVICE: " + std::to_string(miniaudio_log));
   }
 
-  sleep_for_sec(audio_stream_data.get_start_time());
+  sleep_for_sec(audio_stream_decoder.get_start_time());
   
   while (true) {
     mutex_lock.lock();

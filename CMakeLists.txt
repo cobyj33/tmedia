@@ -62,7 +62,7 @@ set(COMMON_SOURCE_FILES
 ./src/audio.cpp
 ./src/audio_thread.cpp
 ./src/videoconverter.cpp
-./src/streamdata.cpp
+./src/streamdecoder.cpp
 ./src/ascii.cpp
 ./src/audiobuffer.cpp
 ./src/decode.cpp

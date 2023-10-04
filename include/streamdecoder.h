@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_STREAM_DATA_INCLUDE
-#define ASCII_VIDEO_STREAM_DATA_INCLUDE
+#ifndef ASCII_VIDEO_STREAM_DECODER_INCLUDE
+#define ASCII_VIDEO_STREAM_DECODER_INCLUDE
 
 #include <stdexcept>
 #include <string>
@@ -12,20 +12,16 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
-
-
-class StreamData {
+class StreamDecoder {
   private:
     enum AVMediaType media_type;
     AVStream* stream;
     const AVCodec* decoder;
     AVCodecContext* codec_context;
-
-  public:
-
     std::deque<AVPacket*> packet_queue;
 
-    StreamData(AVFormatContext* format_context, enum AVMediaType media_type);
+  public:
+    StreamDecoder(AVFormatContext* format_context, enum AVMediaType media_type);
 
     double get_time_base() const;
     double get_average_frame_rate_sec() const;
@@ -35,17 +31,16 @@ class StreamData {
     enum AVMediaType get_media_type() const;
     AVCodecContext* get_codec_context() const;
     
-    void flush();
+    void reset();
 
     bool has_packets();
     void push_back_packet(AVPacket*);
 
     std::vector<AVFrame*> decode_next();
-    void clear_queue();
 
-    ~StreamData();
+    ~StreamDecoder();
 };
 
-std::map<enum AVMediaType, std::shared_ptr<StreamData>> get_stream_datas(AVFormatContext* format_context);
+std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> get_stream_decoders(AVFormatContext* format_context);
 
 #endif

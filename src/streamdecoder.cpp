@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 #include "decode.h"
-#include "streamdata.h"
+#include "streamdecoder.h"
 #include "except.h"
 #include "avguard.h"
 
@@ -12,7 +12,7 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
-StreamData::StreamData(AVFormatContext* format_context, enum AVMediaType media_type) {
+StreamDecoder::StreamDecoder(AVFormatContext* format_context, enum AVMediaType media_type) {
   #if AV_FIND_BEST_STREAM_CONST_DECODER
   const AVCodec* decoder;
   #else
@@ -46,40 +46,38 @@ StreamData::StreamData(AVFormatContext* format_context, enum AVMediaType media_t
   }
 };
 
-double StreamData::get_average_frame_rate_sec() const {
+double StreamDecoder::get_average_frame_rate_sec() const {
   return av_q2d(this->stream->avg_frame_rate);
 }
 
-double StreamData::get_average_frame_time_sec() const {
+double StreamDecoder::get_average_frame_time_sec() const {
   return 1 / av_q2d(this->stream->avg_frame_rate);
 }
 
-double StreamData::get_start_time() const {
+double StreamDecoder::get_start_time() const {
   return this->stream->start_time * this->get_time_base();
 }
 
-int StreamData::get_stream_index() const {
+int StreamDecoder::get_stream_index() const {
   return this->stream->index;
 }
 
-void StreamData::flush() {
-  AVCodecContext* codec_context = this->get_codec_context();
-  avcodec_flush_buffers(codec_context);
-}
-
-enum AVMediaType StreamData::get_media_type() const {
+enum AVMediaType StreamDecoder::get_media_type() const {
   return this->media_type;
 }
 
-double StreamData::get_time_base() const {
+double StreamDecoder::get_time_base() const {
   return av_q2d(this->stream->time_base);
 }
 
-AVCodecContext* StreamData::get_codec_context() const {
+AVCodecContext* StreamDecoder::get_codec_context() const {
   return this->codec_context;
 }
 
-void StreamData::clear_queue() {
+void StreamDecoder::reset() {
+  AVCodecContext* codec_context = this->get_codec_context();
+  avcodec_flush_buffers(codec_context);
+
   while (!this->packet_queue.empty()) {
     AVPacket* packet = this->packet_queue.front();
     this->packet_queue.pop_front();
@@ -87,46 +85,51 @@ void StreamData::clear_queue() {
   }
 }
 
-std::vector<AVFrame*> StreamData::decode_next() {
+std::vector<AVFrame*> StreamDecoder::decode_next() {
   if (this->media_type == AVMEDIA_TYPE_VIDEO) {
     return decode_video_packet_queue(this->codec_context, this->packet_queue);
   } else if (this->media_type == AVMEDIA_TYPE_AUDIO) {
     return decode_audio_packet_queue(this->codec_context, this->packet_queue);
   }
 
-  throw std::runtime_error("[StreamData::decode_next] Could not decode next "
+  throw std::runtime_error("[StreamDecoder::decode_next] Could not decode next "
   "video packet, Media type " + std::string(av_get_media_type_string(this->media_type)) + 
   " is currently unsupported");
 }
 
-StreamData::~StreamData() {
-  this->clear_queue();
+StreamDecoder::~StreamDecoder() {
+  while (!this->packet_queue.empty()) {
+    AVPacket* packet = this->packet_queue.front();
+    this->packet_queue.pop_front();
+    av_packet_free(&packet);
+  }
+
   if (this->codec_context != nullptr) {
     avcodec_free_context(&(this->codec_context));
   }
 };
 
-bool StreamData::has_packets() {
+bool StreamDecoder::has_packets() {
   return !this->packet_queue.empty();
 }
 
-void StreamData::push_back_packet(AVPacket* packet) {
+void StreamDecoder::push_back_packet(AVPacket* packet) {
   this->packet_queue.push_back(packet);
 }
 
-std::map<enum AVMediaType, std::shared_ptr<StreamData>> get_stream_datas(AVFormatContext* format_context) {
+std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> get_stream_decoders(AVFormatContext* format_context) {
   const int NUM_OF_MEDIA_TYPES_TO_SEARCH = 2;
   enum AVMediaType MEDIA_TYPES_TO_SEARCH[NUM_OF_MEDIA_TYPES_TO_SEARCH] = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-  std::map<enum AVMediaType, std::shared_ptr<StreamData>> stream_datas;
+  std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> stream_decoders;
 
   for (int i = 0; i < NUM_OF_MEDIA_TYPES_TO_SEARCH; i++) {
     try {
-      std::shared_ptr<StreamData> stream_data_ptr = std::make_shared<StreamData>(format_context, MEDIA_TYPES_TO_SEARCH[i]);
-      stream_datas[MEDIA_TYPES_TO_SEARCH[i]] = stream_data_ptr;
+      std::shared_ptr<StreamDecoder> stream_decoder_ptr = std::make_shared<StreamDecoder>(format_context, MEDIA_TYPES_TO_SEARCH[i]);
+      stream_decoders[MEDIA_TYPES_TO_SEARCH[i]] = stream_decoder_ptr;
     } catch (std::invalid_argument const& e) {
       continue;
     }
   }
 
-  return stream_datas;
+  return stream_decoders;
 }

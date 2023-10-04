@@ -37,9 +37,9 @@ void MediaPlayer::video_playback_thread() {
     throw std::runtime_error("Could not playback video data: Could not find video stream in media player");
   }
 
-  StreamData& video_stream_data = this->get_media_stream(AVMEDIA_TYPE_VIDEO);
-  double avg_frame_time_sec = video_stream_data.get_average_frame_time_sec();
-  AVCodecContext* video_codec_context = video_stream_data.get_codec_context();
+  StreamDecoder& video_stream_decoder = this->get_stream_decoder(AVMEDIA_TYPE_VIDEO);
+  double avg_frame_time_sec = video_stream_decoder.get_average_frame_time_sec();
+  AVCodecContext* video_codec_context = video_stream_decoder.get_codec_context();
 
   std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(video_codec_context->width, video_codec_context->height, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
   int output_frame_width = bounded_video_frame_dimensions.first;
@@ -86,9 +86,9 @@ void MediaPlayer::video_playback_thread() {
 
         if (frame_image != nullptr) {
           #if HAS_AVFRAME_DURATION
-          frame_duration = (double)frame_image->duration * video_stream_data.get_time_base();
+          frame_duration = (double)frame_image->duration * video_stream_decoder.get_time_base();
           #endif
-          frame_pts_time_sec = (double)frame_image->pts * video_stream_data.get_time_base();
+          frame_pts_time_sec = (double)frame_image->pts * video_stream_decoder.get_time_base();
           extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
           av_frame_free(&frame_image);
         }
