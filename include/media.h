@@ -64,7 +64,7 @@ class MediaPlayer {
      */
     PixelData frame;
 
-    std::shared_ptr<MediaDecoder> media_decoder;
+    std::unique_ptr<MediaDecoder> media_decoder;
 
     // AVFormatContext* format_context;
 

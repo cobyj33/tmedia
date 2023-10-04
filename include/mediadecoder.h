@@ -12,7 +12,7 @@ extern "C" {
 class MediaDecoder {
   private:
     AVFormatContext* format_context;
-    std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> stream_decoders;
+    std::map<enum AVMediaType, std::unique_ptr<StreamDecoder>> stream_decoders;
     MediaType media_type;
 
     int fetch_next(int requested_packet_count);

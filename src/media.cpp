@@ -34,7 +34,7 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, Med
   this->media_gui = starting_media_gui;
 
   std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-  this->media_decoder = std::make_shared<MediaDecoder>(file_name);
+  this->media_decoder = std::move(std::make_unique<MediaDecoder>(file_name));
   this->media_type = this->media_decoder->get_media_type();
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
