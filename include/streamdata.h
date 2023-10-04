@@ -12,6 +12,8 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
+
+
 class StreamData {
   private:
     enum AVMediaType media_type;
@@ -32,12 +34,13 @@ class StreamData {
     int get_stream_index() const;
     enum AVMediaType get_media_type() const;
     AVCodecContext* get_codec_context() const;
+    
+    void flush();
 
     bool has_packets();
     void push_back_packet(AVPacket*);
 
     std::vector<AVFrame*> decode_next();
-    void flush();
     void clear_queue();
 
     ~StreamData();

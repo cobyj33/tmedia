@@ -9,7 +9,7 @@ class MediaPlaybackContext {
   MediaGUI guiSettings;
 
   MediaPlaybackContext(MediaPlayer media);
-}
+};
 
 void asv_player_set_media();
 

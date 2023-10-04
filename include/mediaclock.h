@@ -17,13 +17,11 @@ class MediaClock {
 
     MediaClock();
 
-
     /**
      * @brief Get the current time (in seconds) of the clock. This time takes into account total time paused, skipped, and played
      * @return double
      */
     double get_time(double current_system_time) const;
-
 
     /**
      * @brief Toggle in between resume and stop
@@ -50,7 +48,6 @@ class MediaClock {
     bool is_playing() const;
     double get_speed() const;
     double get_volume() const;
-
 
     void set_speed(double amount);
     void set_volume(double amount);
