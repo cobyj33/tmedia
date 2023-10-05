@@ -27,7 +27,7 @@ MediaDecoder::MediaDecoder(const char* file_name) {
   for (int i = 0; i < NUM_OF_MEDIA_TYPES_TO_SEARCH; i++) {
     try {
       this->stream_decoders[MEDIA_TYPES_TO_SEARCH[i]] = std::move(std::make_unique<StreamDecoder>(format_context, MEDIA_TYPES_TO_SEARCH[i]));
-    } catch (std::invalid_argument const& e) {
+    } catch (std::runtime_error const& e) {
       continue;
     }
   }

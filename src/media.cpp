@@ -37,11 +37,11 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, Med
   this->media_decoder = std::move(std::make_unique<MediaDecoder>(file_name));
   this->media_type = this->media_decoder->get_media_type();
 
-  this->audio_resampler = std::move(std::make_unique<AudioResampler>(
-    this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
-    this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate()));
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    this->audio_resampler = std::move(std::make_unique<AudioResampler>(
+    this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
+    this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate()));
     this->audio_buffer = std::move(std::make_unique<AudioBuffer>(this->media_decoder->get_nb_channels(), this->media_decoder->get_sample_rate()));
   }
 }
