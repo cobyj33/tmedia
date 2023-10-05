@@ -79,6 +79,7 @@ class MediaPlayer {
 
 
     std::mutex alter_mutex;
+    std::mutex buffer_read_mutex;
 
     MediaGUI media_gui;
 

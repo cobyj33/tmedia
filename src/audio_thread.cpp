@@ -33,6 +33,7 @@ const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
 const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
 const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 5;
 const int AUDIO_THREAD_ITERATION_SLEEP_MS = 5;
+const int MINIMUM_AUDIO_BUFFER_DEVICE_START_SIZE = 1024;
 
 /**
  * @brief The callback called by miniaudio once the connected audio device requests audio data
@@ -46,7 +47,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 {
   // CallbackData* data = (CallbackData*)(pDevice->pUserData);
   MediaPlayer* player = (MediaPlayer*)(pDevice->pUserData);
-  std::lock_guard<std::mutex> mutex_lock_guard(player->alter_mutex);
+  std::lock_guard<std::mutex> mutex_lock_guard(player->buffer_read_mutex);
 
   while (!player->audio_buffer->can_read(sampleCount)) {
     int written_samples = player->load_next_audio();
@@ -95,7 +96,12 @@ void MediaPlayer::audio_playback_thread() {
   miniaudio_log = ma_device_start(&audio_device);
   if (miniaudio_log != MA_SUCCESS) {
     ma_device_uninit(&audio_device);
-    throw std::runtime_error("[MediaPlayer::audio_playback_thread] Failed to start playback: Miniaudio Error " + std::to_string(miniaudio_log));
+    throw std::runtime_error("[MediaPlayer::audio_playback_thread] Failed to initially start playback: Miniaudio Error " + std::to_string(miniaudio_log));
+  }
+  miniaudio_log = ma_device_stop(&audio_device);
+  if (miniaudio_log != MA_SUCCESS) {
+    ma_device_uninit(&audio_device);
+    throw std::runtime_error("[MediaPlayer::audio_playback_thread] Failed to initially stop playback: Miniaudio Error " + std::to_string(miniaudio_log));
   }
 
   sleep_for_sec(START_TIME);
@@ -135,6 +141,8 @@ void MediaPlayer::audio_playback_thread() {
         break;
       }
 
+      std::lock_guard<std::mutex> lock(this->buffer_read_mutex);
+
       if (this->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) { // desync handling
         if (this->audio_buffer->is_time_in_bounds(target_resync_time)) {
           this->audio_buffer->set_time_in_bounds(target_resync_time);
@@ -162,14 +170,17 @@ void MediaPlayer::audio_playback_thread() {
     }
 
     {
-      std::lock_guard<std::mutex> lock(this->alter_mutex);
+      std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
+      
       if (!this->audio_buffer->can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
-        for (int i = 0; i < AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT; i++)
+        for (int i = 0; i < AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT; i++) {
+          std::lock_guard<std::mutex> lock(this->buffer_read_mutex);
           this->load_next_audio();
+        }
       }
+
     }
 
-    sleep_for_ms(AUDIO_THREAD_ITERATION_SLEEP_MS);
   }
 
   ma_device_uninit(&audio_device);
