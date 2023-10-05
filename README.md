@@ -19,13 +19,6 @@ Terminal video player, Written in C++ 17
 * [FFmpeg](https://ffmpeg.org/)
 * [cmake](https://cmake.org/)
 
-Building:  
-g++, gcc, libtool, make, cmake, pkg-config, yasm (on x86 or x86_64 cpu
-architectures), git
-
-> NOTE: **The source code for all non-building dependencies listed above**
-> **are already included and will be compiled along with ascii_video**
-
 ## Installing
 
 ### Ubuntu/Debian
@@ -59,7 +52,7 @@ While it is by no means required, ascii_video will run faster in GPU accelerated
 terminals like [alacritty](https://github.com/alacritty/alacritty) and
 [kitty](https://github.com/kovidgoyal/kitty).
 
-- Works with FFmpeg versions as far back as FFmpeg 3.4
+Works with FFmpeg versions as far back as FFmpeg 3.4
 
 ## Acknowledgments
 
