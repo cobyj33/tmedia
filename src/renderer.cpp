@@ -44,12 +44,19 @@ RGBColor get_index_display_color(int index, int length)
 
 void MediaPlayer::render_loop()
 {
+  std::unique_lock<std::mutex> lock(this->alter_mutex, std::defer_lock);
   WINDOW *inputWindow = newwin(0, 0, 1, 1);
+  if (inputWindow == NULL) {
+    lock.lock();
+    this->in_use = false;
+    lock.unlock();
+    return;
+  }
+
   nodelay(inputWindow, true);
   keypad(inputWindow, true);
   double batched_jump_time = 0;
   const int RENDER_LOOP_SLEEP_TIME_MS = 41;
-  std::unique_lock<std::mutex> lock(this->alter_mutex, std::defer_lock);
   erase();
 
   while (inputWindow != NULL) {
