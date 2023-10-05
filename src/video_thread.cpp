@@ -34,18 +34,19 @@ const char* DEBUG_VIDEO_TYPE = "debug";
 
 void MediaPlayer::video_playback_thread() {
   std::unique_lock<std::mutex> mutex_lock(this->alter_mutex, std::defer_lock);
+  mutex_lock.lock();
   if (!this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
+    mutex_lock.unlock();
     throw std::runtime_error("Could not playback video data: Could not find video stream in media player");
   }
 
-  // StreamDecoder& video_stream_decoder = this->get_stream_decoder(AVMEDIA_TYPE_VIDEO);
-  double avg_frame_time_sec = this->media_decoder->get_average_frame_time_sec(AVMEDIA_TYPE_VIDEO);
-
-  std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(this->media_decoder->get_width(), this->media_decoder->get_height(), MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
-  int output_frame_width = bounded_video_frame_dimensions.first;
-  int output_frame_height = bounded_video_frame_dimensions.second;
+  const double avg_frame_time_sec = this->media_decoder->get_average_frame_time_sec(AVMEDIA_TYPE_VIDEO);
+  const std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(this->media_decoder->get_width(), this->media_decoder->get_height(), MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+  const int output_frame_width = bounded_video_frame_dimensions.first;
+  const int output_frame_height = bounded_video_frame_dimensions.second;
 
   VideoConverter videoConverter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, this->media_decoder->get_width(), this->media_decoder->get_height(), this->media_decoder->get_pix_fmt());
+  mutex_lock.unlock();
 
   while (1) {
     mutex_lock.lock();
@@ -84,11 +85,11 @@ void MediaPlayer::video_playback_thread() {
     clear_av_frame_list(decoded_frames);
 
 
-    double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / this->clock.get_speed() ) );
+    const double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / this->clock.get_speed() ) );
     this->clock.skip(frame_speed_skip_time_sec);
 
     const double current_time = this->get_time(system_clock_sec());
-    double waitDuration = frame_pts_time_sec - current_time + extra_delay - frame_speed_skip_time_sec;
+    const double waitDuration = frame_pts_time_sec - current_time + extra_delay - frame_speed_skip_time_sec;
 
     mutex_lock.unlock();
     if (waitDuration <= 0) {
