@@ -44,12 +44,10 @@ RGBColor get_index_display_color(int index, int length)
 
 void MediaPlayer::render_loop()
 {
-  std::unique_lock<std::mutex> lock(this->alter_mutex, std::defer_lock);
   WINDOW *inputWindow = newwin(0, 0, 1, 1);
   if (inputWindow == NULL) {
-    lock.lock();
+    std::lock_guard<std::mutex> lock(this->alter_mutex);
     this->in_use = false;
-    lock.unlock();
     return;
   }
 
@@ -60,141 +58,142 @@ void MediaPlayer::render_loop()
   erase();
 
   while (inputWindow != NULL) {
-    int input = wgetch(inputWindow);
+    PixelData image;
+    VideoOutputMode vom;
 
-    lock.lock();
-    if (!this->in_use) {
-      lock.unlock();
-      break;
-    }
-
-    if (this->media_type != MediaType::IMAGE && this->get_time(system_clock_sec()) >= this->get_duration()) {
-      if (this->is_looped) {
-        this->jump_to_time(0.0, system_clock_sec());
-      } else {   
-        this->in_use = false;
-        lock.unlock();
-        break;
-      }
-    }
-
-    while (input != ERR) { // Go through and process all the batched input
-      if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b') {
-        this->in_use = false;
-        break; // break out of input != ERR
-      }
-
-      if (input == KEY_RESIZE) {
-        erase();
-        refresh();
-      }
-
-      if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version
-        switch (this->media_gui.get_video_output_mode()) {
-          case VideoOutputMode::COLORED:
-            this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY);
-            break;
-          case VideoOutputMode::GRAYSCALE:
-            this->media_gui.set_video_output_mode(VideoOutputMode::COLORED);
-            ncurses_set_color_palette(AVNCursesColorPalette::RGB);
-            break;
-          case VideoOutputMode::COLORED_BACKGROUND_ONLY:
-            this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY);
-            break;
-          case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: 
-            this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY);
-            ncurses_set_color_palette(AVNCursesColorPalette::RGB);
-            break; 
-          case VideoOutputMode::TEXT_ONLY:
-            this->media_gui.set_video_output_mode(VideoOutputMode::COLORED);
-            ncurses_set_color_palette(AVNCursesColorPalette::RGB);
-            break;
-        }
-      }
-
-      if ((input == 'g' || input == 'G') && has_colors() && can_change_color()) {
-        switch (this->media_gui.get_video_output_mode()) {
-          case VideoOutputMode::COLORED:
-            this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE);
-            ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
-            break;
-          case VideoOutputMode::GRAYSCALE:
-            this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY);
-            break;
-          case VideoOutputMode::COLORED_BACKGROUND_ONLY:
-            this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY);
-            ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
-            break;
-          case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: 
-            this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY);
-            break; 
-          case VideoOutputMode::TEXT_ONLY:
-            this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE);
-            ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
-            break;
-        }
-      }
-
-      if ((input == 'b' || input == 'B') && has_colors() && can_change_color()) {
-        switch (this->media_gui.get_video_output_mode()) {
-          case VideoOutputMode::COLORED:
-            this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY);
-            break;
-          case VideoOutputMode::GRAYSCALE:
-            this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY);
-            break;
-          case VideoOutputMode::COLORED_BACKGROUND_ONLY:
-            this->media_gui.set_video_output_mode(VideoOutputMode::COLORED);
-            break;
-          case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: 
-            this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE);
-            break; 
-          case VideoOutputMode::TEXT_ONLY: break;
-        }
-      }
-
-      if ((input == KEY_LEFT || input == KEY_RIGHT) && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
-        if (input == KEY_LEFT) {
-          batched_jump_time -= 5;
-        }
-        else if (input == KEY_RIGHT) {
-          batched_jump_time += 5;
-        }
-      }
-
-      if (input == ' ' && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
-        this->clock.toggle(system_clock_sec());
-      }
-
-      if (input == 'm' || input == 'M') {
-        this->muted = !this->muted;
-      }
-
-      input = wgetch(inputWindow);
-    } // Ending of "while (input != ERR)"
-
-    if (this->in_use)
     {
-      if (batched_jump_time != 0 && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO))
-      {
-        double current_playback_time = this->get_time(system_clock_sec());
-        double target_time = current_playback_time + batched_jump_time;
+      std::lock_guard<std::mutex> lock(this->alter_mutex);
+      if (!this->in_use)
+        break;
+      int input = wgetch(inputWindow);
 
+
+      if (this->media_type != MediaType::IMAGE && this->get_time(system_clock_sec()) >= this->get_duration()) {
         if (this->is_looped) {
-          target_time = target_time < 0 ? this->get_duration() + std::fmod(target_time, this->get_duration()) : std::fmod(target_time, this->get_duration());
-        } else {
-          target_time = clamp(target_time, 0.0, this->get_duration());
+          this->jump_to_time(0.0, system_clock_sec());
+        } else {   
+          this->in_use = false;
+          break;
+        }
+      }
+
+      while (input != ERR) { // Go through and process all the batched input
+        if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b') {
+          this->in_use = false;
+          break; // break out of input != ERR
         }
 
-        this->jump_to_time(target_time, system_clock_sec());
-        batched_jump_time = 0;
+        if (input == KEY_RESIZE) {
+          erase();
+          refresh();
+        }
+
+        if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version
+          switch (this->media_gui.get_video_output_mode()) {
+            case VideoOutputMode::COLORED:
+              this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY);
+              break;
+            case VideoOutputMode::GRAYSCALE:
+              this->media_gui.set_video_output_mode(VideoOutputMode::COLORED);
+              ncurses_set_color_palette(AVNCursesColorPalette::RGB);
+              break;
+            case VideoOutputMode::COLORED_BACKGROUND_ONLY:
+              this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY);
+              break;
+            case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: 
+              this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY);
+              ncurses_set_color_palette(AVNCursesColorPalette::RGB);
+              break; 
+            case VideoOutputMode::TEXT_ONLY:
+              this->media_gui.set_video_output_mode(VideoOutputMode::COLORED);
+              ncurses_set_color_palette(AVNCursesColorPalette::RGB);
+              break;
+          }
+        }
+
+        if ((input == 'g' || input == 'G') && has_colors() && can_change_color()) {
+          switch (this->media_gui.get_video_output_mode()) {
+            case VideoOutputMode::COLORED:
+              this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE);
+              ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
+              break;
+            case VideoOutputMode::GRAYSCALE:
+              this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY);
+              break;
+            case VideoOutputMode::COLORED_BACKGROUND_ONLY:
+              this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY);
+              ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
+              break;
+            case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: 
+              this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY);
+              break; 
+            case VideoOutputMode::TEXT_ONLY:
+              this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE);
+              ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
+              break;
+          }
+        }
+
+        if ((input == 'b' || input == 'B') && has_colors() && can_change_color()) {
+          switch (this->media_gui.get_video_output_mode()) {
+            case VideoOutputMode::COLORED:
+              this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY);
+              break;
+            case VideoOutputMode::GRAYSCALE:
+              this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY);
+              break;
+            case VideoOutputMode::COLORED_BACKGROUND_ONLY:
+              this->media_gui.set_video_output_mode(VideoOutputMode::COLORED);
+              break;
+            case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: 
+              this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE);
+              break; 
+            case VideoOutputMode::TEXT_ONLY: break;
+          }
+        }
+
+        if ((input == KEY_LEFT || input == KEY_RIGHT) && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+          if (input == KEY_LEFT) {
+            batched_jump_time -= 5;
+          }
+          else if (input == KEY_RIGHT) {
+            batched_jump_time += 5;
+          }
+        }
+
+        if (input == ' ' && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+          this->clock.toggle(system_clock_sec());
+        }
+
+        if (input == 'm' || input == 'M') {
+          this->muted = !this->muted;
+        }
+
+        input = wgetch(inputWindow);
+      } // Ending of "while (input != ERR)"
+
+      if (this->in_use)
+      {
+        if (batched_jump_time != 0 && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO))
+        {
+          double current_playback_time = this->get_time(system_clock_sec());
+          double target_time = current_playback_time + batched_jump_time;
+
+          if (this->is_looped) {
+            target_time = target_time < 0 ? this->get_duration() + std::fmod(target_time, this->get_duration()) : std::fmod(target_time, this->get_duration());
+          } else {
+            target_time = clamp(target_time, 0.0, this->get_duration());
+          }
+
+          this->jump_to_time(target_time, system_clock_sec());
+          batched_jump_time = 0;
+        }
+
       }
-    } // end of "if (this->in_use)"
 
-
-    PixelData image(this->frame);
-    VideoOutputMode vom = this->media_gui.get_video_output_mode();
-    lock.unlock();
+      image = this->frame;
+      vom = this->media_gui.get_video_output_mode();
+    }
 
     render_movie_screen(image, vom);
     refresh();
