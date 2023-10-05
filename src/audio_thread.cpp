@@ -68,7 +68,10 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
 void MediaPlayer::audio_playback_thread() {
   std::unique_lock<std::mutex> mutex_lock(this->alter_mutex, std::defer_lock);
+
+  mutex_lock.lock();
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    mutex_lock.unlock();
     throw std::runtime_error("Cannot play audio playback, Audio stream could not be found");
   }
   ma_device_config config = ma_device_config_init(ma_device_type_playback);
@@ -77,6 +80,8 @@ void MediaPlayer::audio_playback_thread() {
   config.sampleRate = this->media_decoder->get_sample_rate();       
   config.dataCallback = audioDataCallback;   
   config.pUserData = this;
+  const double start_time = this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO);
+  mutex_lock.unlock();
 
   ma_result miniaudio_log;
   ma_device audio_device;
@@ -86,7 +91,7 @@ void MediaPlayer::audio_playback_thread() {
     throw std::runtime_error("FAILED TO INITIALIZE AUDIO DEVICE: " + std::to_string(miniaudio_log));
   }
 
-  sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
+  sleep_for_sec(start_time);
   
   while (true) {
     mutex_lock.lock();
