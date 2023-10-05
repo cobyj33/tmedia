@@ -78,7 +78,7 @@ class MediaPlayer {
     /**
      * @brief The buffer of audio bytes loaded by the media player
      */
-    AudioBuffer audio_buffer;
+    std::unique_ptr<AudioBuffer> audio_buffer;
 
 
     std::mutex alter_mutex;

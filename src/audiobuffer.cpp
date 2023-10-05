@@ -10,16 +10,13 @@ void AudioBuffer::construct() {
   this->m_nb_channels = 0;
   this->m_start_time = 0.0;
   this->m_sample_rate = 0;
-  this->m_initialized = false;
 }
 
-AudioBuffer::AudioBuffer() {
-  this->construct();
-};
-
-AudioBuffer::AudioBuffer(int nb_channels, int sample_rate) {
-  this->construct();
-  this->init(nb_channels, sample_rate);
+AudioBuffer::AudioBuffer(unsigned int nb_channels, unsigned int sample_rate) {
+  this->m_playhead = 0;
+  this->m_start_time = 0.0;
+  this->m_nb_channels = nb_channels;
+  this->m_sample_rate = sample_rate;
 };
 
 std::size_t AudioBuffer::get_nb_samples() const {
@@ -28,28 +25,6 @@ std::size_t AudioBuffer::get_nb_samples() const {
   }
   
   return (std::size_t)this->m_buffer.size() / this->m_nb_channels;
-};
-
-void AudioBuffer::init(int nb_channels, int sample_rate) {
-  if (nb_channels <= 0) {
-    std::invalid_argument("[AudioBuffer::init] Attemped to initialize audio "
-    "buffer with " + std::to_string(nb_channels) + " channels. Number of channels"
-    "must be an integer greater than 0");
-  }
-
-  if (sample_rate <= 0) {
-    throw std::invalid_argument("[AudioBuffer::init] Attemped to initialize audio "
-    "buffer with a sample rate of " + std::to_string(sample_rate) + ". Sample"
-    "rate must be an integer greater than 0");
-  }
-
-  this->m_buffer.clear();
-
-  this->m_nb_channels = nb_channels;
-  this->m_start_time = 0.0;
-  this->m_sample_rate = sample_rate;
-  this->m_playhead = 0;
-  this->m_initialized = true;
 };
 
 // NOTE: Am I supposed to also clear the start_time? 
@@ -161,10 +136,6 @@ int AudioBuffer::get_nb_channels() const {
 
 int AudioBuffer::get_sample_rate() const {
   return this->m_sample_rate;
-};
-
-bool AudioBuffer::is_initialized() const {
-  return this->m_initialized;
 };
 
 std::size_t AudioBuffer::get_nb_can_read() const {

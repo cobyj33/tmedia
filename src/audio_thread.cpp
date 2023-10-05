@@ -46,17 +46,16 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
   // CallbackData* data = (CallbackData*)(pDevice->pUserData);
   MediaPlayer* player = (MediaPlayer*)(pDevice->pUserData);
   std::lock_guard<std::mutex> mutex_lock_guard(player->alter_mutex);
-  AudioBuffer& audio_buffer = player->audio_buffer;
 
-  while (!audio_buffer.can_read(sampleCount)) {
+  while (!player->audio_buffer->can_read(sampleCount)) {
     int written_samples = player->load_next_audio_frames(AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT);
     if (written_samples == 0) {
       break;
     }
   }
 
-  if (audio_buffer.can_read(sampleCount)) {
-    audio_buffer.read_into(sampleCount, (float*)pOutput);
+  if (player->audio_buffer->can_read(sampleCount)) {
+    player->audio_buffer->read_into(sampleCount, (float*)pOutput);
   } else {
     float* pFloatOutput = (float*)pOutput;
     for (ma_uint32 i = 0; i < sampleCount; i++) {
@@ -141,17 +140,17 @@ void MediaPlayer::audio_playback_thread() {
         break;
       }
 
-      if (this->audio_buffer.is_time_in_bounds(target_resync_time)) {
-        this->audio_buffer.set_time_in_bounds(target_resync_time);
-      } else if (target_resync_time > this->audio_buffer.get_time() && target_resync_time <= this->audio_buffer.get_time() + MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS) {
+      if (this->audio_buffer->is_time_in_bounds(target_resync_time)) {
+        this->audio_buffer->set_time_in_bounds(target_resync_time);
+      } else if (target_resync_time > this->audio_buffer->get_time() && target_resync_time <= this->audio_buffer->get_time() + MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS) {
 
         int writtenSamples = 0;
         do {
           writtenSamples = this->load_next_audio_frames(AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT);
-        } while (writtenSamples != 0 && !this->audio_buffer.is_time_in_bounds(target_resync_time));
+        } while (writtenSamples != 0 && !this->audio_buffer->is_time_in_bounds(target_resync_time));
 
-        if (this->audio_buffer.is_time_in_bounds(target_resync_time)) {
-          this->audio_buffer.set_time_in_bounds(target_resync_time);
+        if (this->audio_buffer->is_time_in_bounds(target_resync_time)) {
+          this->audio_buffer->set_time_in_bounds(target_resync_time);
         } else {
           this->jump_to_time(target_resync_time, current_system_time);
         }
@@ -162,11 +161,11 @@ void MediaPlayer::audio_playback_thread() {
 
     } // end of desync handling
 
-    if (this->audio_buffer.get_elapsed_time() > MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS) {
-      this->audio_buffer.leave_behind(RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS);
+    if (this->audio_buffer->get_elapsed_time() > MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS) {
+      this->audio_buffer->leave_behind(RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS);
     }
 
-    if (!this->audio_buffer.can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
+    if (!this->audio_buffer->can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
       this->load_next_audio_frames(AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT);
     }
 

@@ -9,7 +9,6 @@
  * 
  * The reasoning for a specific AudioBuffer class is to be able to track and pick up exactly where playback leaves off, so as to prevent weird peaking, static, and cuts in audio playback.
  * Additionally, the AudioBuffer object helps easily track the time of the audio playback to detect desynchronization along media playback.
- * 
  */
 class AudioBuffer {
   private:
@@ -45,26 +44,17 @@ class AudioBuffer {
     // The sample rate of the audio stored in this audio buffer
     int m_sample_rate;
 
-    /**
-     * @brief Whether the audio buffer is initialized or not. The audio buffer must be initialized in order to begin storing audio data. An audio buffer only needs to be initialized once.
-     */
-    bool m_initialized;
     
   void construct();
 
   public:
     /**
-     * @brief Creates an empty uninitialized audio buffer object
-    */
-    AudioBuffer();
-
-    /**
-     * @brief Construct a new initialized audio buffer object with the given number of channels and the given sample rate
+     * @brief Construct a new audio buffer object with the given number of channels and the given sample rate
      * @param nb_channels The number of channels to be used in the stored audio buffer's data
      * @param sample_rate The sample rate to be used in the stored audio buffer's data
      * @throws Invalid Argument Error if nb_channels or sample_rate is not positive and non-zero
      */
-    AudioBuffer(int nb_channels, int sample_rate);
+    AudioBuffer(unsigned int nb_channels, unsigned int sample_rate);
 
     /** gets the number of audio samples stored in the audio buffer */
     std::size_t get_nb_samples() const;
@@ -85,17 +75,6 @@ class AudioBuffer {
      * This will reset the nb_samples, 
     */
     void clear();
-
-    /**
-     * @brief Initialize the audio buffer with a given number of channels and sample rate to store it's data
-     * NOTE: If the audio data is reinitialized, the audio buffer data will be cleared. It's recommended to create a new AudioBuffer object instead of reinitializing an old one
-     * 
-     * @param nb_channels The number of channels to be used in the stored audio buffer's data
-     * @param sample_rate The sample rate to be used in the stored audio buffer's data
-     * @throws Invalid Argument Error: if nb_channels or sample_rate is not positive and non-zero
-     */
-    void init(int nb_channels, int sample_rate);
-
 
     /**
      * @brief Get the current time that the audio buffer is on
@@ -211,14 +190,6 @@ class AudioBuffer {
      * @param nb_samples the number of samples to move the audio buffer
      */
     void advance(std::size_t nb_samples);
-
-    /**
-     * @brief Determines whether the audio buffer has been initialized with 
-     * 
-     * @return true: The audio buffer has been initialized and is ready to store data
-     * @return false: The audio buffer has not been initialized and data cannot yet be written to it
-     */
-    bool is_initialized() const;
 };
 
 #endif

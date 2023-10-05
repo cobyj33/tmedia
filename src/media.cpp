@@ -38,7 +38,7 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, Med
   this->media_type = this->media_decoder->get_media_type();
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    this->audio_buffer.init(this->media_decoder->get_nb_channels(), this->media_decoder->get_sample_rate());
+    this->audio_buffer = std::move(std::make_unique<AudioBuffer>(this->media_decoder->get_nb_channels(), this->media_decoder->get_sample_rate()));
   }
 }
 
@@ -114,7 +114,7 @@ double MediaPlayer::get_time(double current_system_time) const {
 double MediaPlayer::get_desync_time(double current_system_time) const {
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO) && this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
     double current_playback_time = this->get_time(current_system_time);
-    double desync = std::abs(this->audio_buffer.get_time() - current_playback_time); // in our implementation, only the audio buffer can really get desynced from our MediaClock
+    double desync = std::abs(this->audio_buffer->get_time() - current_playback_time); // in our implementation, only the audio buffer can really get desynced from our MediaClock
     return desync;
   }
   return 0.0; // if there is only one stream, there cannot be desync 
@@ -158,7 +158,7 @@ int MediaPlayer::load_next_audio_frames(int frames) {
     std::vector<AVFrame*> next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);
     std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
     for (int i = 0; i < (int)audio_frames.size(); i++) {
-      this->audio_buffer.write((float*)(audio_frames[i]->data[0]), audio_frames[i]->nb_samples);
+      this->audio_buffer->write((float*)(audio_frames[i]->data[0]), audio_frames[i]->nb_samples);
       written_samples += audio_frames[i]->nb_samples;
     }
 
@@ -181,7 +181,10 @@ int MediaPlayer::jump_to_time(double target_time, double current_system_time) {
   if (ret < 0)
     return ret;
   
-  this->audio_buffer.clear_and_restart_at(target_time);
+  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    this->audio_buffer->clear_and_restart_at(target_time);
+  }
+  
   this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time
   return ret;
 }
