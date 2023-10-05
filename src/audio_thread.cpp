@@ -73,11 +73,10 @@ void MediaPlayer::audio_playback_thread() {
   }
   ma_device_config config = ma_device_config_init(ma_device_type_playback);
   config.playback.format  = ma_format_f32;
-
   config.playback.channels = this->media_decoder->get_nb_channels();
   config.sampleRate = this->media_decoder->get_sample_rate();       
   config.dataCallback = audioDataCallback;   
-  config.pUserData = this;   
+  config.pUserData = this;
 
   ma_result miniaudio_log;
   ma_device audio_device;
@@ -175,5 +174,6 @@ void MediaPlayer::audio_playback_thread() {
     sleep_for_ms(5);
   }
 
+  ma_device_uninit(&audio_device);
 }
 
