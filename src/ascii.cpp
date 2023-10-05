@@ -72,7 +72,7 @@ RGBColor get_rgb_from_char(std::string& characters, char ch) {
   throw std::runtime_error("Cannot get color value from char " + std::to_string(ch) + ", character \"" + std::to_string(ch) + "\" not found in string: " + characters);
 }
 
-char get_char_from_rgb(std::string& characters, RGBColor& color) {
+char get_char_from_rgb(std::string& characters, const RGBColor& color) {
   return get_char_from_value(characters, (uint8_t)get_grayscale(color.red, color.green, color.blue));
 }
 

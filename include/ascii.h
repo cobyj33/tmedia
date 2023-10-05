@@ -7,16 +7,6 @@
 #include "color.h"
 #include "pixeldata.h"
 
-class ColorChar {
-  public:
-    const char ch;
-    const RGBColor color;
-    ColorChar(char ch, RGBColor& color) : ch(ch), color(color) {}
-    ColorChar(char ch, const RGBColor& color) : ch(ch), color(color) {}
-    ColorChar(const ColorChar& color_char) : ch(color_char.ch), color(color_char.color) {}
-    bool equals(const ColorChar& color_char) const; 
-};
-
 class AsciiImage {
   private:
     std::vector<ColorChar> chars;
@@ -41,11 +31,10 @@ class AsciiImage {
     bool in_bounds(int row, int column) const;
 };
 
-
-
 char get_char_from_value(std::string& characters, uint8_t value);
-char get_char_from_rgb(std::string& characters, RGBColor& color);
+char get_char_from_rgb(std::string& characters, const RGBColor& color);
 char get_char_from_area_rgb(std::string& characters, uint8_t* pixels, int row, int col, int width, int height, int pixelWidth, int pixelHeight);
 
 RGBColor get_rgb_from_char(std::string& characters, char ch);
+
 #endif
