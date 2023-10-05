@@ -254,7 +254,7 @@ void ncurses_init_color_pairs()
   for (int i = 0; i < available_colors; i++) {
     RGBColor color = ncurses_get_color_number_content(i);
     RGBColor complementary = color.get_complementary();
-    init_pair(i, get_closest_ncurses_color(complementary), i);
+    init_pair(i, ncurses_find_best_initialized_color_number(complementary), i);
   }
   available_color_pairs = available_colors;
 }
