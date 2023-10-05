@@ -106,14 +106,6 @@ void MediaPlayer::render_loop()
       }
 
       if ((input == 'g' || input == 'G') && has_colors() && can_change_color()) {
-        // switch (this->media_gui.get_video_output_mode()) {
-        //   case VideoOutputMode::COLORED_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-        //   case VideoOutputMode::COLORED: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
-        //   case VideoOutputMode::TEXT_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
-        //   case VideoOutputMode::GRAYSCALE: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
-        //   case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY); break;
-        // }
-
         switch (this->media_gui.get_video_output_mode()) {
           case VideoOutputMode::COLORED:
             this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE);
@@ -137,14 +129,6 @@ void MediaPlayer::render_loop()
       }
 
       if ((input == 'b' || input == 'B') && has_colors() && can_change_color()) {
-        // switch (this->media_gui.get_video_output_mode()) {
-        //   case VideoOutputMode::COLORED: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-        //   case VideoOutputMode::GRAYSCALE: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-        //   case VideoOutputMode::COLORED_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::COLORED); break;
-        //   case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: this->media_gui.set_video_output_mode(VideoOutputMode::GRAYSCALE); break;
-        //   case VideoOutputMode::TEXT_ONLY: break;
-        // }
-
         switch (this->media_gui.get_video_output_mode()) {
           case VideoOutputMode::COLORED:
             this->media_gui.set_video_output_mode(VideoOutputMode::COLORED_BACKGROUND_ONLY);
