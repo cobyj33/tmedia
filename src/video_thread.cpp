@@ -71,8 +71,8 @@ void MediaPlayer::video_playback_thread() {
     if (decoded_frames.size() > 0 && decoded_frames[0] != nullptr) {
       mutex_lock.unlock();
       AVFrame* frame_image = videoConverter.convert_video_frame(decoded_frames[0]);
-      this->set_current_frame(frame_image);
       mutex_lock.lock();
+      this->set_current_frame(frame_image);
 
       #if HAS_AVFRAME_DURATION
       frame_duration = (double)frame_image->duration * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);

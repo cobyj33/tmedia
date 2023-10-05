@@ -137,25 +137,22 @@ double MediaPlayer::get_desync_time(double current_system_time) const {
 }
 
 
-int MediaPlayer::load_next_audio_frames(unsigned int frames) {
+int MediaPlayer::load_next_audio() {
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     throw std::runtime_error("[MediaPlayer::load_next_audio_frames] Cannot load "
     "next audio frames, Media Player does not have any audio stream to load data from");
   }
 
   int written_samples = 0;
-
-  for (int i = 0; i < (int)frames; i++) {
-    std::vector<AVFrame*> next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);
-    std::vector<AVFrame*> audio_frames = this->audio_resampler->resample_audio_frames(next_raw_audio_frames);
-    for (int i = 0; i < (int)audio_frames.size(); i++) {
-      this->audio_buffer->write((float*)(audio_frames[i]->data[0]), audio_frames[i]->nb_samples);
-      written_samples += audio_frames[i]->nb_samples;
-    }
-
-    clear_av_frame_list(next_raw_audio_frames);
-    clear_av_frame_list(audio_frames);
+  std::vector<AVFrame*> next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);
+  std::vector<AVFrame*> audio_frames = this->audio_resampler->resample_audio_frames(next_raw_audio_frames);
+  for (int i = 0; i < (int)audio_frames.size(); i++) {
+    this->audio_buffer->write((float*)(audio_frames[i]->data[0]), audio_frames[i]->nb_samples);
+    written_samples += audio_frames[i]->nb_samples;
   }
+
+  clear_av_frame_list(next_raw_audio_frames);
+  clear_av_frame_list(audio_frames);
 
   return written_samples;
 }

@@ -48,7 +48,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
   std::lock_guard<std::mutex> mutex_lock_guard(player->alter_mutex);
 
   while (!player->audio_buffer->can_read(sampleCount)) {
-    int written_samples = player->load_next_audio_frames(AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT);
+    int written_samples = player->load_next_audio();
     if (written_samples == 0) {
       break;
     }
@@ -150,7 +150,7 @@ void MediaPlayer::audio_playback_thread() {
 
         int writtenSamples = 0;
         do {
-          writtenSamples = this->load_next_audio_frames(AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT);
+          writtenSamples = this->load_next_audio();
         } while (writtenSamples != 0 && !this->audio_buffer->is_time_in_bounds(target_resync_time));
 
         if (this->audio_buffer->is_time_in_bounds(target_resync_time)) {
@@ -170,7 +170,8 @@ void MediaPlayer::audio_playback_thread() {
     }
 
     if (!this->audio_buffer->can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
-      this->load_next_audio_frames(AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT);
+      for (int i = 0; i < AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT; i++)
+        this->load_next_audio();
     }
 
     audio_device.sampleRate = this->media_decoder->get_sample_rate() * this->clock.get_speed();
