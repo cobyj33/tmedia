@@ -116,8 +116,8 @@ std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::de
 
     try {
       switch (packet_type) {
-        case AVMEDIA_TYPE_AUDIO: decoded_frames = decode_audio_packet(codec_context, packet); break;
-        case AVMEDIA_TYPE_VIDEO: decoded_frames = decode_video_packet(codec_context, packet); break;
+        case AVMEDIA_TYPE_AUDIO: decoded_frames = std::move(decode_audio_packet(codec_context, packet)); break;
+        case AVMEDIA_TYPE_VIDEO: decoded_frames = std::move(decode_video_packet(codec_context, packet)); break;
         default: throw std::runtime_error("[decode_packet_queue] Could not decode packet queue of unimplemented AVMediaType " + std::string(av_get_media_type_string(packet_type)));
       }
     } catch (ascii::ffmpeg_error const& e) {
