@@ -142,17 +142,8 @@ int MediaPlayer::load_next_audio_frames(int frames) {
   }
 
   int written_samples = 0;
-  StreamDecoder& audio_stream_decoder = this->media_decoder->get_stream_decoder(AVMEDIA_TYPE_AUDIO); //TODO: FIX LATER
-  AVCodecContext* audio_codec_context = audio_stream_decoder.get_codec_context();
-  #if HAS_AVCHANNEL_LAYOUT
-  AudioResampler audio_resampler(
-    &(audio_codec_context->ch_layout), AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
-    &(audio_codec_context->ch_layout), audio_codec_context->sample_fmt, audio_codec_context->sample_rate);
-  #else
-  AudioResampler audio_resampler(
-    audio_codec_context->channel_layout, AV_SAMPLE_FMT_FLT, audio_codec_context->sample_rate,
-    audio_codec_context->channel_layout, audio_codec_context->sample_fmt, audio_codec_context->sample_rate);
-  #endif
+  AudioResampler audio_resampler(this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
+  this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate());
 
   for (int i = 0; i < frames; i++) {
     std::vector<AVFrame*> next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);

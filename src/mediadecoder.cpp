@@ -170,6 +170,35 @@ int MediaDecoder::get_sample_rate() {
   return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->sample_rate;
 }
 
+AVSampleFormat MediaDecoder::get_sample_fmt() {
+  if (!this->has_media_decoder(AVMEDIA_TYPE_AUDIO)) {
+    throw std::runtime_error("[MediaDecoder::get_sample_fmt] Cannot get sample "
+    "format from this media decoder: No audio stream decoder is available");
+  }
+
+  return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->sample_fmt;
+}
+
+#if HAS_AVCHANNEL_LAYOUT
+AVChannelLayout* MediaDecoder::get_ch_layout() {
+  if (!this->has_media_decoder(AVMEDIA_TYPE_AUDIO)) {
+    throw std::runtime_error("[MediaDecoder::get_ch_layout] Cannot get channel "
+    "layout from this media decoder: No audio stream decoder is available");
+  }
+
+  return &(this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->ch_layout);
+}
+#else
+int64_t MediaDecoder::get_ch_layout() {
+  if (!this->has_media_decoder(AVMEDIA_TYPE_AUDIO)) {
+    throw std::runtime_error("[MediaDecoder::get_ch_layout] Cannot get channel "
+    "layout from this media decoder: No audio stream decoder is available");
+  }
+
+  return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channel_layout;
+}
+#endif
+
 
 /**
  * 
@@ -236,14 +265,4 @@ double MediaDecoder::get_average_frame_time_sec(enum AVMediaType media_type) {
   }
 
   return this->stream_decoders[media_type]->get_average_frame_time_sec();
-}
-
-StreamDecoder& MediaDecoder::get_stream_decoder(enum AVMediaType media_type) {
-  if (!this->has_media_decoder(media_type)) {
-    throw std::runtime_error("[MediaDecoder::get_stream_decoder] Cannot get stream "
-    "decoder from this media decoder: No " + std::string(av_get_media_type_string(media_type)) + " stream decoder is available");
-  }
-
-
-  return *(this->stream_decoders[media_type]);
 }

@@ -4,6 +4,7 @@
 #include <vector>
 #include "streamdecoder.h"
 #include "mediatype.h"
+#include "avguard.h"
 
 extern "C" {
   #include <libavutil/avutil.h>
@@ -36,12 +37,17 @@ class MediaDecoder {
     int get_height();
     AVPixelFormat get_pix_fmt();
 
-
-    StreamDecoder& get_stream_decoder(enum AVMediaType media_type); // TODO: DELETE THIS LATER!!!!!!
-
     // audio getters
     int get_nb_channels();
     int get_sample_rate();
+    AVSampleFormat get_sample_fmt();
+    
+    #if HAS_AVCHANNEL_LAYOUT
+    AVChannelLayout* get_ch_layout();
+    #else
+    int64_t get_ch_layout();
+    #endif
+    
 
     ~MediaDecoder();
 };
