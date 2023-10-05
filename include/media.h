@@ -141,7 +141,7 @@ class MediaPlayer {
     int jump_to_time(double target_time, double current_system_time);
 
 
-    int load_next_audio_frames(int frames);
+    int load_next_audio_frames(unsigned int frames);
 
     // StreamDecoder& get_stream_decoder(enum AVMediaType media_type) const;
     bool has_media_stream(enum AVMediaType media_type) const;
