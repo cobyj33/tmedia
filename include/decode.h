@@ -21,8 +21,6 @@ void clear_av_frame_list(std::vector<AVFrame*>& frame_list);
 
 std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet);
 std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet);
-std::vector<AVFrame*> decode_video_packet_queue(AVCodecContext* video_codec_context, std::deque<AVPacket*>& video_packet_queue);
-std::vector<AVFrame*> decode_audio_packet_queue(AVCodecContext* audio_codec_context, std::deque<AVPacket*>& audio_packet_queue);
-void decode_video_packet_queue_until(AVCodecContext* video_codec_context, std::deque<AVPacket*>& video_packet_queue, int64_t target_pts); // mostly meant for media seeking
+std::vector<AVFrame*> decode_packet_queue(AVCodecContext* audio_codec_context, std::deque<AVPacket*>& packet_queue, enum AVMediaType packet_type);
 
 #endif

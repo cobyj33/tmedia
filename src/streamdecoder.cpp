@@ -89,15 +89,16 @@ void StreamDecoder::reset() {
 }
 
 std::vector<AVFrame*> StreamDecoder::decode_next() {
-  if (this->media_type == AVMEDIA_TYPE_VIDEO) {
-    return decode_video_packet_queue(this->codec_context, this->packet_queue);
-  } else if (this->media_type == AVMEDIA_TYPE_AUDIO) {
-    return decode_audio_packet_queue(this->codec_context, this->packet_queue);
-  }
+  std::vector<AVFrame*> decoded_frames;
 
-  throw std::runtime_error("[StreamDecoder::decode_next] Could not decode next "
-  "video packet, Media type " + std::string(av_get_media_type_string(this->media_type)) + 
-  " is currently unsupported");
+  try {
+    decoded_frames = std::move(decode_packet_queue(this->codec_context, this->packet_queue, this->media_type));
+  } catch (std::runtime_error const& e) {
+    throw std::runtime_error("[StreamDecoder::decode_next] Could not decode next "
+    "video packet: " + std::string(e.what()));
+  }
+  
+  return decoded_frames;
 }
 
 StreamDecoder::~StreamDecoder() {
