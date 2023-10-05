@@ -37,9 +37,37 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, Med
   this->media_decoder = std::move(std::make_unique<MediaDecoder>(file_name));
   this->media_type = this->media_decoder->get_media_type();
 
+  this->audio_resampler = std::move(std::make_unique<AudioResampler>(
+    this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
+    this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate()));
+
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     this->audio_buffer = std::move(std::make_unique<AudioBuffer>(this->media_decoder->get_nb_channels(), this->media_decoder->get_sample_rate()));
   }
+}
+
+void MediaPlayer::set_current_frame(PixelData& data) {
+  this->frame = data;
+}
+
+void MediaPlayer::set_current_frame(AVFrame* frame) {
+  this->frame = frame;
+}
+
+PixelData& MediaPlayer::get_current_frame() {
+  return this->frame;
+}
+
+bool MediaPlayer::has_media_stream(enum AVMediaType media_type) const {
+  return this->media_decoder->has_media_decoder(media_type);
+}
+
+double MediaPlayer::get_duration() const {
+  return this->media_decoder->get_duration();
+}
+
+double MediaPlayer::get_time(double current_system_time) const {
+  return this->clock.get_time(current_system_time);
 }
 
 void MediaPlayer::start(double start_time) {
@@ -99,18 +127,6 @@ void MediaPlayer::start(double start_time) {
   this->in_use = false;
 }
 
-bool MediaPlayer::has_media_stream(enum AVMediaType media_type) const {
-  return this->media_decoder->has_media_decoder(media_type);
-}
-
-double MediaPlayer::get_duration() const {
-  return this->media_decoder->get_duration();
-}
-
-double MediaPlayer::get_time(double current_system_time) const {
-  return this->clock.get_time(current_system_time);
-}
-
 double MediaPlayer::get_desync_time(double current_system_time) const {
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO) && this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
     double current_playback_time = this->get_time(current_system_time);
@@ -120,34 +136,18 @@ double MediaPlayer::get_desync_time(double current_system_time) const {
   return 0.0; // if there is only one stream, there cannot be desync 
 }
 
-void MediaPlayer::set_current_frame(PixelData& data) {
-  this->frame = data;
-}
 
-void MediaPlayer::set_current_frame(AVFrame* frame) {
-  this->frame = frame;
-}
-
-PixelData& MediaPlayer::get_current_frame() {
-  return this->frame;
-}
-
-int MediaPlayer::load_next_audio_frames(int frames) {
+int MediaPlayer::load_next_audio_frames(unsigned int frames) {
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     throw std::runtime_error("[MediaPlayer::load_next_audio_frames] Cannot load "
     "next audio frames, Media Player does not have any audio stream to load data from");
   }
-  if (frames < 0) {
-    throw std::runtime_error("Cannot load negative frames, (got " + std::to_string(frames) + " ). ");
-  }
 
   int written_samples = 0;
-  AudioResampler audio_resampler(this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
-  this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate());
 
-  for (int i = 0; i < frames; i++) {
+  for (int i = 0; i < (int)frames; i++) {
     std::vector<AVFrame*> next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);
-    std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
+    std::vector<AVFrame*> audio_frames = this->audio_resampler->resample_audio_frames(next_raw_audio_frames);
     for (int i = 0; i < (int)audio_frames.size(); i++) {
       this->audio_buffer->write((float*)(audio_frames[i]->data[0]), audio_frames[i]->nb_samples);
       written_samples += audio_frames[i]->nb_samples;

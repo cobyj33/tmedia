@@ -44,9 +44,6 @@ class AudioBuffer {
     // The sample rate of the audio stored in this audio buffer
     int m_sample_rate;
 
-    
-  void construct();
-
   public:
     /**
      * @brief Construct a new audio buffer object with the given number of channels and the given sample rate

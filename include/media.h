@@ -10,6 +10,8 @@
 #include "pixeldata.h"
 #include "mediadecoder.h"
 
+#include "audioresampler.h"
+
 #include "gui.h"
 
 #include <cstdint>
@@ -66,12 +68,7 @@ class MediaPlayer {
 
     std::unique_ptr<MediaDecoder> media_decoder;
 
-    // AVFormatContext* format_context;
-
-    // std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> stream_decoders;
-
-    // std::vector<AVFrame*> next_frames(enum AVMediaType media_type);
-    // int fetch_next(int requested_packet_count);
+    std::unique_ptr<AudioResampler> audio_resampler;
 
   public:
   

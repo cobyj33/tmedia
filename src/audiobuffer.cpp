@@ -5,13 +5,6 @@
 #include "wmath.h"
 #include "audio.h"
 
-void AudioBuffer::construct() {
-  this->m_playhead = 0;
-  this->m_nb_channels = 0;
-  this->m_start_time = 0.0;
-  this->m_sample_rate = 0;
-}
-
 AudioBuffer::AudioBuffer(unsigned int nb_channels, unsigned int sample_rate) {
   this->m_playhead = 0;
   this->m_start_time = 0.0;
