@@ -22,6 +22,7 @@
 #include <string>
 #include <deque>
 #include <mutex>
+#include <atomic>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -87,7 +88,7 @@ class MediaPlayer {
 
     MediaClock clock;
     const char* file_name;
-    bool in_use;
+    std::atomic<bool> in_use;
     bool is_looped;
     bool muted;
 

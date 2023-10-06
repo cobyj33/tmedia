@@ -47,7 +47,6 @@ void MediaPlayer::render_loop()
 {
   WINDOW *inputWindow = newwin(0, 0, 1, 1);
   if (inputWindow == NULL) {
-    std::lock_guard<std::mutex> lock(this->alter_mutex);
     this->in_use = false;
     return;
   }
@@ -59,14 +58,12 @@ void MediaPlayer::render_loop()
   erase();
   try {
 
-    while (1) {
+    while (this->in_use) {
       PixelData image;
       VideoOutputMode vom;
 
       {
         std::lock_guard<std::mutex> lock(this->alter_mutex);
-        if (!this->in_use)
-          break;
 
         if (should_sig_exit()) { // lmao i know this is bad ok I'll fix it later
           this->in_use = false;

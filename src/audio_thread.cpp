@@ -92,12 +92,9 @@ void MediaPlayer::audio_playback_thread() {
     ma_device_w audio_device(nullptr, &config);
     sleep_for_sec(START_TIME);
     
-    while (true) {
+    while (this->in_use) {
       {
         std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
-        if (!this->in_use)
-          break;
-        
         ma_device_state audio_device_state = audio_device.get_state();
 
         if ((this->clock.is_playing() == false || this->muted) && audio_device_state == ma_device_state_started) { // audio stop and start handling

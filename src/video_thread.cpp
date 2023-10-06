@@ -53,14 +53,12 @@ void MediaPlayer::video_playback_thread() {
       video_converter = std::move(std::make_unique<VideoConverter>(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, this->media_decoder->get_width(), this->media_decoder->get_height(), this->media_decoder->get_pix_fmt()));
     }
 
-    while (1) {
+    while (this->in_use) {
       double wait_duration = 0.0;
       std::vector<AVFrame*> decoded_frames;
 
       {
         std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
-        if (!this->in_use)
-          break;
         if (!this->clock.is_playing()) {
           sleep_quick();
           continue;
