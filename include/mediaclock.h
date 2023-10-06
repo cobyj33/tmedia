@@ -1,9 +1,11 @@
 #ifndef ASCII_VIDEO_MEDIA_CLOCK
 #define ASCII_VIDEO_MEDIA_CLOCK
 
+#include <atomic>
+
 class MediaClock {
   private:
-    bool m_playing;
+    std::atomic<bool> m_playing;
     double m_speed;
     double m_volume;
     double m_start_time;

@@ -46,16 +46,9 @@ const int MINIMUM_AUDIO_BUFFER_DEVICE_START_SIZE = 1024;
  */
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 sampleCount)
 {
-  // CallbackData* data = (CallbackData*)(pDevice->pUserData);
   MediaPlayer* player = (MediaPlayer*)(pDevice->pUserData);
   std::lock_guard<std::mutex> mutex_lock_guard(player->buffer_read_mutex);
-
-  while (!player->audio_buffer->can_read(sampleCount)) {
-    int written_samples = player->load_next_audio();
-    if (written_samples == 0) {
-      break;
-    }
-  }
+  
 
   if (player->audio_buffer->can_read(sampleCount)) {
     player->audio_buffer->read_into(sampleCount, (float*)pOutput);
@@ -93,28 +86,21 @@ void MediaPlayer::audio_playback_thread() {
     sleep_for_sec(START_TIME);
     
     while (this->in_use) {
+      ma_device_state audio_device_state = audio_device.get_state();
+      if ((this->clock.is_playing() == false || this->muted) && audio_device_state == ma_device_state_started) { // audio stop and start handling
+        audio_device.stop();
+      } else if ((this->clock.is_playing() && !this->muted) && audio_device_state == ma_device_state_stopped) {
+        audio_device.start();
+      }
+
+      audio_device_state = audio_device.get_state();
+      if (audio_device_state == ma_device_state_stopped || audio_device_state == ma_device_state_stopping) {
+        sleep_quick();
+        continue;
+      }
+
       {
         std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
-        ma_device_state audio_device_state = audio_device.get_state();
-
-        if ((this->clock.is_playing() == false || this->muted) && audio_device_state == ma_device_state_started) { // audio stop and start handling
-          ma_result miniaudio_log = audio_device.stop();
-          if (miniaudio_log != MA_SUCCESS) {
-            throw std::runtime_error("[MediaPlayer::audio_playback_thread] Failed to stop playback: Miniaudio Error " + std::to_string(miniaudio_log));
-          }
-        } else if ((this->clock.is_playing() && !this->muted) && audio_device_state == ma_device_state_stopped) {
-          ma_result miniaudio_log = audio_device.start();
-          if (miniaudio_log != MA_SUCCESS) {
-            throw std::runtime_error("[MediaPlayer::audio_playback_thread] Failed to start playback: Miniaudio Error " + std::to_string(miniaudio_log));
-          }
-        }
-
-        audio_device_state = audio_device.get_state();
-        if (audio_device_state == ma_device_state_stopped || audio_device_state == ma_device_state_stopping) {
-          sleep_quick();
-          continue;
-        }
-
         const double current_system_time = system_clock_sec();
         const double target_resync_time = this->get_time(current_system_time);
         if (target_resync_time > this->get_duration()) {

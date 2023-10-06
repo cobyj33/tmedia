@@ -60,7 +60,6 @@ void MediaPlayer::video_playback_thread() {
       {
         std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
         if (!this->clock.is_playing()) {
-          sleep_quick();
           continue;
         }
 
