@@ -70,6 +70,8 @@ class MediaPlayer {
 
     std::unique_ptr<AudioResampler> audio_resampler;
 
+    std::string error;
+
   public:
   
     /**
@@ -141,6 +143,9 @@ class MediaPlayer {
 
     // StreamDecoder& get_stream_decoder(enum AVMediaType media_type) const;
     bool has_media_stream(enum AVMediaType media_type) const;
+
+    bool has_error();
+    std::string get_error();
 
 };
 

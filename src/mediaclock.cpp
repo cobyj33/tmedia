@@ -30,7 +30,7 @@ void MediaClock::skip(double seconds_to_skip) {
 
 void MediaClock::start(double current_system_time) {
   if (this->is_playing()) {
-    throw std::runtime_error("Cannot resume while playback is already playing");
+    throw std::runtime_error("[MediaClock::start] Cannot start while playback is already playing");
   }
 
   this->m_playing = true;
@@ -42,7 +42,7 @@ void MediaClock::start(double current_system_time) {
 
 void MediaClock::resume(double current_system_time) {
   if (this->is_playing()) {
-    throw std::runtime_error("Cannot resume while playback is already playing");
+    throw std::runtime_error("[MediaClock::resume] Cannot resume while playback is already playing");
   }
 
   this->m_playing = true;
@@ -52,7 +52,7 @@ void MediaClock::resume(double current_system_time) {
 
 void MediaClock::stop(double current_system_time) {
   if (!this->is_playing()) {
-    throw std::runtime_error("Attempted to stop playback although playback is already stopped");
+    throw std::runtime_error("[MediaClock::stop] Attempted to stop playback although playback is already stopped");
   }
 
   this->m_playing = false;

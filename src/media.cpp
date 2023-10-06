@@ -70,6 +70,15 @@ double MediaPlayer::get_time(double current_system_time) const {
   return this->clock.get_time(current_system_time);
 }
 
+bool MediaPlayer::has_error() {
+  return this->error.length() > 0;
+}
+
+std::string MediaPlayer::get_error() {
+  return this->error;
+}
+
+
 void MediaPlayer::start(double start_time) {
   if (this->in_use) {
     throw std::runtime_error("[MediaPlayer::start] Cannot use a MediaPlayer "
@@ -176,3 +185,5 @@ int MediaPlayer::jump_to_time(double target_time, double current_system_time) {
   this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time
   return ret;
 }
+
+

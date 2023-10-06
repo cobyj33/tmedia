@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <filesystem>
+#include <memory>
 
 #include "color.h"
 #include "icons.h"
@@ -254,13 +255,28 @@ int main(int argc, char** argv)
   MediaGUI media_gui;
   media_gui.set_video_output_mode(mode);
   MediaPlayerConfig config(mute);
-  MediaPlayer player(file.c_str(), media_gui, config);
-  player.start(start_time);
+  std::unique_ptr<MediaPlayer> player;
+
+  try {
+    player = std::make_unique<MediaPlayer>(file.c_str(), media_gui, config);
+    player->start(start_time);
+  } catch (std::exception const &e) {
+    std::cout << "Error while starting Media Player: " << e.what() << std::endl;
+    ncurses_uninit();
+    return EXIT_FAILURE;
+  }
+
   ncurses_uninit();
 
-  if (player.media_type == MediaType::VIDEO || player.media_type == MediaType::AUDIO) {
-    std::cout << media_type_to_string(player.media_type) << " Player ended at " << format_duration(player.get_time(system_clock_sec())) << " / " << format_duration(player.get_duration()) << std::endl;
+  if (player->has_error()) {
+    std::cout << "Error: " << player->get_error() << std::endl;
+    return EXIT_FAILURE;
   }
+
+  if (player->media_type == MediaType::VIDEO || player->media_type == MediaType::AUDIO) {
+    std::cout << media_type_to_string(player->media_type) << " Player ended at " << format_duration(player->get_time(system_clock_sec())) << " / " << format_duration(player->get_duration()) << std::endl;
+  }
+
   return EXIT_SUCCESS;
 }
 
