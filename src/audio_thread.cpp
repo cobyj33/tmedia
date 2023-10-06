@@ -48,15 +48,14 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 {
   MediaPlayer* player = (MediaPlayer*)(pDevice->pUserData);
   std::lock_guard<std::mutex> mutex_lock_guard(player->buffer_read_mutex);
-  
 
-  if (player->audio_buffer->can_read(sampleCount)) {
-    player->audio_buffer->read_into(sampleCount, (float*)pOutput);
-  } else {
+  if (!player->clock.is_playing() || !player->audio_buffer->can_read(sampleCount)) {
     float* pFloatOutput = (float*)pOutput;
     for (ma_uint32 i = 0; i < sampleCount; i++) {
       pFloatOutput[i] = 0.0;
     }
+  } else if (player->audio_buffer->can_read(sampleCount)) {
+    player->audio_buffer->read_into(sampleCount, (float*)pOutput);
   }
 
   (void)pInput;
@@ -83,18 +82,11 @@ void MediaPlayer::audio_playback_thread() {
     }
 
     ma_device_w audio_device(nullptr, &config);
+    audio_device.start();
     sleep_for_sec(START_TIME);
     
     while (this->in_use) {
-      ma_device_state audio_device_state = audio_device.get_state();
-      if ((this->clock.is_playing() == false || this->muted) && audio_device_state == ma_device_state_started) { // audio stop and start handling
-        audio_device.stop();
-      } else if ((this->clock.is_playing() && !this->muted) && audio_device_state == ma_device_state_stopped) {
-        audio_device.start();
-      }
-
-      audio_device_state = audio_device.get_state();
-      if (audio_device_state == ma_device_state_stopped || audio_device_state == ma_device_state_stopping) {
+      if (!this->clock.is_playing()) {
         sleep_quick();
         continue;
       }
