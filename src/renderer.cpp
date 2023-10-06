@@ -18,6 +18,7 @@
 #include "wmath.h"
 #include "wtime.h"
 #include "avcurses.h"
+#include "sigexit.h"
 
 #include "gui.h"
 
@@ -58,7 +59,7 @@ void MediaPlayer::render_loop()
   erase();
   try {
 
-    while (inputWindow != NULL) {
+    while (1) {
       PixelData image;
       VideoOutputMode vom;
 
@@ -66,6 +67,12 @@ void MediaPlayer::render_loop()
         std::lock_guard<std::mutex> lock(this->alter_mutex);
         if (!this->in_use)
           break;
+
+        if (should_sig_exit()) { // lmao i know this is bad ok I'll fix it later
+          this->in_use = false;
+          break;
+        }
+
         int input = wgetch(inputWindow);
 
 

@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <filesystem>
 #include <memory>
+#include <atomic>
+#include <csignal>
 
 #include "color.h"
 #include "icons.h"
@@ -16,8 +18,8 @@
 #include "gui.h"
 #include "version.h"
 #include "avguard.h"
-
 #include <avcurses.h>
+#include "sigexit.h"
 
 
 #include <argparse.hpp>
@@ -33,6 +35,16 @@ extern "C" {
 #include <libswscale/version.h>
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
+}
+
+std::atomic<bool> sent_exit_signal;
+
+bool should_sig_exit() {
+  return sent_exit_signal;
+}
+
+void exit_type_signal_handler(int signal) {
+    sent_exit_signal = true;
 }
 
 
@@ -67,6 +79,7 @@ int main(int argc, char** argv)
   srand(time(nullptr));
   av_log_set_level(AV_LOG_QUIET);
   std::set_terminate(on_terminate);
+  std::signal(SIGINT, exit_type_signal_handler);
 
   argparse::ArgumentParser parser("ascii_video", ASCII_VIDEO_VERSION);
 
