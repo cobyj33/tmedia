@@ -77,7 +77,6 @@ set(COMMON_SOURCE_FILES
 ./src/wtime.cpp
 ./src/wminiaudio.cpp
 ./src/color.cpp
-./src/icons.cpp
 ./src/mediaclock.cpp
 ./src/mediadecoder.cpp
 ./src/mediatype.cpp

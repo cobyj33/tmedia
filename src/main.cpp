@@ -9,7 +9,6 @@
 #include <csignal>
 
 #include "color.h"
-#include "icons.h"
 #include "pixeldata.h"
 #include "scale.h"
 #include "media.h"

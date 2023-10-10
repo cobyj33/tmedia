@@ -12,7 +12,6 @@
 #include "pixeldata.h"
 #include "scale.h"
 #include "ascii.h"
-#include "icons.h"
 #include "media.h"
 #include "sleep.h"
 #include "wmath.h"

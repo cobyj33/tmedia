@@ -4,7 +4,6 @@
 #include "audiobuffer.h"
 #include "decode.h"
 #include "boiler.h"
-#include "icons.h"
 #include "color.h"
 #include "mediaclock.h"
 #include "pixeldata.h"
