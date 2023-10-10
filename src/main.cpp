@@ -37,15 +37,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
-std::atomic<bool> sent_exit_signal;
 
-bool should_sig_exit() {
-  return sent_exit_signal;
-}
-
-void exit_type_signal_handler(int signal) {
-    sent_exit_signal = true;
-}
 
 
 bool is_valid_path(const char* path);
@@ -79,7 +71,17 @@ int main(int argc, char** argv)
   srand(time(nullptr));
   av_log_set_level(AV_LOG_QUIET);
   std::set_terminate(on_terminate);
-  std::signal(SIGINT, exit_type_signal_handler);
+
+  // common signal handlers
+  // i literally just took this from the git git repo (sigchain.c) 
+  std::signal(SIGINT, ascii_video_signal_handler); // interrupted (usually with Ctrl+C)
+	std::signal(SIGTERM, ascii_video_signal_handler); // politely asking for termination
+  
+	// std::signal(SIGQUIT, ascii_video_signal_handler); I don't know if I should handle this,
+  // as I'd want quitting if ascii_video does happen to actually break
+
+	// std::signal(SIGHUP, ascii_video_signal_handler); This is when the user's terminal is disconnected or quit, I do want
+  // to handle this, but I'm sure that it has some exceptions with ncurses use
 
   argparse::ArgumentParser parser("ascii_video", ASCII_VIDEO_VERSION);
 

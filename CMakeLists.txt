@@ -82,6 +82,7 @@ set(COMMON_SOURCE_FILES
 ./src/mediadecoder.cpp
 ./src/mediatype.cpp
 ./src/pixeldata.cpp
+./src/sigexit.cpp
 ./src/scale.cpp
 ./src/ui/gui.cpp)
 
