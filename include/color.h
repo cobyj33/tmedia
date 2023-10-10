@@ -9,9 +9,9 @@
  */
 class RGBColor {
   public:
-    const int red;
-    const int green;
-    const int blue;
+    int red;
+    int green;
+    int blue;
 
     static RGBColor BLACK;
     static RGBColor WHITE; 
@@ -20,7 +20,9 @@ class RGBColor {
     RGBColor(int gray) : red(gray), green(gray), blue(gray) {}
     RGBColor(int red, int green, int blue) : red(red), green(green), blue(blue) {}
     RGBColor(const RGBColor& color) : red(color.red), green(color.green), blue(color.blue) {}
-    
+
+    RGBColor& operator=(const RGBColor& color);
+
     double distance(const RGBColor& other) const;
     double distance_squared(const RGBColor& other) const;
     RGBColor get_complementary() const;

@@ -114,6 +114,16 @@ void AudioBuffer::peek_into(std::size_t nb_samples, float* target) const {
   }
 };
 
+std::vector<float> AudioBuffer::peek_into(std::size_t nb_samples) {
+  std::vector<float> peek;
+  for (std::size_t i = 0; i < nb_samples * this->m_nb_channels; i++) {
+    peek.push_back(uint8_sample_to_normalized_float(this->m_buffer[this->m_playhead * this->m_nb_channels + i]));
+  }
+
+  return peek;
+}
+
+
 void AudioBuffer::read_into(std::size_t nb_samples, float* target)  {
   this->peek_into(nb_samples, target);
   this->advance(nb_samples);

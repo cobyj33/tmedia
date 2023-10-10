@@ -105,17 +105,10 @@ void MediaPlayer::start(double start_time) {
     }
   }
 
-  std::thread video_thread;
-  bool video_thread_initialized = false;
   std::thread audio_thread;
   bool audio_thread_initialized = false;
 
-  if (this->has_media_stream(AVMEDIA_TYPE_VIDEO) && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
-    std::thread initialized_video_thread(&MediaPlayer::video_playback_thread, this);
-    video_thread.swap(initialized_video_thread);
-    video_thread_initialized = true;
-  }
-
+  std::thread video_thread(&MediaPlayer::video_playback_thread, this);
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     std::thread initialized_audio_thread(&MediaPlayer::audio_playback_thread, this);
     audio_thread.swap(initialized_audio_thread);
@@ -123,9 +116,7 @@ void MediaPlayer::start(double start_time) {
   }
 
   this->render_loop();
-  if (video_thread_initialized) {
-    video_thread.join();
-  }
+  video_thread.join();
   if (audio_thread_initialized) {
     audio_thread.join();
   }

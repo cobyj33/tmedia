@@ -124,8 +124,6 @@ void MediaPlayer::audio_playback_thread() {
         if (this->audio_buffer->get_elapsed_time() > MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS) {
           this->audio_buffer->leave_behind(RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS);
         }
-
-        // audio_device.sampleRate = this->media_decoder->get_sample_rate() * this->clock.get_speed();
       }
 
       {

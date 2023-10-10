@@ -90,3 +90,9 @@ int find_closest_color_index(RGBColor& input, std::vector<RGBColor>& colors) {
   return best_color;
 }
 
+RGBColor& RGBColor::operator=(const RGBColor& color) {
+  this->red = color.red;
+  this->green = color.green;
+  this->blue = color.blue;
+  return *this;
+}

@@ -59,6 +59,7 @@ set(TARGET_DEPENDENCIES "")
 set(COMMON_SOURCE_FILES 
 ./src/audioresampler.cpp
 ./src/avcurses.cpp
+./src/audio_image.cpp
 ./src/audio.cpp
 ./src/audio_thread.cpp
 ./src/videoconverter.cpp
@@ -77,6 +78,7 @@ set(COMMON_SOURCE_FILES
 ./src/wtime.cpp
 ./src/wminiaudio.cpp
 ./src/color.cpp
+./src/canvas.cpp
 ./src/icons.cpp
 ./src/mediaclock.cpp
 ./src/mediadecoder.cpp
