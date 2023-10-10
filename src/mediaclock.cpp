@@ -12,7 +12,6 @@ MediaClock::MediaClock() {
   this->m_paused_time = 0.0;
   this->m_skipped_time = 0.0;
   this->m_speed = 1.0;
-  this->m_volume = 1.0;
   this->m_playing = false;
 };
 
@@ -68,24 +67,12 @@ double MediaClock::get_speed() const {
   return this->m_speed;
 };
 
-double MediaClock::get_volume() const {
-  return this->m_volume;
-};
-
 void MediaClock::set_speed(double amount) {
   this->m_speed = amount;
 }
 
-void MediaClock::set_volume(double amount) {
-  this->m_volume = amount;
-};
-
 void MediaClock::change_speed(double offset) {
   this->set_speed(this->m_speed + offset);
-};
-
-void MediaClock::change_volume(double offset) {
-  this->set_volume(this->m_volume + offset);
 };
 
 double MediaClock::get_time(double current_system_time) const {

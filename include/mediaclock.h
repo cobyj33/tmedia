@@ -7,7 +7,6 @@ class MediaClock {
   private:
     std::atomic<bool> m_playing;
     double m_speed;
-    double m_volume;
     double m_start_time;
 
     double m_paused_time;
@@ -49,13 +48,11 @@ class MediaClock {
 
     bool is_playing() const;
     double get_speed() const;
-    double get_volume() const;
 
+    // deprecated tbh, don't use this
     void set_speed(double amount);
-    void set_volume(double amount);
 
     void change_speed(double offset);
-    void change_volume(double amount);
 };
 
 #endif

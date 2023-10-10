@@ -89,14 +89,16 @@ int main(int argc, char** argv)
     .help("The file to be played")
     .nargs(0, 1);
 
-  const std::string controls = std::string("-------CONTROLS-----------\n") +
-              "SPACE - Toggle Playback \n" +
-              "Left Arrow - Skip backward 5 seconds\n" +
-              "Right Arrow - Skip forward 5 seconds \n" +
+  const std::string controls = std::string("-------CONTROLS-----------\n"
+              "SPACE - Toggle Playback \n"
+              "Up Arrow - Increase Volume 5% \n"
+              "Up Arrow - Decrease Volume 5% \n"
+              "Left Arrow - Skip backward 5 seconds\n"
+              "Right Arrow - Skip forward 5 seconds \n"
               "Escape or Backspace - End Playback \n"
               "C - Change to color mode on supported terminals \n"
               "G - Change to grayscale mode \n"
-              "B - Change to Background Mode on supported terminals if in Color or Grayscale mode \n";
+              "B - Change to Background Mode on supported terminals if in Color or Grayscale mode \n");
 
   parser.add_description(controls);
 
@@ -135,6 +137,10 @@ int main(int argc, char** argv)
     .default_value(false)
     .implicit_value(true);
 
+  parser.add_argument("--volume")
+    .help("Set initial volume (must be between 0.0 and 1.0)")
+    .scan<'g', double>();
+
   parser.add_argument("--ffmpeg-version")
     .help("Print the version of linked FFmpeg libraries")
     .default_value(false)
@@ -164,6 +170,12 @@ int main(int argc, char** argv)
   bool dump = parser.get<bool>("-d");
   bool quiet = parser.get<bool>("-q");
   bool mute = parser.get<bool>("-m");
+
+  double volume = 1.0;
+  if (std::optional<double> user_volume = parser.present<double>("--volume")) {
+    volume = *user_volume;
+  }
+  
   bool print_ffmpeg_version = parser.get<bool>("--ffmpeg-version");
   bool print_curses_version = parser.get<bool>("--curses-version");
   std::string inputted_start_time = parser.get<std::string>("-t");
@@ -180,6 +192,12 @@ int main(int argc, char** argv)
   if (print_curses_version) {
     std::cout << curses_version() << std::endl;
     return EXIT_SUCCESS;
+  }
+
+  if (volume < 0.0 || volume > 1.0) {
+    std::cerr << "Error: volume must be in between 0.0 and 1.0 (got " << volume << ")" << std::endl;
+    std::cerr << parser << std::endl;
+    return EXIT_FAILURE;
   }
 
 
@@ -269,11 +287,12 @@ int main(int argc, char** argv)
 
   MediaGUI media_gui;
   media_gui.set_video_output_mode(mode);
-  MediaPlayerConfig config(mute);
   std::unique_ptr<MediaPlayer> player;
 
   try {
-    player = std::make_unique<MediaPlayer>(file.c_str(), media_gui, config);
+    player = std::make_unique<MediaPlayer>(file.c_str(), media_gui);
+    player->muted = mute;
+    player->volume = volume;
     player->start(start_time);
   } catch (std::exception const &e) {
     std::cout << "Error while starting Media Player: " << e.what() << std::endl;

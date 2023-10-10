@@ -66,6 +66,7 @@ void MediaPlayer::audio_playback_thread() {
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     double START_TIME = 0.0;
+    double current_volume = this->volume;
 
     {
       std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
@@ -83,6 +84,7 @@ void MediaPlayer::audio_playback_thread() {
 
     ma_device_w audio_device(nullptr, &config);
     audio_device.start();
+    audio_device.set_volume(current_volume);
     sleep_for_sec(START_TIME);
     
     while (this->in_use) {
@@ -126,6 +128,10 @@ void MediaPlayer::audio_playback_thread() {
         }
 
         // audio_device.sampleRate = this->media_decoder->get_sample_rate() * this->clock.get_speed();
+        if (current_volume != this->volume) {
+          audio_device.set_volume(this->volume);
+          current_volume = this->volume;
+        }
       }
 
       {
