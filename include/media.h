@@ -4,7 +4,6 @@
 #include "audiobuffer.h"
 #include "decode.h"
 #include "boiler.h"
-#include "icons.h"
 #include "color.h"
 #include "mediaclock.h"
 #include "pixeldata.h"
@@ -29,13 +28,6 @@ extern "C" {
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 }
-
-
-struct MediaPlayerConfig {
-  bool muted;
-
-  MediaPlayerConfig(bool muted) : muted(muted) {}
-};
 
 class MediaPlayer {
   private:
@@ -89,12 +81,13 @@ class MediaPlayer {
     MediaClock clock;
     const char* file_name;
     std::atomic<bool> in_use;
-    bool is_looped;
-    bool muted;
+    std::atomic<bool> is_looped;
+    std::atomic<bool> muted;
+    std::atomic<double> volume;
 
     MediaType media_type;
 
-    MediaPlayer(const char* file_name, MediaGUI starting_media_gui, MediaPlayerConfig config);
+    MediaPlayer(const char* file_name, MediaGUI starting_media_gui);
 
     void start(double start_time);
 

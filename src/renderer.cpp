@@ -12,7 +12,6 @@
 #include "pixeldata.h"
 #include "scale.h"
 #include "ascii.h"
-#include "icons.h"
 #include "media.h"
 #include "sleep.h"
 #include "wmath.h"
@@ -29,6 +28,7 @@ extern "C"
 }
 
 const int KEY_ESCAPE = 27;
+const double VOLUME_CHANGE_AMOUNT = 0.05;
 
 void render_movie_screen(PixelData& pixel_data, VideoOutputMode media_gui);
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
@@ -164,6 +164,14 @@ void MediaPlayer::render_loop()
             else if (input == KEY_RIGHT) {
               batched_jump_time += 5;
             }
+          }
+
+          if (input == KEY_UP) {
+            this->volume = clamp(this->volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
+          }
+
+          if (input == KEY_DOWN) {
+            this->volume = clamp(this->volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
           }
 
           if (input == ' ' && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {

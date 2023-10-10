@@ -79,11 +79,11 @@ set(COMMON_SOURCE_FILES
 ./src/wminiaudio.cpp
 ./src/color.cpp
 ./src/canvas.cpp
-./src/icons.cpp
 ./src/mediaclock.cpp
 ./src/mediadecoder.cpp
 ./src/mediatype.cpp
 ./src/pixeldata.cpp
+./src/sigexit.cpp
 ./src/scale.cpp
 ./src/ui/gui.cpp)
 

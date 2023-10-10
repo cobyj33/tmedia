@@ -17,7 +17,7 @@ std::size_t AudioBuffer::get_nb_samples() const {
     return 0;
   }
   
-  return (std::size_t)this->m_buffer.size() / this->m_nb_channels;
+  return this->m_buffer.size() / (std::size_t)this->m_nb_channels;
 };
 
 // NOTE: Am I supposed to also clear the start_time? 
@@ -67,7 +67,7 @@ void AudioBuffer::leave_behind(double time) {
 
   double target_time = this->get_time() - time;
   std::size_t offset_sample_from_start = (target_time - this->m_start_time) * this->m_sample_rate;
-  this->m_buffer = std::move(std::vector<uint8_t>(this->m_buffer.begin() + offset_sample_from_start * this->m_nb_channels, this->m_buffer.end()));
+  this->m_buffer = std::move(std::vector<float>(this->m_buffer.begin() + offset_sample_from_start * this->m_nb_channels, this->m_buffer.end()));
   this->m_start_time = target_time;
   this->m_playhead -= offset_sample_from_start;
 }
@@ -76,17 +76,9 @@ double AudioBuffer::get_end_time() const {
   return this->m_start_time + ((double)this->get_nb_samples() / this->m_sample_rate);
 };
 
-void AudioBuffer::write(uint8_t sample_part) {
-  this->m_buffer.push_back(sample_part);
-};
-
-void AudioBuffer::write(float sample_part) {
-  this->m_buffer.push_back(normalized_float_sample_to_uint8(sample_part));
-};
-
 void AudioBuffer::write(float* samples, int nb_samples) {
   for (int i = 0; i < nb_samples * this->get_nb_channels(); i++) {
-    this->write(normalized_float_sample_to_uint8(samples[i]));
+    this->m_buffer.push_back(samples[i]);
   }
 };
 
@@ -110,7 +102,7 @@ bool AudioBuffer::can_read() const {
 
 void AudioBuffer::peek_into(std::size_t nb_samples, float* target) const {
   for (std::size_t i = 0; i < nb_samples * this->m_nb_channels; i++) {
-    target[i] = uint8_sample_to_normalized_float(this->m_buffer[this->m_playhead * this->m_nb_channels + i]);
+    target[i] = this->m_buffer[this->m_playhead * this->m_nb_channels + i];
   }
 };
 

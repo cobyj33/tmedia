@@ -2,6 +2,8 @@
 
 #include "wminiaudio.h"
 
+#include "wmath.h"
+
 #include <stdexcept>
 
 extern "C" {
@@ -39,6 +41,10 @@ void ma_device_w::stop() {
 
 ma_device_state ma_device_w::get_state() {
   return ma_device_get_state(&this->device);
+}
+
+void ma_device_w::set_volume(double volume) {
+  ma_device_set_master_volume(&this->device, clamp(volume, 0.0, 1.0));
 }
 
 ma_device_w::~ma_device_w() {

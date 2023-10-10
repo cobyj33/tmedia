@@ -1,7 +1,6 @@
 
 #ifndef ASCII_VIDEO_AUDIO_BUFFER_INCLUDED
 #define ASCII_VIDEO_AUDIO_BUFFER_INCLUDED
-#include <cstdint>
 #include <vector>
 
 /**
@@ -21,7 +20,7 @@ class AudioBuffer {
      * bytes should take 4x less space in memory than floats, and I could not notice a real drop in audio quality.
      * However, the data is converted to a float once it is read by the user
      */
-    std::vector<uint8_t> m_buffer;
+    std::vector<float> m_buffer;
 
     /** 
      * @brief the starting time that the first sample in the buffer data is at
@@ -114,18 +113,6 @@ class AudioBuffer {
      * @return The time in seconds that the final sample in the buffer represents 
      */
     double get_end_time() const;
-
-    /**
-     * @brief Writes a part of a sample into the audio data
-     * @param sample_part A part of a sample to write
-     */
-    void write(uint8_t sample_part);
-
-    /**
-     * @brief Writes a part of a sample into the audio data
-     * @param sample_part A part of a sample to write
-     */
-    void write(float sample_part);
 
     /**
      * @brief Writes nb_samples from a float buffer into the audio buffer. Sample data should be interleavened with each sample consisting of the number of channels currently in use by the audio buffer

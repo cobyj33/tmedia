@@ -11,7 +11,6 @@
 #include "boiler.h"
 #include "decode.h"
 #include "sleep.h"
-#include "icons.h"
 #include "ascii.h"
 #include "wmath.h"
 #include "wtime.h"

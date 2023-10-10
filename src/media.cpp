@@ -26,12 +26,13 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui, MediaPlayerConfig config) {
+MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui) {
   this->in_use = false;
   this->file_name = file_name;
   this->is_looped = false;
-  this->muted = config.muted;
+  this->muted = false;
   this->media_gui = starting_media_gui;
+  this->volume = 1.0;
 
   std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
   this->media_decoder = std::move(std::make_unique<MediaDecoder>(file_name));
