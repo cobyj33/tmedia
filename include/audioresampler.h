@@ -64,12 +64,12 @@ class AudioResampler {
     AVFrame* resample_audio_frame(AVFrame* original);
 
     /**
-     * @brief Resample a vector of audio frames and return a new set of resampled frames
+     * @brief Resample a vector of audio AVFrames and return a new set of resampled frames
      * 
      * @note The original list of audio frames is left unaltered.
      * @note Don't forget to free any original or returned frames after resampling and finished
      * 
-     * @param originals The frames to resample
+     * @param originals The AVFrames to resample
      * @return std::vector<AVFrame*> The resampled frames
      */
     std::vector<AVFrame*> resample_audio_frames(std::vector<AVFrame*>& originals);

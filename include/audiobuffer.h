@@ -12,35 +12,27 @@
 class AudioBuffer {
   private:
     /**
-     * @brief The actual buffer of bytes used to store the audio data in the audio buffer.  
+     * @brief audio frame vector for the audio buffer.  
      * 
-     * All bytes are stored interleavened, which means one audio sample consists of the same number of bytes.
-     * 
-     * I chose to store audio data as byte unsigned integers instead of floats because the
-     * bytes should take 4x less space in memory than floats, and I could not notice a real drop in audio quality.
-     * However, the data is converted to a float once it is read by the user
+     * All samples are stored interleavened, which means one audio frame consists of c samples, where c is the number of channels of the stored audio data.
      */
     std::vector<float> m_buffer;
 
     /** 
-     * @brief the starting time that the first sample in the buffer data is at
+     * @brief the starting time that the first frame in the buffer data is at
      * 
      * This is mainly used in conjunction with the sample rate to find the current time of the playhead in the audio buffer.
     */
-    float m_start_time;
+    double m_start_time;
 
     /**
-     * @brief The current sample of the playhead in the audio buffer's data. 
-     * This idea of the "playhead" is used so that data can continuosly be requested and given again from where the audio buffer previously stopped.
-     * 
-     * @note This playhead index should NOT take into account the number of channels in the audio data, only the offset of samples since the start of the audio buffer.
-     * In order to query into the audio buffer, this value should then be multiplied by the number of audio channels before extracting data
+     * @brief The current frame of the playhead in the audio buffer's data. 
+     * This idea of the "playhead" is used so that data can continuosly be moved exactly from where the audio buffer previously stopped.
      */
     std::size_t m_playhead;
 
     int m_nb_channels;
 
-    // The sample rate of the audio stored in this audio buffer
     int m_sample_rate;
 
   public:
@@ -48,12 +40,11 @@ class AudioBuffer {
      * @brief Construct a new audio buffer object with the given number of channels and the given sample rate
      * @param nb_channels The number of channels to be used in the stored audio buffer's data
      * @param sample_rate The sample rate to be used in the stored audio buffer's data
-     * @throws Invalid Argument Error if nb_channels or sample_rate is not positive and non-zero
      */
     AudioBuffer(unsigned int nb_channels, unsigned int sample_rate);
 
-    /** gets the number of audio samples stored in the audio buffer */
-    std::size_t get_nb_samples() const;
+    /** gets the number of audio frames stored in the audio buffer */
+    std::size_t get_nb_frames() const;
     /** gets the number of audio channels represented by the audio buffer */
     int get_nb_channels() const;
     /** gets the sample rate per second of the data stored by the audio buffer*/
@@ -65,12 +56,6 @@ class AudioBuffer {
      * @param time The "time" that the beginning of the audio buffer represents
      */
     void clear_and_restart_at(double time);
-
-    /** 
-     * @brief Clears the audio buffer's data
-     * This will reset the nb_samples, 
-    */
-    void clear();
 
     /**
      * @brief Get the current time that the audio buffer is on
@@ -104,77 +89,82 @@ class AudioBuffer {
 
     /**
      * @brief Gets the starting time of the buffer. The starting time is determined by the time given by clear_and_restart_at
-     * @return The time in seconds that the first sample in the buffer represents 
+     * @return The time in seconds that the first frame in the buffer represents 
      */
     double get_start_time() const;
 
     /**
-     * @brief Gets the ending time of the buffer. The ending time is determined by the amount of samples inputted into the buffer and the sample rate of the buffer
-     * @return The time in seconds that the final sample in the buffer represents 
+     * @brief Gets the ending time of the buffer. The ending time is determined by the amount of frames in the buffer and the sample rate of the buffer
+     * @return The time in seconds that the final frame in the buffer represents 
      */
     double get_end_time() const;
 
     /**
-     * @brief Writes nb_samples from a float buffer into the audio buffer. Sample data should be interleavened with each sample consisting of the number of channels currently in use by the audio buffer
-     * @param sample_part A part of a sample to write
+     * @brief Writes nb_frames audio frames from an interleavened float buffer into the audio buffer.
+     * 
+     * @param nb_frames the number of audio frames to write into the audio buffer
      */
-    void write(float* samples, int nb_samples);
+    void write(float* frames, int nb_frames);
 
     /**
      * @brief Finds if a certain time stamp lies in the audio buffer's data length
-     * 
      * @param time the time to check
-     * @return true 
-     * @return false 
      */
     bool is_time_in_bounds(double time) const;
 
     /**
-     * @brief Determine if the audio buffer has any sample data to read
-     * 
-     * @return true: There is any samples available to be read
-     * @return false: There is not samples available to read
+     * @brief Determine if the audio buffer has any audio frame data to read
      */
     bool can_read() const;
 
     /**
-     * @brief Determine if the audio buffer has enough data to be able to read nb_samples number of samples
-     * This does not necessarily mean that the buffer is empty, only that there is no further data to be found or all data has previously been read.
+     * @brief Determine if the audio buffer has enough data to be able to read nb_frames frames
      * 
-     * @param nb_samples The number of samples to test if able to be read
-     * @return true: There is enough samples to be able to read
-     * @return false: There is not enough samples able to be read
+     * This does not necessarily mean that the buffer is empty, only that there
+     * is no further data to be found or all data has previously been read.
+     * 
+     * @param nb_frames The number of frames to test if able to be read
      */
-    bool can_read(std::size_t nb_samples) const;
+    bool can_read(std::size_t nb_frames) const;
 
     std::size_t get_nb_can_read() const;
 
     /**
-     * @brief Reads nb_samples samples into the float buffer and advanced the audio buffer by nb_samples. The data returned is interleaved
-     * The float buffer should be of the size (nb_samples * nb_channels), where nb_samples is the number of samples wanted to be read and nb_channels is the number of channels in the audio buffer. This can be easily found by multiplying the nb_samples to be read by the number of channels in the audio buffer through get_nb_channels()
+     * @brief Reads nb_frames frames into the float buffer and advances the audio buffer by nb_frames. The data returned is interleaved
+     * The float buffer should be of the size (nb_frames * nb_channels), where
+     * nb_frames is the number of frames wanted to be read and nb_channels is
+     * the number of channels in the audio buffer. This can be easily found by
+     * multiplying the number of frames to be read by the number of channels in
+     * the audio buffer through get_nb_channels()
+     * 
      * NOTE: This function advances the audio buffer, so multiple calls to read_into in a row will not read the same data.
      * 
-     * @param nb_samples The number of samples to be read into the buffer
-     * @param target The float buffer to read the data into. The buffer should be of a length of at least (nb_samples * nb_channels) where nb_samples is the number of samples wanted to be read and nb_channels is the number of channels in the audio buffer. This can be easily found by multiplying the nb_samples to be read by the number of channels in the audio buffer through get_nb_channels()
+     * @param nb_frames The number of frames to be read into the buffer
+     * @param target The float buffer to read the data into.
      */
-    void read_into(std::size_t nb_samples, float* target);
+    void read_into(std::size_t nb_frames, float* target);
 
     /**
-     * @brief Reads nb_samples samples into the float buffer. The data returned is interleaved
-     * The float buffer should be of the size (nb_samples * nb_channels), where nb_samples is the number of samples wanted to be read and nb_channels is the number of channels in the audio buffer. This can be easily found by multiplying the nb_samples to be read by the number of channels in the audio buffer through get_nb_channels()
-     * NOTE: This function is unlike read_into(nb_samples, float* target). In peek_into, the audio buffer is not automatically advanced by nb_samples
+     * @brief Reads nb_frames frames into the float buffer. The data returned is interleaved
+     * The float buffer should be of the size (nb_frames * nb_channels), where
+     * nb_frames is the number of frames wanted to be read and nb_channels is
+     * the number of channels in the audio buffer. This can be easily found by
+     * multiplying the number of frames to be read by the number of channels in the
+     * audio buffer through get_nb_channels()
      * 
-     * @param nb_samples The number of samples to be read into the buffer
-     * @param target The float buffer to read the data into. The buffer should be of a length of at least (nb_samples * nb_channels) where nb_samples is the number of samples wanted to be read and nb_channels is the number of channels in the audio buffer. This can be easily found by multiplying the nb_samples to be read by the number of channels in the audio buffer through get_nb_channels()
+     * NOTE: This function is unlike read_into. In peek_into, the audio buffer is not automatically advanced by nb_frames
+     * 
+     * @param nb_frames The number of frames to be read into the buffer
+     * @param target The float buffer to read the data into.
      */
     void peek_into(std::size_t nb_frames, float* target) const;
     std::vector<float> peek_into(std::size_t nb_frames);
 
     /**
-     * @brief Moves the audio buffer forward by nb_samples amount
-     * @param nb_samples the number of samples to move the audio buffer
+     * @brief Moves the audio buffer forward by nb_frames amount
+     * @param nb_frames the number of frames to move the audio buffer
      */
-    void advance(std::size_t nb_samples);
+    void advance(std::size_t nb_frames);
 };
 
 #endif

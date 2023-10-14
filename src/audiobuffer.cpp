@@ -14,19 +14,12 @@ AudioBuffer::AudioBuffer(unsigned int nb_channels, unsigned int sample_rate) {
   this->m_sample_rate = sample_rate;
 };
 
-std::size_t AudioBuffer::get_nb_samples() const {
+std::size_t AudioBuffer::get_nb_frames() const {
   if (this->m_nb_channels == 0) {
     return 0;
   }
   
   return this->m_buffer.size() / (std::size_t)this->m_nb_channels;
-};
-
-// NOTE: Am I supposed to also clear the start_time? 
-
-void AudioBuffer::clear() { // Note: No longer takes in a clear capacity
-  this->m_buffer.clear();
-  this->m_playhead = 0;
 };
 
 double AudioBuffer::get_elapsed_time() const {
@@ -42,14 +35,14 @@ double AudioBuffer::get_time() const {
 };
 
 void AudioBuffer::set_time_in_bounds(double time) {
-  if (this->get_nb_samples() == 0) {
+  if (this->get_nb_frames() == 0) {
     throw std::runtime_error("[AudioBuffer::set_time_in_bounds] Cannot set audio buffer time to " + std::to_string(time) + ". The audio buffer is currently empty.");
   }
   if (!this->is_time_in_bounds(time)) {
     throw std::runtime_error("[AudioBuffer::set_time_in_bounds] Cannot set audio buffer time to " + std::to_string(time) + ". The audio buffer is currently only holding data between the times " + std::to_string(this->m_start_time) + " and " + std::to_string(this->get_end_time()));
   }
 
-  this->m_playhead = (std::size_t)(std::min(this->get_nb_samples() - 1, std::max( (std::size_t)0, (std::size_t)((time - this->m_start_time) * this->m_sample_rate  ))  )  );
+  this->m_playhead = (std::size_t)(std::min(this->get_nb_frames() - 1, std::max( (std::size_t)0, (std::size_t)((time - this->m_start_time) * this->m_sample_rate  ))  )  );
 };
 
 double AudioBuffer::get_start_time() const {
@@ -75,12 +68,12 @@ void AudioBuffer::leave_behind(double time) {
 }
 
 double AudioBuffer::get_end_time() const {
-  return this->m_start_time + ((double)this->get_nb_samples() / this->m_sample_rate);
+  return this->m_start_time + ((double)this->get_nb_frames() / this->m_sample_rate);
 };
 
-void AudioBuffer::write(float* samples, int nb_samples) {
-  for (int i = 0; i < nb_samples * this->get_nb_channels(); i++) {
-    this->m_buffer.push_back(samples[i]);
+void AudioBuffer::write(float* frames, int nb_frames) {
+  for (int i = 0; i < nb_frames * this->get_nb_channels(); i++) {
+    this->m_buffer.push_back(frames[i]);
   }
 };
 
@@ -89,13 +82,14 @@ bool AudioBuffer::is_time_in_bounds(double time) const {
 };
 
 void AudioBuffer::clear_and_restart_at(double time) {
-  this->clear();
+  this->m_buffer.clear();
+  this->m_playhead = 0;
   this->m_start_time = time;
 };
 
 
-bool AudioBuffer::can_read(std::size_t nb_samples) const {
-  return this->m_playhead + nb_samples <= this->get_nb_samples();
+bool AudioBuffer::can_read(std::size_t nb_frames) const {
+  return this->m_playhead + nb_frames <= this->get_nb_frames();
 };
 
 bool AudioBuffer::can_read() const {
@@ -118,13 +112,13 @@ std::vector<float> AudioBuffer::peek_into(std::size_t nb_frames) {
 }
 
 
-void AudioBuffer::read_into(std::size_t nb_samples, float* target)  {
-  this->peek_into(nb_samples, target);
-  this->advance(nb_samples);
+void AudioBuffer::read_into(std::size_t nb_frames, float* target)  {
+  this->peek_into(nb_frames, target);
+  this->advance(nb_frames);
 };
 
-void AudioBuffer::advance(std::size_t nb_samples) {
-  this->m_playhead += nb_samples;
+void AudioBuffer::advance(std::size_t nb_frames) {
+  this->m_playhead += nb_frames;
 };
 
 int AudioBuffer::get_nb_channels() const {
@@ -136,5 +130,5 @@ int AudioBuffer::get_sample_rate() const {
 };
 
 std::size_t AudioBuffer::get_nb_can_read() const {
-  return this->get_nb_samples() - this->m_playhead;
+  return this->get_nb_frames() - this->m_playhead;
 }
