@@ -100,16 +100,16 @@ bool AudioBuffer::can_read() const {
   return this->can_read(1);
 };
 
-void AudioBuffer::peek_into(std::size_t nb_samples, float* target) const {
-  for (std::size_t i = 0; i < nb_samples * this->m_nb_channels; i++) {
+void AudioBuffer::peek_into(std::size_t nb_frames, float* target) const {
+  for (std::size_t i = 0; i < nb_frames * this->m_nb_channels; i++) {
     target[i] = this->m_buffer[this->m_playhead * this->m_nb_channels + i];
   }
 };
 
-std::vector<float> AudioBuffer::peek_into(std::size_t nb_samples) {
+std::vector<float> AudioBuffer::peek_into(std::size_t nb_frames) {
   std::vector<float> peek;
-  for (std::size_t i = 0; i < nb_samples * this->m_nb_channels; i++) {
-    peek.push_back(uint8_sample_to_normalized_float(this->m_buffer[this->m_playhead * this->m_nb_channels + i]));
+  for (std::size_t i = 0; i < nb_frames * this->m_nb_channels; i++) {
+    peek.push_back(this->m_buffer[this->m_playhead * this->m_nb_channels + i]);
   }
 
   return peek;

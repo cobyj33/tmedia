@@ -61,6 +61,8 @@ void MediaPlayer::render_loop()
     while (this->in_use) {
       PixelData image;
       VideoOutputMode vom;
+      this->display_lines = LINES;
+      this->display_cols = COLS;
 
       {
         std::lock_guard<std::mutex> lock(this->alter_mutex);

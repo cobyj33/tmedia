@@ -31,10 +31,10 @@ class PixelData {
     PixelData(int width, int height);
     PixelData(AVFrame* video_frame);
     PixelData(const char* file_name);
+    PixelData(const PixelData& pix_data);
     
     void operator=(const PixelData& pix_data);
     void operator=(AVFrame* video_frame);
-    PixelData(const PixelData& pix_data);
 
     bool equals(const PixelData& pix_data) const;
     int get_width() const;
@@ -47,8 +47,6 @@ class PixelData {
     bool in_bounds(int row, int column) const;
     RGBColor get_avg_color_from_area(int row, int col, int width, int height) const;
     RGBColor get_avg_color_from_area(double row, double col, double width, double height) const;
-
-    
 };
 
 #endif

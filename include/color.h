@@ -21,7 +21,7 @@ class RGBColor {
     RGBColor(int red, int green, int blue) : red(red), green(green), blue(blue) {}
     RGBColor(const RGBColor& color) : red(color.red), green(color.green), blue(color.blue) {}
 
-    RGBColor& operator=(const RGBColor& color);
+    void operator=(const RGBColor& color);
 
     double distance(const RGBColor& other) const;
     double distance_squared(const RGBColor& other) const;

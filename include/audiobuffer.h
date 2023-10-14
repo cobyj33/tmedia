@@ -167,8 +167,8 @@ class AudioBuffer {
      * @param nb_samples The number of samples to be read into the buffer
      * @param target The float buffer to read the data into. The buffer should be of a length of at least (nb_samples * nb_channels) where nb_samples is the number of samples wanted to be read and nb_channels is the number of channels in the audio buffer. This can be easily found by multiplying the nb_samples to be read by the number of channels in the audio buffer through get_nb_channels()
      */
-    void peek_into(std::size_t nb_samples, float* target) const;
-    std::vector<float> peek_into(std::size_t nb_samples);
+    void peek_into(std::size_t nb_frames, float* target) const;
+    std::vector<float> peek_into(std::size_t nb_frames);
 
     /**
      * @brief Moves the audio buffer forward by nb_samples amount

@@ -1,16 +1,18 @@
 #include "canvas.h"
 
 
-Canvas::Canvas(int width, int height) {
-  this->canvas.reserve(height);
-  for (int row = 0; row < height; row++) {
+Canvas::Canvas(int nb_rows, int nb_cols) {
+  this->canvas.reserve(nb_rows);
+  for (int row = 0; row < nb_rows; row++) {
     std::vector<RGBColor> column;
-    column.reserve(width);
-    for (int col = 0; col < width; col++) {
+    column.reserve(nb_cols);
+    for (int col = 0; col < nb_cols; col++) {
       column.push_back(RGBColor(0));
     }
     this->canvas.push_back(std::move(column));
   }
+  this->nb_cols = nb_cols;
+  this->nb_rows = nb_rows;
 }
 
 void Canvas::line(int row1, int col1, int row2, int col2, RGBColor color) {

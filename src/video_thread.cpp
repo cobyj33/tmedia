@@ -20,6 +20,7 @@
 #include "mediadecoder.h"
 
 #include "audio_image.h"
+#include "audio.h"
 
 extern "C" {
 #include <libavutil/version.h>
@@ -29,8 +30,19 @@ extern "C" {
 
 const int MAX_FRAME_WIDTH = 27 * 16;
 const int MAX_FRAME_HEIGHT = 27 * 9;
-const char* DEBUG_VIDEO_SOURCE = "video";
-const char* DEBUG_VIDEO_TYPE = "debug";
+
+/**
+ * The purpose of the video thread is to update the current MediaPlayer's frame for rendering
+ * 
+ * This is done in different ways depending on if a video is available in the current media type or not
+ * If the currently attached media is a video:
+ *  The video thread will update the current frame to be the correct frame according to the MediaPlayer's current
+ *  playback timestamp
+ * 
+ * If the currently attached media is audio:
+ *  The video thread will update the current frame to be a snapshot of the wave of audio data currently being
+ *  processed. 
+*/
 
 
 void MediaPlayer::video_playback_thread() {
@@ -39,8 +51,8 @@ void MediaPlayer::video_playback_thread() {
     std::unique_ptr<VideoConverter> video_converter;
     double avg_frame_time_sec = 1 / 24.0;
 
-    switch (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
-      case true: {
+    if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
+
         {
           std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
 
@@ -98,20 +110,37 @@ void MediaPlayer::video_playback_thread() {
             sleep_for_sec(wait_duration);
           }
         }
-      } break;
-
-      case false:
+    } else if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
 
       while (this->in_use) {
+        const int AUDIO_VIEW_ROWS = this->display_lines;
+        const int AUDIO_VIEW_COLS = std::max(this->display_cols, 144);
+        
+        std::vector<float> audio_buffer_view;
+        int nb_channels;
+
         {
-          std::lock_guard<std::mutex> alter(this->alter_mutex);
-          std::lock_guard<std::mutex> guard(this->buffer_read_mutex);
-          PixelData data = generate_audio_view(*this->audio_buffer);
-          this->frame = data;
+          std::lock_guard<std::mutex> player_lock(this->alter_mutex);
+          std::lock_guard<std::mutex> buffer_read_lock(this->buffer_read_mutex);
+
+          std::size_t to_peek = std::min(this->audio_buffer->get_nb_can_read(), (std::size_t)AUDIO_VIEW_COLS);
+          if (to_peek == 0) {
+            continue;
+          }
+          audio_buffer_view = this->audio_buffer->peek_into(to_peek);
+          nb_channels = this->audio_buffer->get_nb_channels();
         }
 
-        sleep_for_ms(5);
-      } break;
+        std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
+        PixelData frame = generate_audio_view(mono, AUDIO_VIEW_ROWS, AUDIO_VIEW_COLS);
+
+        {
+          std::lock_guard<std::mutex> player_lock(this->alter_mutex);
+          this->frame = frame;
+        }
+
+        sleep_for_ms(avg_frame_time_sec);
+      }
 
     }
 

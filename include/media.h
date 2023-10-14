@@ -65,6 +65,9 @@ class MediaPlayer {
 
     std::string error;
 
+    std::atomic<int> display_lines;
+    std::atomic<int> display_cols;
+
   public:
   
     /**
