@@ -115,8 +115,7 @@ void MediaPlayer::video_playback_thread() {
     } else if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
 
       while (this->in_use) {
-        const int AUDIO_VIEW_ROWS = this->display_lines;
-        const int AUDIO_VIEW_COLS = std::max(static_cast<int>(this->display_cols), 144);
+        const std::size_t AUDIO_PEEK_SIZE = 44100 * 2;
         
         std::vector<float> audio_buffer_view;
         int nb_channels;
@@ -125,7 +124,7 @@ void MediaPlayer::video_playback_thread() {
           std::lock_guard<std::mutex> player_lock(this->alter_mutex);
           std::lock_guard<std::mutex> buffer_read_lock(this->buffer_read_mutex);
 
-          std::size_t to_peek = std::min(this->audio_buffer->get_nb_can_read(), (std::size_t)AUDIO_VIEW_COLS);
+          std::size_t to_peek = std::min(this->audio_buffer->get_nb_can_read(), AUDIO_PEEK_SIZE);
           if (to_peek == 0) {
             continue;
           }
@@ -134,7 +133,12 @@ void MediaPlayer::video_playback_thread() {
         }
 
         std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
-        PixelData frame = generate_audio_view(mono, AUDIO_VIEW_ROWS, AUDIO_VIEW_COLS);
+        audio_bound_volume(mono, 1.0);
+        std::pair<int, int> output_size = get_bounded_dimensions(this->display_cols, this->display_lines, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+        int display_rows = output_size.second;
+        int display_cols = output_size.first;
+
+        PixelData frame = generate_audio_view(mono, display_rows, display_cols);
 
         {
           std::lock_guard<std::mutex> player_lock(this->alter_mutex);

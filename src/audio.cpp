@@ -13,8 +13,21 @@ std::vector<float> audio_to_mono(std::vector<float>& samples, int nb_channels) {
     res.push_back(mono);
   }
 
-  audio_normalize(res);
   return res;
+}
+
+void audio_bound_volume(std::vector<float>& samples, float max) {
+  float largest = 0.0;
+  for (std::size_t i = 0; i < samples.size(); i++) {
+    largest = std::max(samples[i], largest);
+  }
+
+  if (largest < max)
+    return;
+
+  for (std::size_t i = 0; i < samples.size(); i++) {
+    samples[i] *= max / largest;
+  }
 }
 
 void audio_normalize(std::vector<float>& samples) {

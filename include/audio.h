@@ -14,5 +14,6 @@
 
 std::vector<float> audio_to_mono(std::vector<float>& samples, int nb_channels);
 void audio_normalize(std::vector<float>& samples);
+void audio_bound_volume(std::vector<float>& samples, float max);
 
 #endif
