@@ -17,8 +17,22 @@ extern "C" {
 #include <libavutil/frame.h>
 }
 
-const int MAX_FRAME_WIDTH = 27 * 16;
-const int MAX_FRAME_HEIGHT = 27 * 9;
+
+const int PIXEL_ASPECT_RATIO_WIDTH = 2; // account for non-square shape of terminal characters
+const int PIXEL_ASPECT_RATIO_HEIGHT = 5;
+const double PIXEL_ASPECT_RATIO = (double)PIXEL_ASPECT_RATIO_WIDTH / (double)PIXEL_ASPECT_RATIO_HEIGHT;
+
+const int MAX_FRAME_ASPECT_RATIO_WIDTH = 80;
+const int MAX_FRAME_ASPECT_RATIO_HEIGHT = 24;
+const double MAX_FRAME_ASPECT_RATIO = (double)MAX_FRAME_ASPECT_RATIO_WIDTH / (double)MAX_FRAME_ASPECT_RATIO_HEIGHT;
+
+
+const int DISPLAY_ASPECT_RATIO_WIDTH = PIXEL_ASPECT_RATIO_WIDTH * MAX_FRAME_ASPECT_RATIO_WIDTH;
+const int DISPLAY_ASPECT_RATIO_HEIGHT = PIXEL_ASPECT_RATIO_HEIGHT * MAX_FRAME_ASPECT_RATIO_HEIGHT;
+const double DISPLAY_ASPECT_RATIO = (double)DISPLAY_ASPECT_RATIO_WIDTH / (double)DISPLAY_ASPECT_RATIO_HEIGHT;
+
+const int MAX_FRAME_WIDTH = 640;
+const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH * MAX_FRAME_ASPECT_RATIO;
 
 /**
  * The purpose of the video thread is to update the current MediaPlayer's frame for rendering
@@ -33,7 +47,6 @@ const int MAX_FRAME_HEIGHT = 27 * 9;
  *  processed. 
 */
 
-
 void MediaPlayer::video_playback_thread() {
 
   try {
@@ -45,7 +58,7 @@ void MediaPlayer::video_playback_thread() {
         {
           std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
 
-          const std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(this->media_decoder->get_width(), this->media_decoder->get_height(), MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+          const std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT, this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
           const int output_frame_width = bounded_video_frame_dimensions.first;
           const int output_frame_height = bounded_video_frame_dimensions.second;
 

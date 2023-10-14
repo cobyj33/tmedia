@@ -212,6 +212,7 @@ void MediaPlayer::render_loop()
 }
 
 void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode) {
+  // exists as a separate function because more complexity will be added later
   print_pixel_data(pixel_data, 0, 0, COLS, LINES, output_mode);
 }
 
