@@ -1,6 +1,6 @@
 #ifndef ASCII_VIDEO_THREADS
 #define ASCII_VIDEO_THREADS
-#include "media.h"
+#include "mediaplayer.h"
 
 /**
  * @brief Sleep the current thread for the given number of nanoseconds

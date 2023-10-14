@@ -11,7 +11,7 @@
 #include "color.h"
 #include "pixeldata.h"
 #include "scale.h"
-#include "media.h"
+#include "mediaplayer.h"
 #include "formatting.h"
 #include "wtime.h"
 #include "gui.h"

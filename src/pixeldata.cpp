@@ -12,7 +12,7 @@
 #include "pixeldata.h"
 #include "wmath.h"
 #include "scale.h"
-#include "media.h"
+#include "mediaplayer.h"
 #include "decode.h"
 #include "boiler.h"
 #include "videoconverter.h"

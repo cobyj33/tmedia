@@ -12,7 +12,7 @@
 #include "pixeldata.h"
 #include "scale.h"
 #include "ascii.h"
-#include "media.h"
+#include "mediaplayer.h"
 #include "sleep.h"
 #include "wmath.h"
 #include "wtime.h"

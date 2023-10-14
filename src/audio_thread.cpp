@@ -1,7 +1,7 @@
 
 #include "boiler.h"
 #include "decode.h"
-#include "media.h"
+#include "mediaplayer.h"
 #include "wtime.h"
 #include "audio.h"
 #include "wmath.h"

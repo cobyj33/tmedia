@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <iostream>
 
-#include "media.h"
+#include "mediaplayer.h"
 #include "boiler.h"
 #include "decode.h"
 #include "sleep.h"
@@ -114,7 +114,7 @@ void MediaPlayer::video_playback_thread() {
 
       while (this->in_use) {
         const int AUDIO_VIEW_ROWS = this->display_lines;
-        const int AUDIO_VIEW_COLS = std::max(this->display_cols, 144);
+        const int AUDIO_VIEW_COLS = std::max(static_cast<int>(this->display_cols), 144);
         
         std::vector<float> audio_buffer_view;
         int nb_channels;

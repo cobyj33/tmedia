@@ -10,7 +10,7 @@
 #include <deque>
 
 #include "boiler.h"
-#include "media.h"
+#include "mediaplayer.h"
 #include "wtime.h"
 #include "wmath.h"
 #include "except.h"

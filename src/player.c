@@ -1,5 +1,5 @@
 #include "player.h"
-#include "media.h"
+#include "mediaplayer.h"
 
 MediaPlayer* currentMedia;
 

@@ -1,7 +1,7 @@
 #ifndef ASCII_VIDEO_RENDERER_H
 #define ASCII_VIDEO_RENDERER_H
 
-#include "media.h"
+#include "mediaplayer.h"
 
 void ascii_video_set_current_media(MediaPlayer* media);
 

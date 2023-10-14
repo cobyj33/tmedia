@@ -1,7 +1,7 @@
 #ifndef ASCII_VIDEO_PLAYBACK_H
 #define ASCII_VIDEO_PLAYBACK_H
 
-#include "media.h"
+#include "mediaplayer.h"
 
 class MediaPlaybackContext {
   MediaPlayer media;
