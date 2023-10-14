@@ -133,7 +133,7 @@ void MediaPlayer::video_playback_thread() {
         }
 
         std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
-        audio_bound_volume(mono, 1.0);
+        audio_bound_volume(mono, 1, 1.0);
         std::pair<int, int> output_size = get_bounded_dimensions(this->display_cols, this->display_lines, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
         int display_rows = output_size.second;
         int display_cols = output_size.first;

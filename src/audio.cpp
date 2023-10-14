@@ -3,12 +3,12 @@
 #include <vector>
 #include <cstddef>
 
-std::vector<float> audio_to_mono(std::vector<float>& samples, int nb_channels) {
+std::vector<float> audio_to_mono(std::vector<float>& frames, int nb_channels) {
   std::vector<float> res;
-  for (std::size_t frame = 0; frame < samples.size() / (std::size_t)nb_channels; frame++) {
+  for (std::size_t frame = 0; frame < frames.size() / (std::size_t)nb_channels; frame++) {
     float mono = 0.0;
     for (int c = 0; c < nb_channels; c++) {
-      mono += samples[frame * nb_channels + c];
+      mono += frames[frame * nb_channels + c];
     }
     res.push_back(mono);
   }
@@ -16,30 +16,34 @@ std::vector<float> audio_to_mono(std::vector<float>& samples, int nb_channels) {
   return res;
 }
 
-void audio_bound_volume(std::vector<float>& samples, float max) {
-  float largest = 0.0;
-  for (std::size_t i = 0; i < samples.size(); i++) {
-    largest = std::max(samples[i], largest);
-  }
+void audio_bound_volume(std::vector<float>& frames, int nb_channels, float max) {
+  for (int c = 0; c < nb_channels; c++) { // bound each channel individually
+    float largest = 0.0;
+    for (std::size_t i = c; i < frames.size(); i += nb_channels) {
+      largest = std::max(frames[i], largest);
+    }
 
-  if (largest < max)
-    return;
+    if (largest < max)
+      continue;
 
-  for (std::size_t i = 0; i < samples.size(); i++) {
-    samples[i] *= max / largest;
+    for (std::size_t i = c; i < frames.size(); i += nb_channels) {
+      frames[i] *= max / largest;
+    }
   }
 }
 
-void audio_normalize(std::vector<float>& samples) {
-  float largest = 0.0;
-  for (std::size_t i = 0; i < samples.size(); i++) {
-    largest = std::max(samples[i], largest);
-  }
+void audio_normalize(std::vector<float>& frames, int nb_channels) {
+  for (int c = 0; c < nb_channels; c++) { // normalize each channel individually
+    float largest = 0.0;
+    for (std::size_t i = c; i < frames.size(); i += nb_channels) {
+      largest = std::max(frames[i], largest);
+    }
 
-  if (largest == 0.0)
-    return;
+    if (largest == 0.0)
+      continue;
 
-  for (std::size_t i = 0; i < samples.size(); i++) {
-    samples[i] /= largest;
+    for (std::size_t i = c; i < frames.size(); i += nb_channels) {
+      frames[i] /= largest;
+    }
   }
 }
