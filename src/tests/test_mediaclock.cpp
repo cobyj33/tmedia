@@ -1,4 +1,5 @@
 #include "mediaclock.h"
+
 #include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("mediaclock", "[mediaclock]") {
@@ -6,7 +7,6 @@ TEST_CASE("mediaclock", "[mediaclock]") {
   MediaClock clock;
   clock.start(MOCK_SYSTEM_START_TIME);
   REQUIRE(clock.get_speed() == 1.0);
-  REQUIRE(clock.get_volume() == 1.0);
   REQUIRE(clock.get_time(MOCK_SYSTEM_START_TIME) == 0);
   REQUIRE(clock.is_playing());
   

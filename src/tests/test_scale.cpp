@@ -1,6 +1,6 @@
-#include <utility>
-
 #include "scale.h"
+
+#include <utility>
 
 #include <catch2/catch_test_macros.hpp>
 

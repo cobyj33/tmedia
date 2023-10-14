@@ -1,4 +1,5 @@
 #include "color.h"
+
 #include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("color", "[color]") {
