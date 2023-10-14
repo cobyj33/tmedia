@@ -1,11 +1,7 @@
 #include "ascii.h" 
 
-#include "scale.h"
 #include "pixeldata.h"
-#include "wmath.h"
 
-#include <cstdint>
-#include <vector>
 #include <stdexcept>
 
 extern "C" {

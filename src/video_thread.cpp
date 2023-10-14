@@ -1,26 +1,15 @@
+#include "mediaplayer.h"
 
-#include <cstdint>
-#include <cstdio>
-#include <ctime>
+#include "audio.h"
+#include "audio_image.h"
+#include "sleep.h"
+#include "scale.h"
+#include "wtime.h"
+#include "videoconverter.h"
+
 #include <mutex>
 #include <memory>
 #include <stdexcept>
-#include <iostream>
-
-#include "mediaplayer.h"
-#include "boiler.h"
-#include "decode.h"
-#include "sleep.h"
-#include "scale.h"
-#include "wmath.h"
-#include "wtime.h"
-#include "videoconverter.h"
-#include "except.h"
-#include "avguard.h"
-#include "mediadecoder.h"
-
-#include "audio_image.h"
-#include "audio.h"
 
 extern "C" {
 #include <libavutil/version.h>

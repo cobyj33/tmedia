@@ -1,11 +1,6 @@
-#include <algorithm>
+#include "mediaclock.h"
+
 #include <stdexcept>
-
-#include <mediaclock.h>
-#include <wtime.h>
-#include <wmath.h>
-
-
 
 MediaClock::MediaClock() {
   this->m_start_time = 0.0;

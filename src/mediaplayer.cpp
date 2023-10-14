@@ -1,27 +1,17 @@
 
-#include <cstdarg>
-#include <cstddef>
-#include <cstdint>
+#include "mediaplayer.h"
+
+#include "wtime.h"
+#include "wmath.h"
+#include "formatting.h"
+#include "audioresampler.h"
+
 #include <string>
-#include <algorithm>
 #include <memory>
 #include <thread>
 #include <mutex>
-#include <deque>
-
-#include "boiler.h"
-#include "mediaplayer.h"
-#include "wtime.h"
-#include "wmath.h"
-#include "except.h"
-#include "formatting.h"
-#include "sleep.h"
-#include "audioresampler.h"
-#include "avguard.h"
-#include "streamdecoder.h"
 
 extern "C" {
-#include "curses.h"
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 }

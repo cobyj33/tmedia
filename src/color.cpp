@@ -1,12 +1,10 @@
 #include "color.h"
 
-#include <cmath>
-#include <cstdlib>
-#include <vector>
-#include <stdexcept>
-
 #include "wmath.h"
 
+#include <cmath>
+#include <vector>
+#include <stdexcept>
 
 RGBColor RGBColor::BLACK = RGBColor(0, 0, 0);
 RGBColor RGBColor::WHITE = RGBColor(255, 255, 255);

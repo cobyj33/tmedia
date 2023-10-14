@@ -1,5 +1,9 @@
 #include "canvas.h"
 
+#include "color.h"
+#include "pixeldata.h"
+
+#include <vector>
 
 Canvas::Canvas(int nb_rows, int nb_cols) {
   this->canvas.reserve(nb_rows);

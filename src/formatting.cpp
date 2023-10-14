@@ -1,14 +1,13 @@
-#include <cstring>
+#include "formatting.h"
+ 
+#include "unitconvert.h"
+
 #include <cstdarg>
 #include <string>
 #include <stdexcept>
-#include <cmath>
-
-#include <iomanip>
+#include <iomanip> // std::setprecision
 #include <sstream>
 
-#include "formatting.h" 
-#include "unitconvert.h"
 
 std::string double_to_fixed_string(double num, int decimal_places) {
   if (decimal_places < 0) {

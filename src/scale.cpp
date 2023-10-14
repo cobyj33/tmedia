@@ -1,7 +1,7 @@
+#include "scale.h"
+
 #include <utility>
 #include <algorithm>
-
-#include "scale.h"
 
 double get_scale_factor(int src_width, int src_height, int target_width, int target_height) {
   double width_scaler = (double)target_width / src_width; // > 1 if growing, < 1 if shrinking, ==1 if same

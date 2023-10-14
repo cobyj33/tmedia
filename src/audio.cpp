@@ -1,7 +1,7 @@
-#include <cstdlib>
 #include "audio.h"
-#include <cstddef>
+
 #include <vector>
+#include <cstddef>
 
 std::vector<float> audio_to_mono(std::vector<float>& samples, int nb_channels) {
   std::vector<float> res;
@@ -32,7 +32,7 @@ void audio_normalize(std::vector<float>& samples) {
 }
 
 std::vector<float> alter_audio_len(std::vector<float>& original_samples, int nb_channels, size_t target_nb_samples) {
-    size_t nb_samples = original_samples.size() / nb_channels;
+    std::size_t nb_samples = original_samples.size() / nb_channels;
 
     return original_samples;
     

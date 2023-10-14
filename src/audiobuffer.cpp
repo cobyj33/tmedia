@@ -1,9 +1,11 @@
-#include <cstdint>
-#include <stdexcept>
-
 #include "audiobuffer.h"
+
 #include "wmath.h"
 #include "audio.h"
+
+#include <vector>
+#include <stdexcept>
+
 
 AudioBuffer::AudioBuffer(unsigned int nb_channels, unsigned int sample_rate) {
   this->m_playhead = 0;

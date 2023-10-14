@@ -4,7 +4,6 @@
 #include "wmath.h"
 
 #include <vector>
-#include <algorithm>
 
 PixelData generate_audio_view(std::vector<float>& mono, int rows, int cols) {
   int middle_row = rows / 2;

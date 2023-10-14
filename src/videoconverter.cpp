@@ -1,6 +1,9 @@
 #include "videoconverter.h"
+
 #include "except.h"
 #include "avguard.h"
+
+#include <stdexcept>
 
 extern "C" {
   #include <libavutil/frame.h>

@@ -1,3 +1,14 @@
+#include "pixeldata.h"
+
+#include "color.h"
+#include "wmath.h"
+#include "scale.h"
+#include "decode.h"
+#include "boiler.h"
+#include "videoconverter.h"
+#include "except.h"
+#include "streamdecoder.h"
+
 #include <stdexcept>
 #include <cstdio>
 #include <cstdint>
@@ -5,19 +16,6 @@
 #include <cstdlib>
 #include <memory>
 #include <functional>
-
-#include "pixeldata.h"
-#include "ascii.h"
-#include "color.h"
-#include "pixeldata.h"
-#include "wmath.h"
-#include "scale.h"
-#include "mediaplayer.h"
-#include "decode.h"
-#include "boiler.h"
-#include "videoconverter.h"
-#include "except.h"
-#include "streamdecoder.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>

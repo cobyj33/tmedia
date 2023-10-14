@@ -1,24 +1,17 @@
-
-#include "boiler.h"
-#include "decode.h"
 #include "mediaplayer.h"
-#include "wtime.h"
+
 #include "audio.h"
-#include "wmath.h"
 #include "except.h"
-#include "pixeldata.h"
 #include "sleep.h"
-#include "audioresampler.h"
-#include "avguard.h"
+#include "wtime.h"
+#include "wmath.h"
 #include "wminiaudio.h"
 
-#include <cstdlib>
 #include <memory>
 #include <mutex>
 
 extern "C" {
 #include <miniaudio.h>
-
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>

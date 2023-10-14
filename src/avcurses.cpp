@@ -1,16 +1,17 @@
-
-#include <stdexcept>
-#include <cmath>
-#include <string>
-#include <vector>
+#include "avcurses.h"
 
 #include "color.h"
-#include "avcurses.h"
 #include "wmath.h"
+#define ASCII_VIDEO_AVCURSES_INTERNAL_IMPLEMENTATION
+#include "internal/avcurses_internal.h"
+#undef ASCII_VIDEO_AVCURSES_INTERNAL_IMPLEMENTATION
 
-#define ASCII_VIDEO_TERMCOLOR_INTERNAL_IMPLEMENTATION
-#include "internal/termcolor_internal.h"
-#undef ASCII_VIDEO_TERMCOLOR_INTERNAL_IMPLEMENTATION
+#include <cmath>
+#include <vector>
+#include <stdexcept>
+#include <string>
+
+
 
 
 

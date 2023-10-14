@@ -1,8 +1,9 @@
-#include <stdexcept>
-
 #include "audioresampler.h"
+
+#include "avguard.h"
 #include "except.h"
-#include "decode.h"
+
+#include <stdexcept>
 
 extern "C" {
   #include <libswresample/swresample.h>

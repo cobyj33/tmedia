@@ -1,5 +1,3 @@
-
-
 #include "wminiaudio.h"
 
 #include "wmath.h"

@@ -1,30 +1,21 @@
-
-#include <cmath>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
-#include <mutex>
-#include <map>
-#include <iostream>
-
-#include "audio.h"
-#include "color.h"
-#include "pixeldata.h"
-#include "scale.h"
-#include "ascii.h"
 #include "mediaplayer.h"
+
+#include <mutex>
+
+#include "ascii.h"
+#include "avcurses.h"
+#include "color.h"
+#include "gui.h"
+#include "pixeldata.h"
+#include "sigexit.h"
 #include "sleep.h"
 #include "wmath.h"
 #include "wtime.h"
-#include "avcurses.h"
-#include "sigexit.h"
 
-#include "gui.h"
 
-extern "C"
-{
-#include "curses.h"
-#include <libavutil/avutil.h>
+extern "C" {
+  #include "curses.h"
+  #include <libavutil/avutil.h>
 }
 
 const int KEY_ESCAPE = 27;

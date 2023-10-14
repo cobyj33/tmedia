@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <map>
+#include <vector>
 #include <memory>
 #include <deque>
 

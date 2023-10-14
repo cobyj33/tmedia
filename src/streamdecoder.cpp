@@ -1,12 +1,15 @@
-#include <map>
-#include <memory>
-#include <stdexcept>
+#include "streamdecoder.h"
+
 
 #include "decode.h"
 #include "boiler.h"
-#include "streamdecoder.h"
 #include "except.h"
 #include "avguard.h"
+
+#include <map>
+#include <vector>
+#include <memory>
+#include <stdexcept>
 
 extern "C" {
   #include <libavcodec/avcodec.h>

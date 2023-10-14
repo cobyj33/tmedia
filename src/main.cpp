@@ -1,3 +1,13 @@
+#include "wtime.h"
+#include "mediaplayer.h"
+#include "formatting.h"
+#include "gui.h"
+#include "version.h"
+#include "avguard.h"
+#include "avcurses.h"
+#include "sigexit.h"
+
+
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -8,21 +18,7 @@
 #include <atomic>
 #include <csignal>
 
-#include "color.h"
-#include "pixeldata.h"
-#include "scale.h"
-#include "mediaplayer.h"
-#include "formatting.h"
-#include "wtime.h"
-#include "gui.h"
-#include "version.h"
-#include "avguard.h"
-#include <avcurses.h>
-#include "sigexit.h"
-
-
 #include <argparse.hpp>
-
 
 extern "C" {
 #include "curses.h"
@@ -35,8 +31,6 @@ extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 }
-
-
 
 
 bool is_valid_path(const char* path);

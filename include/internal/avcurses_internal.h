@@ -1,8 +1,8 @@
-#ifndef ASCII_VIDEO_TERMCOLOR_INTERNAL_H
-#define ASCII_VIDEO_TERMCOLOR_INTERNAL_H
+#ifndef ASCII_VIDEO_AVCURSES_INTERNAL_H
+#define ASCII_VIDEO_AVCURSES_INTERNAL_H
 
-#ifndef ASCII_VIDEO_TERMCOLOR_INTERNAL_IMPLEMENTATION
-#error "Cannot include internal termcolor implementation details in public api. Include exposed functions through avcurses.h instead"
+#ifndef ASCII_VIDEO_AVCURSES_INTERNAL_IMPLEMENTATION
+#error "Cannot include internal avcurses implementation details in public api. Include exposed functions through avcurses.h instead"
 #endif
 
 #include "color.h"
