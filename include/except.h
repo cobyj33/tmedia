@@ -26,10 +26,8 @@ namespace ascii {
        * @param averror The FFmpeg error code
        */
       ffmpeg_error(const std::string message, int averror) : std::runtime_error::runtime_error("") {
-        char errBuf[512];
-        av_strerror(averror, errBuf, 512);
         this->averror = averror;
-        this->error_string = std::string(errBuf);
+        this->error_string =  av_strerror_string(averror);
         this->message = message;
         static_cast<std::runtime_error&>(*this) = std::runtime_error(this->message + ": " + this->error_string + " (" + std::to_string(this->averror) + " ).");
       }
