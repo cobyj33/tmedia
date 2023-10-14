@@ -10,7 +10,6 @@
  * @copyright Copyright (c) 2023
  */
 
-#include <cstdint>
 #include <vector>
 
 std::vector<float> audio_to_mono(std::vector<float>& samples, int nb_channels);

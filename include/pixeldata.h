@@ -3,8 +3,8 @@
 
 #include <cstdint>
 #include <vector>
+
 #include "color.h"
-#include <functional>
 
 extern "C" {
 #include <libavutil/frame.h>

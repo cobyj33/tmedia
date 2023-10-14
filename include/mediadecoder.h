@@ -2,6 +2,7 @@
 #define ASCII_VIDEO_MEDIA_DECODER_H
 
 #include <vector>
+
 #include "streamdecoder.h"
 #include "mediatype.h"
 #include "avguard.h"

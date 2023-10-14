@@ -1,8 +1,6 @@
 #ifndef ASCII_VIDEO_WRAPPER_MATH
 #define ASCII_VIDEO_WRAPPER_MATH
 
-#include <cmath>
-#include <algorithm>
 
 int signum(int num);
 int signum(double num);

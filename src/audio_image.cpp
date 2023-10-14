@@ -1,6 +1,5 @@
 #include "audio_image.h"
-#include "audiobuffer.h"
-#include "audio.h"
+
 #include "canvas.h"
 #include "wmath.h"
 

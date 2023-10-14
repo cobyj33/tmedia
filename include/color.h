@@ -1,6 +1,6 @@
 #ifndef ASCII_VIDEO_COLOR
 #define ASCII_VIDEO_COLOR
-#include <cstdint>
+
 #include <vector>
 
 /**

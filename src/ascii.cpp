@@ -1,12 +1,12 @@
+#include "ascii.h" 
+
+#include "scale.h"
+#include "pixeldata.h"
+#include "wmath.h"
 
 #include <cstdint>
 #include <vector>
 #include <stdexcept>
-
-#include "scale.h"
-#include "pixeldata.h"
-#include "ascii.h"
-#include "wmath.h"
 
 extern "C" {
 #include <libavutil/avutil.h>

@@ -85,7 +85,7 @@ set(COMMON_SOURCE_FILES
 ./src/pixeldata.cpp
 ./src/sigexit.cpp
 ./src/scale.cpp
-./src/ui/gui.cpp)
+./src/gui.cpp)
 
 set(TEST_SOURCE_FILES
 ./src/tests/test_audiobuffer.cpp

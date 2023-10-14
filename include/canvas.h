@@ -2,6 +2,7 @@
 #define ASCII_VIDEO_CANVAS_H
 
 #include <vector>
+
 #include "pixeldata.h"
 #include "color.h"
 

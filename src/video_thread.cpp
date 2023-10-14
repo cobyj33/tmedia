@@ -11,7 +11,7 @@
 #include "boiler.h"
 #include "decode.h"
 #include "sleep.h"
-#include "ascii.h"
+#include "scale.h"
 #include "wmath.h"
 #include "wtime.h"
 #include "videoconverter.h"

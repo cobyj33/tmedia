@@ -1,8 +1,6 @@
 #ifndef ASCII_VIDEO_GUI_STATE
 #define ASCII_VIDEO_GUI_STATE
 
-#include <stdexcept>
-
 enum class VideoOutputMode {
   COLORED,
   GRAYSCALE,

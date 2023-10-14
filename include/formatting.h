@@ -2,7 +2,6 @@
 #define ASCII_VIDEO_STRING_FORMATTING
 
 #include <string>
-#include <cstdarg>
 
 typedef struct DurationData {
   int hours;

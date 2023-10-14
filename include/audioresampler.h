@@ -2,6 +2,7 @@
 #define ASCII_VIDEO_AUDIO_RESAMPLER_INCLUDE
 
 #include <vector>
+
 #include "avguard.h"
 
 extern "C" {
@@ -73,9 +74,6 @@ class AudioResampler {
      */
     std::vector<AVFrame*> resample_audio_frames(std::vector<AVFrame*>& originals);
 
-    /**
-     * Frees the SwrContext generated at construction
-    */
     ~AudioResampler();
 };
 

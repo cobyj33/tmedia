@@ -1,8 +1,10 @@
+#include "wmath.h"
+
+#include <cmath>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
 
-#include "wmath.h"
 
 double frand() {
   return rand() / (double)RAND_MAX;

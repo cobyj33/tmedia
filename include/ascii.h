@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include "scale.h"
 #include "color.h"
 #include "pixeldata.h"
 
