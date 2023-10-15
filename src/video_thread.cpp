@@ -50,68 +50,67 @@ const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH * MAX_FRAME_ASPECT_RATIO;
 void MediaPlayer::video_playback_thread() {
 
   try {
-    std::unique_ptr<VideoConverter> video_converter;
     double avg_frame_time_sec = 1 / 24.0;
 
     if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
+      std::unique_ptr<VideoConverter> video_converter;
+      {
+        std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
+
+        const std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT, this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+        const int output_frame_width = bounded_video_frame_dimensions.first;
+        const int output_frame_height = bounded_video_frame_dimensions.second;
+
+        avg_frame_time_sec = this->media_decoder->get_average_frame_time_sec(AVMEDIA_TYPE_VIDEO);
+        video_converter = std::move(std::make_unique<VideoConverter>(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, this->media_decoder->get_width(), this->media_decoder->get_height(), this->media_decoder->get_pix_fmt()));
+      }
+
+      while (this->in_use) {
+        double wait_duration = 0.0;
+        std::vector<AVFrame*> decoded_frames;
 
         {
           std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
+          if (!this->clock.is_playing()) {
+            continue;
+          }
 
-          const std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT, this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
-          const int output_frame_width = bounded_video_frame_dimensions.first;
-          const int output_frame_height = bounded_video_frame_dimensions.second;
-
-          avg_frame_time_sec = this->media_decoder->get_average_frame_time_sec(AVMEDIA_TYPE_VIDEO);
-          video_converter = std::move(std::make_unique<VideoConverter>(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, this->media_decoder->get_width(), this->media_decoder->get_height(), this->media_decoder->get_pix_fmt()));
+          decoded_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_VIDEO);
         }
 
-        while (this->in_use) {
-          double wait_duration = 0.0;
-          std::vector<AVFrame*> decoded_frames;
+        if (decoded_frames.size() > 0 && decoded_frames[0] != nullptr) {
+          // resizing can take quite some time, so we release the mutex for this part
+          AVFrame* frame_image = video_converter->convert_video_frame(decoded_frames[0]);
 
           {
-            std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
-            if (!this->clock.is_playing()) {
-              continue;
-            }
+            std::lock_guard<std::mutex> lock(this->alter_mutex);
+            this->set_current_frame(frame_image);
 
-            decoded_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_VIDEO);
+            #if HAS_AVFRAME_DURATION
+            const double frame_duration = (double)frame_image->duration * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
+            #else
+            const double frame_duration = avg_frame_time_sec;
+            #endif
+
+            const double frame_pts_time_sec = (double)frame_image->pts * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
+            const double extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
+            const double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / this->clock.get_speed() ) );
+            this->clock.skip(frame_speed_skip_time_sec);
+
+            const double current_time = this->get_time(system_clock_sec());
+            wait_duration = frame_pts_time_sec - current_time + extra_delay - frame_speed_skip_time_sec;
           }
 
-          if (decoded_frames.size() > 0 && decoded_frames[0] != nullptr) {
-            // resizing can take quite some time, so we release the mutex for this part
-            AVFrame* frame_image = video_converter->convert_video_frame(decoded_frames[0]);
+          av_frame_free(&frame_image);
+        } 
 
-            {
-              std::lock_guard<std::mutex> lock(this->alter_mutex);
-              this->set_current_frame(frame_image);
-
-              #if HAS_AVFRAME_DURATION
-              const double frame_duration = (double)frame_image->duration * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
-              #else
-              const double frame_duration = avg_frame_time_sec;
-              #endif
-
-              const double frame_pts_time_sec = (double)frame_image->pts * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
-              const double extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
-              const double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / this->clock.get_speed() ) );
-              this->clock.skip(frame_speed_skip_time_sec);
-
-              const double current_time = this->get_time(system_clock_sec());
-              wait_duration = frame_pts_time_sec - current_time + extra_delay - frame_speed_skip_time_sec;
-            }
-
-            av_frame_free(&frame_image);
-          } 
-
-          clear_av_frame_list(decoded_frames);
-          if (wait_duration <= 0) {
-            continue;
-          } else {
-            sleep_for_sec(wait_duration);
-          }
+        clear_av_frame_list(decoded_frames);
+        if (wait_duration <= 0) {
+          continue;
+        } else {
+          sleep_for_sec(wait_duration);
         }
+      }
     } else if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
 
       while (this->in_use) {

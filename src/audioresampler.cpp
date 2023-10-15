@@ -115,14 +115,28 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
     #endif
 
     result = swr_convert_frame(this->m_context, resampled_frame, original);
-    if (result != 0) {
-      if (resampled_frame != nullptr) {
-        av_frame_free(&resampled_frame);
+    switch (result) {
+      // .wav files were having a weird glitch where swr_conver_frame returns AVERROR_INPUT_CHANGED
+      // on calling swr_convert_frame. This allows the SwrContext to "fix itself" (even though I think that's a bug)
+      // whenever this happens.
+      case AVERROR_INPUT_CHANGED: {
+        result = swr_config_frame(this->m_context, resampled_frame, original);
+        if (result != 0) {
+          throw ascii::ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to reconfigure resampling context", result);
+        }
+
+        result = swr_convert_frame(this->m_context, resampled_frame, original);
       }
-      throw ascii::ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to resample audio frame", result);
     }
 
-    return resampled_frame;
+    if (result == 0) {
+      return resampled_frame;
+    }
+
+    if (resampled_frame != nullptr) {
+      av_frame_free(&resampled_frame);
+    }
+    throw ascii::ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to resample audio frame", result);
 }
 
 int AudioResampler::get_src_sample_rate() {
