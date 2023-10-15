@@ -67,12 +67,7 @@ void MediaPlayer::render_loop()
 
 
         if (this->media_type != MediaType::IMAGE && this->get_time(system_clock_sec()) >= this->get_duration()) {
-          if (this->is_looped) {
-            this->jump_to_time(0.0, system_clock_sec());
-          } else {   
-            this->in_use = false;
-            break;
-          }
+          this->in_use = false;
         }
 
         while (input != ERR) { // Go through and process all the batched input
@@ -181,13 +176,7 @@ void MediaPlayer::render_loop()
         if (batched_jump_time != 0 && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
           double current_playback_time = this->get_time(system_clock_sec());
           double target_time = current_playback_time + batched_jump_time;
-
-          if (this->is_looped) {
-            target_time = target_time < 0 ? this->get_duration() + std::fmod(target_time, this->get_duration()) : std::fmod(target_time, this->get_duration());
-          } else {
-            target_time = clamp(target_time, 0.0, this->get_duration());
-          }
-
+          target_time = clamp(target_time, 0.0, this->get_duration());
           this->jump_to_time(target_time, system_clock_sec());
           batched_jump_time = 0;
         }

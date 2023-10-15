@@ -193,19 +193,12 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
-
   if (file_inputs.size() == 0) {
     std::cerr << "Error: 1 media file input expected. 0 provided." << std::endl;
     std::cerr << parser << std::endl;
     return EXIT_FAILURE;
   }
   std::string file = file_inputs[0];
-
-
-  if (dump) {
-    dump_file_info(file.c_str());
-    return EXIT_SUCCESS;
-  }
 
   if (!is_valid_path(file.c_str()) && file.length() > 0) {
     std::cerr << "[ascii_video] Cannot open invalid path: " << file << std::endl;
@@ -218,6 +211,18 @@ int main(int argc, char** argv)
   { 
     std::cerr << "[ascii_video] Given path " << file << " is a directory." << std::endl;
     return EXIT_FAILURE; 
+  }
+
+  if (dump) {
+    dump_file_info(file.c_str());
+
+    AVFormatContext* format_context = open_format_context(file);
+    MediaType media_type = media_type_from_avformat_context(format_context);
+    avformat_free_context(format_context);
+    std::string media_type_str = media_type_to_string(media_type);
+    std::cerr << std::endl << "Detected media Type: " << media_type_str << std::endl;
+    // print to cerr because av_dump_format also prints to cerr
+    return EXIT_SUCCESS;
   }
 
   if (inputted_start_time.length() > 0) {

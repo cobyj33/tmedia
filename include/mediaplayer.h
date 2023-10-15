@@ -77,7 +77,6 @@ class MediaPlayer {
     MediaClock clock;
     const char* file_name;
     std::atomic<bool> in_use;
-    std::atomic<bool> is_looped;
     std::atomic<bool> muted;
     std::atomic<double> volume;
 

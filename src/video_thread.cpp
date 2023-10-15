@@ -66,7 +66,7 @@ void MediaPlayer::video_playback_thread() {
       }
 
       while (this->in_use) {
-        double wait_duration = 0.0;
+        double wait_duration = avg_frame_time_sec;
         std::vector<AVFrame*> decoded_frames;
 
         {

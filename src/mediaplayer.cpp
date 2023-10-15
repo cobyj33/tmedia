@@ -19,7 +19,6 @@ extern "C" {
 MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui) {
   this->in_use = false;
   this->file_name = file_name;
-  this->is_looped = false;
   this->muted = false;
   this->media_gui = starting_media_gui;
   this->volume = 1.0;
@@ -90,13 +89,9 @@ void MediaPlayer::start(double start_time) {
 
   this->in_use = true;
 
-  if (this->media_type == MediaType::IMAGE) {
-    this->frame = PixelData(this->file_name);
-  } else if (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO) {
-    this->clock.start(system_clock_sec());
-    if (start_time != 0) {
-      this->jump_to_time(start_time, system_clock_sec());
-    }
+  this->clock.start(system_clock_sec());
+  if (start_time != 0) {
+    this->jump_to_time(start_time, system_clock_sec());
   }
 
   std::thread audio_thread;
