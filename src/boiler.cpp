@@ -65,7 +65,7 @@ bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVM
 }
 
 bool avformat_context_is_static_image(AVFormatContext* format_context) {
-  std::vector<std::string> accepted_iformats{"image2", "png_pipe"};
+  std::vector<std::string> accepted_iformats{"image2", "png_pipe", "webp_pipe"};
   for (std::size_t i = 0; i < accepted_iformats.size(); i++) {
     if (strcmp(format_context->iformat->name, accepted_iformats[i].c_str()) == 0) {
       return true;
