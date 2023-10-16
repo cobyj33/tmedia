@@ -300,15 +300,17 @@ int main(int argc, char** argv)
 
   ncurses_uninit();
 
-  if (player != nullptr) {
-    if (player->has_error()) {
-      std::cout << "Error: " << player->get_error() << std::endl;
-      return EXIT_FAILURE;
-    }
+  if (!player) {
+    return EXIT_FAILURE;
+  }
 
-    if (player->media_type == MediaType::VIDEO || player->media_type == MediaType::AUDIO) {
-      std::cout << media_type_to_string(player->media_type) << " Player ended at " << format_duration(player->get_time(system_clock_sec())) << " / " << format_duration(player->get_duration()) << std::endl;
-    }
+  if (player->has_error()) {
+    std::cout << "Error: " << player->get_error() << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if (player->media_type == MediaType::VIDEO || player->media_type == MediaType::AUDIO) {
+    std::cout << media_type_to_string(player->media_type) << " Player ended at " << format_duration(player->get_time(system_clock_sec())) << " / " << format_duration(player->get_duration()) << std::endl;
   }
 
   return EXIT_SUCCESS;
