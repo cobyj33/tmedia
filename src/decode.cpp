@@ -120,7 +120,7 @@ std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::de
         default: throw std::runtime_error("[decode_packet_queue] Could not decode packet queue of unimplemented AVMediaType " + std::string(av_get_media_type_string(packet_type)));
       }
     } catch (ascii::ffmpeg_error const& e) {
-      if (e.get_averror() != AVERROR(EAGAIN) || packet_queue.empty()) { // if error is fatal, or the packet list is empty
+      if (e.get_averror() != AVERROR(EAGAIN)) { // if error is fatal, or the packet list is empty
         av_packet_free(&packet);
         throw e;
       }
