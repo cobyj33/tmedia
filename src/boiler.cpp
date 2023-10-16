@@ -9,12 +9,14 @@
 #include <string>
 #include <vector>
 
+#include <filesystem>
+
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavutil/log.h>
 }
 
-AVFormatContext* open_format_context(std::string file_path) {
+AVFormatContext* open_format_context(const std::string& file_path) {
   AVFormatContext* format_context = nullptr;
   int result = avformat_open_input(&format_context, file_path.c_str(), nullptr, nullptr);
   if (result < 0) {
@@ -38,14 +40,14 @@ AVFormatContext* open_format_context(std::string file_path) {
   throw std::runtime_error("Failed to open format context input, unknown error occured");
 }
 
-void dump_file_info(const char* file_path) {
+void dump_file_info(const std::string& file_path) {
   av_log_set_level(AV_LOG_INFO);
   AVFormatContext* format_context = open_format_context(file_path);
-  av_dump_format(format_context, 0, file_path, 0);
+  av_dump_format(format_context, 0, file_path.c_str(), 0);
   avformat_free_context(format_context);
 }
 
-double get_file_duration(const char* file_path) {
+double get_file_duration(const std::string& file_path) {
   AVFormatContext* format_context = open_format_context(file_path);
   int64_t duration = format_context->duration;
   double duration_seconds = (double)duration / AV_TIME_BASE;
@@ -85,4 +87,20 @@ bool avformat_context_is_audio_only(AVFormatContext* format_context) {
   return !avformat_context_is_static_image(format_context) &&
   !avformat_context_is_video(format_context) &&
   avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO);
+}
+
+bool is_valid_media_file_path(const std::string& path_str) {
+  std::filesystem::path path(path_str);
+  std::error_code ec;
+  if (!std::filesystem::is_regular_file(path, ec)) return false;
+
+  try {
+    AVFormatContext* fmt_ctx = open_format_context(path_str);
+    avformat_free_context(fmt_ctx);
+    return true;
+  } catch (const ascii::ffmpeg_error& e) {
+    return false;
+  }
+
+  return false;
 }

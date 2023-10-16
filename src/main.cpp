@@ -19,6 +19,7 @@
 #include <csignal>
 
 #include <argparse.hpp>
+#include <natural_sort.hpp>
 
 extern "C" {
 #include "curses.h"
@@ -32,8 +33,6 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
-
-bool is_valid_path(const char* path);
 
 void on_terminate() {
   if (ncurses_is_initialized()) {
@@ -78,9 +77,11 @@ int main(int argc, char** argv)
 
   argparse::ArgumentParser parser("ascii_video", ASCII_VIDEO_VERSION);
 
-  parser.add_argument("file")   
-    .help("The file to be played")
-    .nargs(0, 1);
+  parser.add_argument("paths")   
+    .help("The the paths to files or directories to be played. "
+    "Multiple files will be played one after the other. "
+    "Directories will be expanded so any media files inside them will be played.")
+    .nargs(argparse::nargs_pattern::any);
 
   const std::string controls = std::string("-------CONTROLS-----------\n"
               "SPACE - Toggle Playback \n"
@@ -111,7 +112,7 @@ int main(int argc, char** argv)
     .help("Do not show characters, only the background");
 
   parser.add_argument("-d", "--dump")
-    .help("Print metadata about the file")
+    .help("Print metadata about the files")
     .default_value(false)
     .implicit_value(true);
 
@@ -121,9 +122,7 @@ int main(int argc, char** argv)
     .implicit_value(true);
 
   parser.add_argument("-t", "--time")
-    .help("Choose the time to start media playback")
-    .default_value(std::string("00:00"));
-
+    .help("Choose the time to start media playback");
 
   parser.add_argument("-m", "--mute")
     .help("Mute the audio playback")
@@ -154,24 +153,28 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
-  std::vector<std::string> file_inputs = parser.get<std::vector<std::string>>("file");
-  
   double start_time = 0.0;
+  double volume = 1.0;
+  std::string inputted_start_time = "00:00";
+
+
+  std::vector<std::string> paths = parser.get<std::vector<std::string>>("paths");
   bool colors = parser.get<bool>("-c");
   bool grayscale = !colors && parser.get<bool>("-g");
   bool background = parser.get<bool>("-b");
   bool dump = parser.get<bool>("-d");
   bool quiet = parser.get<bool>("-q");
   bool mute = parser.get<bool>("-m");
+  bool print_ffmpeg_version = parser.get<bool>("--ffmpeg-version");
+  bool print_curses_version = parser.get<bool>("--curses-version");
 
-  double volume = 1.0;
   if (std::optional<double> user_volume = parser.present<double>("--volume")) {
     volume = *user_volume;
   }
-  
-  bool print_ffmpeg_version = parser.get<bool>("--ffmpeg-version");
-  bool print_curses_version = parser.get<bool>("--curses-version");
-  std::string inputted_start_time = parser.get<std::string>("-t");
+
+  if (std::optional<std::string> user_start_time = parser.present<std::string>("--time")) {
+    inputted_start_time = *user_start_time;
+  }
 
   if (print_ffmpeg_version) {
     std::cout << "libavformat: " << LIBAVFORMAT_VERSION_MAJOR << ":" << LIBAVFORMAT_VERSION_MINOR << ":" << LIBAVFORMAT_VERSION_MICRO << std::endl;
@@ -187,84 +190,118 @@ int main(int argc, char** argv)
     return EXIT_SUCCESS;
   }
 
-  if (volume < 0.0 || volume > 1.0) {
-    std::cerr << "Error: volume must be in between 0.0 and 1.0 (got " << volume << ")" << std::endl;
+  if (paths.size() == 0) {
+    std::cerr << "[ascii_video]: at least 1 path expected. 0 found. Path can be to directory or media file" << std::endl;
     std::cerr << parser << std::endl;
     return EXIT_FAILURE;
   }
 
-  if (file_inputs.size() == 0) {
-    std::cerr << "Error: 1 media file input expected. 0 provided." << std::endl;
-    std::cerr << parser << std::endl;
-    return EXIT_FAILURE;
-  }
-  std::string file = file_inputs[0];
+  std::vector<std::string> files;
+  for (std::size_t i = 0; i < paths.size(); i++) {
+    if (paths[i].length() == 0) {
+      std::cerr << "[ascii_video] Cannot open empty path" << std::endl;
+      return EXIT_FAILURE;
+    }
 
-  if (!is_valid_path(file.c_str()) && file.length() > 0) {
-    std::cerr << "[ascii_video] Cannot open invalid path: " << file << std::endl;
-    return EXIT_FAILURE;
-  }
+    std::filesystem::path path(paths[i]);
+    std::error_code ec;
 
-  const std::filesystem::path path(file);
-  std::error_code ec; // For using the non-throwing overloads of functions below.
-  if (std::filesystem::is_directory(path, ec))
-  { 
-    std::cerr << "[ascii_video] Given path " << file << " is a directory." << std::endl;
-    return EXIT_FAILURE; 
-  }
+    if (!std::filesystem::exists(path, ec)) {
+      std::cerr << "[ascii_video] Cannot open invalid path: " << paths[i] << ec << std::endl;
+      return EXIT_FAILURE;
+    }
 
-  if (dump) {
-    dump_file_info(file.c_str());
+    if (std::filesystem::is_directory(path, ec)) {
+      std::vector<std::string> media_file_paths;
+      for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(path)) {
+        if (is_valid_media_file_path(entry.path().string())) {
+          media_file_paths.push_back(entry.path().string());
+        }
+      }
 
-    AVFormatContext* format_context = open_format_context(file);
-    MediaType media_type = media_type_from_avformat_context(format_context);
-    avformat_free_context(format_context);
-    std::string media_type_str = media_type_to_string(media_type);
-    std::cerr << std::endl << "Detected media Type: " << media_type_str << std::endl;
-    // print to cerr because av_dump_format also prints to cerr
-    return EXIT_SUCCESS;
-  }
+      SI::natural::sort(media_file_paths);
 
-  if (inputted_start_time.length() > 0) {
-    if (is_duration(inputted_start_time)) {
-      start_time = parse_duration(inputted_start_time);
-    } else if (is_int_str(inputted_start_time)) {
-      start_time = std::stoi(inputted_start_time);
+      for (const std::string& media_file_path : media_file_paths) {
+        files.push_back(media_file_path);
+      }
+
+    } else if (is_valid_media_file_path(paths[i])) {
+      files.push_back(paths[i]);
     } else {
-      std::cerr << "[ascii_video] Inputted time must be in seconds, H:MM:SS, or M:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
+      std::cerr << "[ascii_video] Cannot open path to non-media file: " << paths[i] << ec << std::endl;
       return EXIT_FAILURE;
     }
   }
 
-  double file_duration = get_file_duration(file.c_str());
-  if (start_time < 0) { // Catch errors in out of bounds times
-    std::cerr << "Cannot start file at a negative time ( got time " << double_to_fixed_string(start_time, 2) << "  from input " + inputted_start_time + " )" << std::endl;
+  if (files.size() == 0) {
+    std::cerr << "[ascii_video]: at least 1 media file expected. 0 found." << std::endl;
+    std::cerr << parser << std::endl;
     return EXIT_FAILURE;
-  } else if (start_time >= file_duration && file_duration >= 0.0) { 
-    std::cerr << "Cannot start file at a time greater than duration of media file ( got time " << double_to_fixed_string(start_time, 2) << " seconds from input " << inputted_start_time << ". File ends at " << double_to_fixed_string(file_duration, 2) << " seconds (" << format_duration(file_duration) << ") ) "  << std::endl;
+  }
+
+  if (volume < 0.0 || volume > 1.0) {
+    std::cerr << "[ascii_video]: volume must be in between 0.0 and 1.0 inclusive (got " << volume << ")" << std::endl;
+    std::cerr << parser << std::endl;
     return EXIT_FAILURE;
+  }
+
+  if (dump) {
+    for (std::size_t i = 0; i < files.size(); i++) {
+      dump_file_info(files[i]);
+      AVFormatContext* format_context = open_format_context(files[i]);
+
+      MediaType media_type = media_type_from_avformat_context(format_context);
+      std::string media_type_str = media_type_to_string(media_type);
+      std::cerr << std::endl << "[ascii_video]: Detected media Type: " << media_type_str << std::endl;
+
+      avformat_free_context(format_context);
+    }
+
+    return EXIT_SUCCESS;
+  }
+
+  if (is_duration(inputted_start_time)) {
+    start_time = parse_duration(inputted_start_time);
+  } else if (is_int_str(inputted_start_time)) {
+    start_time = std::stoi(inputted_start_time);
+  } else {
+    std::cerr << "[ascii_video]: Inputted time must be in seconds, H:MM:SS, or M:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if (start_time < 0.0) { // Catch errors in out of bounds times
+    std::cerr << "[ascii_video]: Cannot start media player at a negative time ( got time " << double_to_fixed_string(start_time, 2) << "  from input " << inputted_start_time << " )" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  for (std::size_t i = 0; i < files.size(); i++) {
+    double file_duration = get_file_duration(files[i]);
+    if (start_time >= file_duration && file_duration >= 0.0) { 
+      std::cerr << "[ascii_video]: Cannot start media file at a time greater than media's duration ( got time " << double_to_fixed_string(start_time, 2) << " seconds from input " << inputted_start_time << ". File ends at " << double_to_fixed_string(file_duration, 2) << " seconds (" << format_duration(file_duration) << ") ) "  << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
   ncurses_init();
   std::string warnings;
 
   if (colors && grayscale) {
-    warnings += "WARNING: Cannot have both colored (-c, --color) and grayscale (-g, --gray) output. Falling back to colored output\n";
+    warnings += "[ascii_video]: WARNING: Cannot have both colored (-c, --color) and grayscale (-g, --gray) output. Falling back to colored output\n";
     grayscale = false;
   }
 
   if ( (colors || grayscale) && !has_colors()) {
-    warnings += "WARNING: Terminal does not support colored output\n";
+    warnings += "[ascii_video]: WARNING: Terminal does not support colored output\n";
     colors = false;
     grayscale = false;
   }
 
   if (background && !(colors || grayscale) ) {
     if (!has_colors()) {
-      warnings += "WARNING: Cannot use background option as colors are not available in this terminal. Falling back to pure text output\n";
+      warnings += "[ascii_video]: WARNING: Cannot use background option as colors are not available in this terminal. Falling back to pure text output\n";
       background = false;
     } else {
-      warnings += "WARNING: Cannot only show background without either color (-c, --color) or grayscale(-g, --gray, --grayscale) options selected. Falling back to colored output\n";
+      warnings += "[ascii_video]: WARNING: Cannot only show background without either color (-c, --color) or grayscale(-g, --gray, --grayscale) options selected. Falling back to colored output\n";
       colors = true;
       grayscale = false;
     }
@@ -282,49 +319,34 @@ int main(int argc, char** argv)
   erase();
 
   VideoOutputMode mode = get_video_output_mode_from_params(colors, grayscale, background);
-
   MediaGUI media_gui;
   media_gui.set_video_output_mode(mode);
-  std::unique_ptr<MediaPlayer> player;
 
   try {
-    player = std::make_unique<MediaPlayer>(file.c_str(), media_gui);
-    player->muted = mute;
-    player->volume = volume;
-    player->start(start_time);
+    for (std::size_t i = 0; i < files.size(); i++) {
+      MediaPlayer player(files[i], media_gui);
+      player.muted = mute;
+      player.volume = volume;
+      player.start(start_time);
+      
+
+      if (player.has_error()) {
+        std::cout << "[ascii_video]: Media Player Error: " << player.get_error() << std::endl;
+        return EXIT_FAILURE;
+      }
+
+      if (should_sig_exit()) {
+        break;
+      }
+    }
   } catch (std::exception const &e) {
-    std::cout << "Error while starting Media Player: " << e.what() << std::endl;
+    std::cout << "[ascii_video]: Error while starting media player: " << e.what() << std::endl;
     ncurses_uninit();
     return EXIT_FAILURE;
   }
 
   ncurses_uninit();
-
-  if (!player) {
-    return EXIT_FAILURE;
-  }
-
-  if (player->has_error()) {
-    std::cout << "Error: " << player->get_error() << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  if (player->media_type == MediaType::VIDEO || player->media_type == MediaType::AUDIO) {
-    std::cout << media_type_to_string(player->media_type) << " Player ended at " << format_duration(player->get_time(system_clock_sec())) << " / " << format_duration(player->get_duration()) << std::endl;
-  }
-
   return EXIT_SUCCESS;
 }
 
-bool is_valid_path(const char* path) {
-  FILE* file;
-  file = fopen(path, "r");
-
-  if (file != nullptr) {
-    fclose(file);
-    return true;
-  }
-
-  return false;
-}
 

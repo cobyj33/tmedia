@@ -1,11 +1,13 @@
 #ifndef ASCII_VIDEO_MEDIA_DECODER_H
 #define ASCII_VIDEO_MEDIA_DECODER_H
 
-#include <vector>
 
 #include "streamdecoder.h"
 #include "mediatype.h"
 #include "avguard.h"
+
+#include <vector>
+#include <string>
 
 extern "C" {
   #include <libavutil/avutil.h>
@@ -20,7 +22,7 @@ class MediaDecoder {
     int fetch_next(int requested_packet_count);
   public:
 
-    MediaDecoder(const char* file_name);
+    MediaDecoder(const std::string& file_path);
     bool has_media_decoder(enum AVMediaType media_type) const;
     std::vector<AVFrame*> next_frames(enum AVMediaType media_type);
     int jump_to_time(double target_time);

@@ -16,9 +16,9 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui) {
+MediaPlayer::MediaPlayer(const std::string& file_path, MediaGUI starting_media_gui) {
   this->in_use = false;
-  this->file_name = file_name;
+  this->file_path = file_path;
   this->muted = false;
   this->media_gui = starting_media_gui;
   this->volume = 1.0;
@@ -27,7 +27,7 @@ MediaPlayer::MediaPlayer(const char* file_name, MediaGUI starting_media_gui) {
   this->display_cols = 80;
 
   std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-  this->media_decoder = std::move(std::make_unique<MediaDecoder>(file_name));
+  this->media_decoder = std::move(std::make_unique<MediaDecoder>(file_path));
   this->media_type = this->media_decoder->get_media_type();
 
 

@@ -7,6 +7,8 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
+bool is_valid_media_file_path(const std::string& path_str);
+
 /**
  * @brief Opens and returns an AVFormat Context
  * 
@@ -17,13 +19,13 @@ extern "C" {
  * @param file_path The path of the file to open from the current working directory
  * @return An AVFormatContext pointer representing the opened media file
  */
-AVFormatContext* open_format_context(std::string file_path);
+AVFormatContext* open_format_context(const std::string& file_path);
 
 /**
  * @brief Dump a media file's metadata into standard output.
  * @param file_path The path of the file to open from the current working directory
  */
-void dump_file_info(const char* file_path);
+void dump_file_info(const std::string& file_path);
 
 /**
  * @brief Return the duration of the media file
@@ -33,7 +35,7 @@ void dump_file_info(const char* file_path);
  * @throws std::runtime_error if the stream information for the format context could not be found
  * @return The duration of the media file at the selected path in seconds
  */
-double get_file_duration(const char* file_path);
+double get_file_duration(const std::string& file_path);
 
 bool avformat_context_is_static_image(AVFormatContext* format_context);
 bool avformat_context_is_video(AVFormatContext* format_context);

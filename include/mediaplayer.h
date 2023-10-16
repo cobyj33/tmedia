@@ -75,14 +75,14 @@ class MediaPlayer {
     MediaGUI media_gui;
 
     MediaClock clock;
-    const char* file_name;
+    std::string file_path;
     std::atomic<bool> in_use;
     std::atomic<bool> muted;
     std::atomic<double> volume;
 
     MediaType media_type;
 
-    MediaPlayer(const char* file_name, MediaGUI starting_media_gui);
+    MediaPlayer(const std::string& file_path, MediaGUI starting_media_gui);
 
     void start(double start_time);
 

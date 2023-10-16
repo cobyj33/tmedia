@@ -5,6 +5,7 @@
 #include "decode.h"
 #include "formatting.h"
 
+#include <string>
 #include <vector>
 #include <stdexcept> 
 #include <memory> //std::make_unique
@@ -15,11 +16,11 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
-MediaDecoder::MediaDecoder(const char* file_name) {
+MediaDecoder::MediaDecoder(const std::string& file_path) {
   try {
-    this->format_context = open_format_context(file_name);
+    this->format_context = open_format_context(file_path);
   } catch (std::runtime_error const& e) {
-    throw std::runtime_error("[MediaDecoder::MediaDecoder] Could not allocate Media Decoder of " + std::string(file_name) + " because of error while fetching file format data: " + e.what());
+    throw std::runtime_error("[MediaDecoder::MediaDecoder] Could not allocate Media Decoder of " + file_path +  " because of error while fetching file format data: " + e.what());
   } 
 
   const int NUM_OF_MEDIA_TYPES_TO_SEARCH = 2;

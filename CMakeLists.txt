@@ -226,6 +226,9 @@ target_include_directories(miniaudio PRIVATE ./lib/miniaudio)
 add_library(argparse INTERFACE)
 target_include_directories(argparse INTERFACE ./lib/argparse)
 
+add_library(NaturalSort INTERFACE)
+target_include_directories(NaturalSort INTERFACE ./lib/NaturalSort)
+
 configure_file(${CMAKE_SOURCE_DIR}/include/version.h.in ${CMAKE_BINARY_DIR}/include/version.h @ONLY)
 
 if(FIND_CURSES)
@@ -248,7 +251,7 @@ endif()
 
 target_compile_features(ascii_video PRIVATE cxx_std_17)
 target_include_directories(ascii_video PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
-target_link_libraries(ascii_video PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> argparse ${CMAKE_DL_LIBS})
+target_link_libraries(ascii_video PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> argparse NaturalSort ${CMAKE_DL_LIBS})
 
 if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
   add_dependencies(ascii_video ${TARGET_DEPENDENCIES})
