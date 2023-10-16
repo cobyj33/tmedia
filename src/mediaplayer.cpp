@@ -17,12 +17,13 @@ extern "C" {
 }
 
 MediaPlayer::MediaPlayer(const std::string& file_path, MediaGUI starting_media_gui) {
-  this->in_use = false;
   this->file_path = file_path;
-  this->muted = false;
   this->media_gui = starting_media_gui;
-  this->volume = 1.0;
 
+  this->in_use = false;
+  this->muted = false;
+  this->volume = 1.0;
+  
   this->display_lines = 24;
   this->display_cols = 80;
 
@@ -37,6 +38,7 @@ MediaPlayer::MediaPlayer(const std::string& file_path, MediaGUI starting_media_g
     this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate()));
     this->audio_buffer = std::move(std::make_unique<AudioBuffer>(this->media_decoder->get_nb_channels(), this->media_decoder->get_sample_rate()));
   }
+  
 }
 
 void MediaPlayer::set_current_frame(PixelData& data) {

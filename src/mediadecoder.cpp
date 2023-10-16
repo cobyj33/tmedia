@@ -25,6 +25,7 @@ MediaDecoder::MediaDecoder(const std::string& file_path) {
 
   const int NUM_OF_MEDIA_TYPES_TO_SEARCH = 2;
   enum AVMediaType MEDIA_TYPES_TO_SEARCH[NUM_OF_MEDIA_TYPES_TO_SEARCH] = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
+  this->media_type = media_type_from_avformat_context(this->format_context);
 
   for (int i = 0; i < NUM_OF_MEDIA_TYPES_TO_SEARCH; i++) {
     try {

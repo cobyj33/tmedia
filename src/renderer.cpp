@@ -36,14 +36,13 @@ RGBColor get_index_display_color(int index, int length)
 
 void MediaPlayer::render_loop()
 {
-  WINDOW *inputWindow = newwin(0, 0, 1, 1);
-  if (inputWindow == NULL) {
-    this->in_use = false;
-    return;
-  }
+  // WINDOW *inputWindow = newwin(0, 0, 1, 1);
+  // if (inputWindow == NULL) {
+  //   this->in_use = false;
+  //   return;
+  // }
 
-  nodelay(inputWindow, true);
-  keypad(inputWindow, true);
+  
   double batched_jump_time_sec = 0;
   const int RENDER_LOOP_SLEEP_TIME_MS = 41;
   erase();
@@ -63,7 +62,7 @@ void MediaPlayer::render_loop()
           break;
         }
 
-        int input = wgetch(inputWindow);
+        int input = getch();
 
 
         if (this->media_type != MediaType::IMAGE && this->get_time(system_clock_sec()) >= this->get_duration()) {
@@ -163,13 +162,14 @@ void MediaPlayer::render_loop()
 
           if (input == ' ' && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
             this->clock.toggle(system_clock_sec());
+            this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY);
           }
 
           if (input == 'm' || input == 'M') {
             this->muted = !this->muted;
           }
 
-          input = wgetch(inputWindow);
+          input = getch();
         } // Ending of "while (input != ERR)"
 
         if (batched_jump_time_sec != 0) {
@@ -197,7 +197,6 @@ void MediaPlayer::render_loop()
     this->in_use = false;
   }
 
-  delwin(inputWindow);
 }
 
 void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode) {

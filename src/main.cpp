@@ -207,7 +207,7 @@ int main(int argc, char** argv)
     std::error_code ec;
 
     if (!std::filesystem::exists(path, ec)) {
-      std::cerr << "[ascii_video] Cannot open invalid path: " << paths[i] << ec << std::endl;
+      std::cerr << "[ascii_video] Cannot open invalid path: " << paths[i] << " " << ec << std::endl;
       return EXIT_FAILURE;
     }
 
@@ -228,7 +228,7 @@ int main(int argc, char** argv)
     } else if (is_valid_media_file_path(paths[i])) {
       files.push_back(paths[i]);
     } else {
-      std::cerr << "[ascii_video] Cannot open path to non-media file: " << paths[i] << ec << std::endl;
+      std::cerr << "[ascii_video] Cannot open path to non-media file: " << paths[i] << " " << ec << std::endl;
       return EXIT_FAILURE;
     }
   }

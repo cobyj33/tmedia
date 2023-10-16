@@ -27,12 +27,21 @@ void ncurses_init() {
   }
   ncurses_initialized = true;
   initscr();
+  savetty();
   ncurses_init_color();
   ncurses_set_color_palette(AVNCursesColorPalette::RGB);
   cbreak();
+  // nocbreak();
   noecho();
-  curs_set(0);
+  nodelay(stdscr, true);
+  timeout(5);
   keypad(stdscr, true);
+  intrflush(stdscr, false); // maybe set to true?
+  idcok(stdscr, true);
+  idlok(stdscr, true);
+  leaveok(stdscr, true);
+  nonl();
+  curs_set(0);
 }
 
 bool ncurses_is_initialized() {
@@ -48,6 +57,7 @@ void ncurses_uninit() {
   keypad(stdscr, false);
   nocbreak();
   echo();
+  resetty();
   endwin();
 }
 
