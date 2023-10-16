@@ -44,7 +44,7 @@ void MediaPlayer::render_loop()
 
   nodelay(inputWindow, true);
   keypad(inputWindow, true);
-  double batched_jump_time = 0;
+  double batched_jump_time_sec = 0;
   const int RENDER_LOOP_SLEEP_TIME_MS = 41;
   erase();
   try {
@@ -145,13 +145,12 @@ void MediaPlayer::render_loop()
             }
           }
 
-          if ((input == KEY_LEFT || input == KEY_RIGHT) && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
-            if (input == KEY_LEFT) {
-              batched_jump_time -= 5;
-            }
-            else if (input == KEY_RIGHT) {
-              batched_jump_time += 5;
-            }
+          if (input == KEY_LEFT) {
+            batched_jump_time_sec -= 5.0;
+          }
+
+          if (input == KEY_RIGHT) {
+            batched_jump_time_sec += 5.0;
           }
 
           if (input == KEY_UP) {
@@ -173,14 +172,15 @@ void MediaPlayer::render_loop()
           input = wgetch(inputWindow);
         } // Ending of "while (input != ERR)"
 
-        if (batched_jump_time != 0 && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
-          double current_playback_time = this->get_time(system_clock_sec());
-          double target_time = current_playback_time + batched_jump_time;
-          target_time = clamp(target_time, 0.0, this->get_duration());
-          this->jump_to_time(target_time, system_clock_sec());
-          batched_jump_time = 0;
+        if (batched_jump_time_sec != 0) {
+          if (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO) {
+            double current_playback_time = this->get_time(system_clock_sec());
+            double target_time = current_playback_time + batched_jump_time_sec;
+            target_time = clamp(target_time, 0.0, this->get_duration());
+            this->jump_to_time(target_time, system_clock_sec());
+          }
+          batched_jump_time_sec = 0;
         }
-
 
         image = this->frame;
         vom = this->media_gui.get_video_output_mode();
