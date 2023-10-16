@@ -1,6 +1,31 @@
 
 # DEV NOTES
 
+## Testing files
+
+While I don't include images, videos, and audio directly into the ascii_video
+repo, here are some good sources that I use to make sure many different file
+formats and sizes work well.
+
+Yes, this isn't actual "testing" but whatever
+
+Images:
+
+[The USC-SIPI Image Database](https://sipi.usc.edu/database/)
+[Png Suite](http://www.schaik.com/pngsuite/)
+
+
+Audio:
+
+You can download various mixtapes and whatnot from [Web Archive](https://archive.org/),
+which give an easy way to listen to music and test at the same time
+
+Video:
+
+[Sample Videos](https://sample-videos.com/)
+[Pexels](https://www.pexels.com/search/videos/sample/)
+
+
 ## Known Bugs
 
 On AVPackets, sometimes the time_base is not set, so don't rely on finding the time base for a stream through a packet
