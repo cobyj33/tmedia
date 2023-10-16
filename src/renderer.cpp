@@ -56,6 +56,7 @@ void MediaPlayer::render_loop()
 
       {
         std::lock_guard<std::mutex> lock(this->alter_mutex);
+        const double current_system_time = system_clock_sec();
 
         if (should_sig_exit()) { // lmao i know this is bad ok I'll fix it later
           this->in_use = false;
@@ -65,7 +66,7 @@ void MediaPlayer::render_loop()
         int input = getch();
 
 
-        if (this->media_type != MediaType::IMAGE && this->get_time(system_clock_sec()) >= this->get_duration()) {
+        if (this->media_type != MediaType::IMAGE && this->get_time(current_system_time) >= this->get_duration()) {
           this->in_use = false;
         }
 
@@ -161,7 +162,7 @@ void MediaPlayer::render_loop()
           }
 
           if (input == ' ' && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
-            this->clock.toggle(system_clock_sec());
+            this->clock.toggle(current_system_time);
             this->media_gui.set_video_output_mode(VideoOutputMode::TEXT_ONLY);
           }
 
@@ -169,22 +170,62 @@ void MediaPlayer::render_loop()
             this->muted = !this->muted;
           }
 
+          if (input == '0'  && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+            this->jump_to_time(0.0, current_system_time);
+          }
+
+          if (input == '1'  && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+            this->jump_to_time(this->get_duration() * 1.0 / 10.0, current_system_time);
+          }
+
+          if (input == '2'  && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+            this->jump_to_time(this->get_duration() * 2.0 / 10.0, current_system_time);
+          }
+
+          if (input == '3'  && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+            this->jump_to_time(this->get_duration() * 3.0 / 10.0, current_system_time);
+          }
+
+          if (input == '4'  && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+            this->jump_to_time(this->get_duration() * 4.0 / 10.0, current_system_time);
+          }
+
+          if (input == '5'  && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+            this->jump_to_time(this->get_duration() * 5.0 / 10.0, current_system_time);
+          }
+
+          if (input == '6'  && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+            this->jump_to_time(this->get_duration() * 6.0 / 10.0, current_system_time);
+          }
+
+          if (input == '7'  && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+            this->jump_to_time(this->get_duration() * 7.0 / 10.0, current_system_time);
+          }
+
+          if (input == '8'  && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+            this->jump_to_time(this->get_duration() * 8.0 / 10.0, current_system_time);
+          }
+
+          if (input == '9'  && (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO)) {
+            this->jump_to_time(this->get_duration() * 9.0 / 10.0, current_system_time);
+          }
+
           input = getch();
         } // Ending of "while (input != ERR)"
 
         if (batched_jump_time_sec != 0) {
           if (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO) {
-            double current_playback_time = this->get_time(system_clock_sec());
+            double current_playback_time = this->get_time(current_system_time);
             double target_time = current_playback_time + batched_jump_time_sec;
             target_time = clamp(target_time, 0.0, this->get_duration());
-            this->jump_to_time(target_time, system_clock_sec());
+            this->jump_to_time(target_time, current_system_time);
           }
           batched_jump_time_sec = 0;
         }
 
         image = this->frame;
         vom = this->media_gui.get_video_output_mode();
-      }
+      } // end of lock_guard alter_mutex lock
 
       render_movie_screen(image, vom);
       refresh();
