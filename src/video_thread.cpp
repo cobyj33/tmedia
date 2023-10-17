@@ -137,7 +137,7 @@ void MediaPlayer::video_playback_thread() {
         int display_rows = output_size.second;
         int display_cols = output_size.first;
 
-        PixelData frame = generate_audio_view(mono, display_rows, display_cols);
+        PixelData frame = generate_audio_view_amplitude_averaged(mono, display_rows, display_cols);
 
         {
           std::lock_guard<std::mutex> player_lock(this->alter_mutex);
