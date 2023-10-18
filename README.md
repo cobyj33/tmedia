@@ -46,14 +46,6 @@ it wouldn't be possible
 
 On non Linux/Unix, good luck for now, I'll get to y'all later
 
-## Miscellaneous Notes
-
-While it is by no means required, ascii_video will run faster in GPU accelerated
-terminals like [alacritty](https://github.com/alacritty/alacritty) and
-[kitty](https://github.com/kovidgoyal/kitty).
-
-Works with FFmpeg versions as far back as FFmpeg 3.4
-
 ## Acknowledgments
 
 Inspiration, code snippets, etc.
@@ -64,8 +56,6 @@ Inspiration, code snippets, etc.
 * [Coding Video into Text by The Coding Train on Youtube](https://www.youtube.com/watch?v=55iwMYv8tGI)
   * [The Coding Train](https://www.youtube.com/c/TheCodingTrain)
 * [How to Write a Video Player in Less Than 1000 Lines](http://dranger.com/ffmpeg/)
-  * Outdated toward current ffmpeg standards but still a great resource
-  for understanding the workings of a video decoding program
 
 ## Similar Programs
 
