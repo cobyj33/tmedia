@@ -84,15 +84,17 @@ int main(int argc, char** argv)
     .nargs(argparse::nargs_pattern::any);
 
   const std::string controls = std::string("-------CONTROLS-----------\n"
-              "SPACE - Toggle Playback \n"
+              "Space - Play and Pause \n"
               "Up Arrow - Increase Volume 5% \n"
               "Up Arrow - Decrease Volume 5% \n"
               "Left Arrow - Skip backward 5 seconds\n"
               "Right Arrow - Skip forward 5 seconds \n"
               "Escape or Backspace - End Playback \n"
-              "C - Change to color mode on supported terminals \n"
-              "G - Change to grayscale mode \n"
-              "B - Change to Background Mode on supported terminals if in Color or Grayscale mode \n");
+              "'0' - Restart playback\n"
+              "'1' through '9' - Skip to the timestamp at n/10 of the duration (similar to youtube)\n"
+              "c - Change to color mode on supported terminals \n"
+              "g - Change to grayscale mode \n"
+              "b - Change to Background Mode on supported terminals if in Color or Grayscale mode \n");
 
   parser.add_description(controls);
 
