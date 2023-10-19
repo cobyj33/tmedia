@@ -3,6 +3,8 @@
 #include "boiler.h"
 
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 extern "C" {
   #include <libavformat/avformat.h>
@@ -18,13 +20,31 @@ std::string media_type_to_string(MediaType media_type) {
 }
 
 MediaType media_type_from_avformat_context(AVFormatContext* format_context) {
-  if (avformat_context_is_static_image(format_context)) {
-    return MediaType::IMAGE;
-  } else if (avformat_context_is_video(format_context)) {
-    return MediaType::VIDEO;
-  } else if (avformat_context_is_audio_only(format_context)) {
-    return MediaType::AUDIO;
-  } else {
-    throw std::runtime_error("Could not find matching MediaType for AVFormatContext for file " + std::string(format_context->url));
+  std::vector<std::string> image_formats{"image2", "png_pipe", "webp_pipe"};
+  std::vector<std::string> audio_formats{"wav", "ogg", "mp3"};
+  for (std::size_t i = 0; i < image_formats.size(); i++) {
+    if (strcmp(format_context->iformat->name, image_formats[i].c_str()) == 0) {
+      return MediaType::IMAGE;
+    }
   }
+
+  for (std::size_t i = 0; i < audio_formats.size(); i++) {
+    if (strcmp(format_context->iformat->name, audio_formats[i].c_str()) == 0) {
+      return MediaType::AUDIO;
+    }
+  }
+
+  if (avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_VIDEO)) {
+    if (!avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO) &&
+    (format_context->duration == AV_NOPTS_VALUE || format_context->duration == 0) &&
+    (format_context->start_time == AV_NOPTS_VALUE || format_context->start_time == 0)) {
+      return MediaType::IMAGE;
+    }
+
+    return MediaType::VIDEO;
+  } else if (avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO)) {
+    return MediaType::AUDIO;
+  }
+
+  throw std::runtime_error("[media_type_from_avformat_context] Could not find media type for file " + std::string(format_context->url));
 }

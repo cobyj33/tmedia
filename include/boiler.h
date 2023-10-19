@@ -37,10 +37,6 @@ void dump_file_info(const std::string& file_path);
  */
 double get_file_duration(const std::string& file_path);
 
-bool avformat_context_is_static_image(AVFormatContext* format_context);
-bool avformat_context_is_video(AVFormatContext* format_context);
-bool avformat_context_is_audio_only(AVFormatContext* format_context);
-
 bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVMediaType media_type);
 
 #endif

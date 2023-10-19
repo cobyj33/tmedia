@@ -52,7 +52,7 @@ void MediaPlayer::video_playback_thread() {
   try {
     double avg_frame_time_sec = 1 / 24.0;
 
-    if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
+    if (this->media_type == MediaType::VIDEO) {
       std::unique_ptr<VideoConverter> video_converter;
       {
         std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
@@ -111,7 +111,7 @@ void MediaPlayer::video_playback_thread() {
           sleep_for_sec(wait_duration);
         }
       }
-    } else if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    } else if (this->media_type == MediaType::AUDIO) {
 
       while (this->in_use) {
         const std::size_t AUDIO_PEEK_SIZE = 44100 * 2;

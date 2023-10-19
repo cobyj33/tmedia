@@ -64,31 +64,6 @@ bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVM
   return false;
 }
 
-bool avformat_context_is_static_image(AVFormatContext* format_context) {
-  std::vector<std::string> accepted_iformats{"image2", "png_pipe", "webp_pipe"};
-  for (std::size_t i = 0; i < accepted_iformats.size(); i++) {
-    if (strcmp(format_context->iformat->name, accepted_iformats[i].c_str()) == 0) {
-      return true;
-    }
-  }
-
-  return avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_VIDEO) && 
-  !avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO) &&
-  (format_context->duration == AV_NOPTS_VALUE || format_context->duration == 0) &&
-  (format_context->start_time == AV_NOPTS_VALUE || format_context->start_time == 0);;
-}
-
-bool avformat_context_is_video(AVFormatContext* format_context) {
-  return !avformat_context_is_static_image(format_context) &&
-  avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_VIDEO);
-}
-
-bool avformat_context_is_audio_only(AVFormatContext* format_context) {
-  return !avformat_context_is_static_image(format_context) &&
-  !avformat_context_is_video(format_context) &&
-  avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO);
-}
-
 bool is_valid_media_file_path(const std::string& path_str) {
   std::filesystem::path path(path_str);
   std::error_code ec;
