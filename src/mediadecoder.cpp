@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 #include <stdexcept> 
 #include <memory> //std::make_unique
 
@@ -16,20 +17,18 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
-MediaDecoder::MediaDecoder(const std::string& file_path) {
+MediaDecoder::MediaDecoder(const std::string& file_path, std::set<enum AVMediaType>& requested_streams) {
   try {
     this->format_context = open_format_context(file_path);
   } catch (std::runtime_error const& e) {
     throw std::runtime_error("[MediaDecoder::MediaDecoder] Could not allocate Media Decoder of " + file_path +  " because of error while fetching file format data: " + e.what());
   } 
 
-  const int NUM_OF_MEDIA_TYPES_TO_SEARCH = 2;
-  enum AVMediaType MEDIA_TYPES_TO_SEARCH[NUM_OF_MEDIA_TYPES_TO_SEARCH] = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
   this->media_type = media_type_from_avformat_context(this->format_context);
 
-  for (int i = 0; i < NUM_OF_MEDIA_TYPES_TO_SEARCH; i++) {
+  for (const enum AVMediaType& stream_type : requested_streams) {
     try {
-      this->stream_decoders[MEDIA_TYPES_TO_SEARCH[i]] = std::move(std::make_unique<StreamDecoder>(format_context, MEDIA_TYPES_TO_SEARCH[i]));
+      this->stream_decoders[stream_type] = std::move(std::make_unique<StreamDecoder>(format_context, stream_type));
     } catch (std::runtime_error const& e) {
       continue;
     }

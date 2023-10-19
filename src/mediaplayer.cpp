@@ -10,6 +10,7 @@
 #include <memory>
 #include <thread>
 #include <mutex>
+#include <set>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -27,8 +28,8 @@ MediaPlayer::MediaPlayer(const std::string& file_path, MediaGUI starting_media_g
   this->display_lines = 24;
   this->display_cols = 80;
 
-  std::vector<enum AVMediaType> media_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-  this->media_decoder = std::move(std::make_unique<MediaDecoder>(file_path));
+  std::set<enum AVMediaType> requested_stream_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
+  this->media_decoder = std::move(std::make_unique<MediaDecoder>(file_path, requested_stream_types));
   this->media_type = this->media_decoder->get_media_type();
 
 

@@ -24,25 +24,8 @@ const double VOLUME_CHANGE_AMOUNT = 0.05;
 void render_movie_screen(PixelData& pixel_data, VideoOutputMode media_gui);
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
 
-RGBColor get_index_display_color(int index, int length)
-{
-  const double step = (255.0 / 2.0) / length;
-  const double color_space_size = 255 - (step * (double)(index / 6));
-  int red = index % 6 >= 3 ? color_space_size : 0;
-  int green = index % 2 == 0 ? color_space_size : 0;
-  int blue = index % 6 < 3 ? color_space_size : 0;
-  return RGBColor(red, green, blue);
-}
-
 void MediaPlayer::render_loop()
-{
-  // WINDOW *inputWindow = newwin(0, 0, 1, 1);
-  // if (inputWindow == NULL) {
-  //   this->in_use = false;
-  //   return;
-  // }
-
-  
+{ 
   double batched_jump_time_sec = 0;
   const int RENDER_LOOP_SLEEP_TIME_MS = 41;
   erase();
@@ -58,7 +41,7 @@ void MediaPlayer::render_loop()
         std::lock_guard<std::mutex> lock(this->alter_mutex);
         const double current_system_time = system_clock_sec();
 
-        if (should_sig_exit()) { // lmao i know this is bad ok I'll fix it later
+        if (INTERRUPT_RECEIVED) { // lmao i know this is bad ok I'll fix it later
           this->in_use = false;
           break;
         }
@@ -241,7 +224,6 @@ void MediaPlayer::render_loop()
 }
 
 void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode) {
-  // exists as a separate function because more complexity will be added later
   print_pixel_data(pixel_data, 0, 0, COLS, LINES, output_mode);
 }
 

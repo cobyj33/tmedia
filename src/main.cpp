@@ -1,3 +1,6 @@
+#include "sigexit.h"
+#include "termenv.h"
+
 #include "wtime.h"
 #include "mediaplayer.h"
 #include "formatting.h"
@@ -5,8 +8,10 @@
 #include "version.h"
 #include "avguard.h"
 #include "avcurses.h"
-#include "sigexit.h"
-
+#include "looptype.h"
+#include "avcurses.h"
+#include "ascii.h"
+#include "wminiaudio.h"
 
 #include <cstdlib>
 #include <cstdio>
@@ -31,6 +36,21 @@ extern "C" {
 #include <libswscale/version.h>
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
+}
+
+
+// void render_movie_screen(PixelData& pixel_data, VideoOutputMode media_gui);
+// void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
+
+std::atomic<bool> INTERRUPT_RECEIVED = false;
+std::atomic<unsigned int> TERM_LINES = 24;
+std::atomic<unsigned int> TERM_COLS = 80;
+
+// const int KEY_ESCAPE = 27;
+// const double VOLUME_CHANGE_AMOUNT = 0.05;
+
+void interrupt_handler(int) {
+  INTERRUPT_RECEIVED = true;
 }
 
 
@@ -64,10 +84,17 @@ int main(int argc, char** argv)
   av_log_set_level(AV_LOG_QUIET);
   std::set_terminate(on_terminate);
 
-  // common signal handlers
-  // i literally just took this from the git git repo (sigchain.c) 
-  std::signal(SIGINT, ascii_video_signal_handler); // interrupted (usually with Ctrl+C)
-	std::signal(SIGTERM, ascii_video_signal_handler); // politely asking for termination
+  std::signal(SIGINT, interrupt_handler);
+	std::signal(SIGTERM, interrupt_handler);
+
+  std::vector<std::string> _files;
+  std::size_t current_file = 0;
+  double _volume;
+  bool _muted;
+  VideoOutputMode _output_mode;
+  LoopType _looped;
+  double _start_time;
+
   
 	// std::signal(SIGQUIT, ascii_video_signal_handler); I don't know if I should handle this,
   // as I'd want quitting if ascii_video does happen to actually break
@@ -123,9 +150,6 @@ int main(int argc, char** argv)
     .default_value(false)
     .implicit_value(true);
 
-  parser.add_argument("-t", "--time")
-    .help("Choose the time to start media playback");
-
   parser.add_argument("-m", "--mute")
     .help("Mute the audio playback")
     .default_value(false)
@@ -155,9 +179,7 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
-  double start_time = 0.0;
   double volume = 1.0;
-  std::string inputted_start_time = "00:00";
 
 
   std::vector<std::string> paths = parser.get<std::vector<std::string>>("paths");
@@ -172,10 +194,6 @@ int main(int argc, char** argv)
 
   if (std::optional<double> user_volume = parser.present<double>("--volume")) {
     volume = *user_volume;
-  }
-
-  if (std::optional<std::string> user_start_time = parser.present<std::string>("--time")) {
-    inputted_start_time = *user_start_time;
   }
 
   if (print_ffmpeg_version) {
@@ -209,7 +227,7 @@ int main(int argc, char** argv)
     std::error_code ec;
 
     if (!std::filesystem::exists(path, ec)) {
-      std::cerr << "[ascii_video] Cannot open invalid path: " << paths[i] << " " << ec << std::endl;
+      std::cerr << "[ascii_video] Cannot open invalid path: " << paths[i] << std::endl;
       return EXIT_FAILURE;
     }
 
@@ -262,63 +280,15 @@ int main(int argc, char** argv)
     return EXIT_SUCCESS;
   }
 
-  if (is_duration(inputted_start_time)) {
-    start_time = parse_duration(inputted_start_time);
-  } else if (is_int_str(inputted_start_time)) {
-    start_time = std::stoi(inputted_start_time);
-  } else {
-    std::cerr << "[ascii_video]: Inputted time must be in seconds, H:MM:SS, or M:SS format (got \"" << inputted_start_time << "\" )" << std::endl;
-    return EXIT_FAILURE;
+  if (colors && grayscale) {
+    grayscale = false;
   }
 
-  if (start_time < 0.0) { // Catch errors in out of bounds times
-    std::cerr << "[ascii_video]: Cannot start media player at a negative time ( got time " << double_to_fixed_string(start_time, 2) << "  from input " << inputted_start_time << " )" << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  for (std::size_t i = 0; i < files.size(); i++) {
-    double file_duration = get_file_duration(files[i]);
-    if (start_time >= file_duration && file_duration >= 0.0) { 
-      std::cerr << "[ascii_video]: Cannot start media file at a time greater than media's duration ( got time " << double_to_fixed_string(start_time, 2) << " seconds from input " << inputted_start_time << ". File ends at " << double_to_fixed_string(file_duration, 2) << " seconds (" << format_duration(file_duration) << ") ) "  << std::endl;
-      return EXIT_FAILURE;
-    }
+  if (background && !(colors || grayscale)) {
+    colors = true;
   }
 
   ncurses_init();
-  std::string warnings;
-
-  if (colors && grayscale) {
-    warnings += "[ascii_video]: WARNING: Cannot have both colored (-c, --color) and grayscale (-g, --gray) output. Falling back to colored output\n";
-    grayscale = false;
-  }
-
-  if ( (colors || grayscale) && !has_colors()) {
-    warnings += "[ascii_video]: WARNING: Terminal does not support colored output\n";
-    colors = false;
-    grayscale = false;
-  }
-
-  if (background && !(colors || grayscale) ) {
-    if (!has_colors()) {
-      warnings += "[ascii_video]: WARNING: Cannot use background option as colors are not available in this terminal. Falling back to pure text output\n";
-      background = false;
-    } else {
-      warnings += "[ascii_video]: WARNING: Cannot only show background without either color (-c, --color) or grayscale(-g, --gray, --grayscale) options selected. Falling back to colored output\n";
-      colors = true;
-      grayscale = false;
-    }
-  }
-
-  if ( (grayscale || colors) && has_colors() && !can_change_color()) {
-    warnings += "WARNING: Terminal does not support changing colored output data, colors may not be as accurate as expected\n";
-  }
-
-  if (warnings.length() > 0 && !quiet) {
-    printw("%s\n\n%s\n", warnings.c_str(), "Press any key to continue");
-    refresh();
-    getch();
-  }
-  erase();
 
   VideoOutputMode mode = get_video_output_mode_from_params(colors, grayscale, background);
   MediaGUI media_gui;
@@ -329,15 +299,14 @@ int main(int argc, char** argv)
       MediaPlayer player(files[i], media_gui);
       player.muted = mute;
       player.volume = volume;
-      player.start(start_time);
+      player.start(0.0);
       
-
       if (player.has_error()) {
         std::cout << "[ascii_video]: Media Player Error: " << player.get_error() << std::endl;
         return EXIT_FAILURE;
       }
 
-      if (should_sig_exit()) {
+      if (INTERRUPT_RECEIVED) {
         break;
       }
     }
@@ -352,3 +321,60 @@ int main(int argc, char** argv)
 }
 
 
+// /**
+//  * @brief The callback called by miniaudio once the connected audio device requests audio data
+//  * 
+//  * @param pDevice The miniaudio audio device representation
+//  * @param pOutput The memory buffer to write frameCount samples into
+//  * @param pInput Irrelevant for us :)
+//  * @param sampleCount The number of samples requested by miniaudio
+//  */
+// void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+// {
+//   MediaPlayer* player = (MediaPlayer*)(pDevice->pUserData);
+//   std::lock_guard<std::mutex> mutex_lock_guard(player->buffer_read_mutex);
+
+//   if (!player->clock.is_playing() || !player->audio_buffer->can_read(frameCount)) {
+//     float* pFloatOutput = (float*)pOutput;
+//     for (ma_uint32 i = 0; i < frameCount; i++) {
+//       pFloatOutput[i] = 0.0001 * sin(0.10 * i);
+//     }
+//   } else if (player->audio_buffer->can_read(frameCount)) {
+//     player->audio_buffer->read_into(frameCount, (float*)pOutput);
+//   }
+
+//   (void)pInput;
+// }
+
+// void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode) {
+//   print_pixel_data(pixel_data, 0, 0, COLS, LINES, output_mode);
+// }
+
+
+// void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode) {
+//   if (output_mode != VideoOutputMode::TEXT_ONLY && !has_colors()) {
+//     throw std::runtime_error("Attempted to print colored text in terminal that does not support color");
+//   }
+
+//   PixelData bounded = pixel_data.bound(bounds_width, bounds_height);
+//   int image_start_row = bounds_row + std::abs(bounded.get_height() - bounds_height) / 2;
+//   int image_start_col = bounds_col + std::abs(bounded.get_width() - bounds_width) / 2; 
+
+//   bool background_only = output_mode == VideoOutputMode::COLORED_BACKGROUND_ONLY || output_mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY;
+
+//   for (int row = 0; row < bounded.get_height(); row++) {
+//     for (int col = 0; col < bounded.get_width(); col++) {
+//       const RGBColor& target_color = bounded.at(row, col);
+//       const char target_char = background_only ? ' ' : get_char_from_rgb(AsciiImage::ASCII_STANDARD_CHAR_MAP, target_color);
+      
+//       if (output_mode == VideoOutputMode::TEXT_ONLY) {
+//         mvaddch(image_start_row + row, image_start_col + col, target_char);
+//       } else {
+//         const int color_pair = get_closest_ncurses_color_pair(target_color);
+//         mvaddch(image_start_row + row, image_start_col + col, target_char | COLOR_PAIR(color_pair));
+//       }
+
+//     }
+//   }
+
+// }

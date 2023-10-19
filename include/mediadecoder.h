@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <string>
+#include <set>
 
 extern "C" {
   #include <libavutil/avutil.h>
@@ -22,7 +23,7 @@ class MediaDecoder {
     int fetch_next(int requested_packet_count);
   public:
 
-    MediaDecoder(const std::string& file_path);
+    MediaDecoder(const std::string& file_path, std::set<enum AVMediaType>& requested_streams);
     bool has_media_decoder(enum AVMediaType media_type) const;
     std::vector<AVFrame*> next_frames(enum AVMediaType media_type);
     int jump_to_time(double target_time);

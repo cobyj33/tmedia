@@ -37,18 +37,18 @@ const int MINIMUM_AUDIO_BUFFER_DEVICE_START_SIZE = 1024;
  * @param pInput Irrelevant for us :)
  * @param sampleCount The number of samples requested by miniaudio
  */
-void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 sampleCount)
+void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
   MediaPlayer* player = (MediaPlayer*)(pDevice->pUserData);
   std::lock_guard<std::mutex> mutex_lock_guard(player->buffer_read_mutex);
 
-  if (!player->clock.is_playing() || !player->audio_buffer->can_read(sampleCount)) {
+  if (!player->clock.is_playing() || !player->audio_buffer->can_read(frameCount)) {
     float* pFloatOutput = (float*)pOutput;
-    for (ma_uint32 i = 0; i < sampleCount; i++) {
-      pFloatOutput[i] = 0.0;
+    for (ma_uint32 i = 0; i < frameCount; i++) {
+      pFloatOutput[i] = 0.0001 * sin(0.10 * i);
     }
-  } else if (player->audio_buffer->can_read(sampleCount)) {
-    player->audio_buffer->read_into(sampleCount, (float*)pOutput);
+  } else if (player->audio_buffer->can_read(frameCount)) {
+    player->audio_buffer->read_into(frameCount, (float*)pOutput);
   }
 
   (void)pInput;
