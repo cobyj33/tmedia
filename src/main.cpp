@@ -103,7 +103,7 @@ int main(int argc, char** argv)
   double volume = 1.0;
   bool muted = false;
   VideoOutputMode vom  = VideoOutputMode::TEXT_ONLY;
-  LoopType loop_type = LoopType::NO_LOOP;
+  // LoopType loop_type = LoopType::NO_LOOP;
   
 	// std::signal(SIGQUIT, ascii_video_signal_handler); I don't know if I should handle this,
   // as I'd want quitting if ascii_video does happen to actually break
@@ -308,14 +308,14 @@ int main(int argc, char** argv)
   while (!INTERRUPT_RECEIVED && !full_exit && current_file < files.size()) {
     MediaFetcher fetcher(files[current_file]);
     std::unique_ptr<ma_device_w> audio_device;
-    std::size_t next_file;
+    std::size_t next_file = current_file + 1;
     
-    switch (loop_type) {
-      case LoopType::NO_LOOP: next_file = current_file + 1; break;
-      case LoopType::REPEAT: next_file = current_file + 1 > files.size() ? 0 : current_file + 1; break;
-      case LoopType::REPEAT_ONE: next_file = current_file; break;
-      default: throw std::runtime_error("[ascii_video] Unimplemented Looping Type");
-    }
+    // switch (loop_type) {
+    //   case LoopType::NO_LOOP: next_file = current_file + 1; break;
+    //   case LoopType::REPEAT: next_file = current_file + 1 > files.size() ? 0 : current_file + 1; break;
+    //   case LoopType::REPEAT_ONE: next_file = current_file; break;
+    //   default: throw std::runtime_error("[ascii_video] Unimplemented Looping Type");
+    // }
 
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
       ma_device_config config = ma_device_config_init(ma_device_type_playback);
@@ -468,7 +468,7 @@ int main(int argc, char** argv)
             }
 
             if (input == 'p' || input == 'P') {
-              next_file = current_file == 0 ? files.size() - 1 : current_file - 1;
+              next_file = current_file == 0 ? 0 : current_file - 1;
               fetcher.in_use = false;
             }
 
