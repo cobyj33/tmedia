@@ -535,6 +535,10 @@ int main(int argc, char** argv)
       fetcher.error = std::string(e.what()); // to be caught after all threads are joined
     }
 
+    if (audio_device) {
+      audio_device->stop();
+    }
+
     video_thread.join();
     if (audio_thread_initialized) {
       audio_thread.join();
