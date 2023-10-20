@@ -68,7 +68,7 @@ set(COMMON_SOURCE_FILES
 ./src/audiobuffer.cpp
 ./src/except.cpp
 ./src/decode.cpp
-./src/mediaplayer.cpp
+./src/mediafetcher.cpp
 ./src/boiler.cpp
 ./src/sleep.cpp
 ./src/video_thread.cpp

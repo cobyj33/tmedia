@@ -1,5 +1,5 @@
 
-#include "mediaplayer.h"
+#include "mediafetcher.h"
 
 #include "decode.h"
 #include "wtime.h"
@@ -18,7 +18,7 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-MediaPlayer::MediaPlayer(const std::string& file_path) {
+MediaFetcher::MediaFetcher(const std::string& file_path) {
   this->file_path = file_path;
   this->in_use = false;
 
@@ -35,19 +35,19 @@ MediaPlayer::MediaPlayer(const std::string& file_path) {
   }
 }
 
-bool MediaPlayer::has_media_stream(enum AVMediaType media_type) const {
+bool MediaFetcher::has_media_stream(enum AVMediaType media_type) const {
   return this->media_decoder->has_media_decoder(media_type);
 }
 
-double MediaPlayer::get_duration() const {
+double MediaFetcher::get_duration() const {
   return this->media_decoder->get_duration();
 }
 
-double MediaPlayer::get_time(double current_system_time) const {
+double MediaFetcher::get_time(double current_system_time) const {
   return this->clock.get_time(current_system_time);
 }
 
-double MediaPlayer::get_desync_time(double current_system_time) const {
+double MediaFetcher::get_desync_time(double current_system_time) const {
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO) && this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
     double current_playback_time = this->get_time(current_system_time);
     double desync = std::abs(this->audio_buffer->get_time() - current_playback_time); // in our implementation, only the audio buffer can really get desynced from our MediaClock
@@ -57,10 +57,10 @@ double MediaPlayer::get_desync_time(double current_system_time) const {
 }
 
 
-int MediaPlayer::load_next_audio() {
+int MediaFetcher::load_next_audio() {
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error("[MediaPlayer::load_next_audio_frames] Cannot load "
-    "next audio frames, Media Player does not have any audio stream to load data from");
+    throw std::runtime_error("[MediaFetcher::load_next_audio_frames] Cannot load "
+    "next audio frames, Media Fetcher does not have any audio stream to load data from");
   }
 
   int written_samples = 0;
@@ -77,7 +77,7 @@ int MediaPlayer::load_next_audio() {
   return written_samples;
 }
 
-int MediaPlayer::jump_to_time(double target_time, double current_system_time) {
+int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   if (target_time < 0.0 || target_time > this->get_duration()) {
     throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(target_time) + " seconds ) "
     ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(this->get_duration()) + " seconds )");

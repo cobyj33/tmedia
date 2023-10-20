@@ -1,4 +1,4 @@
-#include "mediaplayer.h"
+#include "mediafetcher.h"
 
 #include "audio.h"
 #include "sleep.h"
@@ -25,7 +25,7 @@ const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 5;
 const int AUDIO_THREAD_ITERATION_SLEEP_MS = 5;
 const int MINIMUM_AUDIO_BUFFER_DEVICE_START_SIZE = 1024;
 
-void MediaPlayer::audio_playback_thread() {
+void MediaFetcher::audio_fetching_thread() {
   try { // super try block :)
     sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
     

@@ -24,23 +24,11 @@ extern "C" {
  * 
  * If both must be locked, ALWAYS lock the alter_mutex before the buffer_read_mutex
 */
-class MediaPlayer {
+class MediaFetcher {
   public:
-    /**
-     * @brief This loop is responsible for generating and updating the current video frame in the MediaPlayer's cache as the system clock runs.
-     * @note This loop should be run in a separate thread
-     * @note This loop should not output anything toward the stdout stream in any way
-     * @param player The MediaPlayer to generate and update video frames for
-     */
-    void video_playback_thread();
+    void video_fetching_thread();
 
-    /**
-     * @brief This loop is responsible for managing audio playback and synchronizing audio playback with the current MediaPlayer's timer
-     * @note This loop should be run in a separate thread
-     * @note This loop should not output anything toward the stdout stream in any way
-     * @param player The MediaPlayer to generate and update video frames for
-     */
-    void audio_playback_thread();
+    void audio_fetching_thread();
 
     MediaType media_type;
     std::unique_ptr<MediaDecoder> media_decoder;
@@ -56,9 +44,7 @@ class MediaPlayer {
     std::unique_ptr<AudioBuffer> audio_buffer;
 
 
-    MediaPlayer(const std::string& file_path);
-
-    // void start(double start_time);
+    MediaFetcher(const std::string& file_path);
 
     double get_desync_time(double current_system_time) const;
 
@@ -78,9 +64,9 @@ class MediaPlayer {
     double get_time(double current_system_time) const;
 
     /**
-     * @brief Moves the MediaPlayer's playback to a certain time (including video and audio streams)
+     * @brief Moves the MediaFetcher's playback to a certain time (including video and audio streams)
      * @note The caller is responsible for making sure the time to jump to is in the bounds of the video's playtime. 
-     * The video's duration could be found with the MediaPlayer::get_duration() function
+     * The video's duration could be found with the MediaFetcher::get_duration() function
      * 
      * @param target_time The target time to jump the playback to (must be reachable)
      * @param current_system_time The current system time

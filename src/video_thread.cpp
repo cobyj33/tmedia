@@ -1,4 +1,4 @@
-#include "mediaplayer.h"
+#include "mediafetcher.h"
 
 #include "termenv.h"
 #include "decode.h"
@@ -37,11 +37,11 @@ const int MAX_FRAME_WIDTH = 640;
 const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH * MAX_FRAME_ASPECT_RATIO;
 
 /**
- * The purpose of the video thread is to update the current MediaPlayer's frame for rendering
+ * The purpose of the video thread is to update the current MediaFetcher's frame for rendering
  * 
  * This is done in different ways depending on if a video is available in the current media type or not
  * If the currently attached media is a video:
- *  The video thread will update the current frame to be the correct frame according to the MediaPlayer's current
+ *  The video thread will update the current frame to be the correct frame according to the MediaFetcher's current
  *  playback timestamp
  * 
  * If the currently attached media is audio:
@@ -49,7 +49,7 @@ const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH * MAX_FRAME_ASPECT_RATIO;
  *  processed. 
 */
 
-void MediaPlayer::video_playback_thread() {
+void MediaFetcher::video_fetching_thread() {
 
   try {
     double avg_frame_time_sec = 1 / 24.0;
