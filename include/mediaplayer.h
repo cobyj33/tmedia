@@ -18,6 +18,12 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
+/**
+ * 
+ * Notes for use:
+ * 
+ * If both must be locked, ALWAYS lock the alter_mutex before the buffer_read_mutex
+*/
 class MediaPlayer {
   public:
     /**

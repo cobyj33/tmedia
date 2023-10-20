@@ -353,7 +353,8 @@ int main(int argc, char** argv)
         }
 
         {
-          std::lock_guard<std::mutex> lock(player.alter_mutex);
+          std::lock_guard<std::mutex> _alter_lock(player.alter_mutex);
+          std::lock_guard<std::mutex> _buffer_lock(player.buffer_read_mutex); //needed for jump_time
           const double current_system_time = system_clock_sec();
           frame = player.frame;
 

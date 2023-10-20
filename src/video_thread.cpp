@@ -74,9 +74,11 @@ void MediaPlayer::video_playback_thread() {
         
         double wait_duration = avg_frame_time_sec;
         std::vector<AVFrame*> decoded_frames;
+        double current_time = 0.0;
 
         {
           std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
+          current_time = this->get_time(system_clock_sec());
           decoded_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_VIDEO);
         }
 
@@ -99,7 +101,6 @@ void MediaPlayer::video_playback_thread() {
             const double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / this->clock.get_speed() ) );
             this->clock.skip(frame_speed_skip_time_sec);
 
-            const double current_time = this->get_time(system_clock_sec());
             wait_duration = frame_pts_time_sec - current_time + extra_delay - frame_speed_skip_time_sec;
           }
 
