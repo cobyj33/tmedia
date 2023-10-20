@@ -53,6 +53,8 @@ void ncurses_uninit() {
     throw std::runtime_error("ncurses attempted to be uninitialized although it has never been initialized");
   }
   ncurses_initialized = false;
+  erase();
+  refresh();
   ncurses_uninit_color();
   keypad(stdscr, false);
   nocbreak();
