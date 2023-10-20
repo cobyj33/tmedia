@@ -1,17 +1,13 @@
 #include "mediaplayer.h"
 
 #include "audio.h"
-#include "except.h"
 #include "sleep.h"
 #include "wtime.h"
 #include "wmath.h"
-#include "wminiaudio.h"
 
-#include <memory>
 #include <mutex>
 
 extern "C" {
-#include <miniaudio.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
@@ -29,56 +25,9 @@ const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 5;
 const int AUDIO_THREAD_ITERATION_SLEEP_MS = 5;
 const int MINIMUM_AUDIO_BUFFER_DEVICE_START_SIZE = 1024;
 
-/**
- * @brief The callback called by miniaudio once the connected audio device requests audio data
- * 
- * @param pDevice The miniaudio audio device representation
- * @param pOutput The memory buffer to write frameCount samples into
- * @param pInput Irrelevant for us :)
- * @param sampleCount The number of samples requested by miniaudio
- */
-void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
-{
-  MediaPlayer* player = (MediaPlayer*)(pDevice->pUserData);
-  std::lock_guard<std::mutex> mutex_lock_guard(player->buffer_read_mutex);
-
-  if (!player->clock.is_playing() || !player->audio_buffer->can_read(frameCount)) {
-    float* pFloatOutput = (float*)pOutput;
-    for (ma_uint32 i = 0; i < frameCount; i++) {
-      pFloatOutput[i] = 0.0001 * sin(0.10 * i);
-    }
-  } else if (player->audio_buffer->can_read(frameCount)) {
-    player->audio_buffer->read_into(frameCount, (float*)pOutput);
-  }
-
-  (void)pInput;
-}
-
 void MediaPlayer::audio_playback_thread() {
   try { // super try block :)
-
-    ma_device_config config = ma_device_config_init(ma_device_type_playback);
-    double START_TIME = 0.0;
-    double current_volume = this->volume;
-
-    {
-      std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
-      if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-        throw std::runtime_error("[MediaPlayer::audio_playback_thread] Cannot play audio playback, Audio stream could not be found");
-      }
-
-      config.playback.format  = ma_format_f32;
-      config.playback.channels = this->media_decoder->get_nb_channels();
-      config.sampleRate = this->media_decoder->get_sample_rate();       
-      config.dataCallback = audioDataCallback;   
-      config.pUserData = this;
-      START_TIME = this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO);
-    }
-
-    ma_device_w audio_device(nullptr, &config);
-    audio_device.start();
-    audio_device.set_volume(current_volume);
-    sleep_for_sec(START_TIME);
+    sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
     
     while (this->in_use) {
       if (!this->clock.is_playing()) {
@@ -120,11 +69,6 @@ void MediaPlayer::audio_playback_thread() {
           this->audio_buffer->leave_behind(RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS);
         }
 
-        // audio_device.sampleRate = this->media_decoder->get_sample_rate() * this->clock.get_speed();
-        if (current_volume != this->volume) {
-          audio_device.set_volume(this->volume);
-          current_volume = this->volume;
-        }
       }
 
       {

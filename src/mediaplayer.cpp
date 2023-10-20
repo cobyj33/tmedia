@@ -17,16 +17,9 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-MediaPlayer::MediaPlayer(const std::string& file_path, MediaGUI starting_media_gui) {
+MediaPlayer::MediaPlayer(const std::string& file_path) {
   this->file_path = file_path;
-  this->media_gui = starting_media_gui;
-
   this->in_use = false;
-  this->muted = false;
-  this->volume = 1.0;
-  
-  this->display_lines = 24;
-  this->display_cols = 80;
 
   std::set<enum AVMediaType> requested_stream_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
   this->media_decoder = std::move(std::make_unique<MediaDecoder>(file_path, requested_stream_types));
@@ -39,19 +32,6 @@ MediaPlayer::MediaPlayer(const std::string& file_path, MediaGUI starting_media_g
     this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate()));
     this->audio_buffer = std::move(std::make_unique<AudioBuffer>(this->media_decoder->get_nb_channels(), this->media_decoder->get_sample_rate()));
   }
-  
-}
-
-void MediaPlayer::set_current_frame(PixelData& data) {
-  this->frame = data;
-}
-
-void MediaPlayer::set_current_frame(AVFrame* frame) {
-  this->frame = frame;
-}
-
-PixelData& MediaPlayer::get_current_frame() {
-  return this->frame;
 }
 
 bool MediaPlayer::has_media_stream(enum AVMediaType media_type) const {
@@ -64,59 +44,6 @@ double MediaPlayer::get_duration() const {
 
 double MediaPlayer::get_time(double current_system_time) const {
   return this->clock.get_time(current_system_time);
-}
-
-bool MediaPlayer::has_error() {
-  return this->error.length() > 0;
-}
-
-std::string MediaPlayer::get_error() {
-  return this->error;
-}
-
-
-void MediaPlayer::start(double start_time) {
-  if (this->in_use) {
-    throw std::runtime_error("[MediaPlayer::start] Cannot use a MediaPlayer "
-    "that is already in use");
-  }
-  if (start_time < 0) {
-    throw std::runtime_error("[MediaPlayer::start] Cannot start a MediaPlayer "
-    "at a negative time ( got " + std::to_string(start_time) +  ")");
-  }
-  if (start_time > this->get_duration()) {
-    throw std::runtime_error("[MediaPlayer::start] Cannot start a MediaPlayer at"
-    "a time greater than the stream duration ( got " + std::to_string(start_time) +  
-    " seconds. Stream ends at " + std::to_string(this->get_duration()) + " seconds)");
-  }
-
-  this->in_use = true;
-
-  this->clock.start(system_clock_sec());
-  if (start_time != 0) {
-    this->jump_to_time(start_time, system_clock_sec());
-  }
-
-  std::thread audio_thread;
-  bool audio_thread_initialized = false;
-
-  std::thread video_thread(&MediaPlayer::video_playback_thread, this);
-  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    std::thread initialized_audio_thread(&MediaPlayer::audio_playback_thread, this);
-    audio_thread.swap(initialized_audio_thread);
-    audio_thread_initialized = true;
-  }
-
-  this->render_loop();
-  video_thread.join();
-  if (audio_thread_initialized) {
-    audio_thread.join();
-  }
-
-  if (this->clock.is_playing()) {
-    this->clock.stop(system_clock_sec());
-  }
-  this->in_use = false;
 }
 
 double MediaPlayer::get_desync_time(double current_system_time) const {

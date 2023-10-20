@@ -1,5 +1,6 @@
 #include "mediaplayer.h"
 
+#include "termenv.h"
 #include "audio.h"
 #include "audio_image.h"
 #include "sleep.h"
@@ -84,7 +85,7 @@ void MediaPlayer::video_playback_thread() {
 
           {
             std::lock_guard<std::mutex> lock(this->alter_mutex);
-            this->set_current_frame(frame_image);
+            this->frame = frame_image;
 
             #if HAS_AVFRAME_DURATION
             const double frame_duration = (double)frame_image->duration * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
@@ -133,7 +134,7 @@ void MediaPlayer::video_playback_thread() {
 
         std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
         audio_bound_volume(mono, 1, 1.0);
-        std::pair<int, int> output_size = get_bounded_dimensions(this->display_cols, this->display_lines, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+        std::pair<int, int> output_size = get_bounded_dimensions(TERM_COLS, TERM_LINES, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
         int display_rows = output_size.second;
         int display_cols = output_size.first;
 
