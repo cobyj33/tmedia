@@ -82,8 +82,7 @@ set(COMMON_SOURCE_FILES
 ./src/mediadecoder.cpp
 ./src/mediatype.cpp
 ./src/pixeldata.cpp
-./src/scale.cpp
-./src/gui.cpp)
+./src/scale.cpp)
 
 set(TEST_SOURCE_FILES
 ./src/tests/test_audiobuffer.cpp

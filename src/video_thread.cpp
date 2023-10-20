@@ -1,6 +1,7 @@
 #include "mediaplayer.h"
 
 #include "termenv.h"
+#include "decode.h"
 #include "audio.h"
 #include "audio_image.h"
 #include "sleep.h"
@@ -67,15 +68,15 @@ void MediaPlayer::video_playback_thread() {
       }
 
       while (this->in_use) {
+        if (!this->clock.is_playing()) {
+          continue;
+        }
+        
         double wait_duration = avg_frame_time_sec;
         std::vector<AVFrame*> decoded_frames;
 
         {
           std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
-          if (!this->clock.is_playing()) {
-            continue;
-          }
-
           decoded_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_VIDEO);
         }
 

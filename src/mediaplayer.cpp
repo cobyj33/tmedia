@@ -1,6 +1,7 @@
 
 #include "mediaplayer.h"
 
+#include "decode.h"
 #include "wtime.h"
 #include "wmath.h"
 #include "formatting.h"

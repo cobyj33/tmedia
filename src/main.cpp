@@ -3,7 +3,6 @@
 #include "wtime.h"
 #include "mediaplayer.h"
 #include "formatting.h"
-#include "gui.h"
 #include "version.h"
 #include "avguard.h"
 #include "avcurses.h"
@@ -13,6 +12,7 @@
 #include "wminiaudio.h"
 #include "sleep.h"
 #include "wmath.h"
+#include "boiler.h"
 
 #include <cstdlib>
 #include <cstdio>
@@ -41,6 +41,13 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
+enum class VideoOutputMode {
+  COLORED,
+  GRAYSCALE,
+  COLORED_BACKGROUND_ONLY,
+  GRAYSCALE_BACKGROUND_ONLY,
+  TEXT_ONLY,
+};
 
 void render_movie_screen(PixelData& pixel_data, VideoOutputMode media_gui);
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);

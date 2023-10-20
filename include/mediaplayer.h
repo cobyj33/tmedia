@@ -1,18 +1,14 @@
 #ifndef ASCII_VIDEO_MEDIA
 #define ASCII_VIDEO_MEDIA
 
-#include "decode.h"
-#include "boiler.h"
-#include "gui.h"
 #include "mediaclock.h"
 #include "pixeldata.h"
 #include "mediadecoder.h"
 #include "audiobuffer.h"
 #include "audioresampler.h"
 
-#include <memory> // std::unique_ptr
+#include <memory>
 #include <string>
-#include <deque>
 #include <mutex>
 #include <atomic>
 
