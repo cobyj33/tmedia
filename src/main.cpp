@@ -442,28 +442,6 @@ int main(int argc, char** argv)
               }
             }
 
-            if (input == KEY_LEFT) {
-              fetcher.jump_to_time(clamp(fetcher.get_time(current_system_time) - 5.0, 0.0, fetcher.get_duration()), current_system_time);
-            }
-
-            if (input == KEY_RIGHT) {
-              fetcher.jump_to_time(clamp(fetcher.get_time(current_system_time) + 5.0, 0.0, fetcher.get_duration()), current_system_time);
-            }
-
-            if (input == KEY_UP) {
-              volume = clamp(volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-              if (audio_device) {
-                audio_device->set_volume(volume);
-              }
-            }
-
-            if (input == KEY_DOWN) {
-              volume = clamp(volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-              if (audio_device) {
-                audio_device->set_volume(volume);
-              }
-            }
-
             if (input == 'n' || input == 'N') {
               fetcher.in_use = false;
             }
@@ -471,6 +449,24 @@ int main(int argc, char** argv)
             if (input == 'p' || input == 'P') {
               next_file = current_file == 0 ? 0 : current_file - 1;
               fetcher.in_use = false;
+            }
+
+            if (input == KEY_UP && audio_device) {
+              volume = clamp(volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
+              audio_device->set_volume(volume);
+            }
+
+            if (input == KEY_DOWN && audio_device) {
+              volume = clamp(volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
+              audio_device->set_volume(volume);
+            }
+
+            if (input == KEY_LEFT && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+              fetcher.jump_to_time(clamp(fetcher.get_time(current_system_time) - 5.0, 0.0, fetcher.get_duration()), current_system_time);
+            }
+
+            if (input == KEY_RIGHT && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+              fetcher.jump_to_time(clamp(fetcher.get_time(current_system_time) + 5.0, 0.0, fetcher.get_duration()), current_system_time);
             }
 
             if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
