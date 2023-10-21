@@ -21,7 +21,7 @@ std::string media_type_to_string(MediaType media_type) {
 
 MediaType media_type_from_avformat_context(AVFormatContext* format_context) {
   std::vector<std::string> image_formats{"image2", "png_pipe", "webp_pipe"};
-  std::vector<std::string> audio_formats{"wav", "ogg", "mp3"};
+  std::vector<std::string> audio_formats{"wav", "ogg", "mp3", "flac"};
   for (std::size_t i = 0; i < image_formats.size(); i++) {
     if (strcmp(format_context->iformat->name, image_formats[i].c_str()) == 0) {
       return MediaType::IMAGE;
