@@ -32,5 +32,10 @@ TEST_CASE("mediaclock", "[mediaclock]") {
       REQUIRE(clock.get_time(MOCK_SYSTEM_START_TIME + 20) == 10); //Time should be the same after 20 second pause
     }
 
+    SECTION("Get Time in Pause") {
+      clock.stop(MOCK_SYSTEM_START_TIME + 10);
+      REQUIRE(clock.get_time(MOCK_SYSTEM_START_TIME + 20) == 10); //calling 
+    }
+
   }
 }

@@ -54,9 +54,6 @@ void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 
 bool INTERRUPT_RECEIVED = false;
-std::atomic<unsigned int> TERM_LINES = 24;
-std::atomic<unsigned int> TERM_COLS = 80;
-
 const int KEY_ESCAPE = 27;
 const double VOLUME_CHANGE_AMOUNT = 0.05;
 

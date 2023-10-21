@@ -82,6 +82,7 @@ set(COMMON_SOURCE_FILES
 ./src/mediadecoder.cpp
 ./src/mediatype.cpp
 ./src/pixeldata.cpp
+./src/termenv.cpp
 ./src/scale.cpp)
 
 set(TEST_SOURCE_FILES

@@ -71,6 +71,9 @@ void MediaClock::change_speed(double offset) {
 };
 
 double MediaClock::get_time(double current_system_time) const {
-  return current_system_time - this->m_start_time - this->m_paused_time + this->m_skipped_time;
+  switch (this->m_playing) {
+    case true: return current_system_time - this->m_start_time - this->m_paused_time + this->m_skipped_time;
+    case false: return this->m_last_pause_system_time - this->m_start_time - this->m_paused_time + this->m_skipped_time;
+  }
 };
 
