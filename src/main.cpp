@@ -97,6 +97,7 @@ int main(int argc, char** argv)
 
   std::signal(SIGINT, interrupt_handler);
 	std::signal(SIGTERM, interrupt_handler);
+	std::signal(SIGABRT, interrupt_handler);
 
   std::vector<std::string> files;
   std::size_t current_file = 0;
@@ -545,11 +546,12 @@ int main(int argc, char** argv)
     }
 
     if (fetcher.error.length() > 0) {
-      std::cerr << "[ascii_video]: Media Fetcher Error: " << fetcher.error << std::endl;
       ncurses_uninit();
+      std::cerr << "[ascii_video]: Media Fetcher Error: " << fetcher.error << std::endl;
       return EXIT_FAILURE;
     }
 
+    erase();
     current_file = next_file;
   } // !INTERRUPT_RECEIVED && current_file < files.size()
 
