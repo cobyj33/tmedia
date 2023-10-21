@@ -22,7 +22,7 @@ extern "C" {
  * 
  * Notes for use:
  * 
- * If both must be locked, ALWAYS lock the alter_mutex before the buffer_read_mutex
+ * If both must be locked, ALWAYS lock the alter_mutex before the audio_buffer_mutex
 */
 class MediaFetcher {
   public:
@@ -35,7 +35,7 @@ class MediaFetcher {
     PixelData frame;
     std::string error;
     std::mutex alter_mutex;
-    std::mutex buffer_read_mutex;
+    std::mutex audio_buffer_mutex;
     MediaClock clock;
     std::string file_path;
     std::atomic<bool> in_use;

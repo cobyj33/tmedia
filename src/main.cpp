@@ -350,10 +350,14 @@ int main(int argc, char** argv)
           break;
         }
 
+        double requested_jump_time = 0.0;
+        bool requested_jump = false;
+
         {
           std::lock_guard<std::mutex> _alter_lock(fetcher.alter_mutex);
-          std::lock_guard<std::mutex> _buffer_lock(fetcher.buffer_read_mutex); //needed for jump_time
+          // std::lock_guard<std::mutex> _buffer_lock(fetcher.audio_buffer_mutex); jump time calls are now handled outside of input loop
           const double current_system_time = system_clock_sec();
+          requested_jump_time = fetcher.get_time(current_system_time);
           frame = fetcher.frame;
 
           if (fetcher.media_type != MediaType::IMAGE && fetcher.get_time(current_system_time) >= fetcher.get_duration()) {
@@ -458,65 +462,95 @@ int main(int argc, char** argv)
               audio_device->set_volume(volume);
             }
 
-            if (input == KEY_LEFT && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(clamp(fetcher.get_time(current_system_time) - 5.0, 0.0, fetcher.get_duration()), current_system_time);
-            }
-
-            if (input == KEY_RIGHT && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(clamp(fetcher.get_time(current_system_time) + 5.0, 0.0, fetcher.get_duration()), current_system_time);
-            }
-
-            if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.clock.toggle(current_system_time);
-            }
-
             if (input == 'm' || input == 'M') {
               muted = !muted;
             }
 
+            if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+              switch (fetcher.clock.is_playing()) {
+                case true:  {
+                  if (audio_device) audio_device->stop();
+                  fetcher.clock.stop(current_system_time);
+                } break;
+                case false: {
+                  if (audio_device) audio_device->start();
+                  fetcher.clock.resume(current_system_time);
+                } break;
+              }
+            }
+
+            if (input == KEY_LEFT && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+              requested_jump = true;
+              requested_jump_time -= 5.0;
+            }
+
+            if (input == KEY_RIGHT && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+              requested_jump = true;
+              requested_jump_time += 5.0;
+            }
+
             if (input == '0'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(0.0, current_system_time);
+              requested_jump = true;
+              requested_jump_time = 0.0;
             }
 
             if (input == '1'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(fetcher.get_duration() * 1.0 / 10.0, current_system_time);
+              requested_jump = true;
+              requested_jump_time = fetcher.get_duration() * 1.0 / 10.0;
             }
 
             if (input == '2'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(fetcher.get_duration() * 2.0 / 10.0, current_system_time);
+              requested_jump = true;
+              requested_jump_time = fetcher.get_duration() * 2.0 / 10.0;
             }
 
             if (input == '3'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(fetcher.get_duration() * 3.0 / 10.0, current_system_time);
+              requested_jump = true;
+              requested_jump_time = fetcher.get_duration() * 3.0 / 10.0;
             }
 
             if (input == '4'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(fetcher.get_duration() * 4.0 / 10.0, current_system_time);
+              requested_jump = true;
+              requested_jump_time = fetcher.get_duration() * 4.0 / 10.0;
             }
 
             if (input == '5'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(fetcher.get_duration() * 5.0 / 10.0, current_system_time);
+              requested_jump = true;
+              requested_jump_time = fetcher.get_duration() * 5.0 / 10.0;
             }
 
             if (input == '6'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(fetcher.get_duration() * 6.0 / 10.0, current_system_time);
+              requested_jump = true;
+              requested_jump_time = fetcher.get_duration() * 6.0 / 10.0;
             }
 
             if (input == '7'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(fetcher.get_duration() * 7.0 / 10.0, current_system_time);
+              requested_jump = true;
+              requested_jump_time = fetcher.get_duration() * 7.0 / 10.0;
             }
 
             if (input == '8'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(fetcher.get_duration() * 8.0 / 10.0, current_system_time);
+              requested_jump = true;
+              requested_jump_time = fetcher.get_duration() * 8.0 / 10.0;
             }
 
             if (input == '9'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              fetcher.jump_to_time(fetcher.get_duration() * 9.0 / 10.0, current_system_time);
+              requested_jump = true;
+              requested_jump_time = fetcher.get_duration() * 9.0 / 10.0;
             }
 
             input = getch();
           } // Ending of "while (input != ERR)"
+        } // end of locked context
 
+        if (requested_jump) {
+          if (audio_device) audio_device->stop();
+          {
+            std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex);
+            std::lock_guard<std::mutex> buffer_lock(fetcher.audio_buffer_mutex);
+            fetcher.jump_to_time(clamp(requested_jump_time, 0.0, fetcher.get_duration()), system_clock_sec());
+          }
+          if (audio_device) audio_device->start();
         }
 
         render_movie_screen(frame, vom);
@@ -564,7 +598,7 @@ int main(int argc, char** argv)
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
   MediaFetcher* fetcher = (MediaFetcher*)(pDevice->pUserData);
-  std::lock_guard<std::mutex> mutex_lock_guard(fetcher->buffer_read_mutex);
+  std::lock_guard<std::mutex> mutex_lock_guard(fetcher->audio_buffer_mutex);
 
   if (!fetcher->clock.is_playing() || !fetcher->audio_buffer->can_read(frameCount)) {
     float* pFloatOutput = (float*)pOutput;

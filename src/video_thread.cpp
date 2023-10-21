@@ -131,7 +131,7 @@ void MediaFetcher::video_fetching_thread() {
 
           {
             std::lock_guard<std::mutex> player_lock(this->alter_mutex);
-            std::lock_guard<std::mutex> buffer_read_lock(this->buffer_read_mutex);
+            std::lock_guard<std::mutex> buffer_read_lock(this->audio_buffer_mutex);
 
             std::size_t to_peek = std::min(this->audio_buffer->get_nb_can_read(), AUDIO_PEEK_SIZE);
             if (to_peek == 0) {

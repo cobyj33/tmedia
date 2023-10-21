@@ -44,7 +44,7 @@ void MediaFetcher::audio_fetching_thread() {
           break;
         }
 
-        std::lock_guard<std::mutex> lock(this->buffer_read_mutex);
+        std::lock_guard<std::mutex> lock(this->audio_buffer_mutex);
 
         if (this->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) { // desync handling
           if (this->audio_buffer->is_time_in_bounds(target_resync_time)) {
@@ -75,7 +75,7 @@ void MediaFetcher::audio_fetching_thread() {
         std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
         if (!this->audio_buffer->can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
           for (int i = 0; i < AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT; i++) {
-            std::lock_guard<std::mutex> lock(this->buffer_read_mutex);
+            std::lock_guard<std::mutex> lock(this->audio_buffer_mutex);
             this->load_next_audio();
           }
         }
