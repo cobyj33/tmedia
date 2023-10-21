@@ -329,7 +329,7 @@ int main(int argc, char** argv)
     }
 
     fetcher.in_use = true;
-    fetcher.clock.start(system_clock_sec());
+    fetcher.clock.init(system_clock_sec());
     std::thread video_thread(&MediaFetcher::video_fetching_thread, &fetcher);
     std::thread audio_thread;
     bool audio_thread_initialized = false;

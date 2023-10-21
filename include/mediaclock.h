@@ -30,12 +30,12 @@ class MediaClock {
     void toggle(double current_system_time);
 
     /**
-     * @brief 
-     * @note **Do not use the start function if you are simply trying to resume the clock stream, use the resume function instead**. The start function assumes that the clock is beginning one again at the specified time
+     * @note **Do not use the init function if you are simply trying to resume the clock stream, use the resume function instead**.
+     * The init function assumes that the clock is beginning once again at the specified time
      * 
      * @param current_system_time 
      */
-    void start(double current_system_time);
+    void init(double current_system_time);
     void stop(double current_system_time);
 
     /**

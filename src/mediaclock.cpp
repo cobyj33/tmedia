@@ -22,7 +22,7 @@ void MediaClock::skip(double seconds_to_skip) {
   this->m_skipped_time += seconds_to_skip;
 };
 
-void MediaClock::start(double current_system_time) {
+void MediaClock::init(double current_system_time) {
   if (this->is_playing()) {
     throw std::runtime_error("[MediaClock::start] Cannot start while playback is already playing");
   }
