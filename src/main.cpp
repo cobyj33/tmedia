@@ -323,7 +323,7 @@ int main(int argc, char** argv)
       config.dataCallback = audioDataCallback;   
       config.pUserData = &fetcher;
 
-      audio_device = std::make_unique<ma_device_w>(nullptr, &config);
+      audio_device = std::make_unique<ma_device_w>(&config);
       audio_device->start();
       audio_device->set_volume(volume);
     }

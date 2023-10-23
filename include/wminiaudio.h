@@ -8,16 +8,14 @@ extern "C" {
 class ma_device_w {
   private: 
     ma_device device;
-
-    ma_context* pContext;
-    const ma_device_config *pConfig;
+    ma_device_config config_cache;
 
   public:
-    ma_device_w(ma_context *pContext, const ma_device_config *pConfig);
+    ma_device_w(const ma_device_config *pConfig);
 
     void start();
     void stop();
-    ma_device_state get_state();
+    // ma_device_state get_state();
 
     void set_volume(double volume);
 
