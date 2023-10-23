@@ -13,6 +13,9 @@
 #include <vector>
 
 #include "color.h"
+extern "C" {
+  #include <curses.h>
+}
 
 typedef short curses_color_pair_t;
 typedef short curses_color_t;
@@ -26,7 +29,11 @@ void ncurses_init();
 bool ncurses_is_initialized();
 void ncurses_uninit();
 
-
+void wprintw_center(WINDOW* window, int row, int col, int width, const char* format, ...);
+void wprintw_left(WINDOW* window, int y, int x, int width, const char* format, ...);
+void wprintw_right(WINDOW* window, int y, int x, int width, const char* format, ...);
+void wfill_box(WINDOW* window, int y, int x, int width, int height, char ch);
+void werasebox(WINDOW* window, int y, int x, int width, int height);
 
 /**
  * @brief Initialize ncurses's color palette for a given enum

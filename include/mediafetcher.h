@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_MEDIA
-#define ASCII_VIDEO_MEDIA
+#ifndef ASCII_VIDEO_MEDIA_FETCHER_H
+#define ASCII_VIDEO_MEDIA_FETCHER_H
 
 #include "mediaclock.h"
 #include "pixeldata.h"

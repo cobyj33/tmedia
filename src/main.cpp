@@ -13,6 +13,7 @@
 #include "sleep.h"
 #include "wmath.h"
 #include "boiler.h"
+#include "asv_string.h"
 
 #include <cstdlib>
 #include <cstdio>
@@ -49,7 +50,7 @@ enum class VideoOutputMode {
   TEXT_ONLY,
 };
 
-void render_movie_screen(PixelData& pixel_data, VideoOutputMode media_gui);
+void render_movie_screen(PixelData& pixel_data, VideoOutputMode media_gui, const std::string& current_file);
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 
@@ -307,13 +308,6 @@ int main(int argc, char** argv)
     MediaFetcher fetcher(files[current_file]);
     std::unique_ptr<ma_device_w> audio_device;
     std::size_t next_file = current_file + 1;
-    
-    // switch (loop_type) {
-    //   case LoopType::NO_LOOP: next_file = current_file + 1; break;
-    //   case LoopType::REPEAT: next_file = current_file + 1 > files.size() ? 0 : current_file + 1; break;
-    //   case LoopType::REPEAT_ONE: next_file = current_file; break;
-    //   default: throw std::runtime_error("[ascii_video] Unimplemented Looping Type");
-    // }
 
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
       ma_device_config config = ma_device_config_init(ma_device_type_playback);
@@ -338,9 +332,9 @@ int main(int argc, char** argv)
       audio_thread.swap(initialized_audio_thread);
       audio_thread_initialized = true;
     }
-    PixelData frame;
     
     try {
+      PixelData frame;
       while (fetcher.in_use) { // never break without setting in_use to false
         TERM_COLS = COLS;
         TERM_LINES = LINES;
@@ -553,7 +547,7 @@ int main(int argc, char** argv)
           if (audio_device && fetcher.clock.is_playing()) audio_device->start();
         }
 
-        render_movie_screen(frame, vom);
+        render_movie_screen(frame, vom, files[current_file]);
         refresh();
         sleep_for_ms(RENDER_LOOP_SLEEP_TIME_MS);
       }
@@ -587,6 +581,7 @@ int main(int argc, char** argv)
 }
 
 
+
 // /**
 //  * @brief The callback called by miniaudio once the connected audio device requests audio data
 //  * 
@@ -612,8 +607,20 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
   (void)pInput;
 }
 
-void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode) {
+void render_fullscreen(PixelData& pixel_data, VideoOutputMode output_mode) {
   print_pixel_data(pixel_data, 0, 0, COLS, LINES, output_mode);
+}
+
+void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode, const std::string& current_file_name) {
+  if (LINES < 10) {
+    render_fullscreen(pixel_data, output_mode);
+    return;
+  }
+
+  print_pixel_data(pixel_data, 2, 0, COLS, LINES - 4, output_mode);
+  wfill_box(stdscr, 1, 0, COLS, 1, '~');
+  wfill_box(stdscr, LINES - 1, 0, COLS, 1, '~');
+  wprintw_center(stdscr, 0, 0, COLS, current_file_name.c_str());
 }
 
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode) {
