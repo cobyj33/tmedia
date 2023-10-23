@@ -18,10 +18,7 @@
 #include <functional>
 
 extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/avutil.h>
-#include <libswscale/swscale.h>
+  #include <libavutil/frame.h>
 }
 
 // Accepts empty matrices
@@ -174,62 +171,6 @@ bool PixelData::equals(const PixelData& pix_data) const {
 
 const RGBColor& PixelData::at(int row, int col) const {
   return this->pixels[row * this->m_width + col];
-}
-
-PixelData::PixelData(const char* file_name) {
-  AVFormatContext* format_context;
-  format_context = open_format_context(std::string(file_name));
-
-  std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> stream_decoders = get_stream_decoders(format_context);
-
-  if (!(stream_decoders.count(AVMEDIA_TYPE_VIDEO) == 1)) {
-    throw std::runtime_error("[PixelData::PixelData(const char* file_name)] Could not fetch image of file " + std::string(file_name));
-  }
-  
-  StreamDecoder& imageStream = *(stream_decoders.at(AVMEDIA_TYPE_VIDEO));
-
-  AVCodecContext* codec_context = imageStream.get_codec_context();
-  VideoConverter image_converter(
-      codec_context->width, codec_context->height, AV_PIX_FMT_RGB24,
-      codec_context->width, codec_context->height, codec_context->pix_fmt
-      );
-  AVPacket* packet = av_packet_alloc();
-  AVFrame* final_frame = NULL;
-
-  std::vector<AVFrame*> original_frame_container;
-
-  while (av_read_frame(format_context, packet) == 0) {
-
-    if (packet->stream_index != imageStream.get_stream_index()) {
-      continue;
-    }
-
-    try {
-      original_frame_container = decode_video_packet(codec_context, packet);
-      final_frame = image_converter.convert_video_frame(original_frame_container[0]);
-      clear_av_frame_list(original_frame_container);
-    } catch (ascii::ffmpeg_error const& e) {
-      if (e.get_averror() == AVERROR(EAGAIN)) {
-        continue;
-      } else {
-        av_packet_free((AVPacket**)&packet);
-        av_frame_free((AVFrame**)&final_frame);
-        throw ascii::ffmpeg_error("ERROR WHILE READING PACKET DATA FROM IMAGE FILE: " + std::string(file_name), e.get_averror());
-      }
-    }
-
-  }
-
-  this->pixels.reserve(final_frame->width * final_frame->height * 3);
-  this->m_height = final_frame->height;
-  this->m_width = final_frame->width;
-  for (int i = 0; i < final_frame->width * final_frame->height; i++) {
-    this->pixels.push_back(RGBColor( final_frame->data[0][i * 3], final_frame->data[0][i * 3 + 1], final_frame->data[0][i * 3 + 2] ));
-  }
-
-  av_packet_free((AVPacket**)&packet);
-  av_frame_free((AVFrame**)&final_frame);
-  avformat_free_context(format_context);
 }
 
 RGBColor PixelData::get_avg_color_from_area(int row, int col, int width, int height) const {

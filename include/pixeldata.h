@@ -30,7 +30,6 @@ class PixelData {
     // PixelData(std::vector<uint8_t>& raw_grayscale_data, int width, int height);
     PixelData(int width, int height);
     PixelData(AVFrame* video_frame);
-    PixelData(const char* file_name);
     PixelData(const PixelData& pix_data);
     
     void operator=(const PixelData& pix_data);
