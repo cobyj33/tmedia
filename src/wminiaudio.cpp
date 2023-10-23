@@ -33,6 +33,7 @@ ma_device_w::ma_device_w(const ma_device_config *pConfig) {
     throw std::runtime_error("[ma_device_w::ma_device_w] Failed to initialize audio device: " + std::string(ma_result_description(log)));
   }
   this->config_cache = *pConfig;
+  this->volume_cache = 1.0;
 }
 
 // void ma_device_w::start() {
@@ -56,6 +57,7 @@ void ma_device_w::start() {
     if (log != MA_SUCCESS) {
       throw std::runtime_error("[ma_device_w::start] Failed to reinitialize audio device: " + std::string(ma_result_description(log)));
     }
+    this->set_volume(this->volume_cache);
   }
 
   ma_result log = ma_device_start(&this->device);
@@ -77,7 +79,9 @@ void ma_device_w::stop() {
 // }
 
 void ma_device_w::set_volume(double volume) {
-  ma_device_set_master_volume(&this->device, clamp(volume, 0.0, 1.0));
+  double clamped_volume = clamp(volume, 0.0, 1.0);
+  ma_device_set_master_volume(&this->device, clamped_volume);
+  this->volume_cache = clamped_volume;
 }
 
 ma_device_w::~ma_device_w() {

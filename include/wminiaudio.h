@@ -9,6 +9,7 @@ class ma_device_w {
   private: 
     ma_device device;
     ma_device_config config_cache;
+    double volume_cache;
 
   public:
     ma_device_w(const ma_device_config *pConfig);
