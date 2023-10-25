@@ -34,13 +34,15 @@ extern "C" {
  *  processed. 
 */
 
+
+
 void MediaFetcher::video_fetching_thread() {
   const int PIXEL_ASPECT_RATIO_WIDTH = 2; // account for non-square shape of terminal characters
   const int PIXEL_ASPECT_RATIO_HEIGHT = 5;
   const double PIXEL_ASPECT_RATIO = (double)PIXEL_ASPECT_RATIO_WIDTH / (double)PIXEL_ASPECT_RATIO_HEIGHT;
 
-  const int MAX_FRAME_ASPECT_RATIO_WIDTH = 16;
-  const int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9;
+  const int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PIXEL_ASPECT_RATIO_HEIGHT;
+  const int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PIXEL_ASPECT_RATIO_WIDTH;
   const double MAX_FRAME_ASPECT_RATIO = (double)MAX_FRAME_ASPECT_RATIO_WIDTH / (double)MAX_FRAME_ASPECT_RATIO_HEIGHT;
 
 
