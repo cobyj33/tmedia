@@ -1,5 +1,3 @@
-#include "termenv.h"
-
 #include "wtime.h"
 #include "mediafetcher.h"
 #include "formatting.h"
@@ -109,7 +107,7 @@ int main(int argc, char** argv)
   double volume = 1.0;
   bool muted = false;
   VideoOutputMode vom  = VideoOutputMode::TEXT_ONLY;
-  // LoopType loop_type = LoopType::NO_LOOP;
+  LoopType loop_type = LoopType::NO_LOOP;
   
 	// std::signal(SIGQUIT, ascii_video_signal_handler); I don't know if I should handle this,
   // as I'd want quitting if ascii_video does happen to actually break
@@ -320,7 +318,7 @@ int main(int argc, char** argv)
   while (!INTERRUPT_RECEIVED && !full_exit && current_file < files.size()) {
     MediaFetcher fetcher(files[current_file]);
     std::unique_ptr<ma_device_w> audio_device;
-    std::size_t next_file = current_file + 1;
+    int next_file = playback_get_next(current_file, files.size(), loop_type);
 
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
       ma_device_config config = ma_device_config_init(ma_device_type_playback);
@@ -340,8 +338,6 @@ int main(int argc, char** argv)
     try {
       PixelData frame;
       while (fetcher.in_use) { // never break without setting in_use to false
-        TERM_COLS = COLS;
-        TERM_LINES = LINES;
 
         if (INTERRUPT_RECEIVED) {
           fetcher.in_use = false;
@@ -443,12 +439,28 @@ int main(int argc, char** argv)
               }
             }
 
+
+            if (input == 'l' || input == 'L') {
+              switch (loop_type) {
+                case LoopType::NO_LOOP: loop_type = LoopType::REPEAT; break;
+                case LoopType::REPEAT: loop_type = LoopType::REPEAT_ONE; break;
+                case LoopType::REPEAT_ONE: loop_type = LoopType::NO_LOOP; break;
+              }
+              next_file = playback_get_next(current_file, files.size(), loop_type);
+            }
+
             if (input == 'n' || input == 'N') {
+              if (loop_type == LoopType::REPEAT_ONE) {
+                loop_type = LoopType::REPEAT;
+                next_file = playback_get_next(current_file, files.size(), loop_type);
+              }
               fetcher.in_use = false;
             }
 
             if (input == 'p' || input == 'P') {
-              next_file = current_file == 0 ? 0 : current_file - 1;
+              if (loop_type == LoopType::REPEAT_ONE)
+                loop_type = LoopType::REPEAT;
+              next_file = playback_get_previous(current_file, files.size(), loop_type);
               fetcher.in_use = false;
             }
 
@@ -568,14 +580,17 @@ int main(int argc, char** argv)
           wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
 
           wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
-          wprintw_center(stdscr, 0, 0, COLS, std::filesystem::path(files[current_file]).filename().c_str());
+          mvwprintw_center(stdscr, 0, 0, COLS, std::filesystem::path(files[current_file]).filename().c_str());
 
-          int section_size = COLS / 4;
+          const std::string loop_str = str_capslock(loop_type_to_string(loop_type)); 
+          const std::string playing_str = fetcher.clock.is_playing() ? "PLAYING" : "PAUSED";
+          const std::string volume_str = "VOLUME: " +  std::to_string((int)(volume * 100)) + "%";
+
+          int section_size = COLS / 3;
           werasebox(stdscr, LINES - 1, 0, COLS, 1);
-          wprintw_center(stdscr, LINES - 1, 0, section_size, fetcher.clock.is_playing() ? "PLAYING" : "PAUSED");
-          wprintw_center(stdscr, LINES - 1, section_size, section_size, "NOT LOOPED");
-          wprintw_center(stdscr, LINES - 1, section_size * 2, section_size, "NOT SHUFFLING");
-          wprintw_center(stdscr, LINES - 1, section_size * 3, section_size, "VOLUME: %d%%", (int)(volume * 100));
+          mvwaddstr_center(stdscr, LINES - 1, 0, section_size, playing_str.c_str());
+          mvwaddstr_center(stdscr, LINES - 1, section_size, section_size, loop_str.c_str());
+          mvwaddstr_center(stdscr, LINES - 1, section_size * 2, section_size, volume_str.c_str());
         }
 
 
@@ -648,7 +663,7 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in
   std::string formatted_passed_time = format_duration(time_in_seconds);
   std::string formatted_duration = format_duration(duration_in_seconds);
   std::string current_time_string = formatted_passed_time + " / " + formatted_duration;
-  wprintw_left(window, y, x, width, current_time_string.c_str());
+  mvwprintw_left(window, y, x, width, current_time_string.c_str());
 
   int progress_bar_width = width - current_time_string.length() - PADDING_BETWEEN_ELEMENTS;
 
@@ -665,7 +680,7 @@ void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode, con
   print_pixel_data(pixel_data, 2, 0, COLS, LINES - 4, output_mode);
   wfill_box(stdscr, 1, 0, COLS, 1, '~');
   wfill_box(stdscr, LINES - 1, 0, COLS, 1, '~');
-  wprintw_center(stdscr, 0, 0, COLS, current_file_name.c_str());
+  mvwprintw_center(stdscr, 0, 0, COLS, current_file_name.c_str());
 }
 
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode) {

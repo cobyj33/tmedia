@@ -6,7 +6,8 @@
 #include <cstddef>
 
 std::string str_bound(const std::string& str, std::size_t max_size);
-std::string vsnprintf_str(const char* format, va_list args);
-std::string snprintf_str(const char* format, ...);
+std::string vsprintf_str(const char* format, va_list args);
+std::string sprintf_str(const char* format, ...);
+std::string str_capslock(const std::string& str);
 
 #endif

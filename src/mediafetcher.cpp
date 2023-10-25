@@ -109,6 +109,7 @@ void MediaFetcher::begin() {
 }
 
 void MediaFetcher::join() {
+  this->in_use = false; // the user can set this as well if they want, but this is to make sure that the threads WILL end regardless
   this->video_thread.join();
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     this->audio_thread.join();

@@ -82,9 +82,9 @@ set(COMMON_SOURCE_FILES
 ./src/mediadecoder.cpp
 ./src/mediatype.cpp
 ./src/pixeldata.cpp
-./src/termenv.cpp
 ./src/asv_string.cpp
 ./src/avcurses_print.cpp
+./src/looptype.cpp
 ./src/scale.cpp)
 
 set(TEST_SOURCE_FILES

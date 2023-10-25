@@ -29,7 +29,7 @@ void MediaClock::init(double current_system_time) {
 
   this->m_playing = true;
   this->m_start_time = current_system_time;
-
+  this->m_speed = 1.0;
   this->m_skipped_time = 0.0;
   this->m_paused_time = 0.0;
 };

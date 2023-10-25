@@ -8,43 +8,49 @@ extern "C" {
 #include <cstdarg>
 #include <string>
 
-void wprintw_center(WINDOW* window, int row, int col, int width, const char* format, ...) {
+void mvwaddstr_center(WINDOW* window, int row, int col, int width, const std::string& str) {
   int center_col = col + width / 2;
+  std::string bounded_str = str_bound(str, width);
+  wmove(window, row, center_col - bounded_str.length() / 2);
+  waddstr(window, bounded_str.c_str());
+}
+
+void mvwaddstr_left(WINDOW* window, int row, int col, int width, const std::string& str) {
+  std::string bounded_str = str_bound(str, width);
+  wmove(window, row, col);
+  waddstr(window, bounded_str.c_str());
+}
+
+void mvwaddstr_right(WINDOW* window, int row, int col, int width, const std::string& str) {
+  std::string bounded_str = str_bound(str, width);
+  int move_col = col + width - bounded_str.length();
+  wmove(window, row, move_col);
+  waddstr(window, bounded_str.c_str());
+}
+
+void mvwprintw_center(WINDOW* window, int row, int col, int width, const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+  std::string str = vsprintf_str(format, args);
+  mvwaddstr_center(window, row, col, width, str);
+  va_end(args);
+}
+
+void mvwprintw_left(WINDOW* window, int row, int col, int width, const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+  std::string str = vsprintf_str(format, args);
+  mvwaddstr_left(window, row, col, width, str);
+  va_end(args);
+}
+
+void mvwprintw_right(WINDOW* window, int row, int col, int width, const char* format, ...) {
   va_list args;
   va_start(args, format);
 
-  std::string str = vsnprintf_str(format, args);
-  str = str_bound(str, width);
-  wmove(window, row, center_col - str.length() / 2);
-  waddstr(window, str.c_str());
+  std::string str = vsprintf_str(format, args);
+  mvwaddstr_right(window, row, col, width, str);
   
-  va_end(args);
-}
-
-void wprintw_left(WINDOW* window, int y, int x, int width, const char* format, ...) {
-  va_list args;
-  va_start(args, format);
-
-  std::string str = vsnprintf_str(format, args);
-  str = str_bound(str, width);
-  wmove(window, y, x);
-  waddstr(window, str.c_str());
-
-  va_end(args);
-}
-
-void wprintw_right(WINDOW* window, int y, int x, int width, const char* format, ...) {
-  va_list args;
-  va_start(args, format);
-
-  std::string str = vsnprintf_str(format, args);
-  str = str_bound(str, width);
-
-  int move_x = x + width - str.length();
-
-  wmove(window, y, move_x);
-  waddstr(window, str.c_str());
-
   va_end(args);
 }
 
