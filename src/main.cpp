@@ -53,7 +53,6 @@ enum class JustifyStrings {
 };
 
 // void wprintstr_list(WINDOW* window, int y, int x, int width, 
-void render_movie_screen(PixelData& pixel_data, VideoOutputMode media_gui, const std::string& current_file);
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage);
@@ -136,7 +135,8 @@ int main(int argc, char** argv)
               "g - Change to grayscale mode \n"
               "b - Change to Background Mode on supported terminals if in Color or Grayscale mode \n"
               "n - Go to next media file\n"
-              "p - Go to previous media file\n");
+              "p - Go to previous media file\n"
+              "l - Switch looping type of playback\n");
 
   parser.add_description(controls);
 
@@ -174,6 +174,9 @@ int main(int argc, char** argv)
     .help("Set initial volume (must be between 0.0 and 1.0)")
     .scan<'g', double>();
 
+  parser.add_argument("-l", "--loop")
+    .help("Set the loop type of the player ('none', 'repeat', 'repeat-one')");
+
   parser.add_argument("--ffmpeg-version")
     .help("Print the version of linked FFmpeg libraries")
     .default_value(false)
@@ -184,6 +187,7 @@ int main(int argc, char** argv)
     .help("Print the version of linked Curses libraries")
     .default_value(false)
     .implicit_value(true);
+
 
   try {
     parser.parse_args(argc, argv);
@@ -206,6 +210,20 @@ int main(int argc, char** argv)
   muted = parser.get<bool>("-m");
   if (std::optional<double> user_volume = parser.present<double>("--volume")) {
     volume = *user_volume;
+  }
+
+  if (std::optional<std::string> user_loop = parser.present<std::string>("--loop")) {
+    if (*user_loop == "none") {
+      loop_type = LoopType::NO_LOOP;
+    } else if (*user_loop == "repeat") {
+      loop_type = LoopType::REPEAT;
+    } else if (*user_loop == "repeat-one") {
+      loop_type = LoopType::REPEAT_ONE;
+    } else {
+      std::cerr << "[ascii_video] Received invalid loop type '" << *user_loop << "', must be either 'none', 'repeat', or 'repeat-one'" << std::endl;
+      std::cerr << parser << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
   if (print_ffmpeg_version) {
@@ -575,24 +593,71 @@ int main(int argc, char** argv)
         if (COLS <= 20 || LINES < 10 || fullscreen) {
           print_pixel_data(frame, 0, 0, COLS, LINES, vom);
         } else {
-          print_pixel_data(frame, 2, 0, COLS, LINES - 4, vom); // frame
-          wfill_box(stdscr, 2, 0, COLS, 1, '~');
-          wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
 
-          wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
-          mvwprintw_center(stdscr, 0, 0, COLS, std::filesystem::path(files[current_file]).filename().c_str());
+          switch (fetcher.media_type) {
+            case MediaType::VIDEO:
+            case MediaType::AUDIO: {
+              print_pixel_data(frame, 2, 0, COLS, LINES - 4, vom); // frame
 
-          const std::string loop_str = str_capslock(loop_type_to_string(loop_type)); 
-          const std::string playing_str = fetcher.clock.is_playing() ? "PLAYING" : "PAUSED";
-          const std::string volume_str = "VOLUME: " +  std::to_string((int)(volume * 100)) + "%";
+              if (files.size() == 1) {
+                wfill_box(stdscr, 1, 0, COLS, 1, '~');
+                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(files.size()) + ") " + std::filesystem::path(files[current_file]).filename().c_str());
+              } else if (files.size() > 1) {
+                wfill_box(stdscr, 2, 0, COLS, 1, '~');
+                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(files.size()) + ") " + std::filesystem::path(files[current_file]).filename().c_str());
+                int rewind_file = playback_get_previous(current_file, files.size(), loop_type);
+                int skip_file = playback_get_next(current_file, files.size(), loop_type);
 
-          int section_size = COLS / 3;
-          werasebox(stdscr, LINES - 1, 0, COLS, 1);
-          mvwaddstr_center(stdscr, LINES - 1, 0, section_size, playing_str.c_str());
-          mvwaddstr_center(stdscr, LINES - 1, section_size, section_size, loop_str.c_str());
-          mvwaddstr_center(stdscr, LINES - 1, section_size * 2, section_size, volume_str.c_str());
+                if (rewind_file >= 0) {
+                  werasebox(stdscr, 1, 0, COLS / 2, 1);
+                  mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + std::filesystem::path(files[rewind_file]).filename().string());
+                }
+
+                if (skip_file >= 0) {
+                  werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
+                  mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, std::filesystem::path(files[skip_file]).filename().string() + " >");
+                }
+              }
+
+              wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
+              wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
+              const std::string loop_str = str_capslock(loop_type_to_string(loop_type)); 
+              const std::string playing_str = fetcher.clock.is_playing() ? "PLAYING" : "PAUSED";
+              const std::string volume_str = "VOLUME: " +  std::to_string((int)(volume * 100)) + "%";
+
+              int section_size = COLS / 3;
+              werasebox(stdscr, LINES - 1, 0, COLS, 1);
+              mvwaddstr_center(stdscr, LINES - 1, 0, section_size, playing_str.c_str());
+              mvwaddstr_center(stdscr, LINES - 1, section_size, section_size, loop_str.c_str());
+              mvwaddstr_center(stdscr, LINES - 1, section_size * 2, section_size, volume_str.c_str());
+            } break;
+            case MediaType::IMAGE: {
+              print_pixel_data(frame, 2, 0, COLS, LINES, vom); // frame
+
+              if (files.size() == 1) {
+                wfill_box(stdscr, 1, 0, COLS, 1, '~');
+                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(files.size()) + ") " + std::filesystem::path(files[current_file]).filename().c_str());
+              } else if (files.size() > 1) {
+                wfill_box(stdscr, 2, 0, COLS, 1, '~');
+                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(files.size()) + ") " + std::filesystem::path(files[current_file]).filename().c_str());
+                int rewind_file = playback_get_previous(current_file, files.size(), loop_type);
+                int skip_file = playback_get_next(current_file, files.size(), loop_type);
+
+                if (rewind_file >= 0) {
+                  werasebox(stdscr, 1, 0, COLS / 2, 1);
+                  mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + std::filesystem::path(files[rewind_file]).filename().string());
+                }
+
+                if (skip_file >= 0) {
+                  werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
+                  mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, std::filesystem::path(files[skip_file]).filename().string() + " >");
+                }
+              }
+
+            } break;
+          }
+          
         }
-
 
         refresh();
         sleep_for_ms(RENDER_LOOP_SLEEP_TIME_MS);
@@ -669,18 +734,6 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in
 
   if (progress_bar_width > 0) 
     wprint_progress_bar(window, y, x + current_time_string.length() + PADDING_BETWEEN_ELEMENTS, progress_bar_width, 1,time_in_seconds / duration_in_seconds);
-}
-
-void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode, const std::string& current_file_name) {
-  if (LINES < 10) {
-    print_pixel_data(pixel_data, 0, 0, COLS, LINES, output_mode);
-    return;
-  }
-
-  print_pixel_data(pixel_data, 2, 0, COLS, LINES - 4, output_mode);
-  wfill_box(stdscr, 1, 0, COLS, 1, '~');
-  wfill_box(stdscr, LINES - 1, 0, COLS, 1, '~');
-  mvwprintw_center(stdscr, 0, 0, COLS, current_file_name.c_str());
 }
 
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode) {

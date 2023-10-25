@@ -13,7 +13,7 @@ int playback_get_next(int current, int max, LoopType loop_type) {
 
 int playback_get_previous(int current, int max, LoopType loop_type) {
   switch (loop_type) {
-    case LoopType::NO_LOOP: return current - 1 == 0 ? 0 : current + 1;
+    case LoopType::NO_LOOP: return current - 1 < 0 ? 0 : current - 1;
     case LoopType::REPEAT: return current - 1 < 0 ? max - 1 : current - 1;
     case LoopType::REPEAT_ONE: return current;
   }
