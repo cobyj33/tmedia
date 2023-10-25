@@ -48,19 +48,19 @@ TEST_CASE("pixeldata", "[image manipulation]") {
   }
 
   SECTION("scale - bigger size") {
-    PixelData bounded = grayscale.scale(2.0);
+    PixelData bounded = grayscale.scale(2.0, ScalingAlgo::BOX_SAMPLING);
     REQUIRE(bounded.get_width() == grayscale.get_width() * 2);
     REQUIRE(bounded.get_height() == grayscale.get_height() * 2);
   }
 
   SECTION("scale - same size") {
-    PixelData bounded = grayscale.scale(1.0);
+    PixelData bounded = grayscale.scale(1.0, ScalingAlgo::BOX_SAMPLING);
     REQUIRE(bounded.get_width() == grayscale.get_width());
     REQUIRE(bounded.get_height() == grayscale.get_height());
   }
 
   SECTION("scale - smaller size") {
-    PixelData bounded = grayscale.scale(0.5);
+    PixelData bounded = grayscale.scale(0.5, ScalingAlgo::BOX_SAMPLING);
     REQUIRE(bounded.get_width() == grayscale.get_width() / 2);
     REQUIRE(bounded.get_height() == grayscale.get_height() / 2);
   }
