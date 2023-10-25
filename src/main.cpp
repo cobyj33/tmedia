@@ -53,7 +53,7 @@ enum class JustifyStrings {
 };
 
 // void wprintstr_list(WINDOW* window, int y, int x, int width, 
-void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
+void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode, const ScalingAlgo scaling_algorithm);
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage);
 void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time, double duration);
@@ -107,6 +107,7 @@ int main(int argc, char** argv)
   bool muted = false;
   VideoOutputMode vom  = VideoOutputMode::TEXT_ONLY;
   LoopType loop_type = LoopType::NO_LOOP;
+  ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
   
 	// std::signal(SIGQUIT, ascii_video_signal_handler); I don't know if I should handle this,
   // as I'd want quitting if ascii_video does happen to actually break
@@ -588,13 +589,13 @@ int main(int argc, char** argv)
         }
 
         if (COLS <= 20 || LINES < 10 || fullscreen) {
-          print_pixel_data(frame, 0, 0, COLS, LINES, vom);
+          print_pixel_data(frame, 0, 0, COLS, LINES, vom, scaling_algorithm);
         } else {
 
           switch (fetcher.media_type) {
             case MediaType::VIDEO:
             case MediaType::AUDIO: {
-              print_pixel_data(frame, 2, 0, COLS, LINES - 4, vom);
+              print_pixel_data(frame, 2, 0, COLS, LINES - 4, vom, scaling_algorithm);
 
               if (files.size() == 1) {
                 wfill_box(stdscr, 1, 0, COLS, 1, '~');
@@ -629,7 +630,7 @@ int main(int argc, char** argv)
               mvwaddstr_center(stdscr, LINES - 1, section_size * 2, section_size, volume_str.c_str());
             } break;
             case MediaType::IMAGE: {
-              print_pixel_data(frame, 2, 0, COLS, LINES, vom);
+              print_pixel_data(frame, 2, 0, COLS, LINES, vom, scaling_algorithm);
 
               if (files.size() == 1) {
                 wfill_box(stdscr, 1, 0, COLS, 1, '~');
@@ -733,17 +734,14 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in
     wprint_progress_bar(window, y, x + current_time_string.length() + PADDING_BETWEEN_ELEMENTS, progress_bar_width, 1,time_in_seconds / duration_in_seconds);
 }
 
-void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode) {
+void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode, const ScalingAlgo scaling_algorithm) {
   if (output_mode != VideoOutputMode::TEXT_ONLY && !has_colors()) {
     throw std::runtime_error("Attempted to print colored text in terminal that does not support color");
   }
 
-  const ScalingAlgo scaling_algorithm = output_mode == VideoOutputMode::TEXT_ONLY ? ScalingAlgo::NEAREST_NEIGHBOR : ScalingAlgo::BOX_SAMPLING;
-  // const ScalingAlgo scaling_algorithm = ScalingAlgo::NEAREST_NEIGHBOR;
   PixelData bounded = pixel_data.bound(bounds_width, bounds_height, scaling_algorithm);
   int image_start_row = bounds_row + std::abs(bounded.get_height() - bounds_height) / 2;
   int image_start_col = bounds_col + std::abs(bounded.get_width() - bounds_width) / 2; 
-
   bool background_only = output_mode == VideoOutputMode::COLORED_BACKGROUND_ONLY || output_mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY;
 
   for (int row = 0; row < bounded.get_height(); row++) {
