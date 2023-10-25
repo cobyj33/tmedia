@@ -20,21 +20,6 @@ extern "C" {
 }
 
 
-const int PIXEL_ASPECT_RATIO_WIDTH = 2; // account for non-square shape of terminal characters
-const int PIXEL_ASPECT_RATIO_HEIGHT = 5;
-const double PIXEL_ASPECT_RATIO = (double)PIXEL_ASPECT_RATIO_WIDTH / (double)PIXEL_ASPECT_RATIO_HEIGHT;
-
-const int MAX_FRAME_ASPECT_RATIO_WIDTH = 80;
-const int MAX_FRAME_ASPECT_RATIO_HEIGHT = 24;
-const double MAX_FRAME_ASPECT_RATIO = (double)MAX_FRAME_ASPECT_RATIO_WIDTH / (double)MAX_FRAME_ASPECT_RATIO_HEIGHT;
-
-
-const int DISPLAY_ASPECT_RATIO_WIDTH = PIXEL_ASPECT_RATIO_WIDTH * MAX_FRAME_ASPECT_RATIO_WIDTH;
-const int DISPLAY_ASPECT_RATIO_HEIGHT = PIXEL_ASPECT_RATIO_HEIGHT * MAX_FRAME_ASPECT_RATIO_HEIGHT;
-const double DISPLAY_ASPECT_RATIO = (double)DISPLAY_ASPECT_RATIO_WIDTH / (double)DISPLAY_ASPECT_RATIO_HEIGHT;
-
-const int MAX_FRAME_WIDTH = 640;
-const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH * MAX_FRAME_ASPECT_RATIO;
 
 /**
  * The purpose of the video thread is to update the current MediaFetcher's frame for rendering
@@ -50,6 +35,21 @@ const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH * MAX_FRAME_ASPECT_RATIO;
 */
 
 void MediaFetcher::video_fetching_thread() {
+  const int PIXEL_ASPECT_RATIO_WIDTH = 2; // account for non-square shape of terminal characters
+  const int PIXEL_ASPECT_RATIO_HEIGHT = 5;
+  const double PIXEL_ASPECT_RATIO = (double)PIXEL_ASPECT_RATIO_WIDTH / (double)PIXEL_ASPECT_RATIO_HEIGHT;
+
+  const int MAX_FRAME_ASPECT_RATIO_WIDTH = 16;
+  const int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9;
+  const double MAX_FRAME_ASPECT_RATIO = (double)MAX_FRAME_ASPECT_RATIO_WIDTH / (double)MAX_FRAME_ASPECT_RATIO_HEIGHT;
+
+
+  const int DISPLAY_ASPECT_RATIO_WIDTH = PIXEL_ASPECT_RATIO_WIDTH * MAX_FRAME_ASPECT_RATIO_WIDTH;
+  const int DISPLAY_ASPECT_RATIO_HEIGHT = PIXEL_ASPECT_RATIO_HEIGHT * MAX_FRAME_ASPECT_RATIO_HEIGHT;
+  const double DISPLAY_ASPECT_RATIO = (double)DISPLAY_ASPECT_RATIO_WIDTH / (double)DISPLAY_ASPECT_RATIO_HEIGHT;
+
+  const int MAX_FRAME_WIDTH = 640;
+  const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH / MAX_FRAME_ASPECT_RATIO;
 
   try {
     double avg_frame_time_sec = 1 / 24.0;
@@ -108,7 +108,7 @@ void MediaFetcher::video_fetching_thread() {
             }
 
             av_frame_free(&frame_image);
-          } 
+          }
 
           clear_av_frame_list(decoded_frames);
 
@@ -143,11 +143,7 @@ void MediaFetcher::video_fetching_thread() {
 
           std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
           audio_bound_volume(mono, 1, 1.0);
-          std::pair<int, int> output_size = get_bounded_dimensions(TERM_COLS, TERM_LINES, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
-          int display_rows = output_size.second;
-          int display_cols = output_size.first;
-
-          PixelData frame = generate_audio_view_amplitude_averaged(mono, display_rows, display_cols);
+          PixelData frame = generate_audio_view_amplitude_averaged(mono, MAX_FRAME_HEIGHT, MAX_FRAME_WIDTH);
 
           {
             std::lock_guard<std::mutex> player_lock(this->alter_mutex);

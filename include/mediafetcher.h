@@ -11,6 +11,7 @@
 #include <string>
 #include <mutex>
 #include <atomic>
+#include <thread>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -25,6 +26,10 @@ extern "C" {
  * If both must be locked, ALWAYS lock the alter_mutex before the audio_buffer_mutex
 */
 class MediaFetcher {
+  private:
+    std::thread video_thread;
+    std::thread audio_thread;
+
   public:
     void video_fetching_thread();
 
@@ -53,6 +58,9 @@ class MediaFetcher {
      * @return double 
      */
     double get_duration() const;
+
+    void begin();
+    void join();
 
 
     /**

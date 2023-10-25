@@ -16,16 +16,17 @@ extern "C" {
 }
 
 
-const int RECOMMENDED_AUDIO_BUFFER_SIZE = 44100 * 15; // 15 seconds of audio data at 44100 Hz sample rate
-const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 120.0;
-const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 15.0;
-const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
-const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
-const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 5;
-const int AUDIO_THREAD_ITERATION_SLEEP_MS = 5;
-const int MINIMUM_AUDIO_BUFFER_DEVICE_START_SIZE = 1024;
 
 void MediaFetcher::audio_fetching_thread() {
+  const int RECOMMENDED_AUDIO_BUFFER_SIZE = 44100 * 15; // 15 seconds of audio data at 44100 Hz sample rate
+  const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 120.0;
+  const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 15.0;
+  const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
+  const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
+  const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 5;
+  const int AUDIO_THREAD_ITERATION_SLEEP_MS = 5;
+  const int MINIMUM_AUDIO_BUFFER_DEVICE_START_SIZE = 1024;
+  
   try { // super try block :)
     sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
     

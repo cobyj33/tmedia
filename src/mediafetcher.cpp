@@ -97,4 +97,21 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   return ret;
 }
 
+void MediaFetcher::begin() {
+  this->in_use = true;
+  this->clock.init(system_clock_sec());
+  std::thread initialized_video_thread(&MediaFetcher::video_fetching_thread, this);
+  video_thread.swap(initialized_video_thread);
+  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    std::thread initialized_audio_thread(&MediaFetcher::audio_fetching_thread, this);
+    audio_thread.swap(initialized_audio_thread);
+  }
+}
 
+void MediaFetcher::join() {
+  this->video_thread.join();
+  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    this->audio_thread.join();
+  }
+  this->clock.stop(system_clock_sec());
+}

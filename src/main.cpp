@@ -335,17 +335,8 @@ int main(int argc, char** argv)
       audio_device->set_volume(volume);
     }
 
-    fetcher.in_use = true;
-    fetcher.clock.init(system_clock_sec());
-    std::thread video_thread(&MediaFetcher::video_fetching_thread, &fetcher);
-    std::thread audio_thread;
-    bool audio_thread_initialized = false;
-    if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-      std::thread initialized_audio_thread(&MediaFetcher::audio_fetching_thread, &fetcher);
-      audio_thread.swap(initialized_audio_thread);
-      audio_thread_initialized = true;
-    }
-    
+    fetcher.begin();
+
     try {
       PixelData frame;
       while (fetcher.in_use) { // never break without setting in_use to false
@@ -599,10 +590,7 @@ int main(int argc, char** argv)
       audio_device->stop();
     }
 
-    video_thread.join();
-    if (audio_thread_initialized) {
-      audio_thread.join();
-    }
+    fetcher.join();
 
     if (fetcher.error.length() > 0) {
       ncurses_uninit();
