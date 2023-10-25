@@ -20,7 +20,7 @@ typedef RGBColor FillFunction(int row, int col);
 
 class PixelData {
   private:
-    std::vector<RGBColor> pixels;
+    std::shared_ptr<std::vector<RGBColor>> pixels;
     int m_width;
     int m_height;
 
@@ -29,10 +29,11 @@ class PixelData {
     void init_from_avframe(AVFrame* video_frame);
   public:
 
-    PixelData() : pixels(std::vector<RGBColor>()), m_width(0), m_height(0) {}
+    PixelData() : pixels(std::make_shared<std::vector<RGBColor>>()), m_width(0), m_height(0) {}
     PixelData(const std::vector< std::vector<RGBColor> >& raw_rgb_data);
     PixelData(const std::vector< std::vector<uint8_t> >& raw_grayscale_data);
     PixelData(const std::vector<RGBColor>& colors, int width, int height);
+    PixelData(std::shared_ptr<std::vector<RGBColor>> colors, int width, int height);
     // PixelData(std::vector< std::vector<RGBColor> >& raw_rgb_data, int width, int height);
     // PixelData(std::vector<uint8_t>& raw_grayscale_data, int width, int height);
     PixelData(int width, int height);

@@ -9,7 +9,7 @@
 
 class Canvas {
   private:
-    std::vector<RGBColor> canvas;
+    std::shared_ptr<std::vector<RGBColor>> canvas;
     int nb_rows;
     int nb_cols;
 
