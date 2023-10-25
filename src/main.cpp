@@ -705,7 +705,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
   if (!fetcher->clock.is_playing() || !fetcher->audio_buffer->can_read(frameCount)) {
     float* pFloatOutput = (float*)pOutput;
-    for (ma_uint32 i = 0; i < frameCount; i++) {
+    for (ma_uint32 i = 0; i < frameCount * pDevice->playback.channels; i++) {
       pFloatOutput[i] = 0.0001 * sin(0.10 * i);
     }
   } else if (fetcher->audio_buffer->can_read(frameCount)) {

@@ -138,7 +138,7 @@ void MediaFetcher::video_fetching_thread() {
             this->frame = frame;
           }
 
-          sleep_for_ms(DEFAULT_AVERAGE_FRAME_TIME_SEC);
+          sleep_for_sec(DEFAULT_AVERAGE_FRAME_TIME_SEC);
         }
 
       } break;

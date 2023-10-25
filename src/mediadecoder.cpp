@@ -10,6 +10,7 @@
 #include <set>
 #include <stdexcept> 
 #include <memory> //std::make_unique
+#include <utility>
 
 
 extern "C" {
