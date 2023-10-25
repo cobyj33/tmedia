@@ -152,8 +152,8 @@ std::shared_ptr<PixelData> PixelData::scale(std::shared_ptr<PixelData> pixel_dat
 
   const int new_width = pixel_data->get_width() * amount;
   const int new_height = pixel_data->get_height() * amount;
-  std::vector<RGBColor> new_pixels;
-  new_pixels.reserve(new_width * new_height);
+  std::shared_ptr<std::vector<RGBColor>> new_pixels = std::make_shared<std::vector<RGBColor>>();
+  new_pixels->reserve(new_width * new_height);
 
   switch (scaling_algorithm) {
     case ScalingAlgo::BOX_SAMPLING: {
@@ -162,14 +162,14 @@ std::shared_ptr<PixelData> PixelData::scale(std::shared_ptr<PixelData> pixel_dat
 
       for (double new_row = 0; new_row < new_height; new_row++) {
         for (double new_col = 0; new_col < new_width; new_col++) {
-          new_pixels.push_back(std::move(get_avg_color_from_area(*pixel_data, new_row * box_height, new_col * box_width, box_width, box_height )));
+          new_pixels->push_back(std::move(get_avg_color_from_area(*pixel_data, new_row * box_height, new_col * box_width, box_width, box_height )));
         }
       }
     } break;
     case ScalingAlgo::NEAREST_NEIGHBOR: {
       for (double new_row = 0; new_row < new_height; new_row++) {
         for (double new_col = 0; new_col < new_width; new_col++) {
-          new_pixels.push_back((*pixel_data->pixels)[(int)(new_row / amount) * pixel_data->m_width + (int)(new_col / amount)]);
+          new_pixels->push_back((*pixel_data->pixels)[(int)(new_row / amount) * pixel_data->m_width + (int)(new_col / amount)]);
         }
       }
     } break;
@@ -234,5 +234,4 @@ RGBColor get_avg_color_from_area(const PixelData& pixel_data, int row, int col, 
     return std::move(get_average_color(colors));
   }
   return RGBColor::WHITE;
-  // throw std::runtime_error("Cannot get average color of out of bounds area");
 }

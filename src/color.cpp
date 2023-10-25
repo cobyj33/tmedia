@@ -31,12 +31,12 @@ RGBColor get_average_color(std::vector<RGBColor>& colors) {
 
   int sums[3] = {0, 0, 0};
   for (int i = 0; i < (int)colors.size(); i++) {
-    sums[0] += (double)colors[i].red * colors[i].red;
-    sums[1] += (double)colors[i].green * colors[i].green;
-    sums[2] += (double)colors[i].blue * colors[i].blue;
+    sums[0] += (double)colors[i].red;
+    sums[1] += (double)colors[i].green;
+    sums[2] += (double)colors[i].blue;
   }
 
-  return RGBColor((int)std::sqrt(sums[0]/colors.size()), (int)std::sqrt(sums[1]/colors.size()), (int)std::sqrt(sums[2]/colors.size()));
+  return RGBColor((int)(sums[0]/colors.size()), (int)(sums[1]/colors.size()), (int)(sums[2]/colors.size()));
 }
 
 int RGBColor::get_grayscale_value() const {
