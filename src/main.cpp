@@ -330,7 +330,7 @@ int main(int argc, char** argv)
     vom  = grayscale ? VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY : VideoOutputMode::GRAYSCALE;
   }
 
-  const int RENDER_LOOP_SLEEP_TIME_MS = 41;
+  const int RENDER_LOOP_SLEEP_TIME_MS = 42; //24 fps
   bool full_exit = false;
 
   while (!INTERRUPT_RECEIVED && !full_exit && current_file < files.size()) {
@@ -738,7 +738,8 @@ void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_co
     throw std::runtime_error("Attempted to print colored text in terminal that does not support color");
   }
 
-  const ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+  const ScalingAlgo scaling_algorithm = output_mode == VideoOutputMode::TEXT_ONLY ? ScalingAlgo::NEAREST_NEIGHBOR : ScalingAlgo::BOX_SAMPLING;
+  // const ScalingAlgo scaling_algorithm = ScalingAlgo::NEAREST_NEIGHBOR;
   PixelData bounded = pixel_data.bound(bounds_width, bounds_height, scaling_algorithm);
   int image_start_row = bounds_row + std::abs(bounded.get_height() - bounds_height) / 2;
   int image_start_col = bounds_col + std::abs(bounded.get_width() - bounds_width) / 2; 
