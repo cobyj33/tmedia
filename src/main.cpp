@@ -741,7 +741,7 @@ void print_pixel_data(std::shared_ptr<PixelData> pixel_data, int bounds_row, int
     throw std::runtime_error("Attempted to print colored text in terminal that does not support color");
   }
 
-  ScalingAlgo scaling_algorithm = bounds_width * bounds_height < (150 * 50) ? ScalingAlgo::BOX_SAMPLING : ScalingAlgo::NEAREST_NEIGHBOR;
+  const ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
   std::shared_ptr<PixelData> bounded = PixelData::bound(pixel_data, bounds_width, bounds_height, scaling_algorithm);
   int image_start_row = bounds_row + std::abs(bounded->get_height() - bounds_height) / 2;
   int image_start_col = bounds_col + std::abs(bounded->get_width() - bounds_width) / 2; 
