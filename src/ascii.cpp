@@ -73,7 +73,7 @@ char get_char_from_rgb(std::string& characters, const RGBColor& color) {
 }
 
 char get_char_from_area(std::string& characters, PixelData* pixels, int row, int col, int width, int height) {
-  int grayscale = pixels->get_avg_color_from_area(row, col, width, height).get_grayscale_value();
+  int grayscale = get_avg_color_from_area(*pixels, row, col, width, height).get_grayscale_value();
   return get_char_from_value(characters, (uint8_t)grayscale);
 }
 

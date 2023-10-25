@@ -30,7 +30,6 @@ PixelData generate_audio_view_amplitude_averaged(std::vector<float>& mono, int r
     for (std::size_t i = start; i < std::size_t(((double)col + 1.0) * step_size); i++) {
       sample += std::abs(mono[i]);
       count++;
-      // sample = std::max(mono[i], sample);
     }
 
     if (count != 0)

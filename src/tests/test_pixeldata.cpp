@@ -38,12 +38,12 @@ TEST_CASE("pixeldata", "[image manipulation]") {
   }
 
   SECTION("bounded - same size") {
-    PixelData bounded = grayscale.bound(6, 8);
+    PixelData bounded = grayscale.bound(6, 8, ScalingAlgo::BOX_SAMPLING);
     REQUIRE(bounded.equals(grayscale));
   }
 
   SECTION("bounded - bigger size") {
-    PixelData bounded = grayscale.bound(10, 10);
+    PixelData bounded = grayscale.bound(10, 10, ScalingAlgo::BOX_SAMPLING);
     REQUIRE(bounded.equals(grayscale));
   }
 

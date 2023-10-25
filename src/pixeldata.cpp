@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <memory>
 #include <functional>
+#include <utility>
 
 extern "C" {
   #include <libavutil/frame.h>
@@ -23,7 +24,7 @@ extern "C" {
 
 // Accepts empty matrices
 template <typename T>
-bool is_rectangular_vector_matrix(std::vector<std::vector<T>>& vector_2d) {
+bool is_rectangular_vector_matrix(const std::vector<std::vector<T>>& vector_2d) {
   if (vector_2d.size() == 0)
     return true;
 
@@ -63,7 +64,7 @@ void PixelData::init_from_avframe(AVFrame* video_frame) {
   });
 }
 
-PixelData::PixelData(std::vector<std::vector<RGBColor>>& raw_rgb_data) {
+PixelData::PixelData(const std::vector<std::vector<RGBColor>>& raw_rgb_data) {
   if (!is_rectangular_vector_matrix(raw_rgb_data)) {
     throw std::runtime_error("Cannot initialize pixel data with non-rectangular matrix");
   }
@@ -75,7 +76,7 @@ PixelData::PixelData(std::vector<std::vector<RGBColor>>& raw_rgb_data) {
   }
 }
 
-PixelData::PixelData(std::vector<std::vector<uint8_t> >& raw_grayscale_data) {
+PixelData::PixelData(const std::vector<std::vector<uint8_t> >& raw_grayscale_data) {
   if (!is_rectangular_vector_matrix(raw_grayscale_data)) {
     throw std::runtime_error("Cannot initialize pixel data with non-rectangular matrix");
   }
@@ -85,6 +86,12 @@ PixelData::PixelData(std::vector<std::vector<uint8_t> >& raw_grayscale_data) {
   if (raw_grayscale_data.size() > 0) {
     this->init_from_source(raw_grayscale_data[0].size(), raw_grayscale_data.size(), [raw_grayscale_data](int row, int col) { return RGBColor(raw_grayscale_data[row][col]);  });
   }
+}
+
+PixelData::PixelData(const std::vector<RGBColor>& flat_rgb, int width, int height) {
+  if (std::size_t(width * height) != flat_rgb.size()) 
+    throw std::runtime_error("Cannot initialize PixelData with innacurate flattened rgb vector: size = " + std::to_string(flat_rgb.size()) + ", given width: " + std::to_string(width) + ", given height: " + std::to_string(height) );
+  this->init_from_source(width, height, [flat_rgb, width](int row, int col) { return flat_rgb[row * width + col]; } );
 }
 
 
@@ -108,10 +115,6 @@ bool PixelData::in_bounds(int row, int col) const {
   return row >= 0 && col >= 0 && row < this->m_height && col < this->m_width;
 }
 
-RGBColor PixelData::get_avg_color_from_area(double row, double col, double width, double height) const {
-  return this->get_avg_color_from_area((int)std::floor(row), (int)std::floor(col), (int)std::ceil(width), (int)std::ceil(height));
-}
-
 int PixelData::get_width() const {
   return this->m_width;
 }
@@ -120,39 +123,51 @@ int PixelData::get_height() const {
   return this->m_height;
 }
 
-PixelData PixelData::scale(double amount) const {
+/**
+ * Nearest-Neighbor
+*/
+PixelData PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
   if (amount == 0) {
     return PixelData();
   } else if (amount < 0) {
     throw std::runtime_error("Scaling Pixel data by negative amount is currently not supported");
   }
 
-  int new_width = this->get_width() * amount;
-  int new_height = this->get_height() * amount;
-  std::vector<std::vector<RGBColor>> new_pixels;
-  new_pixels.reserve(new_height);
+  const int new_width = this->get_width() * amount;
+  const int new_height = this->get_height() * amount;
+  std::vector<RGBColor> new_pixels;
+  new_pixels.reserve(new_width * new_height);
 
-  double box_width = 1 / amount;
-  double box_height = 1 / amount;
+  switch (scaling_algorithm) {
+    case ScalingAlgo::BOX_SAMPLING: {
+      double box_width = 1 / amount;
+      double box_height = 1 / amount;
 
-  for (double new_row = 0; new_row < new_height; new_row++) {
-    new_pixels.push_back(std::move(std::vector<RGBColor>()));
-    new_pixels[new_row].reserve(new_width);
-    for (double new_col = 0; new_col < new_width; new_col++) {
-      RGBColor color = this->get_avg_color_from_area( new_row * box_height, new_col * box_width, box_width, box_height );
-      new_pixels[new_row].push_back(color);
-    }
+      for (double new_row = 0; new_row < new_height; new_row++) {
+        for (double new_col = 0; new_col < new_width; new_col++) {
+          new_pixels.push_back(std::move(get_avg_color_from_area(*this, new_row * box_height, new_col * box_width, box_width, box_height )));
+        }
+      }
+    } break;
+    case ScalingAlgo::NEAREST_NEIGHBOR: {
+      for (double new_row = 0; new_row < new_height; new_row++) {
+        for (double new_col = 0; new_col < new_width; new_col++) {
+          new_pixels.push_back(this->pixels[(int)(new_row / amount) * this->m_width + (int)(new_col / amount)]);
+        }
+      }
+    } break;
+    default: throw std::runtime_error("[PixelData::scaele] unrecognized scaling function");
   }
 
-  return PixelData(new_pixels);
+  return std::move(PixelData(new_pixels, new_width, new_height));
 }
 
-PixelData PixelData::bound(int width, int height) const {
+PixelData PixelData::bound(int width, int height, ScalingAlgo scaling_algorithm) const {
   if (this->get_width() <= width && this->get_height() <= height) {
     return PixelData(*this);
   }
   double scale_factor = get_scale_factor(this->get_width(), this->get_height(), width, height);
-  return this->scale(scale_factor);
+  return std::move(this->scale(scale_factor, scaling_algorithm));
 }
 
 bool PixelData::equals(const PixelData& pix_data) const {
@@ -175,7 +190,11 @@ const RGBColor& PixelData::at(int row, int col) const {
   return this->pixels[row * this->m_width + col];
 }
 
-RGBColor PixelData::get_avg_color_from_area(int row, int col, int width, int height) const {
+RGBColor get_avg_color_from_area(const PixelData& pixel_data, double row, double col, double width, double height) {
+  return std::move(get_avg_color_from_area(pixel_data, (int)std::floor(row), (int)std::floor(col), (int)std::ceil(width), (int)std::ceil(height)));
+}
+
+RGBColor get_avg_color_from_area(const PixelData& pixel_data, int row, int col, int width, int height) {
   if (width * height <= 0) {
     throw std::runtime_error("Cannot get average color from an area with dimensions: " + 
     std::to_string(width) + " x " + std::to_string(height) + " Dimensions must be positive");
@@ -184,14 +203,14 @@ RGBColor PixelData::get_avg_color_from_area(int row, int col, int width, int hei
   std::vector<RGBColor> colors;
   for (int curr_row = row; curr_row < row + height; curr_row++) {
     for (int curr_col = col; curr_col < col + width; curr_col++) {
-      if (this->in_bounds(curr_row, curr_col)) {
-        colors.push_back(this->at(curr_row, curr_col));
+      if (pixel_data.in_bounds(curr_row, curr_col)) {
+        colors.push_back(pixel_data.at(curr_row, curr_col));
       }
     }
   }
 
   if (colors.size() > 0) {
-    return get_average_color(colors);
+    return std::move(get_average_color(colors));
   }
   return RGBColor::WHITE;
   // throw std::runtime_error("Cannot get average color of out of bounds area");
