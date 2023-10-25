@@ -6,6 +6,9 @@ function(printlist list) # This has to be called with the list in "${a_string_li
   endforeach()
 endfunction()
 
+include(FetchContent)
+include(ExternalProject)
+
 if (WIN32)
   message(WARNING "Windows builds are completely untested as of now. Good luck")
 endif()
@@ -138,7 +141,6 @@ DESCRIPTION "Terminal video media player")
 
 add_executable(ascii_video ${COMMON_SOURCE_FILES} ./src/main.cpp)
 
-include(ExternalProject)
 
 if(FIND_CURSES)
   find_package(Curses REQUIRED)
@@ -223,8 +225,14 @@ endif()
 add_library(miniaudio OBJECT ./lib/miniaudio/miniaudio.c)
 target_include_directories(miniaudio PRIVATE ./lib/miniaudio)
 
-add_library(argparse INTERFACE)
-target_include_directories(argparse INTERFACE ./lib/argparse)
+set(ARGPARSE_BUILD_TESTS OFF CACHE INTERNAL "Turn off building argparse tests")
+set(ARGPARSE_BUILD_SAMPLES OFF CACHE INTERNAL "Turn off building argparse samples")
+FetchContent_Declare(
+    argparse
+    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+)
+FetchContent_MakeAvailable(argparse)
+
 
 add_library(NaturalSort INTERFACE)
 target_include_directories(NaturalSort INTERFACE ./lib/NaturalSort)
@@ -261,7 +269,6 @@ target_compile_options(ascii_video PRIVATE ${ASV_COMPILE_OPTIONS})
 
 if (ASCII_VIDEO_BUILD_TESTS)
   message("Configured to build testing executable")
-  Include(FetchContent)
   FetchContent_Declare(
     Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git

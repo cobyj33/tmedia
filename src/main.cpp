@@ -24,7 +24,7 @@
 #include <csignal>
 #include <thread>
 
-#include <argparse.hpp>
+#include <argparse/argparse.hpp>
 #include <natural_sort.hpp>
 
 extern "C" {
