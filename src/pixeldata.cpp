@@ -130,12 +130,14 @@ PixelData PixelData::scale(double amount) const {
   int new_width = this->get_width() * amount;
   int new_height = this->get_height() * amount;
   std::vector<std::vector<RGBColor>> new_pixels;
+  new_pixels.reserve(new_height);
 
   double box_width = 1 / amount;
   double box_height = 1 / amount;
 
   for (double new_row = 0; new_row < new_height; new_row++) {
-    new_pixels.push_back(std::vector<RGBColor>());
+    new_pixels.push_back(std::move(std::vector<RGBColor>()));
+    new_pixels[new_row].reserve(new_width);
     for (double new_col = 0; new_col < new_width; new_col++) {
       RGBColor color = this->get_avg_color_from_area( new_row * box_height, new_col * box_width, box_width, box_height );
       new_pixels[new_row].push_back(color);

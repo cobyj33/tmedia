@@ -47,8 +47,10 @@ void MediaFetcher::video_fetching_thread() {
   const int MAX_FRAME_WIDTH = 640;
   const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH / MAX_FRAME_ASPECT_RATIO;
 
+  const double DEFAULT_AVERAGE_FRAME_TIME_SEC = 1.0 / 24.0;
+
   try {
-    double avg_frame_time_sec = 1 / 24.0;
+    double avg_frame_time_sec = DEFAULT_AVERAGE_FRAME_TIME_SEC;
 
     switch (this->media_type) {
       case MediaType::IMAGE:
@@ -136,7 +138,7 @@ void MediaFetcher::video_fetching_thread() {
             this->frame = frame;
           }
 
-          sleep_for_ms(avg_frame_time_sec);
+          sleep_for_ms(DEFAULT_AVERAGE_FRAME_TIME_SEC);
         }
 
       } break;
