@@ -46,8 +46,8 @@ class PixelData {
     int get_width() const;
     int get_height() const;
 
-    std::shared_ptr<PixelData> scale(double amount, ScalingAlgo scaling_algorithm) const;
-    std::shared_ptr<PixelData> bound(int width, int height, ScalingAlgo scaling_algorithm) const;
+    static std::shared_ptr<PixelData> scale(std::shared_ptr<PixelData> pixel_data, double amount, ScalingAlgo scaling_algorithm);
+    static std::shared_ptr<PixelData> bound(std::shared_ptr<PixelData> pixel_data, int width, int height, ScalingAlgo scaling_algorithm);
 
     const RGBColor& at(int row, int column) const;
     bool in_bounds(int row, int column) const;
