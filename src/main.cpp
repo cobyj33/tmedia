@@ -747,7 +747,7 @@ void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_co
   for (int row = 0; row < bounded.get_height(); row++) {
     for (int col = 0; col < bounded.get_width(); col++) {
       const RGBColor& target_color = bounded.at(row, col);
-      const char target_char = background_only ? ' ' : get_char_from_rgb(AsciiImage::ASCII_STANDARD_CHAR_MAP, target_color);
+      const char target_char = background_only ? ' ' : get_char_from_rgb(ASCII_STANDARD_CHAR_MAP, target_color);
       
       if (output_mode == VideoOutputMode::TEXT_ONLY) {
         mvaddch(image_start_row + row, image_start_col + col, target_char);

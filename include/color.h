@@ -32,16 +32,6 @@ class RGBColor {
     int get_grayscale_value() const;
 };
 
-class ColorChar {
-  public:
-    const char ch;
-    const RGBColor color;
-    ColorChar(char ch, RGBColor& color) : ch(ch), color(color) {}
-    ColorChar(char ch, const RGBColor& color) : ch(ch), color(color) {}
-    ColorChar(const ColorChar& color_char) : ch(color_char.ch), color(color_char.color) {}
-    bool equals(const ColorChar& color_char) const; 
-};
-
 /**
  * @brief Get the grayscale value of 3 channels of rgb data.
  * 

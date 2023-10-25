@@ -20,6 +20,6 @@ std::pair<int, int> get_bounded_dimensions(int src_width, int src_height, int ma
   if (src_width <= max_width && src_height <= max_height) {
   return std::make_pair(src_width, src_height);
   } else {
-  return get_scale_size(src_width, src_height, max_width, max_height);
+    return get_scale_size(src_width, src_height, max_width, max_height);
   }
 }
