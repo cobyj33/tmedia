@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <memory>
 
 #include "color.h"
 
@@ -45,8 +46,8 @@ class PixelData {
     int get_width() const;
     int get_height() const;
 
-    PixelData scale(double amount, ScalingAlgo scaling_algorithm) const;
-    PixelData bound(int width, int height, ScalingAlgo scaling_algorithm) const;
+    std::shared_ptr<PixelData> scale(double amount, ScalingAlgo scaling_algorithm) const;
+    std::shared_ptr<PixelData> bound(int width, int height, ScalingAlgo scaling_algorithm) const;
 
     const RGBColor& at(int row, int column) const;
     bool in_bounds(int row, int column) const;

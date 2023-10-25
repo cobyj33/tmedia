@@ -17,6 +17,7 @@
 #include <memory>
 #include <functional>
 #include <utility>
+#include <memory>
 
 extern "C" {
   #include <libavutil/frame.h>
@@ -126,9 +127,9 @@ int PixelData::get_height() const {
 /**
  * Nearest-Neighbor
 */
-PixelData PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
+std::shared_ptr<PixelData> PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
   if (amount == 0) {
-    return PixelData();
+    return std::make_shared<PixelData>();
   } else if (amount < 0) {
     throw std::runtime_error("Scaling Pixel data by negative amount is currently not supported");
   }
@@ -159,15 +160,15 @@ PixelData PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
     default: throw std::runtime_error("[PixelData::scaele] unrecognized scaling function");
   }
 
-  return std::move(PixelData(new_pixels, new_width, new_height));
+  return std::make_shared<PixelData>(new_pixels, new_width, new_height);
 }
 
-PixelData PixelData::bound(int width, int height, ScalingAlgo scaling_algorithm) const {
+std::shared_ptr<PixelData> PixelData::bound(int width, int height, ScalingAlgo scaling_algorithm) const {
   if (this->get_width() <= width && this->get_height() <= height) {
-    return PixelData(*this);
+    return std::make_shared<PixelData>(*this);
   }
   double scale_factor = get_scale_factor(this->get_width(), this->get_height(), width, height);
-  return std::move(this->scale(scale_factor, scaling_algorithm));
+  return this->scale(scale_factor, scaling_algorithm);
 }
 
 bool PixelData::equals(const PixelData& pix_data) const {

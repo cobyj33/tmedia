@@ -741,15 +741,15 @@ void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int
   }
 
   ScalingAlgo scaling_algorithm = bounds_width * bounds_height < (150 * 50) ? ScalingAlgo::BOX_SAMPLING : ScalingAlgo::NEAREST_NEIGHBOR;
-  PixelData bounded = pixel_data.bound(bounds_width, bounds_height, scaling_algorithm);
-  int image_start_row = bounds_row + std::abs(bounded.get_height() - bounds_height) / 2;
-  int image_start_col = bounds_col + std::abs(bounded.get_width() - bounds_width) / 2; 
+  std::shared_ptr<PixelData> bounded = pixel_data.bound(bounds_width, bounds_height, scaling_algorithm);
+  int image_start_row = bounds_row + std::abs(bounded->get_height() - bounds_height) / 2;
+  int image_start_col = bounds_col + std::abs(bounded->get_width() - bounds_width) / 2; 
 
   bool background_only = output_mode == VideoOutputMode::COLORED_BACKGROUND_ONLY || output_mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY;
 
-  for (int row = 0; row < bounded.get_height(); row++) {
-    for (int col = 0; col < bounded.get_width(); col++) {
-      const RGBColor& target_color = bounded.at(row, col);
+  for (int row = 0; row < bounded->get_height(); row++) {
+    for (int col = 0; col < bounded->get_width(); col++) {
+      const RGBColor& target_color = bounded->at(row, col);
       const char target_char = background_only ? ' ' : get_char_from_rgb(AsciiImage::ASCII_STANDARD_CHAR_MAP, target_color);
       
       if (output_mode == VideoOutputMode::TEXT_ONLY) {
