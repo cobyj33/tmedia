@@ -25,7 +25,6 @@ void MediaFetcher::audio_fetching_thread() {
   const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
   const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 5;
   const int AUDIO_THREAD_ITERATION_SLEEP_MS = 5;
-  const int MINIMUM_AUDIO_BUFFER_DEVICE_START_SIZE = 1024;
   
   try { // super try block :)
     sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
@@ -82,6 +81,7 @@ void MediaFetcher::audio_fetching_thread() {
         }
       }
 
+      sleep_for_ms(AUDIO_THREAD_ITERATION_SLEEP_MS);
     }
 
   } catch (std::exception const& e) {
