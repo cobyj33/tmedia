@@ -86,10 +86,11 @@ void MediaFetcher::video_fetching_thread() {
           if (decoded_frames.size() > 0 && decoded_frames[0] != nullptr) {
             // resizing can take quite some time, so we release the mutex for this part
             AVFrame* frame_image = video_converter->convert_video_frame(decoded_frames[0]);
+            std::shared_ptr<PixelData> frame_pixel_data = std::make_shared<PixelData>(frame_image);
 
             {
               std::lock_guard<std::mutex> lock(this->alter_mutex);
-              this->frame = std::make_shared<PixelData>(frame_image);
+              this->frame = frame_pixel_data;
               const double frame_pts_time_sec = (double)frame_image->pts * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
               const double extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
               wait_duration = frame_pts_time_sec - current_time + extra_delay;
