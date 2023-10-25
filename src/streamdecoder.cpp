@@ -123,21 +123,3 @@ bool StreamDecoder::has_packets() {
 void StreamDecoder::push_back_packet(AVPacket* packet) {
   this->packet_queue.push_back(packet);
 }
-
-std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> get_stream_decoders(AVFormatContext* format_context) {
-  const int NUM_OF_MEDIA_TYPES_TO_SEARCH = 2;
-  enum AVMediaType MEDIA_TYPES_TO_SEARCH[NUM_OF_MEDIA_TYPES_TO_SEARCH] = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-  std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> stream_decoders;
-
-  for (int i = 0; i < NUM_OF_MEDIA_TYPES_TO_SEARCH; i++) {
-    try {
-      std::shared_ptr<StreamDecoder> stream_decoder_ptr = std::make_shared<StreamDecoder>(format_context, MEDIA_TYPES_TO_SEARCH[i]);
-      stream_decoders[MEDIA_TYPES_TO_SEARCH[i]] = stream_decoder_ptr;
-    } catch (std::invalid_argument const& e) {
-      continue;
-    }
-  }
-
-  return stream_decoders;
-}
-

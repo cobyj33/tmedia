@@ -42,8 +42,4 @@ class StreamDecoder {
     ~StreamDecoder();
 };
 
-
-
-std::map<enum AVMediaType, std::shared_ptr<StreamDecoder>> get_stream_decoders(AVFormatContext* format_context);
-
 #endif
