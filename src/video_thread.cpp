@@ -39,16 +39,10 @@ extern "C" {
 void MediaFetcher::video_fetching_thread() {
   const int PIXEL_ASPECT_RATIO_WIDTH = 2; // account for non-square shape of terminal characters
   const int PIXEL_ASPECT_RATIO_HEIGHT = 5;
-  const double PIXEL_ASPECT_RATIO = (double)PIXEL_ASPECT_RATIO_WIDTH / (double)PIXEL_ASPECT_RATIO_HEIGHT;
 
   const int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PIXEL_ASPECT_RATIO_HEIGHT;
   const int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PIXEL_ASPECT_RATIO_WIDTH;
   const double MAX_FRAME_ASPECT_RATIO = (double)MAX_FRAME_ASPECT_RATIO_WIDTH / (double)MAX_FRAME_ASPECT_RATIO_HEIGHT;
-
-
-  const int DISPLAY_ASPECT_RATIO_WIDTH = PIXEL_ASPECT_RATIO_WIDTH * MAX_FRAME_ASPECT_RATIO_WIDTH;
-  const int DISPLAY_ASPECT_RATIO_HEIGHT = PIXEL_ASPECT_RATIO_HEIGHT * MAX_FRAME_ASPECT_RATIO_HEIGHT;
-  const double DISPLAY_ASPECT_RATIO = (double)DISPLAY_ASPECT_RATIO_WIDTH / (double)DISPLAY_ASPECT_RATIO_HEIGHT;
 
   const int MAX_FRAME_WIDTH = 640;
   const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH / MAX_FRAME_ASPECT_RATIO;
@@ -94,19 +88,9 @@ void MediaFetcher::video_fetching_thread() {
             {
               std::lock_guard<std::mutex> lock(this->alter_mutex);
               this->frame = frame_image;
-
-              #if HAS_AVFRAME_DURATION
-              const double frame_duration = (double)frame_image->duration * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
-              #else
-              const double frame_duration = avg_frame_time_sec;
-              #endif
-
               const double frame_pts_time_sec = (double)frame_image->pts * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
               const double extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
-              const double frame_speed_skip_time_sec = ( frame_duration - ( frame_duration / this->clock.get_speed() ) );
-              this->clock.skip(frame_speed_skip_time_sec);
-
-              wait_duration = frame_pts_time_sec - current_time + extra_delay - frame_speed_skip_time_sec;
+              wait_duration = frame_pts_time_sec - current_time + extra_delay;
             }
 
             av_frame_free(&frame_image);

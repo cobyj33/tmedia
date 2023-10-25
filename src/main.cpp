@@ -453,6 +453,7 @@ int main(int argc, char** argv)
             }
 
             if (input == 'f' || input == 'F') {
+              erase();
               fullscreen = !fullscreen;
             }
 
@@ -570,6 +571,7 @@ int main(int argc, char** argv)
           wprintw_center(stdscr, 0, 0, COLS, std::filesystem::path(files[current_file]).filename().c_str());
 
           int section_size = COLS / 4;
+          werasebox(stdscr, LINES - 1, 0, COLS, 1);
           wprintw_center(stdscr, LINES - 1, 0, section_size, fetcher.clock.is_playing() ? "PLAYING" : "PAUSED");
           wprintw_center(stdscr, LINES - 1, section_size, section_size, "NOT LOOPED");
           wprintw_center(stdscr, LINES - 1, section_size * 2, section_size, "NOT SHUFFLING");
