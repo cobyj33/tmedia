@@ -108,6 +108,11 @@ int main(int argc, char** argv)
   VideoOutputMode vom  = VideoOutputMode::TEXT_ONLY;
   LoopType loop_type = LoopType::NO_LOOP;
   ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+
+  /**
+   * if <= 0, do not cap FPS
+  */
+  int render_loop_max_fps = 24;
   
 	// std::signal(SIGQUIT, ascii_video_signal_handler); I don't know if I should handle this,
   // as I'd want quitting if ascii_video does happen to actually break
@@ -178,6 +183,10 @@ int main(int argc, char** argv)
   parser.add_argument("-l", "--loop")
     .help("Set the loop type of the player ('none', 'repeat', 'repeat-one')");
 
+  parser.add_argument("--max-fps")
+    .help("Set the maximum rendering fps of ascii_video")
+    .scan<'i', int>();
+
   parser.add_argument("--ffmpeg-version")
     .help("Print the version of linked FFmpeg libraries")
     .default_value(false)
@@ -225,6 +234,10 @@ int main(int argc, char** argv)
       std::cerr << parser << std::endl;
       return EXIT_FAILURE;
     }
+  }
+
+  if (std::optional<int> user_max_fps = parser.present<int>("--max-fps")) {
+    render_loop_max_fps = *user_max_fps;
   }
 
   if (print_ffmpeg_version) {
@@ -330,8 +343,9 @@ int main(int argc, char** argv)
     ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
     vom  = grayscale ? VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY : VideoOutputMode::GRAYSCALE;
   }
+  
 
-  const int RENDER_LOOP_SLEEP_TIME_MS = 42; //24 fps
+  
   bool full_exit = false;
 
   while (!INTERRUPT_RECEIVED && !full_exit && current_file < files.size()) {
@@ -654,11 +668,10 @@ int main(int argc, char** argv)
 
             } break;
           }
-          
         }
 
         refresh();
-        sleep_for_ms(RENDER_LOOP_SLEEP_TIME_MS);
+        if (render_loop_max_fps > 0) sleep_for_sec(1 / (double)render_loop_max_fps);
       }
     } catch (const std::exception& e) {
       std::lock_guard<std::mutex> lock(fetcher.alter_mutex);
