@@ -86,49 +86,52 @@ std::string format_time_hh_mm_ss(double time_in_seconds) {
 }
 
 int parse_h_mm_ss_duration(std::string formatted_duration) {
-  if (is_h_mm_ss_duration(formatted_duration)) {
-    const int END = formatted_duration.length() - 1;
-    const int MM_SS_COLON_POSITION = END - 2;
-    const int HH_MM_COLON_POSITION = END - 5;
-    std::string hours_str = formatted_duration.substr(0, HH_MM_COLON_POSITION);
-    std::string minutes_str = formatted_duration.substr(HH_MM_COLON_POSITION + 1, 2);
-    std::string seconds_str = formatted_duration.substr(MM_SS_COLON_POSITION + 1, 2);
-    return std::stoi(hours_str) * HOURS_TO_SECONDS + std::stoi(minutes_str) * MINUTES_TO_SECONDS + std::stoi(seconds_str);
+  if (!is_h_mm_ss_duration(formatted_duration)) {
+    throw std::runtime_error("Cannot parse H:MM:SS duration of " + formatted_duration + ", this duration is not formatted correctly as H:MM:SS");
   }
-  throw std::runtime_error("Cannot parse H:MM:SS duration of " + formatted_duration + ", this duration is not formatted correctly as H:MM:SS");
+
+  const int END = formatted_duration.length() - 1;
+  const int MM_SS_COLON_POSITION = END - 2;
+  const int HH_MM_COLON_POSITION = END - 5;
+  std::string hours_str = formatted_duration.substr(0, HH_MM_COLON_POSITION);
+  std::string minutes_str = formatted_duration.substr(HH_MM_COLON_POSITION + 1, 2);
+  std::string seconds_str = formatted_duration.substr(MM_SS_COLON_POSITION + 1, 2);
+  return std::stoi(hours_str) * HOURS_TO_SECONDS + std::stoi(minutes_str) * MINUTES_TO_SECONDS + std::stoi(seconds_str);
 }
 
 bool is_h_mm_ss_duration(std::string formatted_duration) {
-  if (formatted_duration.length() >= 7) {
-    const int END = formatted_duration.length() - 1;
-    const int MM_SS_COLON_POSITION = END - 2;
-    const int HH_MM_COLON_POSITION = END - 5;
+  if (formatted_duration.length() < 7) {
+    return false;
+  }
 
-    if (formatted_duration[MM_SS_COLON_POSITION] == ':' && formatted_duration[HH_MM_COLON_POSITION] == ':') {
-      for (int i = 0; i < (int)formatted_duration.length(); i++) {
-        if (!std::isdigit(formatted_duration[i]) && !(i == MM_SS_COLON_POSITION || i == HH_MM_COLON_POSITION )) {
-          return false;
-        }
-      }
+  const int END = formatted_duration.length() - 1;
+  const int MM_SS_COLON_POSITION = END - 2;
+  const int HH_MM_COLON_POSITION = END - 5;
 
-      std::string hours_section = formatted_duration.substr(0, HH_MM_COLON_POSITION);
-      std::string minutes_section = formatted_duration.substr(HH_MM_COLON_POSITION + 1, 2);
-      std::string seconds_section = formatted_duration.substr(MM_SS_COLON_POSITION + 1, 2);
+  if (formatted_duration[MM_SS_COLON_POSITION] != ':' || formatted_duration[HH_MM_COLON_POSITION] != ':') {
+    return false;
+  }
 
-      if (hours_section.length() > 2) {
-        if (hours_section[0] == '0') {
-          return false;
-        }
-      }
-
-      int seconds = std::stoi(seconds_section);
-      int minutes = std::stoi(minutes_section);
-      
-      return seconds < 60 && minutes < 60;
+  for (int i = 0; i < (int)formatted_duration.length(); i++) {
+    if (!std::isdigit(formatted_duration[i]) && !(i == MM_SS_COLON_POSITION || i == HH_MM_COLON_POSITION )) {
+      return false;
     }
   }
 
-  return false;
+  std::string hours_section = formatted_duration.substr(0, HH_MM_COLON_POSITION);
+  std::string minutes_section = formatted_duration.substr(HH_MM_COLON_POSITION + 1, 2);
+  std::string seconds_section = formatted_duration.substr(MM_SS_COLON_POSITION + 1, 2);
+
+  if (hours_section.length() > 2) {
+    if (hours_section[0] == '0') {
+      return false;
+    }
+  }
+
+  int seconds = std::stoi(seconds_section);
+  int minutes = std::stoi(minutes_section);
+  
+  return seconds < 60 && minutes < 60;
 }
 
 std::string format_time_mm_ss(double time_in_seconds) {
@@ -139,44 +142,47 @@ std::string format_time_mm_ss(double time_in_seconds) {
 }
 
 int parse_m_ss_duration(std::string formatted_duration) {
-  if (is_m_ss_duration(formatted_duration)) {
-    const int END = formatted_duration.length() - 1;
-    const int COLON_POSITION = END - 2;
-    std::string minutes_str = formatted_duration.substr(0, COLON_POSITION);
-    std::string seconds_str = formatted_duration.substr(COLON_POSITION + 1, 2);
-    return std::stoi(minutes_str) * MINUTES_TO_SECONDS + std::stoi(seconds_str);
+  if (!is_m_ss_duration(formatted_duration)) {
+    throw std::runtime_error("Cannot parse MM:SS duration of " + formatted_duration + ", this duration is not formatted correctly as MM:SS");
   }
-  throw std::runtime_error("Cannot parse MM:SS duration of " + formatted_duration + ", this duration is not formatted correctly as MM:SS");
+
+  const int END = formatted_duration.length() - 1;
+  const int COLON_POSITION = END - 2;
+  std::string minutes_str = formatted_duration.substr(0, COLON_POSITION);
+  std::string seconds_str = formatted_duration.substr(COLON_POSITION + 1, 2);
+  return std::stoi(minutes_str) * MINUTES_TO_SECONDS + std::stoi(seconds_str);
 }
 
 
 bool is_m_ss_duration(std::string formatted_duration) {
-  if (formatted_duration.length() >= 4) {
-    const int END = formatted_duration.length() - 1;
-    const int COLON_POSITION = END - 2;
+  if (formatted_duration.length() < 4) {
+    return false;
+  }
 
-    if (formatted_duration[COLON_POSITION] == ':') {
-      for (int i = 0; i < (int)formatted_duration.length(); i++) {
-        if (!std::isdigit(formatted_duration[i]) && i != COLON_POSITION) {
-          return false;
-        }
-      }
+  const int END = formatted_duration.length() - 1;
+  const int COLON_POSITION = END - 2;
+  if (formatted_duration[COLON_POSITION] != ':') {
+    return false;
+  }
 
-      std::string minutes_section = formatted_duration.substr(0, COLON_POSITION);
-      if (minutes_section.length() > 2) {
-        if (minutes_section[0] == '0') {
-          return false;
-        }
-      }
-
-
-      std::string seconds_section = formatted_duration.substr(COLON_POSITION + 1, 2);
-      int seconds = std::stoi(seconds_section);
-      
-      return seconds < 60;
+  for (int i = 0; i < (int)formatted_duration.length(); i++) {
+    if (!std::isdigit(formatted_duration[i]) && i != COLON_POSITION) {
+      return false;
     }
   }
-  return false;
+
+  std::string minutes_section = formatted_duration.substr(0, COLON_POSITION);
+  if (minutes_section.length() > 2) {
+    if (minutes_section[0] == '0') {
+      return false;
+    }
+  }
+
+
+  std::string seconds_section = formatted_duration.substr(COLON_POSITION + 1, 2);
+  int seconds = std::stoi(seconds_section);
+  
+  return seconds < 60;
 }
 
 bool is_int_str(std::string str) {
