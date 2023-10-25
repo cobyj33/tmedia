@@ -354,9 +354,8 @@ int main(int argc, char** argv)
     fetcher.begin();
 
     try {
-      PixelData frame;
       while (fetcher.in_use) { // never break without setting in_use to false
-
+        std::shared_ptr<PixelData> frame;
         if (INTERRUPT_RECEIVED) {
           fetcher.in_use = false;
           break;
@@ -591,13 +590,13 @@ int main(int argc, char** argv)
         // render_movie_screen(frame, vom, files[current_file]);
 
         if (COLS <= 20 || LINES < 10 || fullscreen) {
-          print_pixel_data(frame, 0, 0, COLS, LINES, vom);
+          if (frame) print_pixel_data(*frame, 0, 0, COLS, LINES, vom);
         } else {
 
           switch (fetcher.media_type) {
             case MediaType::VIDEO:
             case MediaType::AUDIO: {
-              print_pixel_data(frame, 2, 0, COLS, LINES - 4, vom); // frame
+              if (frame) print_pixel_data(*frame, 2, 0, COLS, LINES - 4, vom); // frame
 
               if (files.size() == 1) {
                 wfill_box(stdscr, 1, 0, COLS, 1, '~');
@@ -632,7 +631,7 @@ int main(int argc, char** argv)
               mvwaddstr_center(stdscr, LINES - 1, section_size * 2, section_size, volume_str.c_str());
             } break;
             case MediaType::IMAGE: {
-              print_pixel_data(frame, 2, 0, COLS, LINES, vom); // frame
+              if (frame) print_pixel_data(*frame, 2, 0, COLS, LINES, vom); // frame
 
               if (files.size() == 1) {
                 wfill_box(stdscr, 1, 0, COLS, 1, '~');

@@ -37,7 +37,8 @@ class MediaFetcher {
 
     MediaType media_type;
     std::unique_ptr<MediaDecoder> media_decoder;
-    PixelData frame;
+    std::shared_ptr<PixelData> frame;
+
     std::string error;
     std::mutex alter_mutex;
     std::mutex audio_buffer_mutex;

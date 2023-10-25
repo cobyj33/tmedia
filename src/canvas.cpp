@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <utility>
+#include <memory>
 
 Canvas::Canvas(int nb_rows, int nb_cols) {
   this->nb_rows = nb_rows;
@@ -39,6 +40,6 @@ void Canvas::line(int row1, int col1, int row2, int col2, RGBColor color) {
   }
 }
 
-PixelData Canvas::get_image() {
-  return std::move(PixelData(this->canvas, this->nb_cols, this->nb_rows));
+std::shared_ptr<PixelData> Canvas::get_image() {
+  return std::make_shared<PixelData>(this->canvas, this->nb_cols, this->nb_rows);
 }

@@ -89,7 +89,7 @@ void MediaFetcher::video_fetching_thread() {
 
             {
               std::lock_guard<std::mutex> lock(this->alter_mutex);
-              this->frame = frame_image;
+              this->frame = std::make_shared<PixelData>(frame_image);
               const double frame_pts_time_sec = (double)frame_image->pts * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
               const double extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
               wait_duration = frame_pts_time_sec - current_time + extra_delay;
@@ -131,11 +131,11 @@ void MediaFetcher::video_fetching_thread() {
 
           std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
           audio_bound_volume(mono, 1, 1.0);
-          PixelData frame = generate_audio_view_amplitude_averaged(mono, MAX_FRAME_HEIGHT, MAX_FRAME_WIDTH);
+          std::shared_ptr<PixelData> audio_visualization = generate_audio_view_amplitude_averaged(mono, MAX_FRAME_HEIGHT, MAX_FRAME_WIDTH);
 
           {
             std::lock_guard<std::mutex> player_lock(this->alter_mutex);
-            this->frame = frame;
+            this->frame = audio_visualization;
           }
 
           sleep_for_sec(DEFAULT_AVERAGE_FRAME_TIME_SEC);
