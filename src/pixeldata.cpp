@@ -121,7 +121,9 @@ PixelData::PixelData(const PixelData& pix_data) {
 }
 
 void PixelData::operator=(const PixelData& pix_data) {
-  this->init_from_source(pix_data.get_width(), pix_data.get_height(), [&pix_data](int row, int col) { return RGBColor(pix_data.at(row, col)); });
+  this->pixels = pix_data.pixels;
+  this->m_width = pix_data.m_width;
+  this->m_height = pix_data.m_height;
 }
 
 bool PixelData::in_bounds(int row, int col) const {
@@ -136,22 +138,15 @@ int PixelData::get_height() const {
   return this->m_height;
 }
 
-/**
- * Nearest-Neighbor
-*/
-std::shared_ptr<PixelData> PixelData::scale(std::shared_ptr<PixelData> pixel_data, double amount, ScalingAlgo scaling_algorithm) {
-  if (!pixel_data) {
-    throw std::runtime_error("[PixelData::scale] Attempted to scale nullptr to pixel_data");
-  }
-  
+PixelData PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
   if (amount == 0) {
-    return std::make_shared<PixelData>();
+    return PixelData();
   } else if (amount < 0) {
     throw std::runtime_error("[PixelData::scale] Scaling Pixel data by negative amount is currently not supported");
   }
 
-  const int new_width = pixel_data->get_width() * amount;
-  const int new_height = pixel_data->get_height() * amount;
+  const int new_width = this->get_width() * amount;
+  const int new_height = this->get_height() * amount;
   std::shared_ptr<std::vector<RGBColor>> new_pixels = std::make_shared<std::vector<RGBColor>>();
   new_pixels->reserve(new_width * new_height);
 
@@ -162,33 +157,30 @@ std::shared_ptr<PixelData> PixelData::scale(std::shared_ptr<PixelData> pixel_dat
 
       for (double new_row = 0; new_row < new_height; new_row++) {
         for (double new_col = 0; new_col < new_width; new_col++) {
-          new_pixels->push_back(std::move(get_avg_color_from_area(*pixel_data, new_row * box_height, new_col * box_width, box_width, box_height )));
+          new_pixels->push_back(std::move(get_avg_color_from_area(*this, new_row * box_height, new_col * box_width, box_width, box_height )));
         }
       }
     } break;
     case ScalingAlgo::NEAREST_NEIGHBOR: {
       for (double new_row = 0; new_row < new_height; new_row++) {
         for (double new_col = 0; new_col < new_width; new_col++) {
-          new_pixels->push_back((*pixel_data->pixels)[(int)(new_row / amount) * pixel_data->m_width + (int)(new_col / amount)]);
+          new_pixels->push_back((*this->pixels)[(int)(new_row / amount) * this->m_width + (int)(new_col / amount)]);
         }
       }
     } break;
     default: throw std::runtime_error("[PixelData::scaele] unrecognized scaling function");
   }
 
-  return std::make_shared<PixelData>(new_pixels, new_width, new_height);
+  return std::move(PixelData(new_pixels, new_width, new_height));
 }
 
-std::shared_ptr<PixelData> PixelData::bound(std::shared_ptr<PixelData> pixel_data,int width, int height, ScalingAlgo scaling_algorithm) {
-  if (!pixel_data) {
-    throw std::runtime_error("[PixelData::bound] attempted to scale nullptr to pixel_data");
+PixelData PixelData::bound(int width, int height, ScalingAlgo scaling_algorithm) const {
+  if (this->get_width() <= width && this->get_height() <= height) {
+    return PixelData(*this);
   }
-  
-  if (pixel_data->get_width() <= width && pixel_data->get_height() <= height) {
-    return pixel_data;
-  }
-  double scale_factor = get_scale_factor(pixel_data->get_width(), pixel_data->get_height(), width, height);
-  return PixelData::scale(pixel_data, scale_factor, scaling_algorithm);
+
+  double scale_factor = get_scale_factor(this->get_width(), this->get_height(), width, height);
+  return std::move(this->scale(scale_factor, scaling_algorithm));
 }
 
 bool PixelData::equals(const PixelData& pix_data) const {

@@ -16,7 +16,7 @@ class Canvas {
   public:
     Canvas(int rows, int cols);
     void line(int row1, int col1, int row2, int col2, RGBColor color);
-    std::shared_ptr<PixelData> get_image();
+    PixelData get_image();
 };
 
 #endif

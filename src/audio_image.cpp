@@ -5,7 +5,7 @@
 
 #include <vector>
 
-std::shared_ptr<PixelData> generate_audio_view_simple(std::vector<float>& mono, int rows, int cols) {
+PixelData generate_audio_view_simple(std::vector<float>& mono, int rows, int cols) {
   int middle_row = rows / 2;
   
   Canvas canvas(rows, cols);
@@ -18,7 +18,7 @@ std::shared_ptr<PixelData> generate_audio_view_simple(std::vector<float>& mono, 
   return canvas.get_image();
 }
 
-std::shared_ptr<PixelData> generate_audio_view_amplitude_averaged(std::vector<float>& mono, int rows, int cols) {
+PixelData generate_audio_view_amplitude_averaged(std::vector<float>& mono, int rows, int cols) {
   int middle_row = rows / 2;
   
   Canvas canvas(rows, cols);
@@ -42,7 +42,7 @@ std::shared_ptr<PixelData> generate_audio_view_amplitude_averaged(std::vector<fl
   return canvas.get_image();
 }
 
-std::shared_ptr<PixelData> generate_audio_view_maxed(std::vector<float>& mono, int rows, int cols) {
+PixelData generate_audio_view_maxed(std::vector<float>& mono, int rows, int cols) {
   int middle_row = rows / 2;
   
   Canvas canvas(rows, cols);

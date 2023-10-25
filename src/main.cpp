@@ -53,7 +53,7 @@ enum class JustifyStrings {
 };
 
 // void wprintstr_list(WINDOW* window, int y, int x, int width, 
-void print_pixel_data(std::shared_ptr<PixelData> pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
+void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage);
 void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time, double duration);
@@ -355,7 +355,7 @@ int main(int argc, char** argv)
 
     try {
       while (fetcher.in_use) { // never break without setting in_use to false
-        std::shared_ptr<PixelData> frame;
+        PixelData frame;
         if (INTERRUPT_RECEIVED) {
           fetcher.in_use = false;
           break;
@@ -587,8 +587,6 @@ int main(int argc, char** argv)
           if (audio_device && fetcher.clock.is_playing()) audio_device->start();
         }
 
-        // render_movie_screen(frame, vom, files[current_file]);
-
         if (COLS <= 20 || LINES < 10 || fullscreen) {
           print_pixel_data(frame, 0, 0, COLS, LINES, vom);
         } else {
@@ -596,7 +594,7 @@ int main(int argc, char** argv)
           switch (fetcher.media_type) {
             case MediaType::VIDEO:
             case MediaType::AUDIO: {
-              print_pixel_data(frame, 2, 0, COLS, LINES - 4, vom); // frame
+              print_pixel_data(frame, 2, 0, COLS, LINES - 4, vom);
 
               if (files.size() == 1) {
                 wfill_box(stdscr, 1, 0, COLS, 1, '~');
@@ -631,7 +629,7 @@ int main(int argc, char** argv)
               mvwaddstr_center(stdscr, LINES - 1, section_size * 2, section_size, volume_str.c_str());
             } break;
             case MediaType::IMAGE: {
-              print_pixel_data(frame, 2, 0, COLS, LINES, vom); // frame
+              print_pixel_data(frame, 2, 0, COLS, LINES, vom);
 
               if (files.size() == 1) {
                 wfill_box(stdscr, 1, 0, COLS, 1, '~');
@@ -735,22 +733,21 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in
     wprint_progress_bar(window, y, x + current_time_string.length() + PADDING_BETWEEN_ELEMENTS, progress_bar_width, 1,time_in_seconds / duration_in_seconds);
 }
 
-void print_pixel_data(std::shared_ptr<PixelData> pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode) {
-  if (!pixel_data) return;
+void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode) {
   if (output_mode != VideoOutputMode::TEXT_ONLY && !has_colors()) {
     throw std::runtime_error("Attempted to print colored text in terminal that does not support color");
   }
 
   const ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
-  std::shared_ptr<PixelData> bounded = PixelData::bound(pixel_data, bounds_width, bounds_height, scaling_algorithm);
-  int image_start_row = bounds_row + std::abs(bounded->get_height() - bounds_height) / 2;
-  int image_start_col = bounds_col + std::abs(bounded->get_width() - bounds_width) / 2; 
+  PixelData bounded = pixel_data.bound(bounds_width, bounds_height, scaling_algorithm);
+  int image_start_row = bounds_row + std::abs(bounded.get_height() - bounds_height) / 2;
+  int image_start_col = bounds_col + std::abs(bounded.get_width() - bounds_width) / 2; 
 
   bool background_only = output_mode == VideoOutputMode::COLORED_BACKGROUND_ONLY || output_mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY;
 
-  for (int row = 0; row < bounded->get_height(); row++) {
-    for (int col = 0; col < bounded->get_width(); col++) {
-      const RGBColor& target_color = bounded->at(row, col);
+  for (int row = 0; row < bounded.get_height(); row++) {
+    for (int col = 0; col < bounded.get_width(); col++) {
+      const RGBColor& target_color = bounded.at(row, col);
       const char target_char = background_only ? ' ' : get_char_from_rgb(AsciiImage::ASCII_STANDARD_CHAR_MAP, target_color);
       
       if (output_mode == VideoOutputMode::TEXT_ONLY) {

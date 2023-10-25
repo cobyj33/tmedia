@@ -86,7 +86,7 @@ void MediaFetcher::video_fetching_thread() {
           if (decoded_frames.size() > 0 && decoded_frames[0] != nullptr) {
             // resizing can take quite some time, so we release the mutex for this part
             AVFrame* frame_image = video_converter->convert_video_frame(decoded_frames[0]);
-            std::shared_ptr<PixelData> frame_pixel_data = std::make_shared<PixelData>(frame_image);
+            PixelData frame_pixel_data = PixelData(frame_image);
 
             {
               std::lock_guard<std::mutex> lock(this->alter_mutex);
@@ -132,7 +132,7 @@ void MediaFetcher::video_fetching_thread() {
 
           std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
           audio_bound_volume(mono, 1, 1.0);
-          std::shared_ptr<PixelData> audio_visualization = generate_audio_view_amplitude_averaged(mono, MAX_FRAME_HEIGHT, MAX_FRAME_WIDTH);
+          PixelData audio_visualization = generate_audio_view_amplitude_averaged(mono, MAX_FRAME_HEIGHT, MAX_FRAME_WIDTH);
 
           {
             std::lock_guard<std::mutex> player_lock(this->alter_mutex);
