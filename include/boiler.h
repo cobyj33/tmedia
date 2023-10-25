@@ -13,6 +13,7 @@ bool is_valid_media_file_path(const std::string& path_str);
  * @brief Opens and returns an AVFormat Context
  * 
  * @note The returned AVFormatContext is guaranteed to be non-null
+ * @note The returned AVFormatContext must be freed with avformat_close_input, not just avformat_free_context
  * @throws std::runtime_error if the format context could not be opened for the corresponding file name
  * @throws std::runtime_error if the stream information for the format context could not be found
  * 

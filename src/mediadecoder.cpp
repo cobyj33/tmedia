@@ -37,7 +37,6 @@ MediaDecoder::MediaDecoder(const std::string& file_path, std::set<enum AVMediaTy
 
 MediaDecoder::~MediaDecoder() {
   avformat_close_input(&(this->format_context));
-  avformat_free_context(this->format_context);
 }
 
 double MediaDecoder::get_duration() const {

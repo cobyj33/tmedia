@@ -21,7 +21,7 @@ AVFormatContext* open_format_context(const std::string& file_path) {
   int result = avformat_open_input(&format_context, file_path.c_str(), nullptr, nullptr);
   if (result < 0) {
     if (format_context != nullptr) {
-      avformat_free_context(format_context);
+      avformat_close_input(&format_context);
     }
     throw ascii::ffmpeg_error("Failed to open format context input for " + file_path, result);
   }
@@ -29,7 +29,7 @@ AVFormatContext* open_format_context(const std::string& file_path) {
   result = avformat_find_stream_info(format_context, NULL);
   if (result < 0) {
     if (format_context != nullptr) {
-      avformat_free_context(format_context);
+      avformat_close_input(&format_context);
     }
     throw ascii::ffmpeg_error("Failed to find stream info for " + file_path, result);
   }
@@ -44,14 +44,14 @@ void dump_file_info(const std::string& file_path) {
   av_log_set_level(AV_LOG_INFO);
   AVFormatContext* format_context = open_format_context(file_path);
   av_dump_format(format_context, 0, file_path.c_str(), 0);
-  avformat_free_context(format_context);
+  avformat_close_input(&format_context);
 }
 
 double get_file_duration(const std::string& file_path) {
   AVFormatContext* format_context = open_format_context(file_path);
   int64_t duration = format_context->duration;
   double duration_seconds = (double)duration / AV_TIME_BASE;
-  avformat_free_context(format_context);
+  avformat_close_input(&format_context);
   return duration_seconds;
 }
 
@@ -71,7 +71,7 @@ bool is_valid_media_file_path(const std::string& path_str) {
 
   try {
     AVFormatContext* fmt_ctx = open_format_context(path_str);
-    avformat_free_context(fmt_ctx);
+    avformat_close_input(&fmt_ctx);
     return true;
   } catch (const ascii::ffmpeg_error& e) {
     return false;

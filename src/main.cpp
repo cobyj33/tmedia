@@ -50,9 +50,16 @@ enum class VideoOutputMode {
   TEXT_ONLY,
 };
 
+enum class JustifyStrings {
+  SPACE_BETWEEN
+};
+
+// void wprintstr_list(WINDOW* window, int y, int x, int width, 
 void render_movie_screen(PixelData& pixel_data, VideoOutputMode media_gui, const std::string& current_file);
 void print_pixel_data(PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode);
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
+void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage);
+void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time, double duration);
 
 bool INTERRUPT_RECEIVED = false;
 const int KEY_ESCAPE = 27;
@@ -160,6 +167,11 @@ int main(int argc, char** argv)
     .default_value(false)
     .implicit_value(true);
 
+  parser.add_argument("-f", "--fullscreen")
+    .help("Begin the player in fullscreen mode")
+    .default_value(false)
+    .implicit_value(true);
+
   parser.add_argument("--volume")
     .help("Set initial volume (must be between 0.0 and 1.0)")
     .scan<'g', double>();
@@ -191,6 +203,7 @@ int main(int argc, char** argv)
   bool dump = parser.get<bool>("-d");
   bool print_ffmpeg_version = parser.get<bool>("--ffmpeg-version");
   bool print_curses_version = parser.get<bool>("--curses-version");
+  bool fullscreen = parser.get<bool>("-f");
 
   muted = parser.get<bool>("-m");
   if (std::optional<double> user_volume = parser.present<double>("--volume")) {
@@ -277,7 +290,7 @@ int main(int argc, char** argv)
       std::string media_type_str = media_type_to_string(media_type);
       std::cerr << std::endl << "[ascii_video]: Detected media Type: " << media_type_str << std::endl;
 
-      avformat_free_context(format_context);
+      avformat_close_input(&format_context);
     }
 
     return EXIT_SUCCESS;
@@ -346,12 +359,14 @@ int main(int argc, char** argv)
 
         double requested_jump_time = 0.0;
         bool requested_jump = false;
+        double timestamp = 0.0;
 
         {
           std::lock_guard<std::mutex> _alter_lock(fetcher.alter_mutex);
           // std::lock_guard<std::mutex> _buffer_lock(fetcher.audio_buffer_mutex); jump time calls are now handled outside of input loop
           const double current_system_time = system_clock_sec();
           requested_jump_time = fetcher.get_time(current_system_time);
+          timestamp = fetcher.get_time(current_system_time);
           frame = fetcher.frame;
 
           if (fetcher.media_type != MediaType::IMAGE && fetcher.get_time(current_system_time) >= fetcher.get_duration()) {
@@ -444,6 +459,10 @@ int main(int argc, char** argv)
             if (input == 'p' || input == 'P') {
               next_file = current_file == 0 ? 0 : current_file - 1;
               fetcher.in_use = false;
+            }
+
+            if (input == 'f' || input == 'F') {
+              fullscreen = !fullscreen;
             }
 
             if (input == KEY_UP && audio_device) {
@@ -547,7 +566,26 @@ int main(int argc, char** argv)
           if (audio_device && fetcher.clock.is_playing()) audio_device->start();
         }
 
-        render_movie_screen(frame, vom, files[current_file]);
+        // render_movie_screen(frame, vom, files[current_file]);
+
+        if (COLS <= 20 || LINES < 10 || fullscreen) {
+          print_pixel_data(frame, 0, 0, COLS, LINES, vom);
+        } else {
+          print_pixel_data(frame, 2, 0, COLS, LINES - 4, vom); // frame
+          wfill_box(stdscr, 2, 0, COLS, 1, '~');
+          wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
+
+          wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
+          wprintw_center(stdscr, 0, 0, COLS, std::filesystem::path(files[current_file]).filename().c_str());
+
+          int section_size = COLS / 4;
+          wprintw_center(stdscr, LINES - 1, 0, section_size, fetcher.clock.is_playing() ? "PLAYING" : "PAUSED");
+          wprintw_center(stdscr, LINES - 1, section_size, section_size, "NOT LOOPED");
+          wprintw_center(stdscr, LINES - 1, section_size * 2, section_size, "NOT SHUFFLING");
+          wprintw_center(stdscr, LINES - 1, section_size * 3, section_size, "VOLUME: %d%%", (int)(volume * 100));
+        }
+
+
         refresh();
         sleep_for_ms(RENDER_LOOP_SLEEP_TIME_MS);
       }
@@ -607,13 +645,30 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
   (void)pInput;
 }
 
-void render_fullscreen(PixelData& pixel_data, VideoOutputMode output_mode) {
-  print_pixel_data(pixel_data, 0, 0, COLS, LINES, output_mode);
+void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage) {
+  int passed_width = width * percentage;
+  int remaining_width = width * (1.0 - percentage);
+  wfill_box(window, y, x, passed_width, height, '@');
+  wfill_box(window, y, x + passed_width, remaining_width, height, '-');
+}
+
+void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in_seconds, double duration_in_seconds) {
+  int PADDING_BETWEEN_ELEMENTS = 2;
+
+  std::string formatted_passed_time = format_duration(time_in_seconds);
+  std::string formatted_duration = format_duration(duration_in_seconds);
+  std::string current_time_string = formatted_passed_time + " / " + formatted_duration;
+  wprintw_left(window, y, x, width, current_time_string.c_str());
+
+  int progress_bar_width = width - current_time_string.length() - PADDING_BETWEEN_ELEMENTS;
+
+  if (progress_bar_width > 0) 
+    wprint_progress_bar(window, y, x + current_time_string.length() + PADDING_BETWEEN_ELEMENTS, progress_bar_width, 1,time_in_seconds / duration_in_seconds);
 }
 
 void render_movie_screen(PixelData& pixel_data, VideoOutputMode output_mode, const std::string& current_file_name) {
   if (LINES < 10) {
-    render_fullscreen(pixel_data, output_mode);
+    print_pixel_data(pixel_data, 0, 0, COLS, LINES, output_mode);
     return;
   }
 
