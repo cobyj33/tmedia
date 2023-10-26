@@ -202,7 +202,7 @@ int main(int argc, char** argv)
   try {
     parser.parse_args(argc, argv);
   }
-  catch (std::runtime_error const& err) {
+  catch (std::exception const& err) {
     std::cerr << err.what() << std::endl;
     std::cerr << parser;
     return EXIT_FAILURE;
