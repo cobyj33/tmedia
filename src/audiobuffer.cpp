@@ -8,7 +8,7 @@
 
 
 AudioBuffer::AudioBuffer(unsigned int nb_channels, unsigned int sample_rate) {
-  this->m_playhead = 0;
+  this->m_playhead_frame = 0;
   this->m_start_time = 0.0;
   this->m_nb_channels = nb_channels;
   this->m_sample_rate = sample_rate;
@@ -27,7 +27,7 @@ double AudioBuffer::get_elapsed_time() const {
     return 0.0;
   }
 
-  return (double)this->m_playhead / (double)this->m_sample_rate;
+  return (double)this->m_playhead_frame / (double)this->m_sample_rate;
 };
 
 double AudioBuffer::get_time() const {
@@ -42,7 +42,7 @@ void AudioBuffer::set_time_in_bounds(double time) {
     throw std::runtime_error("[AudioBuffer::set_time_in_bounds] Cannot set audio buffer time to " + std::to_string(time) + ". The audio buffer is currently only holding data between the times " + std::to_string(this->m_start_time) + " and " + std::to_string(this->get_end_time()));
   }
 
-  this->m_playhead = (std::size_t)(std::min(this->get_nb_frames() - 1, std::max( (std::size_t)0, (std::size_t)((time - this->m_start_time) * this->m_sample_rate  ))  )  );
+  this->m_playhead_frame = static_cast<std::size_t>((time - this->m_start_time) * this->m_sample_rate);
 };
 
 double AudioBuffer::get_start_time() const {
@@ -61,10 +61,10 @@ void AudioBuffer::leave_behind(double time) {
   }
 
   double target_time = this->get_time() - time;
-  std::size_t offset_sample_from_start = (target_time - this->m_start_time) * this->m_sample_rate;
-  this->m_buffer = std::move(std::vector<float>(this->m_buffer.begin() + offset_sample_from_start * this->m_nb_channels, this->m_buffer.end()));
+  std::size_t offset_frame_from_start = (target_time - this->m_start_time) * this->m_sample_rate;
+  this->m_buffer = std::move(std::vector<float>(this->m_buffer.begin() + offset_frame_from_start * this->m_nb_channels, this->m_buffer.end()));
   this->m_start_time = target_time;
-  this->m_playhead -= offset_sample_from_start;
+  this->m_playhead_frame -= offset_frame_from_start;
 }
 
 double AudioBuffer::get_end_time() const {
@@ -83,13 +83,13 @@ bool AudioBuffer::is_time_in_bounds(double time) const {
 
 void AudioBuffer::clear_and_restart_at(double time) {
   this->m_buffer.clear();
-  this->m_playhead = 0;
+  this->m_playhead_frame = 0;
   this->m_start_time = time;
 };
 
 
 bool AudioBuffer::can_read(std::size_t nb_frames) const {
-  return this->m_playhead + nb_frames <= this->get_nb_frames();
+  return this->m_playhead_frame + nb_frames <= this->get_nb_frames();
 };
 
 bool AudioBuffer::can_read() const {
@@ -98,14 +98,14 @@ bool AudioBuffer::can_read() const {
 
 void AudioBuffer::peek_into(std::size_t nb_frames, float* target) const {
   for (std::size_t i = 0; i < nb_frames * this->m_nb_channels; i++) {
-    target[i] = this->m_buffer[this->m_playhead * this->m_nb_channels + i];
+    target[i] = this->m_buffer[this->m_playhead_frame * this->m_nb_channels + i];
   }
 };
 
 std::vector<float> AudioBuffer::peek_into(std::size_t nb_frames) {
   std::vector<float> peek;
   for (std::size_t i = 0; i < nb_frames * this->m_nb_channels; i++) {
-    peek.push_back(this->m_buffer[this->m_playhead * this->m_nb_channels + i]);
+    peek.push_back(this->m_buffer[this->m_playhead_frame * this->m_nb_channels + i]);
   }
 
   return peek;
@@ -118,7 +118,7 @@ void AudioBuffer::read_into(std::size_t nb_frames, float* target)  {
 };
 
 void AudioBuffer::advance(std::size_t nb_frames) {
-  this->m_playhead += nb_frames;
+  this->m_playhead_frame += nb_frames;
 };
 
 int AudioBuffer::get_nb_channels() const {
@@ -130,5 +130,5 @@ int AudioBuffer::get_sample_rate() const {
 };
 
 std::size_t AudioBuffer::get_nb_can_read() const {
-  return this->get_nb_frames() - this->m_playhead;
+  return this->get_nb_frames() - this->m_playhead_frame;
 }

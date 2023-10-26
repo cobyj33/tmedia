@@ -29,7 +29,7 @@ class AudioBuffer {
      * @brief The current frame of the playhead in the audio buffer's data. 
      * This idea of the "playhead" is used so that data can continuosly be moved exactly from where the audio buffer previously stopped.
      */
-    std::size_t m_playhead;
+    std::size_t m_playhead_frame;
 
     int m_nb_channels;
 

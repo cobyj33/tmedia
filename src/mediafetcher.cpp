@@ -106,6 +106,8 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     this->audio_buffer->clear_and_restart_at(target_time);
+    for (int i = 0; i < 10; i++)
+      this->load_next_audio();
   }
   
   this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time
@@ -117,7 +119,14 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
 */
 void MediaFetcher::begin() {
   this->in_use = true;
+
+  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO))
+    for (int i = 0; i < 10; i++)
+      this->load_next_audio();
+
   this->clock.init(system_clock_sec());
+
+
   std::thread initialized_video_thread(&MediaFetcher::video_fetching_thread, this);
   video_thread.swap(initialized_video_thread);
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
