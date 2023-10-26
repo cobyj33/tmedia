@@ -43,29 +43,32 @@ class AudioBuffer {
      */
     AudioBuffer(unsigned int nb_channels, unsigned int sample_rate);
 
-    /** gets the number of audio frames stored in the audio buffer */
-    std::size_t get_nb_frames() const;
-    /** gets the number of audio channels represented by the audio buffer */
+    /** gets the number of audio channels represented by the audio buffer. Thread-Safe */
     int get_nb_channels() const;
-    /** gets the sample rate per second of the data stored by the audio buffer*/
+    /** gets the sample rate per second of the data stored by the audio buffer. Thread-Safe*/
     int get_sample_rate() const;
 
+    /** gets the number of audio frames stored in the audio buffer. Not Thread-Safe */
+    std::size_t get_nb_frames() const;
+
     /**
-     * @brief Clears the audio buffer data and offsets the data to represent it's beginning at a certain "time". This "time" can be something like the time of the start of the buffer in audio or video data.
-     * 
+     * @brief Clears the audio buffer data and offsets the data to represent it's beginning at a certain "time". This "time" can be something like the time of the start of the buffer in audio or video data. 
      * @param time The "time" that the beginning of the audio buffer represents
+     * Not Thread-Safe
      */
     void clear_and_restart_at(double time);
 
     /**
      * @brief Get the current time that the audio buffer is on
      * @return The current time of the audio buffer in seconds 
+     * Not Thread-Safe
      */
     double get_time() const;
 
     /**
      * @brief Get the current time that the audio buffer is on, relative to the beginning of the audio buffer's storage
      * @return The current time that has elapsed since the beginning of the audio buffer in seconds
+     * Not Thread-Safe
      */
     double get_elapsed_time() const;
 
@@ -75,6 +78,7 @@ class AudioBuffer {
      * @param time A time within the bounds of this audio buffer's loaded time interval
      * @throws If the time given is not 
      * @note Query for the current time interval with get_start_time and get_end_time, or test if the given time is inside of the interval with is_time_in_bounds before calling this function
+     * Not Thread-Safe
      */
     void set_time_in_bounds(double time);
 
@@ -84,18 +88,21 @@ class AudioBuffer {
      * @param time The seconds of audio data that should be left behind the current playback position
      * @throws If the amount of time requested is greater than the amount of time available behind the current buffer's playback position, or if the amount of time requested is negative
      * @note Query for the total available time behind the buffer with $get_elapsed_time to ensure no error is thrown through the above conditions
+     * Not Thread-Safe
      */
     void leave_behind(double time);
 
     /**
      * @brief Gets the starting time of the buffer. The starting time is determined by the time given by clear_and_restart_at
      * @return The time in seconds that the first frame in the buffer represents 
+     * Not Thread-Safe
      */
     double get_start_time() const;
 
     /**
      * @brief Gets the ending time of the buffer. The ending time is determined by the amount of frames in the buffer and the sample rate of the buffer
      * @return The time in seconds that the final frame in the buffer represents 
+     * Not Thread-Safe
      */
     double get_end_time() const;
 
@@ -103,17 +110,20 @@ class AudioBuffer {
      * @brief Writes nb_frames audio frames from an interleavened float buffer into the audio buffer.
      * 
      * @param nb_frames the number of audio frames to write into the audio buffer
+     * Not Thread-Safe
      */
     void write(float* frames, int nb_frames);
 
     /**
      * @brief Finds if a certain time stamp lies in the audio buffer's data length
      * @param time the time to check
+     * Not Thread-Safe
      */
     bool is_time_in_bounds(double time) const;
 
     /**
      * @brief Determine if the audio buffer has any audio frame data to read
+     * Not Thread-Safe
      */
     bool can_read() const;
 
@@ -124,10 +134,11 @@ class AudioBuffer {
      * is no further data to be found or all data has previously been read.
      * 
      * @param nb_frames The number of frames to test if able to be read
+     * Not Thread-Safe
      */
     bool can_read(std::size_t nb_frames) const;
 
-    std::size_t get_nb_can_read() const;
+    std::size_t get_nb_can_read() const; // Not Thread-Safe
 
     /**
      * @brief Reads nb_frames frames into the float buffer and advances the audio buffer by nb_frames. The data returned is interleaved
@@ -141,6 +152,7 @@ class AudioBuffer {
      * 
      * @param nb_frames The number of frames to be read into the buffer
      * @param target The float buffer to read the data into.
+     * Not Thread-Safe
      */
     void read_into(std::size_t nb_frames, float* target);
 
@@ -156,13 +168,15 @@ class AudioBuffer {
      * 
      * @param nb_frames The number of frames to be read into the buffer
      * @param target The float buffer to read the data into.
+     * Not Thread-Safe
      */
     void peek_into(std::size_t nb_frames, float* target) const;
-    std::vector<float> peek_into(std::size_t nb_frames);
+    std::vector<float> peek_into(std::size_t nb_frames); // Not Thread-Safe
 
     /**
      * @brief Moves the audio buffer forward by nb_frames amount
      * @param nb_frames the number of frames to move the audio buffer
+     * Not Thread-Safe
      */
     void advance(std::size_t nb_frames);
 };
