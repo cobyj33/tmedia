@@ -4,6 +4,7 @@
 #include "sleep.h"
 #include "wtime.h"
 #include "wmath.h"
+#include "decode.h"
 
 #include <mutex>
 
@@ -19,7 +20,7 @@ extern "C" {
 
 void MediaFetcher::audio_fetching_thread() {
   const int RECOMMENDED_AUDIO_BUFFER_SIZE = 44100 * 15; // 15 seconds of audio data at 44100 Hz sample rate
-  const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 120.0;
+  const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 20.0;
   const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 15.0;
   const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
   const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
@@ -27,6 +28,10 @@ void MediaFetcher::audio_fetching_thread() {
   const int AUDIO_THREAD_ITERATION_SLEEP_MS = 5;
   
   try { // super try block :)
+    AudioResampler audio_resampler(
+    this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
+    this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate());
+    
     sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
     
     while (this->in_use) {
@@ -44,7 +49,7 @@ void MediaFetcher::audio_fetching_thread() {
           break;
         }
 
-        std::lock_guard<std::mutex> lock(this->audio_buffer_mutex);
+        std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
 
         if (this->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) { // desync handling
           if (this->audio_buffer->is_time_in_bounds(target_resync_time)) {
@@ -72,15 +77,32 @@ void MediaFetcher::audio_fetching_thread() {
 
 
       bool can_rest = false;
+      bool should_load = false;
       {
-        std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
-        if (!this->audio_buffer->can_read(RECOMMENDED_AUDIO_BUFFER_SIZE)) {
-          for (int i = 0; i < AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT; i++) {
-            std::lock_guard<std::mutex> lock(this->audio_buffer_mutex);
-            this->load_next_audio();
+        std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
+        should_load = !this->audio_buffer->can_read(RECOMMENDED_AUDIO_BUFFER_SIZE);
+      }
+
+      if (should_load) {
+        for (int i = 0; i < AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT; i++) {
+          std::vector<AVFrame*> next_raw_audio_frames;
+
+          {
+            std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
+            next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);
           }
+          
+          std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
+
+          for (int i = 0; i < (int)audio_frames.size(); i++) {
+            std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
+            this->audio_buffer->write((float*)(audio_frames[i]->data[0]), audio_frames[i]->nb_samples);
+            can_rest = this->audio_buffer->can_read(RECOMMENDED_AUDIO_BUFFER_SIZE);
+          }
+
+          clear_av_frame_list(next_raw_audio_frames);
+          clear_av_frame_list(audio_frames);
         }
-        can_rest = this->audio_buffer->can_read(RECOMMENDED_AUDIO_BUFFER_SIZE);
       }
 
       if (can_rest)

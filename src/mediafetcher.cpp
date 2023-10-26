@@ -35,18 +35,30 @@ MediaFetcher::MediaFetcher(const std::string& file_path) {
   }
 }
 
+/**
+ * Thread-Safe
+*/
 bool MediaFetcher::has_media_stream(enum AVMediaType media_type) const {
   return this->media_decoder->has_media_decoder(media_type);
 }
 
+/**
+ * Thread-Safe
+*/
 double MediaFetcher::get_duration() const {
   return this->media_decoder->get_duration();
 }
 
+/**
+ * For thread safety, alter_mutex must be locked
+*/
 double MediaFetcher::get_time(double current_system_time) const {
   return this->clock.get_time(current_system_time);
 }
 
+/**
+ * For threadsafety, both alter_mutex and buffer_read_mutex must be locked
+*/
 double MediaFetcher::get_desync_time(double current_system_time) const {
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO) && this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
     double current_playback_time = this->get_time(current_system_time);
@@ -77,6 +89,9 @@ int MediaFetcher::load_next_audio() {
   return written_samples;
 }
 
+/**
+ * For threadsafety, both alter_mutex and buffer_read_mutex must be locked
+*/
 int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   if (target_time < 0.0 || target_time > this->get_duration()) {
     throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(target_time) + " seconds ) "
@@ -97,6 +112,9 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   return ret;
 }
 
+/**
+ * Cannot be called inside video_fetching_thread or audio_fetching_thread at all
+*/
 void MediaFetcher::begin() {
   this->in_use = true;
   this->clock.init(system_clock_sec());
@@ -108,6 +126,9 @@ void MediaFetcher::begin() {
   }
 }
 
+/**
+ * Cannot be called inside video_fetching_thread or audio_fetching_thread at all
+*/
 void MediaFetcher::join() {
   this->in_use = false; // the user can set this as well if they want, but this is to make sure that the threads WILL end regardless
   this->video_thread.join();
