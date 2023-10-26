@@ -381,14 +381,16 @@ int main(int argc, char** argv)
         double timestamp = 0.0;
 
         {
-          std::lock_guard<std::mutex> _alter_lock(fetcher.alter_mutex);
-          // std::lock_guard<std::mutex> _buffer_lock(fetcher.audio_buffer_mutex); jump time calls are now handled outside of input loop
-          const double current_system_time = system_clock_sec();
-          requested_jump_time = fetcher.get_time(current_system_time);
-          timestamp = fetcher.get_time(current_system_time);
-          frame = fetcher.frame;
+          double current_system_time = 0.0; // filler
+          {
+            std::lock_guard<std::mutex> _alter_lock(fetcher.alter_mutex);
+            current_system_time = system_clock_sec(); // set in here, since locking the mutex could take an undetermined amount of time
+            timestamp = fetcher.get_time(current_system_time);
+            requested_jump_time = timestamp;
+            frame = fetcher.frame;
+          }
 
-          if (fetcher.media_type != MediaType::IMAGE && fetcher.get_time(current_system_time) >= fetcher.get_duration()) {
+          if (fetcher.media_type != MediaType::IMAGE && timestamp >= fetcher.get_duration()) {
             fetcher.in_use = false;
             break;
           }
@@ -516,6 +518,7 @@ int main(int argc, char** argv)
             }
 
             if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+              std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex); 
               switch (fetcher.clock.is_playing()) {
                 case true:  {
                   if (audio_device) audio_device->stop();

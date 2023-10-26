@@ -91,10 +91,11 @@ void MediaFetcher::video_fetching_thread() {
             {
               std::lock_guard<std::mutex> lock(this->alter_mutex);
               this->frame = frame_pixel_data;
-              const double frame_pts_time_sec = (double)frame_image->pts * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
-              const double extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
-              wait_duration = frame_pts_time_sec - current_time + extra_delay;
             }
+
+            const double frame_pts_time_sec = (double)frame_image->pts * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
+            const double extra_delay = (double)(frame_image->repeat_pict) / (2 * avg_frame_time_sec);
+            wait_duration = frame_pts_time_sec - current_time + extra_delay;
 
             av_frame_free(&frame_image);
           }
@@ -119,7 +120,6 @@ void MediaFetcher::video_fetching_thread() {
           int nb_channels;
 
           {
-            std::lock_guard<std::mutex> player_lock(this->alter_mutex);
             std::lock_guard<std::mutex> buffer_read_lock(this->audio_buffer_mutex);
 
             std::size_t to_peek = std::min(this->audio_buffer->get_nb_can_read(), AUDIO_PEEK_SIZE);
