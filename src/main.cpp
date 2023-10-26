@@ -187,6 +187,9 @@ int main(int argc, char** argv)
     .help("Set the maximum rendering fps of ascii_video")
     .scan<'i', int>();
 
+  parser.add_argument("--scaling-algo")
+    .help("Set the scaling algorithm to use when rendering frames  ('box-sampling', 'nearest-neighbor')");
+
   parser.add_argument("--ffmpeg-version")
     .help("Print the version of linked FFmpeg libraries")
     .default_value(false)
@@ -230,7 +233,20 @@ int main(int argc, char** argv)
     } else if (*user_loop == "repeat-one") {
       loop_type = LoopType::REPEAT_ONE;
     } else {
-      std::cerr << "[ascii_video] Received invalid loop type '" << *user_loop << "', must be either 'none', 'repeat', or 'repeat-one'" << std::endl;
+      std::cerr << "[ascii_video] Received invalid loop type '" << *user_loop << "', must be 'none', 'repeat', or 'repeat-one'" << std::endl;
+      std::cerr << parser << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+
+  if (std::optional<std::string> user_scaling_algo = parser.present<std::string>("--scaling-algo")) {
+    if (*user_scaling_algo == "nearest-neighbor") {
+      scaling_algorithm = ScalingAlgo::NEAREST_NEIGHBOR;
+    }
+    else if (*user_scaling_algo == "box-sampling") {
+      scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+    } else {
+      std::cerr << "[ascii_video] Unrecognized scaling algorithm '" + *user_scaling_algo + "', must be 'nearest-neighbor' or 'box-sampling'" << std::endl;
       std::cerr << parser << std::endl;
       return EXIT_FAILURE;
     }
@@ -239,6 +255,8 @@ int main(int argc, char** argv)
   if (std::optional<int> user_max_fps = parser.present<int>("--max-fps")) {
     render_loop_max_fps = *user_max_fps;
   }
+
+
 
   if (print_ffmpeg_version) {
     std::cout << "libavformat: " << LIBAVFORMAT_VERSION_MAJOR << ":" << LIBAVFORMAT_VERSION_MINOR << ":" << LIBAVFORMAT_VERSION_MICRO << std::endl;
