@@ -49,9 +49,9 @@ void MediaFetcher::video_fetching_thread() {
 
   const double DEFAULT_AVERAGE_FRAME_TIME_SEC = 1.0 / 24.0;
 
-  try {
-    double avg_frame_time_sec = DEFAULT_AVERAGE_FRAME_TIME_SEC;
+  const int PAUSED_SLEEP_TIME_MS = 17;
 
+  try {
     switch (this->media_type) {
       case MediaType::IMAGE:
       case MediaType::VIDEO: {
@@ -60,12 +60,12 @@ void MediaFetcher::video_fetching_thread() {
         const int output_frame_width = bounded_video_frame_dimensions.first;
         const int output_frame_height = bounded_video_frame_dimensions.second;
 
-        avg_frame_time_sec = this->media_decoder->get_average_frame_time_sec(AVMEDIA_TYPE_VIDEO);
+        double avg_frame_time_sec = this->media_decoder->get_average_frame_time_sec(AVMEDIA_TYPE_VIDEO);
         VideoConverter video_converter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, this->media_decoder->get_width(), this->media_decoder->get_height(), this->media_decoder->get_pix_fmt());
 
         while (this->in_use) {
           if (!this->clock.is_playing()) {
-            sleep_for_ms(17);
+            sleep_for_ms(PAUSED_SLEEP_TIME_MS);
             continue;
           }
           
@@ -108,20 +108,23 @@ void MediaFetcher::video_fetching_thread() {
       case MediaType::AUDIO: {
 
         while (this->in_use) {
+          if (!this->clock.is_playing()) {
+            sleep_for_ms(PAUSED_SLEEP_TIME_MS);
+            continue;
+          }
+
           const std::size_t AUDIO_PEEK_SIZE = 44100 * 2;
           
           std::vector<float> audio_buffer_view;
-          int nb_channels;
+          int nb_channels = this->audio_buffer->get_nb_channels();
 
           {
             std::lock_guard<std::mutex> buffer_read_lock(this->audio_buffer_mutex);
-
             std::size_t to_peek = std::min(this->audio_buffer->get_nb_can_read(), AUDIO_PEEK_SIZE);
             if (to_peek == 0) {
               continue;
             }
             audio_buffer_view = this->audio_buffer->peek_into(to_peek);
-            nb_channels = this->audio_buffer->get_nb_channels();
           }
 
           std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
