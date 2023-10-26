@@ -24,32 +24,34 @@ class MediaDecoder {
   public:
 
     MediaDecoder(const std::string& file_path, std::set<enum AVMediaType>& requested_streams);
-    bool has_media_decoder(enum AVMediaType media_type) const;
-    std::vector<AVFrame*> next_frames(enum AVMediaType media_type);
-    int jump_to_time(double target_time);
-    double get_duration() const;
+    bool has_media_decoder(enum AVMediaType media_type) const; // Thread-Safe
+
+    std::vector<AVFrame*> next_frames(enum AVMediaType media_type); // Not Thread-Safe
+    int jump_to_time(double target_time); // Not Thread-Safe
+    
+    double get_duration() const; // Thread-Safe
 
     
-    MediaType get_media_type();
-    double get_start_time(enum AVMediaType media_type);
-    int get_avg_frame_time(enum AVMediaType media_type);
-    double get_time_base(enum AVMediaType media_type);
-    double get_average_frame_time_sec(enum AVMediaType media_type);
+    MediaType get_media_type(); // Thread-Safe
+    double get_start_time(enum AVMediaType media_type); // Thread-Safe
+    int get_avg_frame_time(enum AVMediaType media_type); // Thread-Safe
+    double get_time_base(enum AVMediaType media_type); // Thread-Safe
+    double get_average_frame_time_sec(enum AVMediaType media_type); // Thread-Safe
 
     // video getters
-    int get_width();
-    int get_height();
-    AVPixelFormat get_pix_fmt();
+    int get_width(); // Thread-Safe
+    int get_height(); // Thread-Safe
+    AVPixelFormat get_pix_fmt(); // Thread-Safe
 
     // audio getters
-    int get_nb_channels();
-    int get_sample_rate();
-    AVSampleFormat get_sample_fmt();
+    int get_nb_channels(); // Thread-Safe
+    int get_sample_rate(); // Thread-Safe
+    AVSampleFormat get_sample_fmt(); // Thread-Safe
     
     #if HAS_AVCHANNEL_LAYOUT
-    AVChannelLayout* get_ch_layout();
+    AVChannelLayout* get_ch_layout(); // Thread-Safe
     #else
-    int64_t get_ch_layout();
+    int64_t get_ch_layout(); // Thread-Safe
     #endif
     
 

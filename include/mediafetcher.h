@@ -52,16 +52,15 @@ class MediaFetcher {
 
     MediaFetcher(const std::string& file_path);
 
-    double get_desync_time(double current_system_time) const;
+    void begin(); // Only to be called by owning thread
+    void join(); // Only to be called by owning thread after in_use is set to false
 
     /**
      * @brief Returns the duration in seconds of the currently playing media
      * @return double 
      */
-    double get_duration() const;
-
-    void begin();
-    void join();
+    double get_duration() const; // Thread-Safe
+    bool has_media_stream(enum AVMediaType media_type) const; // Thread-Safe
 
 
     /**
@@ -70,7 +69,8 @@ class MediaFetcher {
      * 
      * @return The current time of playback since 0:00 in seconds
      */
-    double get_time(double current_system_time) const;
+    double get_time(double current_system_time) const; // Not thread-safe, lock alter_mutex first
+    double get_desync_time(double current_system_time) const; // Not thread-safe, lock alter_mutex and audio_buffer_mutex first
 
     /**
      * @brief Moves the MediaFetcher's playback to a certain time (including video and audio streams)
@@ -81,11 +81,10 @@ class MediaFetcher {
      * @param current_system_time The current system time
      * @throws If the target time is not in the boudns of the video's playtime
      */
-    int jump_to_time(double target_time, double current_system_time);
+    int jump_to_time(double target_time, double current_system_time); // Not thread-safe, lock alter_mutex and audio_buffer_mutex first
 
-    int load_next_audio();
+    int load_next_audio(); // Not thread-safe, lock alter_mutex and audio_buffer_mutex first
 
-    bool has_media_stream(enum AVMediaType media_type) const;
 };
 
 
