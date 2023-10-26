@@ -42,14 +42,14 @@ void MediaFetcher::audio_fetching_thread() {
 
       {
         std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
+        std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
+
         const double current_system_time = system_clock_sec();
         const double target_resync_time = this->get_time(current_system_time);
         if (target_resync_time > this->get_duration()) {
           this->in_use = false;
           break;
         }
-
-        std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
 
         if (this->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) { // desync handling
           if (this->audio_buffer->is_time_in_bounds(target_resync_time)) {
@@ -69,7 +69,10 @@ void MediaFetcher::audio_fetching_thread() {
             this->jump_to_time(target_resync_time, current_system_time);
           }
         } // end of desync handling
+      }
 
+      {
+        std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
         if (this->audio_buffer->get_elapsed_time() > MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS) {
           this->audio_buffer->leave_behind(RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS);
         }
