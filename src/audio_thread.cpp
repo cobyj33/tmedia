@@ -20,12 +20,12 @@ extern "C" {
 
 void MediaFetcher::audio_fetching_thread() {
   const int RECOMMENDED_AUDIO_BUFFER_SIZE = 44100 * 15; // 15 seconds of audio data at 44100 Hz sample rate
-  const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 20.0;
-  const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 15.0;
+  const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 30.0;
+  const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 10.0;
   const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
   const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
   const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 5;
-  const int AUDIO_THREAD_ITERATION_SLEEP_MS = 5;
+  const int AUDIO_THREAD_ITERATION_SLEEP_MS = 17;
   
   try { // super try block :)
     AudioResampler audio_resampler(
@@ -36,7 +36,7 @@ void MediaFetcher::audio_fetching_thread() {
     
     while (this->in_use) {
       if (!this->clock.is_playing()) {
-        sleep_quick();
+        sleep_for_ms(AUDIO_THREAD_ITERATION_SLEEP_MS);
         continue;
       }
 
