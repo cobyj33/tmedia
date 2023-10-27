@@ -39,8 +39,10 @@ class PixelData {
     PixelData(int width, int height);
     PixelData(AVFrame* video_frame);
     PixelData(const PixelData& pix_data);
+    PixelData(PixelData&& pix_data);
     
     void operator=(const PixelData& pix_data);
+    void operator=(PixelData&& pix_data);
     void operator=(AVFrame* video_frame);
 
     bool equals(const PixelData& pix_data) const;

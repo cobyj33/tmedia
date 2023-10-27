@@ -40,9 +40,8 @@ void MediaFetcher::audio_fetching_thread() {
         continue;
       }
 
-      {
+      if (this->media_type == MediaType::VIDEO) {
         std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
-        std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
 
         const double current_system_time = system_clock_sec();
         const double target_resync_time = this->get_time(current_system_time);
@@ -50,6 +49,8 @@ void MediaFetcher::audio_fetching_thread() {
           this->in_use = false;
           break;
         }
+
+        std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
 
         if (this->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) { // desync handling
           if (this->audio_buffer->is_time_in_bounds(target_resync_time)) {
@@ -68,8 +69,9 @@ void MediaFetcher::audio_fetching_thread() {
           } else {
             this->jump_to_time(target_resync_time, current_system_time);
           }
-        } // end of desync handling
-      }
+        }
+      } // end of desync handling
+
 
       {
         std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
@@ -94,6 +96,11 @@ void MediaFetcher::audio_fetching_thread() {
             std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
             next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);
           }
+
+          if (next_raw_audio_frames.size() == 0) {
+            can_rest = true;
+            break;
+          } 
           
           std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
 

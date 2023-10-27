@@ -120,7 +120,19 @@ PixelData::PixelData(const PixelData& pix_data) {
   this->m_height = pix_data.m_height;
 }
 
+PixelData::PixelData(PixelData&& pix_data) {
+  this->pixels = pix_data.pixels;
+  this->m_width = pix_data.m_width;
+  this->m_height = pix_data.m_height;
+}
+
 void PixelData::operator=(const PixelData& pix_data) {
+  this->pixels = pix_data.pixels;
+  this->m_width = pix_data.m_width;
+  this->m_height = pix_data.m_height;
+}
+
+void PixelData::operator=(PixelData&& pix_data) {
   this->pixels = pix_data.pixels;
   this->m_width = pix_data.m_width;
   this->m_height = pix_data.m_height;
