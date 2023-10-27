@@ -384,7 +384,11 @@ int main(int argc, char** argv)
       audio_device->set_volume(volume);
     }
 
-    fetcher.begin();
+    {
+      std::lock_guard<std::mutex> audio_buffer_lock(fetcher.audio_buffer_mutex);
+      fetcher.begin();
+    }
+
 
     try {
       while (fetcher.in_use) { // never break without setting in_use to false

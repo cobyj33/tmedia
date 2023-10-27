@@ -68,7 +68,11 @@ double MediaFetcher::get_desync_time(double current_system_time) const {
   return 0.0; // if there is only one stream, there cannot be desync 
 }
 
-
+/**
+ * Convencience method for loading audio.
+ * 
+ * Requires both the alter_mutex and the audio_buffer_mutex to be locked
+*/
 int MediaFetcher::load_next_audio() {
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     throw std::runtime_error("[MediaFetcher::load_next_audio_frames] Cannot load "
@@ -116,6 +120,11 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
 
 /**
  * Cannot be called inside video_fetching_thread or audio_fetching_thread at all
+ * 
+ * Writes some audio to the audio buffer initially, and starts the audio and video threads
+ * 
+ * Note that if the user should lock the audio_buffer_mutex before calling this function
+ * if another thread is already attempting to read from the audio buffer
 */
 void MediaFetcher::begin() {
   this->in_use = true;
