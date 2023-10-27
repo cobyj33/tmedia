@@ -100,7 +100,7 @@ void MediaFetcher::audio_fetching_thread() {
           if (next_raw_audio_frames.size() == 0) {
             can_rest = true;
             break;
-          } 
+          }
           
           std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
 
