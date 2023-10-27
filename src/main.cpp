@@ -107,7 +107,7 @@ int main(int argc, char** argv)
   bool muted = false;
   VideoOutputMode vom  = VideoOutputMode::TEXT_ONLY;
   LoopType loop_type = LoopType::NO_LOOP;
-  ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+  ScalingAlgo scaling_algorithm = ScalingAlgo::NEAREST_NEIGHBOR;
 
   /**
    * if <= 0, do not cap FPS
@@ -396,6 +396,11 @@ int main(int argc, char** argv)
         if (INTERRUPT_RECEIVED) {
           fetcher.in_use = false;
           break;
+        }
+
+        {
+          std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex);
+          fetcher.requested_frame_dims = VideoDimensions(COLS, LINES - 6);
         }
 
         double requested_jump_time = 0.0;

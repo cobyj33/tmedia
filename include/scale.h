@@ -13,6 +13,14 @@
 
 #include <utility>
 
+struct VideoDimensions {
+  int width;
+  int height;
+  VideoDimensions(int width, int height) : width(width), height(height) {}
+  VideoDimensions() : width(0), height(0) {}
+};
+
+
 /**
  * @brief Returns a <width, height> pair representing the source dimensions bounded into the bounded dimensions while preserving aspect ratio
  * 
@@ -23,7 +31,7 @@
  * @param max_height The height of the bounded box which the source will be fitted into
  * @return The size of the frame when it is bounded into the bounded dimensions. 
  */
-std::pair<int, int> get_bounded_dimensions(int src_width, int src_height, int max_width, int max_height);
-std::pair<int, int> get_scale_size(int src_width, int src_height, int target_width, int target_height);
+VideoDimensions get_bounded_dimensions(int src_width, int src_height, int max_width, int max_height);
+VideoDimensions get_scale_size(int src_width, int src_height, int target_width, int target_height);
 double get_scale_factor(int src_width, int src_height, int target_width, int target_height);
 #endif

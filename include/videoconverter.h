@@ -35,6 +35,8 @@ class VideoConverter {
     int get_dst_height();
     enum AVPixelFormat get_dst_pix_fmt();
 
+    void reset_dst_size(int dst_width, int dst_height);
+
     ~VideoConverter();
 };
 

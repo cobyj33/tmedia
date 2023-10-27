@@ -56,17 +56,31 @@ void MediaFetcher::video_fetching_thread() {
       case MediaType::IMAGE:
       case MediaType::VIDEO: {
 
-        const std::pair<int, int> bounded_video_frame_dimensions = get_bounded_dimensions(this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT, this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
-        const int output_frame_width = bounded_video_frame_dimensions.first;
-        const int output_frame_height = bounded_video_frame_dimensions.second;
+        VideoDimensions output_frame_dim = get_bounded_dimensions(this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT,
+        this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH,
+        MAX_FRAME_WIDTH,
+        MAX_FRAME_HEIGHT);
 
         double avg_frame_time_sec = this->media_decoder->get_average_frame_time_sec(AVMEDIA_TYPE_VIDEO);
-        VideoConverter video_converter(output_frame_width, output_frame_height, AV_PIX_FMT_RGB24, this->media_decoder->get_width(), this->media_decoder->get_height(), this->media_decoder->get_pix_fmt());
+        VideoConverter video_converter(output_frame_dim.width, output_frame_dim.height, AV_PIX_FMT_RGB24, this->media_decoder->get_width(), this->media_decoder->get_height(), this->media_decoder->get_pix_fmt());
 
         while (this->in_use) {
           if (!this->clock.is_playing()) {
             sleep_for_ms(PAUSED_SLEEP_TIME_MS);
             continue;
+          }
+
+          {
+            std::lock_guard<std::mutex> alter_mutex_lock(this->alter_mutex);
+            if (this->requested_frame_dims) {
+              VideoDimensions output_frame_dim = get_bounded_dimensions(this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT,
+              this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH,
+              this->requested_frame_dims->width * PIXEL_ASPECT_RATIO_HEIGHT,
+              this->requested_frame_dims->height * PIXEL_ASPECT_RATIO_WIDTH);
+
+              video_converter.reset_dst_size(std::min(MAX_FRAME_WIDTH, output_frame_dim.width),
+              std::min(MAX_FRAME_HEIGHT, output_frame_dim.height));
+            }
           }
           
           double wait_duration = avg_frame_time_sec;
@@ -117,6 +131,16 @@ void MediaFetcher::video_fetching_thread() {
           
           std::vector<float> audio_buffer_view;
           int nb_channels = this->audio_buffer->get_nb_channels();
+          int audio_frame_rows = MAX_FRAME_HEIGHT;
+          int audio_frame_cols = MAX_FRAME_WIDTH;
+
+          {
+            std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
+            if (this->requested_frame_dims) {
+              audio_frame_rows = std::min(MAX_FRAME_HEIGHT, this->requested_frame_dims->height);
+              audio_frame_cols = std::min(MAX_FRAME_WIDTH, this->requested_frame_dims->width);
+            }
+          }
 
           {
             std::lock_guard<std::mutex> buffer_read_lock(this->audio_buffer_mutex);
@@ -129,7 +153,7 @@ void MediaFetcher::video_fetching_thread() {
 
           std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
           audio_bound_volume(mono, 1, 1.0);
-          PixelData audio_visualization = generate_audio_view_amplitude_averaged(mono, MAX_FRAME_HEIGHT, MAX_FRAME_WIDTH);
+          PixelData audio_visualization = generate_audio_view_amplitude_averaged(mono, audio_frame_rows, audio_frame_cols);
 
           {
             std::lock_guard<std::mutex> player_lock(this->alter_mutex);

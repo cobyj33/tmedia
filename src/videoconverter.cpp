@@ -29,6 +29,23 @@ VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat
   this->m_src_pix_fmt = src_pix_fmt;
 }
 
+void VideoConverter::reset_dst_size(int dst_width, int dst_height) {
+  if (dst_width == this->m_dst_width && dst_height == this->m_dst_height)
+    return;
+
+  sws_freeContext(this->m_context);
+  this->m_context = sws_getContext(
+      this->m_src_width, this->m_src_height, this->m_src_pix_fmt, 
+      dst_width, dst_height, this->m_dst_pix_fmt, 
+      SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
+  if (this->m_context == nullptr) {
+    throw std::runtime_error("[VideoConverter::reset_dst_size] Allocation of internal SwsContext of Video Converter failed. Aborting...");
+  }
+
+  this->m_dst_width = dst_width;
+  this->m_dst_height = dst_height;
+}
+
 VideoConverter::~VideoConverter() {
   sws_freeContext(this->m_context);
 }
@@ -36,7 +53,7 @@ VideoConverter::~VideoConverter() {
 AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
   AVFrame* resized_video_frame = av_frame_alloc();
   if (resized_video_frame == nullptr) {
-    throw std::runtime_error("Could not allocate resized frame for VideoConverter");
+    throw std::runtime_error("[VideoConverter::convert_video_frame] Could not allocate resized frame for VideoConverter");
   }
 
   resized_video_frame->format = this->m_dst_pix_fmt;
@@ -49,14 +66,12 @@ AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
   #endif
   
   int err = av_frame_get_buffer(resized_video_frame, 1); //watch this alignment
-  
   if (err) {
     throw std::runtime_error("[VideoConverter::convert_video_frame] Failure on "
     "allocating buffers for resized video frame" + av_strerror_string(err));
   }
 
-  sws_scale(this->m_context, (uint8_t const * const *)original->data, original->linesize, 0, original->height, resized_video_frame->data, resized_video_frame->linesize);
-
+  (void)sws_scale(this->m_context, (uint8_t const * const *)original->data, original->linesize, 0, original->height, resized_video_frame->data, resized_video_frame->linesize);
   return resized_video_frame;
 }
 
