@@ -19,13 +19,14 @@ extern "C" {
 
 
 void MediaFetcher::audio_fetching_thread() {
-  const int RECOMMENDED_AUDIO_BUFFER_SIZE = 44100 * 15; // 15 seconds of audio data at 44100 Hz sample rate
+  const int AUDIO_BUFFER_SHOULD_READ_SIZE = 44100; // 1 seconds of audio data at 44100 Hz sample rate
   const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 30.0;
   const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 10.0;
   const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
   const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
-  const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 5;
+  const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 10;
   const int AUDIO_THREAD_ITERATION_SLEEP_MS = 17;
+  const int AUDIO_THREAD_REST_SLEEP_MS = 170;
   
   try { // super try block :)
     AudioResampler audio_resampler(
@@ -81,11 +82,11 @@ void MediaFetcher::audio_fetching_thread() {
       }
 
 
-      bool can_rest = false;
+      bool can_rest = true;
       bool should_load = false;
       {
         std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
-        should_load = !this->audio_buffer->can_read(RECOMMENDED_AUDIO_BUFFER_SIZE);
+        should_load = !this->audio_buffer->can_read(AUDIO_BUFFER_SHOULD_READ_SIZE);
       }
 
       if (should_load) {
@@ -107,7 +108,7 @@ void MediaFetcher::audio_fetching_thread() {
           for (int i = 0; i < (int)audio_frames.size(); i++) {
             std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
             this->audio_buffer->write((float*)(audio_frames[i]->data[0]), audio_frames[i]->nb_samples);
-            can_rest = this->audio_buffer->can_read(RECOMMENDED_AUDIO_BUFFER_SIZE);
+            can_rest = this->audio_buffer->can_read(AUDIO_BUFFER_SHOULD_READ_SIZE);
           }
 
           clear_av_frame_list(next_raw_audio_frames);
@@ -116,7 +117,7 @@ void MediaFetcher::audio_fetching_thread() {
       }
 
       if (can_rest)
-        sleep_for_ms(AUDIO_THREAD_ITERATION_SLEEP_MS);
+        sleep_for_ms(AUDIO_THREAD_REST_SLEEP_MS);
     }
 
   } catch (std::exception const& e) {

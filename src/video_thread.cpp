@@ -127,7 +127,7 @@ void MediaFetcher::video_fetching_thread() {
             continue;
           }
 
-          const std::size_t AUDIO_PEEK_SIZE = 44100 * 2;
+          const std::size_t AUDIO_PEEK_SIZE = 44100 / 2;
           
           std::vector<float> audio_buffer_view;
           int nb_channels = this->audio_buffer->get_nb_channels();
