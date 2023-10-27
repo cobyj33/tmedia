@@ -60,7 +60,7 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time, d
 
 bool INTERRUPT_RECEIVED = false;
 const int KEY_ESCAPE = 27;
-const double VOLUME_CHANGE_AMOUNT = 0.05;
+const double VOLUME_CHANGE_AMOUNT = 0.01;
 
 void interrupt_handler(int) {
   INTERRUPT_RECEIVED = true;
