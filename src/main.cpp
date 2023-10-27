@@ -15,6 +15,7 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <cctype>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
@@ -568,56 +569,10 @@ int main(int argc, char** argv)
               requested_jump_time += 5.0;
             }
 
-            if (input == '0'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+            if (std::isdigit(input) && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
               requested_jump = true;
-              requested_jump_time = 0.0;
+              requested_jump_time = fetcher.get_duration() * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
             }
-
-            if (input == '1'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time = fetcher.get_duration() * 1.0 / 10.0;
-            }
-
-            if (input == '2'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time = fetcher.get_duration() * 2.0 / 10.0;
-            }
-
-            if (input == '3'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time = fetcher.get_duration() * 3.0 / 10.0;
-            }
-
-            if (input == '4'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time = fetcher.get_duration() * 4.0 / 10.0;
-            }
-
-            if (input == '5'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time = fetcher.get_duration() * 5.0 / 10.0;
-            }
-
-            if (input == '6'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time = fetcher.get_duration() * 6.0 / 10.0;
-            }
-
-            if (input == '7'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time = fetcher.get_duration() * 7.0 / 10.0;
-            }
-
-            if (input == '8'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time = fetcher.get_duration() * 8.0 / 10.0;
-            }
-
-            if (input == '9'  && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time = fetcher.get_duration() * 9.0 / 10.0;
-            }
-
             input = getch();
           } // Ending of "while (input != ERR)"
         } // end of locked context
