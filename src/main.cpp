@@ -423,9 +423,8 @@ int main(int argc, char** argv)
             break;
           }
 
-          int input = getch();
-
-          while (input != ERR) { // Go through and process all the batched input
+          int input = ERR;
+          while ((input = getch()) != ERR) { // Go through and process all the batched input
             if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b' || input == 'q' || input == 'Q') {
               fetcher.in_use = false;
               full_exit = true;
@@ -573,7 +572,6 @@ int main(int argc, char** argv)
               requested_jump = true;
               requested_jump_time = fetcher.get_duration() * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
             }
-            input = getch();
           } // Ending of "while (input != ERR)"
         } // end of locked context
 
