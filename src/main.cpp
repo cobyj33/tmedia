@@ -425,7 +425,7 @@ int main(int argc, char** argv)
           int input = getch();
 
           while (input != ERR) { // Go through and process all the batched input
-            if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b') {
+            if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b' || input == 'q' || input == 'Q') {
               fetcher.in_use = false;
               full_exit = true;
               break; // break out of input != ERR
