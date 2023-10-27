@@ -48,7 +48,6 @@ class MediaFetcher {
     std::string file_path;
     std::atomic<bool> in_use;
 
-    std::unique_ptr<AudioResampler> audio_resampler;
     std::unique_ptr<AudioBuffer> audio_buffer;
 
     std::optional<VideoDimensions> requested_frame_dims;

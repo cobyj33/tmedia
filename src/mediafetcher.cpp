@@ -28,9 +28,6 @@ MediaFetcher::MediaFetcher(const std::string& file_path) {
 
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    this->audio_resampler = std::move(std::make_unique<AudioResampler>(
-    this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
-    this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate()));
     this->audio_buffer = std::move(std::make_unique<AudioBuffer>(this->media_decoder->get_nb_channels(), this->media_decoder->get_sample_rate()));
   }
 }
@@ -79,9 +76,13 @@ int MediaFetcher::load_next_audio() {
     "next audio frames, Media Fetcher does not have any audio stream to load data from");
   }
 
+  AudioResampler audio_resampler(
+  this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
+  this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate());
+
   int written_samples = 0;
   std::vector<AVFrame*> next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);
-  std::vector<AVFrame*> audio_frames = this->audio_resampler->resample_audio_frames(next_raw_audio_frames);
+  std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
   for (int i = 0; i < (int)audio_frames.size(); i++) {
     this->audio_buffer->write((float*)(audio_frames[i]->data[0]), audio_frames[i]->nb_samples);
     written_samples += audio_frames[i]->nb_samples;
