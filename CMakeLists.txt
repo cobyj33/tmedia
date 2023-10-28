@@ -139,7 +139,7 @@ VERSION ${ASCII_VIDEO_VERSION}
 LANGUAGES ${ASCII_VIDEO_SUPPORTED_LANGUAGES}
 DESCRIPTION "Terminal video media player")
 
-add_executable(ascii_video ${COMMON_SOURCE_FILES} ./src/main.cpp)
+add_executable(ascii_video ${COMMON_SOURCE_FILES} ./src/main.cpp ./src/ascii_video.cpp)
 
 
 if(FIND_CURSES)
