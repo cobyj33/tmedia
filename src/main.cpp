@@ -151,7 +151,7 @@ int main(int argc, char** argv)
     .scan<'i', int>();
   
   parser.add_argument("--scaling-algo")
-    .help("Set the scaling algorithm to use when rendering frames  (" + format_arg_map(VALID_LOOP_TYPE_ARGS, "or") + ")");
+    .help("Set the scaling algorithm to use when rendering frames  (" + format_arg_map(VALID_SCALING_ALGO_ARGS, "or") + ")");
 
   parser.add_argument("--ffmpeg-version")
     .help("Print the version of linked FFmpeg libraries")
