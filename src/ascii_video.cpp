@@ -102,137 +102,135 @@ int ascii_video(AsciiVideoProgramData avpd) {
           fetcher.requested_frame_dims = VideoDimensions(COLS, LINES - 6);
         }
 
-        double requested_jump_time = 0.0;
+        double current_system_time = 0.0; // filler data to be filled in critical section
+        double requested_jump_time = 0.0; // filler data to be filled in critical section
+        double timestamp = 0.0; // filler data to be filled in critical section
         bool requested_jump = false;
-        double timestamp = 0.0;
 
         {
-          double current_system_time = 0.0; // filler
-          {
-            std::lock_guard<std::mutex> _alter_lock(fetcher.alter_mutex);
-            current_system_time = system_clock_sec(); // set in here, since locking the mutex could take an undetermined amount of time
-            timestamp = fetcher.get_time(current_system_time);
-            requested_jump_time = timestamp;
-            frame = fetcher.frame;
+          std::lock_guard<std::mutex> _alter_lock(fetcher.alter_mutex);
+          current_system_time = system_clock_sec(); // set in here, since locking the mutex could take an undetermined amount of time
+          timestamp = fetcher.get_time(current_system_time);
+          requested_jump_time = timestamp;
+          frame = fetcher.frame;
+        }
+
+        int input = ERR;
+        while ((input = getch()) != ERR) { // Go through and process all the batched input
+          if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b' || input == 'q' || input == 'Q') {
+            fetcher.in_use = false;
+            full_exit = true;
+            break; // break out of input != ERR
           }
 
-          int input = ERR;
-          while ((input = getch()) != ERR) { // Go through and process all the batched input
-            if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b' || input == 'q' || input == 'Q') {
-              fetcher.in_use = false;
-              full_exit = true;
-              break; // break out of input != ERR
+          if (input == KEY_RESIZE) {
+            erase();
+            refresh();
+          }
+
+          if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version
+            switch (avpd.vom) {
+              case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
+              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
             }
+          }
 
-            if (input == KEY_RESIZE) {
-              erase();
-              refresh();
+          if ((input == 'g' || input == 'G') && has_colors() && can_change_color()) {
+            switch (avpd.vom) {
+              case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
+              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
             }
+          }
 
-            if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version
-              switch (avpd.vom) {
-                case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
-                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
-                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
-                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-                case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
-              }
+          if ((input == 'b' || input == 'B') && has_colors() && can_change_color()) {
+            switch (avpd.vom) {
+              case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
+              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
+              case VideoOutputMode::TEXT_ONLY: break; //no-op
             }
+          }
 
-            if ((input == 'g' || input == 'G') && has_colors() && can_change_color()) {
-              switch (avpd.vom) {
-                case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
-                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
-                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
-                case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
-              }
+
+          if (input == 'l' || input == 'L') {
+            switch (avpd.loop_type) {
+              case LoopType::NO_LOOP: avpd.loop_type = LoopType::REPEAT; break;
+              case LoopType::REPEAT: avpd.loop_type = LoopType::REPEAT_ONE; break;
+              case LoopType::REPEAT_ONE: avpd.loop_type = LoopType::NO_LOOP; break;
             }
+            next_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
+          }
 
-            if ((input == 'b' || input == 'B') && has_colors() && can_change_color()) {
-              switch (avpd.vom) {
-                case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
-                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
-                case VideoOutputMode::TEXT_ONLY: break; //no-op
-              }
-            }
-
-
-            if (input == 'l' || input == 'L') {
-              switch (avpd.loop_type) {
-                case LoopType::NO_LOOP: avpd.loop_type = LoopType::REPEAT; break;
-                case LoopType::REPEAT: avpd.loop_type = LoopType::REPEAT_ONE; break;
-                case LoopType::REPEAT_ONE: avpd.loop_type = LoopType::NO_LOOP; break;
-              }
+          if (input == 'n' || input == 'N') {
+            if (avpd.loop_type == LoopType::REPEAT_ONE) {
+              avpd.loop_type = LoopType::REPEAT;
               next_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
             }
+            fetcher.in_use = false;
+          }
 
-            if (input == 'n' || input == 'N') {
-              if (avpd.loop_type == LoopType::REPEAT_ONE) {
-                avpd.loop_type = LoopType::REPEAT;
-                next_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
-              }
-              fetcher.in_use = false;
-            }
+          if (input == 'p' || input == 'P') {
+            if (avpd.loop_type == LoopType::REPEAT_ONE)
+              avpd.loop_type = LoopType::REPEAT;
+            next_file = playback_get_previous(current_file, avpd.files.size(), avpd.loop_type);
+            fetcher.in_use = false;
+          }
 
-            if (input == 'p' || input == 'P') {
-              if (avpd.loop_type == LoopType::REPEAT_ONE)
-                avpd.loop_type = LoopType::REPEAT;
-              next_file = playback_get_previous(current_file, avpd.files.size(), avpd.loop_type);
-              fetcher.in_use = false;
-            }
+          if (input == 'f' || input == 'F') {
+            erase();
+            avpd.fullscreen = !avpd.fullscreen;
+          }
 
-            if (input == 'f' || input == 'F') {
-              erase();
-              avpd.fullscreen = !avpd.fullscreen;
-            }
+          if (input == KEY_UP && audio_device) {
+            avpd.volume = clamp(avpd.volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
+            audio_device->set_volume(avpd.volume);
+          }
 
-            if (input == KEY_UP && audio_device) {
-              avpd.volume = clamp(avpd.volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-              audio_device->set_volume(avpd.volume);
-            }
+          if (input == KEY_DOWN && audio_device) {
+            avpd.volume = clamp(avpd.volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
+            audio_device->set_volume(avpd.volume);
+          }
 
-            if (input == KEY_DOWN && audio_device) {
-              avpd.volume = clamp(avpd.volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-              audio_device->set_volume(avpd.volume);
-            }
+          if (input == 'm' || input == 'M') {
+            avpd.muted = !avpd.muted;
+          }
 
-            if (input == 'm' || input == 'M') {
-              avpd.muted = !avpd.muted;
+          if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+            std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex); 
+            switch (fetcher.clock.is_playing()) {
+              case true:  {
+                if (audio_device) audio_device->stop();
+                fetcher.clock.stop(current_system_time);
+              } break;
+              case false: {
+                if (audio_device) audio_device->start();
+                fetcher.clock.resume(current_system_time);
+              } break;
             }
+          }
 
-            if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex); 
-              switch (fetcher.clock.is_playing()) {
-                case true:  {
-                  if (audio_device) audio_device->stop();
-                  fetcher.clock.stop(current_system_time);
-                } break;
-                case false: {
-                  if (audio_device) audio_device->start();
-                  fetcher.clock.resume(current_system_time);
-                } break;
-              }
-            }
+          if (input == KEY_LEFT && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+            requested_jump = true;
+            requested_jump_time -= 5.0;
+          }
 
-            if (input == KEY_LEFT && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time -= 5.0;
-            }
+          if (input == KEY_RIGHT && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+            requested_jump = true;
+            requested_jump_time += 5.0;
+          }
 
-            if (input == KEY_RIGHT && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time += 5.0;
-            }
-
-            if (std::isdigit(input) && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-              requested_jump = true;
-              requested_jump_time = fetcher.get_duration() * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
-            }
-          } // Ending of "while (input != ERR)"
-        } // end of locked context
+          if (std::isdigit(input) && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+            requested_jump = true;
+            requested_jump_time = fetcher.get_duration() * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
+          }
+        } // Ending of "while (input != ERR)"
 
         if (requested_jump) {
           if (audio_device && fetcher.clock.is_playing()) audio_device->stop();
