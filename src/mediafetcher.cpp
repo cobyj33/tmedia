@@ -40,10 +40,11 @@ void MediaFetcher::dispatch_exit(std::string err) {
 }
 
 void MediaFetcher::dispatch_exit() {
-  std::scoped_lock<std::mutex, std::mutex> notification_locks(this->exit_notify_mutex, this->audio_buffer_request_mutex);
+  std::scoped_lock<std::mutex, std::mutex, std::mutex> notification_locks(this->exit_notify_mutex, this->audio_buffer_request_mutex, this->resume_notify_mutex);
   this->in_use = false;
   this->exit_cond.notify_all();
   this->audio_buffer_cond.notify_all();
+  this->resume_cond.notify_all();
 }
 
 bool MediaFetcher::should_exit() {
