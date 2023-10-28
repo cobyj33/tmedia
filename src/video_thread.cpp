@@ -75,7 +75,7 @@ void MediaFetcher::frame_video_fetching_func() {
   while (!this->should_exit()) {
     {
       std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
-      if (!this->is_playing()) {
+      while (!this->is_playing() && !this->should_exit()) {
         this->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(PAUSED_SLEEP_TIME_MS));
       }
     }
@@ -168,7 +168,7 @@ void MediaFetcher::frame_audio_fetching_func() {
   while (!this->should_exit()) {
     {
       std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
-      if (!this->is_playing()) {
+      while (!this->is_playing() && !this->should_exit()) {
         this->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(PAUSED_SLEEP_TIME_MS));
       }
     }
