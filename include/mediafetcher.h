@@ -55,6 +55,8 @@ class MediaFetcher {
     std::string error;
     std::mutex alter_mutex;
     std::mutex audio_buffer_mutex;
+
+    std::mutex audio_buffer_request_mutex;
     std::condition_variable audio_buffer_cond;
 
     MediaClock clock;

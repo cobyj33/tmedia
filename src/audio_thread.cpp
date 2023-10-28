@@ -7,6 +7,7 @@
 #include "decode.h"
 
 #include <mutex>
+#include <chrono>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -124,7 +125,6 @@ void MediaFetcher::audio_fetching_thread_func() {
     AudioResampler audio_resampler(
     this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
     this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate());
-    
     sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
 
     while (this->in_use) {
@@ -133,42 +133,32 @@ void MediaFetcher::audio_fetching_thread_func() {
         continue;
       }
 
-      bool can_rest = true;
-      bool should_load = false;
       {
-        std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
-        should_load = !this->audio_buffer->can_read(AUDIO_BUFFER_SHOULD_READ_SIZE);
+        std::unique_lock<std::mutex> audio_buffer_cond_lock(this->audio_buffer_request_mutex);
+        this->audio_buffer_cond.wait_for(audio_buffer_cond_lock, std::chrono::milliseconds(200));
       }
 
-      if (should_load) {
-        for (int i = 0; i < AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT; i++) {
-          std::vector<AVFrame*> next_raw_audio_frames;
+      for (int i = 0; i < AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT; i++) {
+        std::vector<AVFrame*> next_raw_audio_frames;
 
-          {
-            std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
-            next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);
-          }
-
-          if (next_raw_audio_frames.size() == 0) {
-            can_rest = true;
-            break;
-          }
-          
-          std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
-
-          for (int i = 0; i < (int)audio_frames.size(); i++) {
-            std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
-            this->audio_buffer->write((float*)(audio_frames[i]->data[0]), audio_frames[i]->nb_samples);
-            can_rest = this->audio_buffer->can_read(AUDIO_BUFFER_SHOULD_READ_SIZE);
-          }
-
-          clear_av_frame_list(next_raw_audio_frames);
-          clear_av_frame_list(audio_frames);
+        {
+          std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
+          next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);
         }
+
+        if (next_raw_audio_frames.size() == 0) break;
+        
+        std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
+
+        for (int i = 0; i < (int)audio_frames.size(); i++) {
+          std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
+          this->audio_buffer->write((float*)(audio_frames[i]->data[0]), audio_frames[i]->nb_samples);
+        }
+
+        clear_av_frame_list(next_raw_audio_frames);
+        clear_av_frame_list(audio_frames);
       }
 
-      if (can_rest)
-        sleep_for_ms(AUDIO_THREAD_REST_SLEEP_MS);
     }
 
   } catch (std::exception const& e) {

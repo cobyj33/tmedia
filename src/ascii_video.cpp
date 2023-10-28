@@ -336,6 +336,11 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     fetcher->audio_buffer->read_into(frameCount, (float*)pOutput);
   }
 
+  if (!fetcher->audio_buffer->can_read(pDevice->sampleRate * 2)) {
+    std::lock_guard<std::mutex> audio_buffer_request_lock(fetcher->audio_buffer_request_mutex);
+    fetcher->audio_buffer_cond.notify_one();
+  }
+
   (void)pInput;
 }
 
