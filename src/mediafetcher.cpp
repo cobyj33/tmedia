@@ -32,6 +32,13 @@ MediaFetcher::MediaFetcher(const std::string& file_path) {
   }
 }
 
+void MediaFetcher::dispatch_exit(std::string err) {
+  if (err.length() == 0)
+    throw std::runtime_error("[MediaFetcher::set_error] Cannot set error with empty string");
+  this->error = err;
+  this->dispatch_exit();
+}
+
 void MediaFetcher::dispatch_exit() {
   std::scoped_lock<std::mutex, std::mutex> notification_locks(this->exit_notify_mutex, this->audio_buffer_request_mutex);
   this->in_use = false;
@@ -55,6 +62,16 @@ void MediaFetcher::resume(double current_system_time) {
   this->clock.resume(current_system_time);
   std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
   this->resume_cond.notify_all();
+}
+
+bool MediaFetcher::has_error() const noexcept {
+  return this->error.has_value();
+}
+
+std::string MediaFetcher::get_error() {
+  if (!this->error.has_value())
+    throw std::runtime_error("[MediaFetcher::get_error] Cannot get error when no error is available");
+  return *this->error;
 }
 
 /**

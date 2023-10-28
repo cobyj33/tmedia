@@ -34,8 +34,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
     audio_fetching_thread.swap(initialized_audio_fetching_thread);
   } catch (const std::system_error& err) {
     std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
-    this->error = err.what();
-    this->dispatch_exit();
+    this->dispatch_exit(err.what());
   }
 
   if (audio_sync_thread.joinable()) audio_sync_thread.join();
@@ -89,8 +88,7 @@ void MediaFetcher::audio_sync_thread_func() {
     }
   } catch (const std::exception& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
-    this->error = std::string(err.what());
-    this->dispatch_exit();
+    this->dispatch_exit(err.what());
   }
 
 }
@@ -116,8 +114,7 @@ void MediaFetcher::buffer_size_management_thread_func() {
       }
   } catch (const std::exception& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
-    this->error = err.what();
-    this->dispatch_exit();
+    this->dispatch_exit(err.what());
   }
 }
 
@@ -166,10 +163,9 @@ void MediaFetcher::audio_fetching_thread_func() {
         this->audio_buffer_cond.wait_for(audio_buffer_fill_notify_lock, std::chrono::milliseconds(AUDIO_THREAD_ITERATION_SLEEP_MS));
       }
     }
-  } catch (std::exception const& e) {
+  } catch (std::exception const& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
-    this->error = std::string(e.what());
-    this->dispatch_exit();
+    this->dispatch_exit(err.what());
   }
 
 }

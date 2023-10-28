@@ -60,7 +60,7 @@ void on_terminate() {
     std::rethrow_exception(exptr);
   }
   catch (std::exception const& ex) {
-    std::cerr << "Terminated due to exception: " << ex.what() << std::endl;
+    std::cerr << "[ascii_video] Terminated due to exception: " << ex.what() << std::endl;
   }
 
   std::abort();

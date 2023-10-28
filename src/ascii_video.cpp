@@ -290,10 +290,9 @@ int ascii_video(AsciiVideoProgramData avpd) {
           }
         }
       }
-    } catch (const std::exception& e) {
+    } catch (const std::exception& err) {
       std::lock_guard<std::mutex> lock(fetcher.alter_mutex);
-      fetcher.dispatch_exit();
-      fetcher.error = std::string(e.what()); // to be caught after all threads are joined
+      fetcher.dispatch_exit(err.what());
     }
 
     if (audio_device) {
@@ -302,8 +301,8 @@ int ascii_video(AsciiVideoProgramData avpd) {
 
     fetcher.join();
 
-    if (fetcher.error.length() > 0) {
-      std::cerr << "[ascii_video]: Media Fetcher Error: " << fetcher.error << std::endl;
+    if (fetcher.has_error()) {
+      std::cerr << "[ascii_video]: Media Fetcher Error: " << fetcher.get_error() << std::endl;
       ncurses_uninit();
       return EXIT_FAILURE;
     }
@@ -331,7 +330,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
   MediaFetcher* fetcher = (MediaFetcher*)(pDevice->pUserData);
   std::lock_guard<std::mutex> mutex_lock_guard(fetcher->audio_buffer_mutex);
 
-  if (!fetcher->clock.is_playing() || !fetcher->audio_buffer->can_read(frameCount)) {
+  if (!fetcher->is_playing() || !fetcher->audio_buffer->can_read(frameCount)) {
     float* pFloatOutput = (float*)pOutput;
     for (ma_uint32 i = 0; i < frameCount * pDevice->playback.channels; i++) {
       pFloatOutput[i] = 0.0001 * sin(0.10 * i);

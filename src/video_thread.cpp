@@ -52,10 +52,9 @@ void MediaFetcher::video_fetching_thread_func() {
       case MediaType::AUDIO: this->frame_audio_fetching_func(); break;
       default: throw std::runtime_error("[MediaFetcher::video_fetching_thread] Could not identify media type");
     }
-  } catch (std::exception const& e) {
+  } catch (std::exception const& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
-    this->error = std::string(e.what());
-    this->dispatch_exit();
+    this->dispatch_exit(err.what());
   }
 }
 
