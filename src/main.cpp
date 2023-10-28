@@ -181,9 +181,13 @@ int main(int argc, char** argv)
   if (parser.get<bool>("--curses-version")) return program_print_curses_version();
   std::vector<std::string> paths = parser.get<std::vector<std::string>>("paths");
 
+  if (argc == 1) {
+    std::cout << parser << std::endl;
+    return EXIT_SUCCESS;
+  }
+
   if (paths.size() == 0) {
     std::cerr << "[ascii_video]: at least 1 path expected. 0 found. Path can be to directory or media file" << std::endl;
-    std::cerr << parser << std::endl;
     return EXIT_FAILURE;
   }
 
