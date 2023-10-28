@@ -49,6 +49,7 @@ enum class VideoOutputMode {
   TEXT_ONLY,
 };
 
+
 enum class JustifyStrings {
   SPACE_BETWEEN
 };
@@ -58,6 +59,7 @@ void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_co
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage);
 void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time, double duration);
+void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next);
 
 bool INTERRUPT_RECEIVED = false;
 const int KEY_ESCAPE = 27;
@@ -66,7 +68,6 @@ const double VOLUME_CHANGE_AMOUNT = 0.01;
 void interrupt_handler(int) {
   INTERRUPT_RECEIVED = true;
 }
-
 
 void on_terminate() {
   if (ncurses_is_initialized()) {
@@ -83,7 +84,6 @@ void on_terminate() {
 
   std::abort();
 }
-
 
 int main(int argc, char** argv)
 {
@@ -108,18 +108,10 @@ int main(int argc, char** argv)
   bool muted = false;
   VideoOutputMode vom  = VideoOutputMode::TEXT_ONLY;
   LoopType loop_type = LoopType::NO_LOOP;
-  ScalingAlgo scaling_algorithm = ScalingAlgo::NEAREST_NEIGHBOR;
-
-  /**
-   * if <= 0, do not cap FPS
-  */
-  int render_loop_max_fps = 24;
+  ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
   
-	// std::signal(SIGQUIT, ascii_video_signal_handler); I don't know if I should handle this,
-  // as I'd want quitting if ascii_video does happen to actually break
-
-	// std::signal(SIGHUP, ascii_video_signal_handler); This is when the user's terminal is disconnected or quit, I do want
-  // to handle this, but I'm sure that it has some exceptions with ncurses use
+  // if <= 0, do not cap FPS
+  int render_loop_max_fps = 24;
 
   argparse::ArgumentParser parser("ascii_video", ASCII_VIDEO_VERSION);
 
@@ -355,15 +347,10 @@ int main(int argc, char** argv)
 
   ncurses_init();
 
-  if (colors) {
-    ncurses_set_color_palette(AVNCursesColorPalette::RGB);
-    vom  = background ? VideoOutputMode::COLORED_BACKGROUND_ONLY : VideoOutputMode::COLORED;
-  } else if (grayscale) {
-    ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
-    vom  = grayscale ? VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY : VideoOutputMode::GRAYSCALE;
-  }
-  
-
+  if (colors)
+    set_global_video_output_mode(&vom, background ? VideoOutputMode::COLORED_BACKGROUND_ONLY : VideoOutputMode::COLORED);
+  else if (grayscale)
+    set_global_video_output_mode(&vom, background ? VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY : VideoOutputMode::GRAYSCALE);
   
   bool full_exit = false;
 
@@ -438,65 +425,31 @@ int main(int argc, char** argv)
 
             if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version
               switch (vom) {
-                case VideoOutputMode::COLORED:
-                  vom = VideoOutputMode::TEXT_ONLY;
-                  break;
-                case VideoOutputMode::GRAYSCALE:
-                  vom = VideoOutputMode::COLORED;
-                  ncurses_set_color_palette(AVNCursesColorPalette::RGB);
-                  break;
-                case VideoOutputMode::COLORED_BACKGROUND_ONLY:
-                  vom = VideoOutputMode::TEXT_ONLY;
-                  break;
-                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: 
-                  vom = VideoOutputMode::COLORED_BACKGROUND_ONLY;
-                  ncurses_set_color_palette(AVNCursesColorPalette::RGB);
-                  break; 
-                case VideoOutputMode::TEXT_ONLY:
-                  vom = VideoOutputMode::COLORED;
-                  ncurses_set_color_palette(AVNCursesColorPalette::RGB);
-                  break;
+                case VideoOutputMode::COLORED: set_global_video_output_mode(&vom, VideoOutputMode::TEXT_ONLY); break;
+                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&vom, VideoOutputMode::COLORED); break;
+                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::TEXT_ONLY); break;
+                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+                case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::COLORED); break;
               }
             }
 
             if ((input == 'g' || input == 'G') && has_colors() && can_change_color()) {
               switch (vom) {
-                case VideoOutputMode::COLORED:
-                  vom = VideoOutputMode::GRAYSCALE;
-                  ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
-                  break;
-                case VideoOutputMode::GRAYSCALE:
-                  vom = VideoOutputMode::TEXT_ONLY;
-                  break;
-                case VideoOutputMode::COLORED_BACKGROUND_ONLY:
-                  vom = VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY;
-                  ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
-                  break;
-                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: 
-                  vom = VideoOutputMode::TEXT_ONLY;
-                  break; 
-                case VideoOutputMode::TEXT_ONLY:
-                  vom = VideoOutputMode::GRAYSCALE;
-                  ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE);
-                  break;
+                case VideoOutputMode::COLORED: set_global_video_output_mode(&vom, VideoOutputMode::GRAYSCALE); break;
+                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&vom, VideoOutputMode::TEXT_ONLY); break;
+                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::TEXT_ONLY); break;
+                case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::GRAYSCALE); break;
               }
             }
 
             if ((input == 'b' || input == 'B') && has_colors() && can_change_color()) {
               switch (vom) {
-                case VideoOutputMode::COLORED:
-                  vom = VideoOutputMode::COLORED_BACKGROUND_ONLY;
-                  break;
-                case VideoOutputMode::GRAYSCALE:
-                  vom = VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY;
-                  break;
-                case VideoOutputMode::COLORED_BACKGROUND_ONLY:
-                  vom = VideoOutputMode::COLORED;
-                  break;
-                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: 
-                  vom = VideoOutputMode::GRAYSCALE;
-                  break; 
-                case VideoOutputMode::TEXT_ONLY: break;
+                case VideoOutputMode::COLORED: set_global_video_output_mode(&vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::COLORED); break;
+                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::GRAYSCALE); break;
+                case VideoOutputMode::TEXT_ONLY: break; //no-op
               }
             }
 
@@ -683,7 +636,6 @@ int main(int argc, char** argv)
 }
 
 
-
 // /**
 //  * @brief The callback called by miniaudio once the connected audio device requests audio data
 //  * 
@@ -707,6 +659,17 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
   }
 
   (void)pInput;
+}
+
+void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next) {
+  switch (next) {
+    case VideoOutputMode::COLORED:
+    case VideoOutputMode::COLORED_BACKGROUND_ONLY: ncurses_set_color_palette(AVNCursesColorPalette::RGB); break;
+    case VideoOutputMode::GRAYSCALE:
+    case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE); break;
+    case VideoOutputMode::TEXT_ONLY: break;
+  }
+  *current = next;
 }
 
 void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage) {
