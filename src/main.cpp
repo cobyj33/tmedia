@@ -82,6 +82,8 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage);
 void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time, double duration);
 
+std::string to_filename(const std::string& path);
+
 int program_print_ffmpeg_version();
 int program_print_curses_version();
 int program_dump_metadata(const std::vector<std::string>& files);
@@ -326,25 +328,17 @@ int ascii_video(AsciiVideoProgramData avpd) {
   const int KEY_ESCAPE = 27;
   const double VOLUME_CHANGE_AMOUNT = 0.01;
 
-  std::vector<std::string> files = avpd.files;
-  bool volume = avpd.volume;
-  bool muted = avpd.muted;
-  VideoOutputMode vom = avpd.vom;
-  bool fullscreen = avpd.fullscreen;
-  int render_loop_max_fps = avpd.render_loop_max_fps.has_value() ? avpd.render_loop_max_fps.value() : -1;
-  ScalingAlgo scaling_algorithm = avpd.scaling_algorithm;
-  LoopType loop_type = avpd.loop_type;
-
   int current_file = 0;
+  bool full_exit = false;
 
   ncurses_init();
-  init_global_video_output_mode(vom);
+  init_global_video_output_mode(avpd.vom);
   
-  bool full_exit = false;
-  while (!INTERRUPT_RECEIVED && !full_exit && (std::size_t)current_file < files.size()) {
-    MediaFetcher fetcher(files[current_file]);
+  while (!INTERRUPT_RECEIVED && !full_exit && (std::size_t)current_file < avpd.files.size()) {
+    erase();
+    MediaFetcher fetcher(avpd.files[current_file]);
     std::unique_ptr<ma_device_w> audio_device;
-    int next_file = playback_get_next(current_file, files.size(), loop_type);
+    int next_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
 
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
       ma_device_config config = ma_device_config_init(ma_device_type_playback);
@@ -356,14 +350,13 @@ int ascii_video(AsciiVideoProgramData avpd) {
 
       audio_device = std::make_unique<ma_device_w>(&config);
       audio_device->start();
-      audio_device->set_volume(volume);
+      audio_device->set_volume(avpd.volume);
     }
 
     {
       std::lock_guard<std::mutex> audio_buffer_lock(fetcher.audio_buffer_mutex);
       fetcher.begin();
     }
-
 
     try {
       while (fetcher.in_use) { // never break without setting in_use to false
@@ -411,77 +404,77 @@ int ascii_video(AsciiVideoProgramData avpd) {
             }
 
             if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version
-              switch (vom) {
-                case VideoOutputMode::COLORED: set_global_video_output_mode(&vom, VideoOutputMode::TEXT_ONLY); break;
-                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&vom, VideoOutputMode::COLORED); break;
-                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::TEXT_ONLY); break;
-                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-                case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::COLORED); break;
+              switch (avpd.vom) {
+                case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
+                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
+                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
+                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+                case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
               }
             }
 
             if ((input == 'g' || input == 'G') && has_colors() && can_change_color()) {
-              switch (vom) {
-                case VideoOutputMode::COLORED: set_global_video_output_mode(&vom, VideoOutputMode::GRAYSCALE); break;
-                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&vom, VideoOutputMode::TEXT_ONLY); break;
-                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::TEXT_ONLY); break;
-                case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::GRAYSCALE); break;
+              switch (avpd.vom) {
+                case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
+                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
+                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
+                case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
               }
             }
 
             if ((input == 'b' || input == 'B') && has_colors() && can_change_color()) {
-              switch (vom) {
-                case VideoOutputMode::COLORED: set_global_video_output_mode(&vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::COLORED); break;
-                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&vom, VideoOutputMode::GRAYSCALE); break;
+              switch (avpd.vom) {
+                case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+                case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+                case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
+                case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
                 case VideoOutputMode::TEXT_ONLY: break; //no-op
               }
             }
 
 
             if (input == 'l' || input == 'L') {
-              switch (loop_type) {
-                case LoopType::NO_LOOP: loop_type = LoopType::REPEAT; break;
-                case LoopType::REPEAT: loop_type = LoopType::REPEAT_ONE; break;
-                case LoopType::REPEAT_ONE: loop_type = LoopType::NO_LOOP; break;
+              switch (avpd.loop_type) {
+                case LoopType::NO_LOOP: avpd.loop_type = LoopType::REPEAT; break;
+                case LoopType::REPEAT: avpd.loop_type = LoopType::REPEAT_ONE; break;
+                case LoopType::REPEAT_ONE: avpd.loop_type = LoopType::NO_LOOP; break;
               }
-              next_file = playback_get_next(current_file, files.size(), loop_type);
+              next_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
             }
 
             if (input == 'n' || input == 'N') {
-              if (loop_type == LoopType::REPEAT_ONE) {
-                loop_type = LoopType::REPEAT;
-                next_file = playback_get_next(current_file, files.size(), loop_type);
+              if (avpd.loop_type == LoopType::REPEAT_ONE) {
+                avpd.loop_type = LoopType::REPEAT;
+                next_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
               }
               fetcher.in_use = false;
             }
 
             if (input == 'p' || input == 'P') {
-              if (loop_type == LoopType::REPEAT_ONE)
-                loop_type = LoopType::REPEAT;
-              next_file = playback_get_previous(current_file, files.size(), loop_type);
+              if (avpd.loop_type == LoopType::REPEAT_ONE)
+                avpd.loop_type = LoopType::REPEAT;
+              next_file = playback_get_previous(current_file, avpd.files.size(), avpd.loop_type);
               fetcher.in_use = false;
             }
 
             if (input == 'f' || input == 'F') {
               erase();
-              fullscreen = !fullscreen;
+              avpd.fullscreen = !avpd.fullscreen;
             }
 
             if (input == KEY_UP && audio_device) {
-              volume = clamp(volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-              audio_device->set_volume(volume);
+              avpd.volume = clamp(avpd.volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
+              audio_device->set_volume(avpd.volume);
             }
 
             if (input == KEY_DOWN && audio_device) {
-              volume = clamp(volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-              audio_device->set_volume(volume);
+              avpd.volume = clamp(avpd.volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
+              audio_device->set_volume(avpd.volume);
             }
 
             if (input == 'm' || input == 'M') {
-              muted = !muted;
+              avpd.muted = !avpd.muted;
             }
 
             if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
@@ -525,40 +518,40 @@ int ascii_video(AsciiVideoProgramData avpd) {
           if (audio_device && fetcher.clock.is_playing()) audio_device->start();
         }
 
-        if (COLS <= 20 || LINES < 10 || fullscreen) {
-          print_pixel_data(frame, 0, 0, COLS, LINES, vom, scaling_algorithm);
+        if (COLS <= 20 || LINES < 10 || avpd.fullscreen) {
+          print_pixel_data(frame, 0, 0, COLS, LINES, avpd.vom, avpd.scaling_algorithm);
         } else {
 
           switch (fetcher.media_type) {
             case MediaType::VIDEO:
             case MediaType::AUDIO: {
-              print_pixel_data(frame, 2, 0, COLS, LINES - 4, vom, scaling_algorithm);
+              print_pixel_data(frame, 2, 0, COLS, LINES - 4, avpd.vom, avpd.scaling_algorithm);
 
-              if (files.size() == 1) {
+              if (avpd.files.size() == 1) {
                 wfill_box(stdscr, 1, 0, COLS, 1, '~');
-                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(files.size()) + ") " + std::filesystem::path(files[current_file]).filename().c_str());
-              } else if (files.size() > 1) {
+                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
+              } else if (avpd.files.size() > 1) {
                 wfill_box(stdscr, 2, 0, COLS, 1, '~');
-                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(files.size()) + ") " + std::filesystem::path(files[current_file]).filename().c_str());
-                int rewind_file = playback_get_previous(current_file, files.size(), loop_type);
-                int skip_file = playback_get_next(current_file, files.size(), loop_type);
+                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
+                int rewind_file = playback_get_previous(current_file, avpd.files.size(), avpd.loop_type);
+                int skip_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
 
                 if (rewind_file >= 0) {
                   werasebox(stdscr, 1, 0, COLS / 2, 1);
-                  mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + std::filesystem::path(files[rewind_file]).filename().string());
+                  mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + to_filename(avpd.files[rewind_file]));
                 }
 
                 if (skip_file >= 0) {
                   werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-                  mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, std::filesystem::path(files[skip_file]).filename().string() + " >");
+                  mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, to_filename(avpd.files[skip_file]) + " >");
                 }
               }
 
               wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
               wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
-              const std::string loop_str = str_capslock(loop_type_to_string(loop_type)); 
+              const std::string loop_str = str_capslock(loop_type_to_string(avpd.loop_type)); 
               const std::string playing_str = fetcher.clock.is_playing() ? "PLAYING" : "PAUSED";
-              const std::string volume_str = "VOLUME: " +  std::to_string((int)(volume * 100)) + "%";
+              const std::string volume_str = "VOLUME: " +  std::to_string((int)(avpd.volume * 100)) + "%";
 
               int section_size = COLS / 3;
               werasebox(stdscr, LINES - 1, 0, COLS, 1);
@@ -567,25 +560,25 @@ int ascii_video(AsciiVideoProgramData avpd) {
               mvwaddstr_center(stdscr, LINES - 1, section_size * 2, section_size, volume_str.c_str());
             } break;
             case MediaType::IMAGE: {
-              print_pixel_data(frame, 2, 0, COLS, LINES, vom, scaling_algorithm);
+              print_pixel_data(frame, 2, 0, COLS, LINES, avpd.vom, avpd.scaling_algorithm);
 
-              if (files.size() == 1) {
+              if (avpd.files.size() == 1) {
                 wfill_box(stdscr, 1, 0, COLS, 1, '~');
-                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(files.size()) + ") " + std::filesystem::path(files[current_file]).filename().c_str());
-              } else if (files.size() > 1) {
+                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
+              } else if (avpd.files.size() > 1) {
                 wfill_box(stdscr, 2, 0, COLS, 1, '~');
-                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(files.size()) + ") " + std::filesystem::path(files[current_file]).filename().c_str());
-                int rewind_file = playback_get_previous(current_file, files.size(), loop_type);
-                int skip_file = playback_get_next(current_file, files.size(), loop_type);
+                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
+                int rewind_file = playback_get_previous(current_file, avpd.files.size(), avpd.loop_type);
+                int skip_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
 
                 if (rewind_file >= 0) {
                   werasebox(stdscr, 1, 0, COLS / 2, 1);
-                  mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + std::filesystem::path(files[rewind_file]).filename().string());
+                  mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + to_filename(avpd.files[rewind_file]));
                 }
 
                 if (skip_file >= 0) {
                   werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-                  mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, std::filesystem::path(files[skip_file]).filename().string() + " >");
+                  mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, to_filename(avpd.files[skip_file]) + " >");
                 }
               }
 
@@ -594,7 +587,7 @@ int ascii_video(AsciiVideoProgramData avpd) {
         }
 
         refresh();
-        if (render_loop_max_fps > 0) sleep_for_sec(1 / (double)render_loop_max_fps);
+        if (avpd.render_loop_max_fps) sleep_for_sec(1 / static_cast<double>(avpd.render_loop_max_fps.value()));
       }
     } catch (const std::exception& e) {
       std::lock_guard<std::mutex> lock(fetcher.alter_mutex);
@@ -614,9 +607,8 @@ int ascii_video(AsciiVideoProgramData avpd) {
       return EXIT_FAILURE;
     }
 
-    erase();
     current_file = next_file;
-  } // !INTERRUPT_RECEIVED && current_file < files.size()
+  }
 
   ncurses_uninit();
   return EXIT_SUCCESS;
@@ -681,6 +673,9 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
   (void)pInput;
 }
 
+std::string to_filename(const std::string& path_str) {
+  return std::filesystem::path(path_str).filename().string();
+}
 
 void init_global_video_output_mode(VideoOutputMode mode) {
   switch (mode) {
