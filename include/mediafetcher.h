@@ -37,6 +37,11 @@ class MediaFetcher {
     void audio_dispatch_thread_func();
     void duration_checking_thread_func();
 
+    void frame_video_fetching_func();
+    void frame_image_fetching_func();
+    void frame_audio_fetching_func();
+
+
     void audio_sync_thread_func();
     void audio_fetching_thread_func();
     void buffer_size_management_thread_func();
