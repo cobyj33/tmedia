@@ -51,14 +51,20 @@ bool MediaFetcher::should_exit() {
 }
 
 bool MediaFetcher::is_playing() {
+  if (this->media_type == MediaType::IMAGE)
+    throw std::runtime_error("[MediaFetcher::is_playing] Cannot check playing state of Image media file");
   return this->clock.is_playing();
 }
 
 void MediaFetcher::pause(double current_system_time) {
+  if (this->media_type == MediaType::IMAGE)
+    throw std::runtime_error("[MediaFetcher::pause] Cannot pause image media file");
   this->clock.stop(current_system_time);
 }
 
 void MediaFetcher::resume(double current_system_time) {
+  if (this->media_type == MediaType::IMAGE)
+    throw std::runtime_error("[MediaFetcher::pause] Cannot resume image media file");
   this->clock.resume(current_system_time);
   std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
   this->resume_cond.notify_all();
@@ -201,7 +207,7 @@ void MediaFetcher::begin() {
 */
 void MediaFetcher::join() {
   this->in_use = false; // the user can set this as well if they want, but this is to make sure that the threads WILL end regardless
-  if (this->is_playing()) this->pause(system_clock_sec());
+  if (this->media_type != MediaType::IMAGE && this->is_playing()) this->pause(system_clock_sec());
   this->video_thread.join();
   this->duration_checking_thread.join();
   this->audio_thread.join();

@@ -46,9 +46,15 @@ class MediaFetcher {
     void audio_fetching_thread_func();
     void buffer_size_management_thread_func();
 
+    std::string file_path;
     MediaClock clock;
     std::atomic<bool> in_use;
     std::optional<std::string> error;
+
+    std::mutex resume_notify_mutex;
+    std::condition_variable resume_cond;
+
+    int load_next_audio(); // Not thread-safe, lock alter_mutex and audio_buffer_mutex first
   public:
 
     MediaType media_type;
@@ -62,14 +68,8 @@ class MediaFetcher {
     std::mutex audio_buffer_request_mutex;
     std::condition_variable audio_buffer_cond;
 
-    std::mutex resume_notify_mutex;
-    std::condition_variable resume_cond;
-
     std::mutex exit_notify_mutex;
     std::condition_variable exit_cond;
-
-    std::string file_path;
-    
 
     std::unique_ptr<AudioBuffer> audio_buffer;
 
@@ -117,9 +117,6 @@ class MediaFetcher {
      * @throws If the target time is not in the boudns of the video's playtime
      */
     int jump_to_time(double target_time, double current_system_time); // Not thread-safe, lock alter_mutex and audio_buffer_mutex first
-
-    int load_next_audio(); // Not thread-safe, lock alter_mutex and audio_buffer_mutex first
-
 };
 
 

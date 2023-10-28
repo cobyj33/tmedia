@@ -295,10 +295,7 @@ int ascii_video(AsciiVideoProgramData avpd) {
       fetcher.dispatch_exit(err.what());
     }
 
-    if (audio_device) {
-      audio_device->stop();
-    }
-
+    if (audio_device) audio_device->stop();
     fetcher.join();
 
     if (fetcher.has_error()) {
