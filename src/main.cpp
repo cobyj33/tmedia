@@ -164,7 +164,8 @@ int main(int argc, char** argv)
     .default_value(false)
     .implicit_value(true);
 
-  
+  parser.add_argument("--chars")
+    .help("The characters from darkest to lightest to use as display");
 
   try {
     parser.parse_args(argc, argv);
@@ -195,6 +196,7 @@ int main(int argc, char** argv)
   avpd.vom = VideoOutputMode::TEXT_ONLY;
   avpd.volume = 1.0;
   avpd.fullscreen = false;
+  avpd.ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
 
   for (std::size_t i = 0; i < paths.size(); i++) {
     if (paths[i].length() == 0) {
@@ -269,6 +271,10 @@ int main(int argc, char** argv)
 
   if (std::optional<int> user_max_fps = parser.present<int>("--max-fps")) {
     avpd.render_loop_max_fps = user_max_fps.value() <= 0 ? std::nullopt : user_max_fps;
+  }
+
+  if (std::optional<std::string> user_ascii_display_chars = parser.present<std::string>("--chars")) {
+    avpd.ascii_display_chars = *user_ascii_display_chars;
   }
 
   if (parser.get<bool>("--color"))

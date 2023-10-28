@@ -27,6 +27,7 @@ struct AsciiVideoProgramData {
   ScalingAlgo scaling_algorithm;
   std::optional<int> render_loop_max_fps;
   bool fullscreen;
+  std::string ascii_display_chars;
 };
 
 int ascii_video(AsciiVideoProgramData avpd);

@@ -46,7 +46,7 @@ const std::string ASCII_VIDEO_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "p - Go to previous media file\n"
   "l - Switch looping type of playback\n";
 
-void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode, const ScalingAlgo scaling_algorithm);
+void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode, const ScalingAlgo scaling_algorithm, const std::string& ascii_char_map);
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage);
 void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time, double duration);
@@ -241,9 +241,9 @@ int ascii_video(AsciiVideoProgramData avpd) {
         }
 
         if (COLS <= 20 || LINES < 10 || avpd.fullscreen) {
-          print_pixel_data(frame, 0, 0, COLS, LINES, avpd.vom, avpd.scaling_algorithm);
+          print_pixel_data(frame, 0, 0, COLS, LINES, avpd.vom, avpd.scaling_algorithm, avpd.ascii_display_chars);
         } else {
-          print_pixel_data(frame, 2, 0, COLS, LINES - 4, avpd.vom, avpd.scaling_algorithm);
+          print_pixel_data(frame, 2, 0, COLS, LINES - 4, avpd.vom, avpd.scaling_algorithm, avpd.ascii_display_chars);
 
           if (avpd.files.size() == 1) {
             wfill_box(stdscr, 1, 0, COLS, 1, '~');
@@ -384,7 +384,7 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in
     wprint_progress_bar(window, y, x + current_time_string.length() + PADDING_BETWEEN_ELEMENTS, progress_bar_width, 1,time_in_seconds / duration_in_seconds);
 }
 
-void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode, const ScalingAlgo scaling_algorithm) {
+void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode, const ScalingAlgo scaling_algorithm, const std::string& ascii_char_map) {
   if (output_mode != VideoOutputMode::TEXT_ONLY && !has_colors()) {
     throw std::runtime_error("Attempted to print colored text in terminal that does not support color");
   }
@@ -397,7 +397,7 @@ void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_co
   for (int row = 0; row < bounded.get_height(); row++) {
     for (int col = 0; col < bounded.get_width(); col++) {
       const RGBColor& target_color = bounded.at(row, col);
-      const char target_char = background_only ? ' ' : get_char_from_rgb(ASCII_STANDARD_CHAR_MAP, target_color);
+      const char target_char = background_only ? ' ' : get_char_from_rgb(ascii_char_map, target_color);
       
       if (output_mode == VideoOutputMode::TEXT_ONLY) {
         mvaddch(image_start_row + row, image_start_col + col, target_char);
