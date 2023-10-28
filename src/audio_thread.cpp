@@ -27,6 +27,8 @@ void MediaFetcher::audio_fetching_thread() {
   const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 10;
   const int AUDIO_THREAD_ITERATION_SLEEP_MS = 17;
   const int AUDIO_THREAD_REST_SLEEP_MS = 170;
+
+  if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) return;
   
   try { // super try block :)
     AudioResampler audio_resampler(
