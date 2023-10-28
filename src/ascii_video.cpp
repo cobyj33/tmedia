@@ -235,8 +235,7 @@ int ascii_video(AsciiVideoProgramData avpd) {
         if (requested_jump) {
           if (audio_device && fetcher.clock.is_playing()) audio_device->stop();
           {
-            std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex);
-            std::lock_guard<std::mutex> buffer_lock(fetcher.audio_buffer_mutex);
+            std::scoped_lock<std::mutex, std::mutex> total_lock{fetcher.alter_mutex, fetcher.audio_buffer_mutex};
             fetcher.jump_to_time(clamp(requested_jump_time, 0.0, fetcher.get_duration()), system_clock_sec());
           }
           if (audio_device && fetcher.clock.is_playing()) audio_device->start();
@@ -304,6 +303,9 @@ int ascii_video(AsciiVideoProgramData avpd) {
       ncurses_uninit();
       return EXIT_FAILURE;
     }
+
+    //flush getch
+    while (getch() != ERR) getch(); 
 
     current_file = next_file;
   }

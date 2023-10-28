@@ -34,11 +34,12 @@ class MediaFetcher {
     std::thread audio_thread;
     std::thread duration_checking_thread;
     void video_fetching_thread_func();
-    void audio_fetching_thread_func();
+    void audio_dispatch_thread_func();
     void duration_checking_thread_func();
 
-    std::thread audio_sync_thread;
     void audio_sync_thread_func();
+    void audio_fetching_thread_func();
+    void buffer_size_management_thread_func();
 
   public:
 

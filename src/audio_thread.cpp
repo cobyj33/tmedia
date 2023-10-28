@@ -16,11 +16,36 @@ extern "C" {
 #include <libavutil/audio_fifo.h>
 }
 
+void MediaFetcher::audio_dispatch_thread_func() {
+  if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) return;
+  std::thread audio_sync_thread;
+  std::thread buffer_size_management_thread;
+  std::thread audio_fetching_thread;
+
+  try {
+    std::thread initialized_audio_sync_thread(&MediaFetcher::audio_sync_thread_func, this);
+    audio_sync_thread.swap(initialized_audio_sync_thread);
+
+    std::thread initialized_buffer_size_management_thread(&MediaFetcher::buffer_size_management_thread_func, this);
+    buffer_size_management_thread.swap(initialized_buffer_size_management_thread);
+
+    std::thread initialized_audio_fetching_thread(&MediaFetcher::audio_fetching_thread_func, this);
+    audio_fetching_thread.swap(initialized_audio_fetching_thread);
+  } catch (const std::system_error& err) {
+    std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
+    this->error = err.what();
+    this->in_use = false;
+  }
+
+  if (audio_sync_thread.joinable()) audio_sync_thread.join();
+  if (buffer_size_management_thread.joinable()) buffer_size_management_thread.join();
+  if (audio_fetching_thread.joinable()) audio_fetching_thread.join();
+}
 
 void MediaFetcher::audio_sync_thread_func() {
   const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
   const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
-  const int AUDIO_SYNC_THREAD_ITERATION_SLEEP_MS = 80;
+  const int AUDIO_SYNC_THREAD_ITERATION_SLEEP_MS = 200;
 
   if (!this->has_media_stream(AVMEDIA_TYPE_VIDEO)) return;
 
@@ -66,17 +91,34 @@ void MediaFetcher::audio_sync_thread_func() {
 
 }
 
+void MediaFetcher::buffer_size_management_thread_func() {
+  const int AUDIO_BUFFER_SIZE_MANAGEMENT_ITERATION_SLEEP_MS = 500;
+  const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 30.0;
+  const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 0.0;
+
+  try {
+      while (this->in_use) {
+        {
+          std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
+          if (this->audio_buffer->get_elapsed_time() > MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS) {
+            this->audio_buffer->leave_behind(RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS);
+          }
+        }
+
+        sleep_for_ms(AUDIO_BUFFER_SIZE_MANAGEMENT_ITERATION_SLEEP_MS);
+      }
+  } catch (const std::exception& err) {
+    std::lock_guard<std::mutex> lock(this->alter_mutex);
+    this->error = err.what();
+    this->in_use = false;
+  }
+}
+
 void MediaFetcher::audio_fetching_thread_func() {
   const int AUDIO_BUFFER_SHOULD_READ_SIZE = 44100; // 1 seconds of audio data at 44100 Hz sample rate
   const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 10;
   const int AUDIO_THREAD_ITERATION_SLEEP_MS = 17;
   const int AUDIO_THREAD_REST_SLEEP_MS = 170;
-  const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 30.0;
-  const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 10.0;
-
-  if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) return;
-  
-  std::thread audio_sync_thread;
 
   try { // super try block :)
     AudioResampler audio_resampler(
@@ -85,29 +127,11 @@ void MediaFetcher::audio_fetching_thread_func() {
     
     sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
 
-
-    try {
-      std::thread initialized_audio_sync_thread(&MediaFetcher::audio_sync_thread_func, this);
-      audio_sync_thread.swap(initialized_audio_sync_thread);
-    } catch (const std::system_error& err) {
-      std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
-      this->error = err.what();
-      this->in_use = false;
-    }
-    
     while (this->in_use) {
       if (!this->clock.is_playing()) {
         sleep_for_ms(AUDIO_THREAD_ITERATION_SLEEP_MS);
         continue;
       }
-
-      {
-        std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
-        if (this->audio_buffer->get_elapsed_time() > MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS) {
-          this->audio_buffer->leave_behind(RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS);
-        }
-      }
-
 
       bool can_rest = true;
       bool should_load = false;
@@ -153,6 +177,5 @@ void MediaFetcher::audio_fetching_thread_func() {
     this->in_use = false;
   }
 
-  if (audio_sync_thread.joinable()) audio_sync_thread.join();
 }
 
