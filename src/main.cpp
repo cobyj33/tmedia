@@ -23,6 +23,7 @@
 #include <filesystem>
 #include <memory>
 #include <csignal>
+#include <map>
 
 #include <argparse/argparse.hpp>
 #include <natural_sort.hpp>
@@ -145,6 +146,16 @@ int main(int argc, char** argv)
     .default_value(false)
     .implicit_value(true);
 
+  const std::map<std::string, LoopType> VALID_LOOP_TYPE_ARGS{
+      {"none", LoopType::NO_LOOP},
+      {"repeat", LoopType::REPEAT},
+      {"repeat-one", LoopType::REPEAT_ONE}
+  };
+
+  const std::map<std::string, ScalingAlgo> VALID_SCALING_ALGO_ARGS{
+    {"nearest-neighbor", ScalingAlgo::NEAREST_NEIGHBOR},
+    {"box-sampling", ScalingAlgo::BOX_SAMPLING}
+  };
 
   try {
     parser.parse_args(argc, argv);
@@ -229,12 +240,8 @@ int main(int argc, char** argv)
   }
 
   if (std::optional<std::string> user_loop = parser.present<std::string>("--loop")) {
-    if (*user_loop == "none") {
-      avpd.loop_type = LoopType::NO_LOOP;
-    } else if (*user_loop == "repeat") {
-      avpd.loop_type = LoopType::REPEAT;
-    } else if (*user_loop == "repeat-one") {
-      avpd.loop_type = LoopType::REPEAT_ONE;
+    if (VALID_LOOP_TYPE_ARGS.count(*user_loop) == 1) {
+      avpd.loop_type = VALID_LOOP_TYPE_ARGS.at(*user_loop);
     } else {
       std::cerr << "[ascii_video] Received invalid loop type '" << *user_loop << "', must be 'none', 'repeat', or 'repeat-one'" << std::endl;
       return EXIT_FAILURE;
@@ -242,11 +249,8 @@ int main(int argc, char** argv)
   }
 
   if (std::optional<std::string> user_scaling_algo = parser.present<std::string>("--scaling-algo")) {
-    if (*user_scaling_algo == "nearest-neighbor") {
-      avpd.scaling_algorithm = ScalingAlgo::NEAREST_NEIGHBOR;
-    }
-    else if (*user_scaling_algo == "box-sampling") {
-      avpd.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+    if (VALID_SCALING_ALGO_ARGS.count(*user_scaling_algo) == 1) {
+      avpd.scaling_algorithm = VALID_SCALING_ALGO_ARGS.at(*user_scaling_algo);
     } else {
       std::cerr << "[ascii_video] Unrecognized scaling algorithm '" + *user_scaling_algo + "', must be 'nearest-neighbor' or 'box-sampling'" << std::endl;
       return EXIT_FAILURE;
