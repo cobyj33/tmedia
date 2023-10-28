@@ -153,6 +153,6 @@ void MediaFetcher::join() {
   this->video_thread.join();
   this->duration_checking_thread.join();
   this->audio_thread.join();
-  this->clock.stop(system_clock_sec());
+  if (this->clock.is_playing()) this->clock.stop(system_clock_sec());
 }
 
