@@ -41,10 +41,12 @@ AVFormatContext* open_format_context(const std::string& file_path) {
 }
 
 void dump_file_info(const std::string& file_path) {
+  const int saved_avlog_level = av_log_get_level();
   av_log_set_level(AV_LOG_INFO);
   AVFormatContext* format_context = open_format_context(file_path);
   av_dump_format(format_context, 0, file_path.c_str(), 0);
   avformat_close_input(&format_context);
+  av_log_set_level(saved_avlog_level);
 }
 
 double get_file_duration(const std::string& file_path) {
