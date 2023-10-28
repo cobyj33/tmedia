@@ -49,22 +49,48 @@ enum class VideoOutputMode {
   TEXT_ONLY,
 };
 
-
-enum class JustifyStrings {
-  SPACE_BETWEEN
+struct AsciiVideoProgramData {
+  std::vector<std::string> files;
+  double volume;
+  bool muted;
+  VideoOutputMode vom;
+  LoopType loop_type;
+  ScalingAlgo scaling_algorithm;
+  std::optional<int> render_loop_max_fps;
+  
+  bool fullscreen;
 };
 
-// void wprintstr_list(WINDOW* window, int y, int x, int width, 
+const std::string controls = "-------CONTROLS-----------\n"
+  "Space - Play and Pause \n"
+  "Up Arrow - Increase Volume 5% \n"
+  "Up Arrow - Decrease Volume 5% \n"
+  "Left Arrow - Skip backward 5 seconds\n"
+  "Right Arrow - Skip forward 5 seconds \n"
+  "Escape or Backspace or 'q' - Quit Program \n"
+  "'0' - Restart playback\n"
+  "'1' through '9' - Skip to the timestamp at n/10 of the duration (similar to youtube)\n"
+  "c - Change to color mode on supported terminals \n"
+  "g - Change to grayscale mode \n"
+  "b - Change to Background Mode on supported terminals if in Color or Grayscale mode \n"
+  "n - Go to next media file\n"
+  "p - Go to previous media file\n"
+  "l - Switch looping type of playback\n";
+
 void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode, const ScalingAlgo scaling_algorithm);
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage);
 void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time, double duration);
+
+int program_print_ffmpeg_version();
+int program_print_curses_version();
+int program_dump_metadata(const std::vector<std::string>& files);
+int ascii_video(AsciiVideoProgramData program_data);
+
 void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next);
+void init_global_video_output_mode(VideoOutputMode mode);
 
 bool INTERRUPT_RECEIVED = false;
-const int KEY_ESCAPE = 27;
-const double VOLUME_CHANGE_AMOUNT = 0.01;
-
 void interrupt_handler(int) {
   INTERRUPT_RECEIVED = true;
 }
@@ -85,6 +111,7 @@ void on_terminate() {
   std::abort();
 }
 
+
 int main(int argc, char** argv)
 {
   #if USE_AV_REGISTER_ALL
@@ -102,40 +129,23 @@ int main(int argc, char** argv)
 	std::signal(SIGTERM, interrupt_handler);
 	std::signal(SIGABRT, interrupt_handler);
 
-  std::vector<std::string> files;
-  std::size_t current_file = 0;
-  double volume = 1.0;
-  bool muted = false;
-  VideoOutputMode vom  = VideoOutputMode::TEXT_ONLY;
-  LoopType loop_type = LoopType::NO_LOOP;
-  ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+  AsciiVideoProgramData avpd;
+  avpd.loop_type = LoopType::NO_LOOP;
+  avpd.muted = false;
+  avpd.render_loop_max_fps = 24;
+  avpd.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+  avpd.loop_type = LoopType::NO_LOOP;
+  avpd.vom = VideoOutputMode::TEXT_ONLY;
+  avpd.volume = 1.0;
+  avpd.fullscreen = false;
   
-  // if <= 0, do not cap FPS
-  int render_loop_max_fps = 24;
-
   argparse::ArgumentParser parser("ascii_video", ASCII_VIDEO_VERSION);
 
-  parser.add_argument("paths")   
+  parser.add_argument("paths")
     .help("The the paths to files or directories to be played. "
     "Multiple files will be played one after the other. "
     "Directories will be expanded so any media files inside them will be played.")
     .nargs(argparse::nargs_pattern::any);
-
-  const std::string controls = std::string("-------CONTROLS-----------\n"
-              "Space - Play and Pause \n"
-              "Up Arrow - Increase Volume 5% \n"
-              "Up Arrow - Decrease Volume 5% \n"
-              "Left Arrow - Skip backward 5 seconds\n"
-              "Right Arrow - Skip forward 5 seconds \n"
-              "Escape or Backspace - End Program \n"
-              "'0' - Restart playback\n"
-              "'1' through '9' - Skip to the timestamp at n/10 of the duration (similar to youtube)\n"
-              "c - Change to color mode on supported terminals \n"
-              "g - Change to grayscale mode \n"
-              "b - Change to Background Mode on supported terminals if in Color or Grayscale mode \n"
-              "n - Go to next media file\n"
-              "p - Go to previous media file\n"
-              "l - Switch looping type of playback\n");
 
   parser.add_description(controls);
 
@@ -198,78 +208,16 @@ int main(int argc, char** argv)
   try {
     parser.parse_args(argc, argv);
   }
-  catch (std::exception const& err) {
+  catch (const std::exception& err) {
     std::cerr << err.what() << std::endl;
     std::cerr << parser;
     return EXIT_FAILURE;
   }
 
+  if (parser.get<bool>("--ffmpeg-version")) return program_print_ffmpeg_version();
+  if (parser.get<bool>("--curses-version")) return program_print_curses_version();
+
   std::vector<std::string> paths = parser.get<std::vector<std::string>>("paths");
-  bool colors = parser.get<bool>("-c");
-  bool grayscale = !colors && parser.get<bool>("-g");
-  bool background = parser.get<bool>("-b");
-  bool dump = parser.get<bool>("-d");
-  bool print_ffmpeg_version = parser.get<bool>("--ffmpeg-version");
-  bool print_curses_version = parser.get<bool>("--curses-version");
-  bool fullscreen = parser.get<bool>("-f");
-
-  muted = parser.get<bool>("-m");
-  if (std::optional<double> user_volume = parser.present<double>("--volume")) {
-    volume = *user_volume;
-  }
-
-  if (std::optional<std::string> user_loop = parser.present<std::string>("--loop")) {
-    if (*user_loop == "none") {
-      loop_type = LoopType::NO_LOOP;
-    } else if (*user_loop == "repeat") {
-      loop_type = LoopType::REPEAT;
-    } else if (*user_loop == "repeat-one") {
-      loop_type = LoopType::REPEAT_ONE;
-    } else {
-      std::cerr << "[ascii_video] Received invalid loop type '" << *user_loop << "', must be 'none', 'repeat', or 'repeat-one'" << std::endl;
-      std::cerr << parser << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
-
-  if (std::optional<std::string> user_scaling_algo = parser.present<std::string>("--scaling-algo")) {
-    if (*user_scaling_algo == "nearest-neighbor") {
-      scaling_algorithm = ScalingAlgo::NEAREST_NEIGHBOR;
-    }
-    else if (*user_scaling_algo == "box-sampling") {
-      scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
-    } else {
-      std::cerr << "[ascii_video] Unrecognized scaling algorithm '" + *user_scaling_algo + "', must be 'nearest-neighbor' or 'box-sampling'" << std::endl;
-      std::cerr << parser << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
-
-  if (std::optional<int> user_max_fps = parser.present<int>("--max-fps")) {
-    render_loop_max_fps = *user_max_fps;
-  }
-
-
-
-  if (print_ffmpeg_version) {
-    std::cout << "libavformat: " << LIBAVFORMAT_VERSION_MAJOR << ":" << LIBAVFORMAT_VERSION_MINOR << ":" << LIBAVFORMAT_VERSION_MICRO << std::endl;
-    std::cout << "libavcodec: " << LIBAVCODEC_VERSION_MAJOR << ":" << LIBAVCODEC_VERSION_MINOR << ":" << LIBAVCODEC_VERSION_MICRO << std::endl;
-    std::cout << "libavutil: " << LIBAVUTIL_VERSION_MAJOR << ":" << LIBAVUTIL_VERSION_MINOR << ":" << LIBAVUTIL_VERSION_MICRO << std::endl;
-    std::cout << "libswresample: " << LIBSWRESAMPLE_VERSION_MAJOR << ":" << LIBSWRESAMPLE_VERSION_MINOR << ":" << LIBSWRESAMPLE_VERSION_MICRO << std::endl;
-    std::cout << "libswscale: " << LIBSWSCALE_VERSION_MAJOR << ":" << LIBSWSCALE_VERSION_MINOR << ":" << LIBSWSCALE_VERSION_MICRO << std::endl;
-    return EXIT_SUCCESS;
-  }
-
-  if (print_curses_version) {
-    std::cout << curses_version() << std::endl;
-    return EXIT_SUCCESS;
-  }
-
-  if (volume < 0.0 || volume > 1.0) {
-    std::cerr << "[ascii_video]: volume must be in between 0.0 and 1.0 inclusive (got " << volume << ")" << std::endl;
-    std::cerr << parser << std::endl;
-    return EXIT_FAILURE;
-  }
 
   if (paths.size() == 0) {
     std::cerr << "[ascii_video]: at least 1 path expected. 0 found. Path can be to directory or media file" << std::endl;
@@ -304,11 +252,10 @@ int main(int argc, char** argv)
       SI::natural::sort(media_file_paths);
 
       for (const std::string& media_file_path : media_file_paths) {
-        files.push_back(media_file_path);
+        avpd.files.push_back(media_file_path);
       }
-
     } else if (is_valid_media_file_path(paths[i])) {
-      files.push_back(paths[i]);
+      avpd.files.push_back(paths[i]);
     } else {
       std::cerr << "[ascii_video] Cannot open path to non-media file: " << paths[i] << " " << ec << std::endl;
       std::cerr << parser << std::endl;
@@ -316,45 +263,85 @@ int main(int argc, char** argv)
     }
   }
 
-  if (files.size() == 0) {
+  if (avpd.files.size() == 0) {
     std::cerr << "[ascii_video]: at least 1 media file expected. 0 found." << std::endl;
     std::cerr << parser << std::endl;
     return EXIT_FAILURE;
   }
 
-  if (dump) {
-    for (const std::string& file : files) {
-      dump_file_info(file);
-      AVFormatContext* format_context = open_format_context(file);
+  if (parser.get<bool>("--dump")) return program_dump_metadata(avpd.files);
 
-      MediaType media_type = media_type_from_avformat_context(format_context);
-      std::string media_type_str = media_type_to_string(media_type);
-      std::cerr << std::endl << "[ascii_video]: Detected media Type: " << media_type_str << std::endl;
-
-      avformat_close_input(&format_context);
+  avpd.fullscreen = parser.get<bool>("-f");
+  avpd.muted = parser.get<bool>("-m");
+  if (std::optional<double> user_volume = parser.present<double>("--volume")) {
+    if (*user_volume < 0.0 || *user_volume > 1.0) {
+      std::cerr << "[ascii_video] Received invalid volume " << *user_volume << ". Volume must be between 0.0 and 1.0 inclusive" << std::endl;
+      std::cerr << parser << std::endl;
+      return EXIT_FAILURE;
     }
-
-    return EXIT_SUCCESS;
+    avpd.volume = *user_volume;
   }
 
-  if (colors && grayscale) {
-    grayscale = false;
+  if (std::optional<std::string> user_loop = parser.present<std::string>("--loop")) {
+    if (*user_loop == "none") {
+      avpd.loop_type = LoopType::NO_LOOP;
+    } else if (*user_loop == "repeat") {
+      avpd.loop_type = LoopType::REPEAT;
+    } else if (*user_loop == "repeat-one") {
+      avpd.loop_type = LoopType::REPEAT_ONE;
+    } else {
+      std::cerr << "[ascii_video] Received invalid loop type '" << *user_loop << "', must be 'none', 'repeat', or 'repeat-one'" << std::endl;
+      std::cerr << parser << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
-  if (background && !(colors || grayscale)) {
-    colors = true;
+  if (std::optional<std::string> user_scaling_algo = parser.present<std::string>("--scaling-algo")) {
+    if (*user_scaling_algo == "nearest-neighbor") {
+      avpd.scaling_algorithm = ScalingAlgo::NEAREST_NEIGHBOR;
+    }
+    else if (*user_scaling_algo == "box-sampling") {
+      avpd.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+    } else {
+      std::cerr << "[ascii_video] Unrecognized scaling algorithm '" + *user_scaling_algo + "', must be 'nearest-neighbor' or 'box-sampling'" << std::endl;
+      std::cerr << parser << std::endl;
+      return EXIT_FAILURE;
+    }
   }
+
+  if (std::optional<int> user_max_fps = parser.present<int>("--max-fps")) {
+    avpd.render_loop_max_fps = user_max_fps.value() <= 0 ? std::nullopt : user_max_fps;
+  }
+
+  if (parser.get<bool>("--color"))
+    avpd.vom = parser.get<bool>("--background") ? VideoOutputMode::COLORED_BACKGROUND_ONLY : VideoOutputMode::COLORED;
+  else if (parser.get<bool>("--grayscale"))
+    avpd.vom = parser.get<bool>("--background") ? VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY : VideoOutputMode::GRAYSCALE;
+
+  return ascii_video(avpd);
+}
+
+
+int ascii_video(AsciiVideoProgramData avpd) {
+  const int KEY_ESCAPE = 27;
+  const double VOLUME_CHANGE_AMOUNT = 0.01;
+
+  std::vector<std::string> files = avpd.files;
+  bool volume = avpd.volume;
+  bool muted = avpd.muted;
+  VideoOutputMode vom = avpd.vom;
+  bool fullscreen = avpd.fullscreen;
+  int render_loop_max_fps = avpd.render_loop_max_fps.has_value() ? avpd.render_loop_max_fps.value() : -1;
+  ScalingAlgo scaling_algorithm = avpd.scaling_algorithm;
+  LoopType loop_type = avpd.loop_type;
+
+  int current_file = 0;
 
   ncurses_init();
-
-  if (colors)
-    set_global_video_output_mode(&vom, background ? VideoOutputMode::COLORED_BACKGROUND_ONLY : VideoOutputMode::COLORED);
-  else if (grayscale)
-    set_global_video_output_mode(&vom, background ? VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY : VideoOutputMode::GRAYSCALE);
+  init_global_video_output_mode(vom);
   
   bool full_exit = false;
-
-  while (!INTERRUPT_RECEIVED && !full_exit && current_file < files.size()) {
+  while (!INTERRUPT_RECEIVED && !full_exit && (std::size_t)current_file < files.size()) {
     MediaFetcher fetcher(files[current_file]);
     std::unique_ptr<ma_device_w> audio_device;
     int next_file = playback_get_next(current_file, files.size(), loop_type);
@@ -622,8 +609,8 @@ int main(int argc, char** argv)
     fetcher.join();
 
     if (fetcher.error.length() > 0) {
-      ncurses_uninit();
       std::cerr << "[ascii_video]: Media Fetcher Error: " << fetcher.error << std::endl;
+      ncurses_uninit();
       return EXIT_FAILURE;
     }
 
@@ -632,6 +619,39 @@ int main(int argc, char** argv)
   } // !INTERRUPT_RECEIVED && current_file < files.size()
 
   ncurses_uninit();
+  return EXIT_SUCCESS;
+}
+
+int program_print_ffmpeg_version() {
+  std::cout << "libavformat: " << LIBAVFORMAT_VERSION_MAJOR << ":" << LIBAVFORMAT_VERSION_MINOR << ":" << LIBAVFORMAT_VERSION_MICRO << std::endl;
+  std::cout << "libavcodec: " << LIBAVCODEC_VERSION_MAJOR << ":" << LIBAVCODEC_VERSION_MINOR << ":" << LIBAVCODEC_VERSION_MICRO << std::endl;
+  std::cout << "libavutil: " << LIBAVUTIL_VERSION_MAJOR << ":" << LIBAVUTIL_VERSION_MINOR << ":" << LIBAVUTIL_VERSION_MICRO << std::endl;
+  std::cout << "libswresample: " << LIBSWRESAMPLE_VERSION_MAJOR << ":" << LIBSWRESAMPLE_VERSION_MINOR << ":" << LIBSWRESAMPLE_VERSION_MICRO << std::endl;
+  std::cout << "libswscale: " << LIBSWSCALE_VERSION_MAJOR << ":" << LIBSWSCALE_VERSION_MINOR << ":" << LIBSWSCALE_VERSION_MICRO << std::endl;
+  return EXIT_SUCCESS;
+}
+
+int program_print_curses_version() {
+  std::cout << curses_version() << std::endl;
+  return EXIT_SUCCESS;
+}
+
+int program_dump_metadata(const std::vector<std::string>& files) {
+  try {
+    for (const std::string& file : files) {
+      dump_file_info(file);
+      AVFormatContext* format_context = open_format_context(file);
+
+      MediaType media_type = media_type_from_avformat_context(format_context);
+      std::string media_type_str = media_type_to_string(media_type);
+      std::cerr << std::endl << "[ascii_video]: Detected media Type: " << media_type_str << std::endl;
+
+      avformat_close_input(&format_context);
+    }
+  } catch (const std::runtime_error& err) {
+    std::cerr << "Error while dumping metadata: " << err.what() << std::endl;
+    return EXIT_FAILURE;
+  }
   return EXIT_SUCCESS;
 }
 
@@ -661,14 +681,19 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
   (void)pInput;
 }
 
-void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next) {
-  switch (next) {
+
+void init_global_video_output_mode(VideoOutputMode mode) {
+  switch (mode) {
     case VideoOutputMode::COLORED:
     case VideoOutputMode::COLORED_BACKGROUND_ONLY: ncurses_set_color_palette(AVNCursesColorPalette::RGB); break;
     case VideoOutputMode::GRAYSCALE:
     case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE); break;
     case VideoOutputMode::TEXT_ONLY: break;
   }
+}
+
+void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next) {
+  init_global_video_output_mode(next);
   *current = next;
 }
 
