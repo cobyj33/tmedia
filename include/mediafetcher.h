@@ -31,11 +31,12 @@ class MediaFetcher {
   private:
     std::thread video_thread;
     std::thread audio_thread;
+    std::thread duration_checking_thread;
+    void video_fetching_thread();
+    void audio_fetching_thread();
+    void duration_checking_thread_func();
 
   public:
-    void video_fetching_thread();
-
-    void audio_fetching_thread();
 
     MediaType media_type;
     std::unique_ptr<MediaDecoder> media_decoder;

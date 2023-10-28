@@ -116,11 +116,6 @@ int ascii_video(AsciiVideoProgramData avpd) {
             frame = fetcher.frame;
           }
 
-          if (fetcher.media_type != MediaType::IMAGE && timestamp >= fetcher.get_duration()) {
-            fetcher.in_use = false;
-            break;
-          }
-
           int input = ERR;
           while ((input = getch()) != ERR) { // Go through and process all the batched input
             if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b' || input == 'q' || input == 'Q') {

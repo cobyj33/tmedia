@@ -87,6 +87,7 @@ set(COMMON_SOURCE_FILES
 ./src/pixeldata.cpp
 ./src/asv_string.cpp
 ./src/avcurses_print.cpp
+./src/duration_checking.cpp
 ./src/looptype.cpp
 ./src/miscutil.cpp
 ./src/scale.cpp)

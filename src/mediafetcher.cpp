@@ -136,6 +136,8 @@ void MediaFetcher::begin() {
 
   this->clock.init(system_clock_sec());
 
+  std::thread initialized_duration_checking_thread(&MediaFetcher::duration_checking_thread_func, this);
+  duration_checking_thread.swap(initialized_duration_checking_thread);
 
   std::thread initialized_video_thread(&MediaFetcher::video_fetching_thread, this);
   video_thread.swap(initialized_video_thread);
@@ -151,8 +153,10 @@ void MediaFetcher::begin() {
 void MediaFetcher::join() {
   this->in_use = false; // the user can set this as well if they want, but this is to make sure that the threads WILL end regardless
   this->video_thread.join();
+  this->duration_checking_thread.join();
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     this->audio_thread.join();
   }
   this->clock.stop(system_clock_sec());
 }
+
