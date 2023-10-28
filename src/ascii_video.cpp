@@ -50,6 +50,7 @@ void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_co
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage);
 void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time, double duration);
+void wprint_labels(WINDOW* window, std::vector<std::string>& labels, int y, int x, int width);
 void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next);
 void init_global_video_output_mode(VideoOutputMode mode);
 std::string to_filename(const std::string& path);
@@ -276,15 +277,17 @@ int ascii_video(AsciiVideoProgramData avpd) {
           if (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO) {
             wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
             wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
-            const std::string loop_str = str_capslock(loop_type_to_string(avpd.loop_type)); 
+
+            std::vector<std::string> bottom_labels;
             const std::string playing_str = fetcher.clock.is_playing() ? "PLAYING" : "PAUSED";
+            const std::string loop_str = str_capslock(loop_type_to_string(avpd.loop_type)); 
             const std::string volume_str = "VOLUME: " +  std::to_string((int)(avpd.volume * 100)) + "%";
 
-            int section_size = COLS / 3;
+            bottom_labels.push_back(playing_str);
+            bottom_labels.push_back(loop_str);
+            if (audio_device) bottom_labels.push_back(volume_str);
             werasebox(stdscr, LINES - 1, 0, COLS, 1);
-            mvwaddstr_center(stdscr, LINES - 1, 0, section_size, playing_str.c_str());
-            mvwaddstr_center(stdscr, LINES - 1, section_size, section_size, loop_str.c_str());
-            mvwaddstr_center(stdscr, LINES - 1, section_size * 2, section_size, volume_str.c_str());
+            wprint_labels(stdscr, bottom_labels, LINES - 1, 0, COLS);
           }
         }
 
@@ -405,4 +408,16 @@ void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_co
     }
   }
 
+}
+
+void wprint_labels(WINDOW* window, std::vector<std::string>& labels, int y, int x, int width) {
+  if (width < 0)
+    throw std::runtime_error("[wprint_labels] attempted to print to negative width space");
+  if (width == 0)
+    return;
+
+  int section_size = width / labels.size();
+  for (std::size_t i = 0; i < labels.size(); i++) {
+    mvwaddstr_center(window, y, x + section_size * i, section_size, labels[i].c_str());
+  }
 }
