@@ -161,8 +161,9 @@ int main(int argc, char** argv)
     parser.parse_args(argc, argv);
   }
   catch (const std::exception& err) {
+    std::cerr << "[ascii_video]: Error while parsing arguments. Call ascii_video with '--help' or with no arguments to see help message" << std::endl;
+    std::cerr << std::endl;
     std::cerr << err.what() << std::endl;
-    std::cerr << parser;
     return EXIT_FAILURE;
   }
 
