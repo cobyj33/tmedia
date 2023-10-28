@@ -79,16 +79,6 @@ int main(int argc, char** argv)
   std::signal(SIGINT, interrupt_handler);
 	std::signal(SIGTERM, interrupt_handler);
 	std::signal(SIGABRT, interrupt_handler);
-
-  AsciiVideoProgramData avpd;
-  avpd.loop_type = LoopType::NO_LOOP;
-  avpd.muted = false;
-  avpd.render_loop_max_fps = 24;
-  avpd.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
-  avpd.loop_type = LoopType::NO_LOOP;
-  avpd.vom = VideoOutputMode::TEXT_ONLY;
-  avpd.volume = 1.0;
-  avpd.fullscreen = false;
   
   argparse::ArgumentParser parser("ascii_video", ASCII_VIDEO_VERSION);
 
@@ -167,7 +157,6 @@ int main(int argc, char** argv)
 
   if (parser.get<bool>("--ffmpeg-version")) return program_print_ffmpeg_version();
   if (parser.get<bool>("--curses-version")) return program_print_curses_version();
-
   std::vector<std::string> paths = parser.get<std::vector<std::string>>("paths");
 
   if (paths.size() == 0) {
@@ -175,6 +164,16 @@ int main(int argc, char** argv)
     std::cerr << parser << std::endl;
     return EXIT_FAILURE;
   }
+
+  AsciiVideoProgramData avpd;
+  avpd.loop_type = LoopType::NO_LOOP;
+  avpd.muted = false;
+  avpd.render_loop_max_fps = 24;
+  avpd.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+  avpd.loop_type = LoopType::NO_LOOP;
+  avpd.vom = VideoOutputMode::TEXT_ONLY;
+  avpd.volume = 1.0;
+  avpd.fullscreen = false;
 
   for (std::size_t i = 0; i < paths.size(); i++) {
     if (paths[i].length() == 0) {
@@ -187,8 +186,7 @@ int main(int argc, char** argv)
     std::error_code ec;
 
     if (!std::filesystem::exists(path, ec)) {
-      std::cerr << "[ascii_video] Cannot open invalid path: " << paths[i] << std::endl;
-      std::cerr << parser << std::endl;
+      std::cerr << "[ascii_video] Cannot open nonexistent path: " << paths[i] << std::endl;
       return EXIT_FAILURE;
     }
 
@@ -208,15 +206,13 @@ int main(int argc, char** argv)
     } else if (is_valid_media_file_path(paths[i])) {
       avpd.files.push_back(paths[i]);
     } else {
-      std::cerr << "[ascii_video] Cannot open path to non-media file: " << paths[i] << " " << ec << std::endl;
-      std::cerr << parser << std::endl;
+      std::cerr << "[ascii_video] Cannot open path to non-media file: " << paths[i] << std::endl;
       return EXIT_FAILURE;
     }
   }
 
   if (avpd.files.size() == 0) {
-    std::cerr << "[ascii_video]: at least 1 media file expected. 0 found." << std::endl;
-    std::cerr << parser << std::endl;
+    std::cerr << "[ascii_video]: at least 1 media file expected in given paths. 0 found." << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -227,7 +223,6 @@ int main(int argc, char** argv)
   if (std::optional<double> user_volume = parser.present<double>("--volume")) {
     if (*user_volume < 0.0 || *user_volume > 1.0) {
       std::cerr << "[ascii_video] Received invalid volume " << *user_volume << ". Volume must be between 0.0 and 1.0 inclusive" << std::endl;
-      std::cerr << parser << std::endl;
       return EXIT_FAILURE;
     }
     avpd.volume = *user_volume;
@@ -242,7 +237,6 @@ int main(int argc, char** argv)
       avpd.loop_type = LoopType::REPEAT_ONE;
     } else {
       std::cerr << "[ascii_video] Received invalid loop type '" << *user_loop << "', must be 'none', 'repeat', or 'repeat-one'" << std::endl;
-      std::cerr << parser << std::endl;
       return EXIT_FAILURE;
     }
   }
@@ -255,7 +249,6 @@ int main(int argc, char** argv)
       avpd.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
     } else {
       std::cerr << "[ascii_video] Unrecognized scaling algorithm '" + *user_scaling_algo + "', must be 'nearest-neighbor' or 'box-sampling'" << std::endl;
-      std::cerr << parser << std::endl;
       return EXIT_FAILURE;
     }
   }
