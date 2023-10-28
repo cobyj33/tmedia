@@ -251,68 +251,40 @@ int ascii_video(AsciiVideoProgramData avpd) {
         if (COLS <= 20 || LINES < 10 || avpd.fullscreen) {
           print_pixel_data(frame, 0, 0, COLS, LINES, avpd.vom, avpd.scaling_algorithm);
         } else {
+          print_pixel_data(frame, 2, 0, COLS, LINES - 4, avpd.vom, avpd.scaling_algorithm);
 
-          switch (fetcher.media_type) {
-            case MediaType::VIDEO:
-            case MediaType::AUDIO: {
-              print_pixel_data(frame, 2, 0, COLS, LINES - 4, avpd.vom, avpd.scaling_algorithm);
+          if (avpd.files.size() == 1) {
+            wfill_box(stdscr, 1, 0, COLS, 1, '~');
+            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
+          } else if (avpd.files.size() > 1) {
+            wfill_box(stdscr, 2, 0, COLS, 1, '~');
+            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
+            int rewind_file = playback_get_previous(current_file, avpd.files.size(), avpd.loop_type);
+            int skip_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
 
-              if (avpd.files.size() == 1) {
-                wfill_box(stdscr, 1, 0, COLS, 1, '~');
-                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
-              } else if (avpd.files.size() > 1) {
-                wfill_box(stdscr, 2, 0, COLS, 1, '~');
-                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
-                int rewind_file = playback_get_previous(current_file, avpd.files.size(), avpd.loop_type);
-                int skip_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
+            if (rewind_file >= 0) {
+              werasebox(stdscr, 1, 0, COLS / 2, 1);
+              mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + to_filename(avpd.files[rewind_file]));
+            }
 
-                if (rewind_file >= 0) {
-                  werasebox(stdscr, 1, 0, COLS / 2, 1);
-                  mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + to_filename(avpd.files[rewind_file]));
-                }
+            if (skip_file >= 0) {
+              werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
+              mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, to_filename(avpd.files[skip_file]) + " >");
+            }
+          }
 
-                if (skip_file >= 0) {
-                  werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-                  mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, to_filename(avpd.files[skip_file]) + " >");
-                }
-              }
+          if (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO) {
+            wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
+            wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
+            const std::string loop_str = str_capslock(loop_type_to_string(avpd.loop_type)); 
+            const std::string playing_str = fetcher.clock.is_playing() ? "PLAYING" : "PAUSED";
+            const std::string volume_str = "VOLUME: " +  std::to_string((int)(avpd.volume * 100)) + "%";
 
-              wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
-              wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
-              const std::string loop_str = str_capslock(loop_type_to_string(avpd.loop_type)); 
-              const std::string playing_str = fetcher.clock.is_playing() ? "PLAYING" : "PAUSED";
-              const std::string volume_str = "VOLUME: " +  std::to_string((int)(avpd.volume * 100)) + "%";
-
-              int section_size = COLS / 3;
-              werasebox(stdscr, LINES - 1, 0, COLS, 1);
-              mvwaddstr_center(stdscr, LINES - 1, 0, section_size, playing_str.c_str());
-              mvwaddstr_center(stdscr, LINES - 1, section_size, section_size, loop_str.c_str());
-              mvwaddstr_center(stdscr, LINES - 1, section_size * 2, section_size, volume_str.c_str());
-            } break;
-            case MediaType::IMAGE: {
-              print_pixel_data(frame, 2, 0, COLS, LINES, avpd.vom, avpd.scaling_algorithm);
-
-              if (avpd.files.size() == 1) {
-                wfill_box(stdscr, 1, 0, COLS, 1, '~');
-                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
-              } else if (avpd.files.size() > 1) {
-                wfill_box(stdscr, 2, 0, COLS, 1, '~');
-                mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
-                int rewind_file = playback_get_previous(current_file, avpd.files.size(), avpd.loop_type);
-                int skip_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
-
-                if (rewind_file >= 0) {
-                  werasebox(stdscr, 1, 0, COLS / 2, 1);
-                  mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + to_filename(avpd.files[rewind_file]));
-                }
-
-                if (skip_file >= 0) {
-                  werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-                  mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, to_filename(avpd.files[skip_file]) + " >");
-                }
-              }
-
-            } break;
+            int section_size = COLS / 3;
+            werasebox(stdscr, LINES - 1, 0, COLS, 1);
+            mvwaddstr_center(stdscr, LINES - 1, 0, section_size, playing_str.c_str());
+            mvwaddstr_center(stdscr, LINES - 1, section_size, section_size, loop_str.c_str());
+            mvwaddstr_center(stdscr, LINES - 1, section_size * 2, section_size, volume_str.c_str());
           }
         }
 

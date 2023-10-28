@@ -99,7 +99,7 @@ void MediaFetcher::video_fetching_thread() {
             const double extra_delay = (double)(decoded_frames[0]->repeat_pict) / (2 * avg_frame_time_sec);
             wait_duration = frame_pts_time_sec - current_time + extra_delay;
 
-            if (wait_duration > 0.0) {
+            if (wait_duration > 0.0 || this->media_type == MediaType::IMAGE) {
               AVFrame* frame_image = video_converter.convert_video_frame(decoded_frames[0]);
               PixelData frame_pixel_data = PixelData(frame_image);
               {
