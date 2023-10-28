@@ -32,6 +32,31 @@ MediaFetcher::MediaFetcher(const std::string& file_path) {
   }
 }
 
+void MediaFetcher::dispatch_exit() {
+  std::scoped_lock<std::mutex, std::mutex> notification_locks(this->exit_notify_mutex, this->audio_buffer_request_mutex);
+  this->in_use = false;
+  this->exit_cond.notify_all();
+  this->audio_buffer_cond.notify_all();
+}
+
+bool MediaFetcher::should_exit() {
+  return !this->in_use;
+}
+
+bool MediaFetcher::is_playing() {
+  return this->clock.is_playing();
+}
+
+void MediaFetcher::pause(double current_system_time) {
+  this->clock.stop(current_system_time);
+}
+
+void MediaFetcher::resume(double current_system_time) {
+  this->clock.resume(current_system_time);
+  std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
+  this->resume_cond.notify_all();
+}
+
 /**
  * Thread-Safe
 */
@@ -98,6 +123,7 @@ int MediaFetcher::load_next_audio() {
  * For threadsafety, both alter_mutex and buffer_read_mutex must be locked
 */
 int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
+  
   if (target_time < 0.0 || target_time > this->get_duration()) {
     throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(target_time) + " seconds ) "
     ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(this->get_duration()) + " seconds )");
@@ -109,13 +135,22 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   if (ret < 0)
     return ret;
   
-  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) { // refilling on time jumps helps prevent playback crackling when the audio buffer gets cleared
+    const int AUDIO_BUFFER_MAXIMUM_REFILL_FRAME_SIZE = 16384;
+    const int MAX_LOAD_ITERATIONS = 5; 
     this->audio_buffer->clear_and_restart_at(target_time);
-    for (int i = 0; i < 10; i++)
-      this->load_next_audio();
+
+    int total_written = 0;
+    for (int i = 0; i < MAX_LOAD_ITERATIONS && total_written < AUDIO_BUFFER_MAXIMUM_REFILL_FRAME_SIZE; i++) {
+      int samples_written = this->load_next_audio();
+      if (samples_written == 0) break; // eof
+      total_written += samples_written;
+    }
   }
   
   this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time
+  std::unique_lock<std::mutex> audio_buffer_request_lock(this->audio_buffer_request_mutex);
+  this->audio_buffer_cond.notify_one();
   return ret;
 }
 
@@ -149,9 +184,9 @@ void MediaFetcher::begin() {
 */
 void MediaFetcher::join() {
   this->in_use = false; // the user can set this as well if they want, but this is to make sure that the threads WILL end regardless
+  if (this->is_playing()) this->pause(system_clock_sec());
   this->video_thread.join();
   this->duration_checking_thread.join();
   this->audio_thread.join();
-  if (this->clock.is_playing()) this->clock.stop(system_clock_sec());
 }
 

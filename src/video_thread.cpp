@@ -12,6 +12,7 @@
 #include <mutex>
 #include <memory>
 #include <stdexcept>
+#include <chrono>
 
 extern "C" {
 #include <libavutil/version.h>
@@ -41,7 +42,7 @@ const double MAX_FRAME_ASPECT_RATIO = (double)MAX_FRAME_ASPECT_RATIO_WIDTH / (do
 
 const int MAX_FRAME_WIDTH = 640;
 const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH / MAX_FRAME_ASPECT_RATIO;
-const int PAUSED_SLEEP_TIME_MS = 17;
+const int PAUSED_SLEEP_TIME_MS = 500;
 
 void MediaFetcher::video_fetching_thread_func() {
   try {
@@ -54,7 +55,7 @@ void MediaFetcher::video_fetching_thread_func() {
   } catch (std::exception const& e) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
     this->error = std::string(e.what());
-    this->in_use = false;
+    this->dispatch_exit();
   }
 }
 
@@ -72,10 +73,12 @@ void MediaFetcher::frame_video_fetching_func() {
   this->media_decoder->get_height(),
   this->media_decoder->get_pix_fmt());
 
-  while (this->in_use) {
-    if (!this->clock.is_playing()) {
-      sleep_for_ms(PAUSED_SLEEP_TIME_MS);
-      continue;
+  while (!this->should_exit()) {
+    {
+      std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
+      if (!this->is_playing()) {
+        this->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(PAUSED_SLEEP_TIME_MS));
+      }
     }
 
     {
@@ -118,7 +121,10 @@ void MediaFetcher::frame_video_fetching_func() {
     }
 
     clear_av_frame_list(decoded_frames);
-    if (wait_duration > 0.0) sleep_for_sec(wait_duration);
+    std::unique_lock<std::mutex> exit_lock(this->exit_notify_mutex);
+    if (wait_duration > 0.0 && !this->should_exit()) {
+      this->exit_cond.wait_for(exit_lock, seconds_to_chrono_nanoseconds(wait_duration)); 
+    }
   }
 
 }
@@ -160,10 +166,12 @@ void MediaFetcher::frame_audio_fetching_func() {
   const std::size_t AUDIO_PEEK_SIZE = 44100 / 2;
   const double DEFAULT_AVERAGE_FRAME_TIME_SEC = 1.0 / 24.0;
 
-  while (this->in_use) {
-    if (!this->clock.is_playing()) {
-      sleep_for_ms(PAUSED_SLEEP_TIME_MS);
-      continue;
+  while (!this->should_exit()) {
+    {
+      std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
+      if (!this->is_playing()) {
+        this->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(PAUSED_SLEEP_TIME_MS));
+      }
     }
 
     
@@ -198,6 +206,9 @@ void MediaFetcher::frame_audio_fetching_func() {
       this->frame = audio_visualization;
     }
 
-    sleep_for_sec(DEFAULT_AVERAGE_FRAME_TIME_SEC);
+    std::unique_lock<std::mutex> exit_lock(this->exit_notify_mutex);
+    if (!this->should_exit()) {
+      this->exit_cond.wait_for(exit_lock, seconds_to_chrono_nanoseconds(DEFAULT_AVERAGE_FRAME_TIME_SEC)); 
+    }
   }
 }

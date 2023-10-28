@@ -53,11 +53,18 @@ class MediaFetcher {
     PixelData frame;
 
     std::string error;
+
     std::mutex alter_mutex;
     std::mutex audio_buffer_mutex;
 
     std::mutex audio_buffer_request_mutex;
     std::condition_variable audio_buffer_cond;
+
+    std::mutex resume_notify_mutex;
+    std::condition_variable resume_cond;
+
+    std::mutex exit_notify_mutex;
+    std::condition_variable exit_cond;
 
     MediaClock clock;
     std::string file_path;
@@ -79,6 +86,12 @@ class MediaFetcher {
     double get_duration() const; // Thread-Safe
     bool has_media_stream(enum AVMediaType media_type) const; // Thread-Safe
 
+    void dispatch_exit();
+    bool should_exit();
+
+    bool is_playing();
+    void pause(double current_system_time);
+    void resume(double current_system_time);
 
     /**
      * @brief Returns the current timestamp of the video in seconds since the beginning of playback. This takes into account pausing, skipping, etc... and calculates the time according to the current system time given.

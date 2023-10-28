@@ -35,7 +35,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
   } catch (const std::system_error& err) {
     std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
     this->error = err.what();
-    this->in_use = false;
+    this->dispatch_exit();
   }
 
   if (audio_sync_thread.joinable()) audio_sync_thread.join();
@@ -51,13 +51,13 @@ void MediaFetcher::audio_sync_thread_func() {
   if (!this->has_media_stream(AVMEDIA_TYPE_VIDEO)) return;
 
   try {
-    while (this->in_use) {
+    while (!this->should_exit()) {
       {
         std::scoped_lock<std::mutex, std::mutex> total_lock{this->alter_mutex, this->audio_buffer_mutex};
         const double current_system_time = system_clock_sec();
         const double target_resync_time = this->get_time(current_system_time);
         if (target_resync_time > this->get_duration()) {
-          this->in_use = false;
+          this->dispatch_exit();
           break;
         }
 
@@ -82,12 +82,15 @@ void MediaFetcher::audio_sync_thread_func() {
         }
       }
 
-      sleep_for_ms(AUDIO_SYNC_THREAD_ITERATION_SLEEP_MS);
+      std::unique_lock<std::mutex> exit_lock(this->exit_notify_mutex);
+      if (!this->should_exit()) {
+        this->exit_cond.wait_for(exit_lock, std::chrono::milliseconds(AUDIO_SYNC_THREAD_ITERATION_SLEEP_MS));
+      }
     }
   } catch (const std::exception& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
     this->error = std::string(err.what());
-    this->in_use = false;
+    this->dispatch_exit();
   }
 
 }
@@ -98,7 +101,7 @@ void MediaFetcher::buffer_size_management_thread_func() {
   const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 0.0;
 
   try {
-      while (this->in_use) {
+      while (!this->should_exit()) {
         {
           std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
           if (this->audio_buffer->get_elapsed_time() > MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS) {
@@ -106,20 +109,22 @@ void MediaFetcher::buffer_size_management_thread_func() {
           }
         }
 
-        sleep_for_ms(AUDIO_BUFFER_SIZE_MANAGEMENT_ITERATION_SLEEP_MS);
+        std::unique_lock<std::mutex> exit_notify_lock(this->exit_notify_mutex);
+        if (!this->should_exit()) {
+          this->exit_cond.wait_for(exit_notify_lock, std::chrono::milliseconds(AUDIO_BUFFER_SIZE_MANAGEMENT_ITERATION_SLEEP_MS));
+        }
       }
   } catch (const std::exception& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
     this->error = err.what();
-    this->in_use = false;
+    this->dispatch_exit();
   }
 }
 
 void MediaFetcher::audio_fetching_thread_func() {
-  const int AUDIO_BUFFER_SHOULD_READ_SIZE = 44100; // 1 seconds of audio data at 44100 Hz sample rate
   const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 10;
-  const int AUDIO_THREAD_ITERATION_SLEEP_MS = 17;
-  const int AUDIO_THREAD_REST_SLEEP_MS = 170;
+  const int AUDIO_THREAD_ITERATION_SLEEP_MS = 1000;
+  const int AUDIO_THREAD_PAUSED_SLEEP_MS = 500;
 
   try { // super try block :)
     AudioResampler audio_resampler(
@@ -127,15 +132,12 @@ void MediaFetcher::audio_fetching_thread_func() {
     this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate());
     sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
 
-    while (this->in_use) {
-      if (!this->clock.is_playing()) {
-        sleep_for_ms(AUDIO_THREAD_ITERATION_SLEEP_MS);
-        continue;
-      }
-
+    while (!this->should_exit()) {
       {
-        std::unique_lock<std::mutex> audio_buffer_cond_lock(this->audio_buffer_request_mutex);
-        this->audio_buffer_cond.wait_for(audio_buffer_cond_lock, std::chrono::milliseconds(200));
+        std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
+        if (!this->is_playing()) {
+          this->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(AUDIO_THREAD_PAUSED_SLEEP_MS));
+        }
       }
 
       for (int i = 0; i < AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT; i++) {
@@ -159,12 +161,15 @@ void MediaFetcher::audio_fetching_thread_func() {
         clear_av_frame_list(audio_frames);
       }
 
+      if (!this->should_exit()) {
+        std::unique_lock<std::mutex> audio_buffer_fill_notify_lock(this->audio_buffer_request_mutex);
+        this->audio_buffer_cond.wait_for(audio_buffer_fill_notify_lock, std::chrono::milliseconds(AUDIO_THREAD_ITERATION_SLEEP_MS));
+      }
     }
-
   } catch (std::exception const& e) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
     this->error = std::string(e.what());
-    this->in_use = false;
+    this->dispatch_exit();
   }
 
 }

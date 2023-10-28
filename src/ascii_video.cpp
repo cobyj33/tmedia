@@ -90,10 +90,10 @@ int ascii_video(AsciiVideoProgramData avpd) {
     }
 
     try {
-      while (fetcher.in_use) { // never break without setting in_use to false
+      while (!fetcher.should_exit()) { // never break without setting in_use to false
         PixelData frame;
         if (INTERRUPT_RECEIVED) {
-          fetcher.in_use = false;
+          fetcher.dispatch_exit();
           break;
         }
 
@@ -118,7 +118,7 @@ int ascii_video(AsciiVideoProgramData avpd) {
         int input = ERR;
         while ((input = getch()) != ERR) { // Go through and process all the batched input
           if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b' || input == 'q' || input == 'Q') {
-            fetcher.in_use = false;
+            fetcher.dispatch_exit();
             full_exit = true;
             break; // break out of input != ERR
           }
@@ -169,18 +169,17 @@ int ascii_video(AsciiVideoProgramData avpd) {
           }
 
           if (input == 'n' || input == 'N') {
-            if (avpd.loop_type == LoopType::REPEAT_ONE) {
+            if (avpd.loop_type == LoopType::REPEAT_ONE)
               avpd.loop_type = LoopType::REPEAT;
-              next_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
-            }
-            fetcher.in_use = false;
+            next_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
+            fetcher.dispatch_exit();
           }
 
           if (input == 'p' || input == 'P') {
             if (avpd.loop_type == LoopType::REPEAT_ONE)
               avpd.loop_type = LoopType::REPEAT;
             next_file = playback_get_previous(current_file, avpd.files.size(), avpd.loop_type);
-            fetcher.in_use = false;
+            fetcher.dispatch_exit();
           }
 
           if (input == 'f' || input == 'F') {
@@ -204,14 +203,14 @@ int ascii_video(AsciiVideoProgramData avpd) {
 
           if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
             std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex); 
-            switch (fetcher.clock.is_playing()) {
+            switch (fetcher.is_playing()) {
               case true:  {
                 if (audio_device) audio_device->stop();
-                fetcher.clock.stop(current_system_time);
+                fetcher.pause(current_system_time);
               } break;
               case false: {
                 if (audio_device) audio_device->start();
-                fetcher.clock.resume(current_system_time);
+                fetcher.resume(current_system_time);
               } break;
             }
           }
@@ -233,12 +232,12 @@ int ascii_video(AsciiVideoProgramData avpd) {
         } // Ending of "while (input != ERR)"
 
         if (requested_jump) {
-          if (audio_device && fetcher.clock.is_playing()) audio_device->stop();
+          if (audio_device && fetcher.is_playing()) audio_device->stop();
           {
             std::scoped_lock<std::mutex, std::mutex> total_lock{fetcher.alter_mutex, fetcher.audio_buffer_mutex};
             fetcher.jump_to_time(clamp(requested_jump_time, 0.0, fetcher.get_duration()), system_clock_sec());
           }
-          if (audio_device && fetcher.clock.is_playing()) audio_device->start();
+          if (audio_device && fetcher.is_playing()) audio_device->start();
         }
 
         if (COLS <= 20 || LINES < 10 || avpd.fullscreen) {
@@ -271,7 +270,7 @@ int ascii_video(AsciiVideoProgramData avpd) {
             wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
 
             std::vector<std::string> bottom_labels;
-            const std::string playing_str = fetcher.clock.is_playing() ? "PLAYING" : "PAUSED";
+            const std::string playing_str = fetcher.is_playing() ? "PLAYING" : "PAUSED";
             const std::string loop_str = str_capslock(loop_type_to_string(avpd.loop_type)); 
             const std::string volume_str = "VOLUME: " +  std::to_string((int)(avpd.volume * 100)) + "%";
 
@@ -284,11 +283,16 @@ int ascii_video(AsciiVideoProgramData avpd) {
         }
 
         refresh();
-        if (avpd.render_loop_max_fps) sleep_for_sec(1 / static_cast<double>(avpd.render_loop_max_fps.value()));
+        if (avpd.render_loop_max_fps) {
+          std::unique_lock<std::mutex> exit_notify_lock(fetcher.exit_notify_mutex);
+          if (!fetcher.should_exit()) {
+            fetcher.exit_cond.wait_for(exit_notify_lock,  seconds_to_chrono_nanoseconds(1 / static_cast<double>(avpd.render_loop_max_fps.value())));
+          }
+        }
       }
     } catch (const std::exception& e) {
       std::lock_guard<std::mutex> lock(fetcher.alter_mutex);
-      fetcher.in_use = false; // to tell other threads to end on error
+      fetcher.dispatch_exit();
       fetcher.error = std::string(e.what()); // to be caught after all threads are joined
     }
 
@@ -336,7 +340,7 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
     fetcher->audio_buffer->read_into(frameCount, (float*)pOutput);
   }
 
-  if (!fetcher->audio_buffer->can_read(pDevice->sampleRate * 2)) {
+  if (!fetcher->audio_buffer->can_read(pDevice->sampleRate * 5)) {
     std::lock_guard<std::mutex> audio_buffer_request_lock(fetcher->audio_buffer_request_mutex);
     fetcher->audio_buffer_cond.notify_one();
   }
