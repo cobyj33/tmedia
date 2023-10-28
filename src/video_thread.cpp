@@ -36,7 +36,7 @@ extern "C" {
 
 
 
-void MediaFetcher::video_fetching_thread() {
+void MediaFetcher::video_fetching_thread_func() {
   const int PIXEL_ASPECT_RATIO_WIDTH = 2; // account for non-square shape of terminal characters
   const int PIXEL_ASPECT_RATIO_HEIGHT = 5;
 

@@ -17,35 +17,17 @@ extern "C" {
 }
 
 
-
-void MediaFetcher::audio_fetching_thread() {
-  const int AUDIO_BUFFER_SHOULD_READ_SIZE = 44100; // 1 seconds of audio data at 44100 Hz sample rate
-  const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 30.0;
-  const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 10.0;
+void MediaFetcher::audio_sync_thread_func() {
   const double MAX_AUDIO_DESYNC_TIME_SECONDS = 0.25;
   const double MAX_AUDIO_CATCHUP_DECODE_TIME_SECONDS = 2.5;
-  const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 10;
-  const int AUDIO_THREAD_ITERATION_SLEEP_MS = 17;
-  const int AUDIO_THREAD_REST_SLEEP_MS = 170;
+  const int AUDIO_SYNC_THREAD_ITERATION_SLEEP_MS = 80;
 
-  if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) return;
-  
-  try { // super try block :)
-    AudioResampler audio_resampler(
-    this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
-    this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate());
-    
-    sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
-    
+  if (!this->has_media_stream(AVMEDIA_TYPE_VIDEO)) return;
+
+  try {
     while (this->in_use) {
-      if (!this->clock.is_playing()) {
-        sleep_for_ms(AUDIO_THREAD_ITERATION_SLEEP_MS);
-        continue;
-      }
-
-      if (this->media_type == MediaType::VIDEO) {
-        std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
-
+      {
+        std::scoped_lock<std::mutex, std::mutex> total_lock{this->alter_mutex, this->audio_buffer_mutex};
         const double current_system_time = system_clock_sec();
         const double target_resync_time = this->get_time(current_system_time);
         if (target_resync_time > this->get_duration()) {
@@ -53,7 +35,6 @@ void MediaFetcher::audio_fetching_thread() {
           break;
         }
 
-        std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
 
         if (this->get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_TIME_SECONDS) { // desync handling
           if (this->audio_buffer->is_time_in_bounds(target_resync_time)) {
@@ -73,8 +54,52 @@ void MediaFetcher::audio_fetching_thread() {
             this->jump_to_time(target_resync_time, current_system_time);
           }
         }
-      } // end of desync handling
+      }
 
+      sleep_for_ms(AUDIO_SYNC_THREAD_ITERATION_SLEEP_MS);
+    }
+  } catch (const std::exception& err) {
+    std::lock_guard<std::mutex> lock(this->alter_mutex);
+    this->error = std::string(err.what());
+    this->in_use = false;
+  }
+
+}
+
+void MediaFetcher::audio_fetching_thread_func() {
+  const int AUDIO_BUFFER_SHOULD_READ_SIZE = 44100; // 1 seconds of audio data at 44100 Hz sample rate
+  const int AUDIO_FRAME_INCREMENTAL_LOAD_AMOUNT = 10;
+  const int AUDIO_THREAD_ITERATION_SLEEP_MS = 17;
+  const int AUDIO_THREAD_REST_SLEEP_MS = 170;
+  const double MAX_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 30.0;
+  const double RESET_AUDIO_BUFFER_TIME_BEFORE_SECONDS = 10.0;
+
+  if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) return;
+  
+  std::thread audio_sync_thread;
+
+  try { // super try block :)
+    AudioResampler audio_resampler(
+    this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
+    this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate());
+    
+    sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
+
+
+    try {
+      std::thread initialized_audio_sync_thread(&MediaFetcher::audio_sync_thread_func, this);
+      audio_sync_thread.swap(initialized_audio_sync_thread);
+    } catch (const std::system_error& err) {
+      std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
+      this->error = err.what();
+      this->in_use = false;
+    }
+    
+    while (this->in_use) {
+      if (!this->clock.is_playing()) {
+        sleep_for_ms(AUDIO_THREAD_ITERATION_SLEEP_MS);
+        continue;
+      }
 
       {
         std::lock_guard<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
@@ -128,5 +153,6 @@ void MediaFetcher::audio_fetching_thread() {
     this->in_use = false;
   }
 
+  if (audio_sync_thread.joinable()) audio_sync_thread.join();
 }
 

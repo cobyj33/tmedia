@@ -14,6 +14,7 @@
 #include <atomic>
 #include <thread>
 #include <optional>
+#include <condition_variable>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -32,9 +33,12 @@ class MediaFetcher {
     std::thread video_thread;
     std::thread audio_thread;
     std::thread duration_checking_thread;
-    void video_fetching_thread();
-    void audio_fetching_thread();
+    void video_fetching_thread_func();
+    void audio_fetching_thread_func();
     void duration_checking_thread_func();
+
+    std::thread audio_sync_thread;
+    void audio_sync_thread_func();
 
   public:
 
@@ -45,6 +49,8 @@ class MediaFetcher {
     std::string error;
     std::mutex alter_mutex;
     std::mutex audio_buffer_mutex;
+    std::condition_variable audio_buffer_cond;
+
     MediaClock clock;
     std::string file_path;
     std::atomic<bool> in_use;

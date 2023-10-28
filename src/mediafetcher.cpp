@@ -138,10 +138,9 @@ void MediaFetcher::begin() {
 
   std::thread initialized_duration_checking_thread(&MediaFetcher::duration_checking_thread_func, this);
   duration_checking_thread.swap(initialized_duration_checking_thread);
-
-  std::thread initialized_video_thread(&MediaFetcher::video_fetching_thread, this);
+  std::thread initialized_video_thread(&MediaFetcher::video_fetching_thread_func, this);
   video_thread.swap(initialized_video_thread);
-  std::thread initialized_audio_thread(&MediaFetcher::audio_fetching_thread, this);
+  std::thread initialized_audio_thread(&MediaFetcher::audio_fetching_thread_func, this);
   audio_thread.swap(initialized_audio_thread);
 }
 
