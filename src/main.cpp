@@ -83,8 +83,8 @@ int main(int argc, char** argv)
   argparse::ArgumentParser parser("ascii_video", ASCII_VIDEO_VERSION);
 
   parser.add_argument("paths")
-    .help("The the paths to files or directories to be played. "
-    "Multiple files will be played one after the other. "
+    .help("The the paths to files or directories to be played.\n"
+    "Multiple files will be played one after the other.\n"
     "Directories will be expanded so any media files inside them will be played.")
     .nargs(argparse::nargs_pattern::any);
 
