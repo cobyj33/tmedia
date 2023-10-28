@@ -14,6 +14,7 @@
 #include "wmath.h"
 #include "boiler.h"
 #include "asv_string.h"
+#include "miscutil.h"
 #include "ascii_video.h"
 
 #include <cstdlib>
@@ -24,6 +25,7 @@
 #include <memory>
 #include <csignal>
 #include <map>
+#include <algorithm>
 
 #include <argparse/argparse.hpp>
 #include <natural_sort.hpp>
@@ -64,6 +66,11 @@ void on_terminate() {
   std::abort();
 }
 
+template <typename T>
+std::string format_arg_map(std::map<std::string, T> map, std::string conjunction) {
+  return format_list(transform_vec(get_strmap_keys(map), [](std::string str) { return "'" + str + "'"; }), conjunction);
+}
+
 int main(int argc, char** argv)
 {
   #if USE_AV_REGISTER_ALL
@@ -80,6 +87,17 @@ int main(int argc, char** argv)
   std::signal(SIGINT, interrupt_handler);
 	std::signal(SIGTERM, interrupt_handler);
 	std::signal(SIGABRT, interrupt_handler);
+
+  const std::map<std::string, LoopType> VALID_LOOP_TYPE_ARGS{
+      {"none", LoopType::NO_LOOP},
+      {"repeat", LoopType::REPEAT},
+      {"repeat-one", LoopType::REPEAT_ONE}
+  };
+
+  const std::map<std::string, ScalingAlgo> VALID_SCALING_ALGO_ARGS{
+    {"nearest-neighbor", ScalingAlgo::NEAREST_NEIGHBOR},
+    {"box-sampling", ScalingAlgo::BOX_SAMPLING}
+  };
   
   argparse::ArgumentParser parser("ascii_video", ASCII_VIDEO_VERSION);
 
@@ -126,14 +144,14 @@ int main(int argc, char** argv)
     .scan<'g', double>();
 
   parser.add_argument("-l", "--loop")
-    .help("Set the loop type of the player ('none', 'repeat', 'repeat-one')");
+    .help("Set the loop type of the player (" + format_arg_map(VALID_LOOP_TYPE_ARGS, "or") + ")");
 
   parser.add_argument("--max-fps")
     .help("Set the maximum rendering fps of ascii_video")
     .scan<'i', int>();
-
+  
   parser.add_argument("--scaling-algo")
-    .help("Set the scaling algorithm to use when rendering frames  ('box-sampling', 'nearest-neighbor')");
+    .help("Set the scaling algorithm to use when rendering frames  (" + format_arg_map(VALID_LOOP_TYPE_ARGS, "or") + ")");
 
   parser.add_argument("--ffmpeg-version")
     .help("Print the version of linked FFmpeg libraries")
@@ -146,16 +164,7 @@ int main(int argc, char** argv)
     .default_value(false)
     .implicit_value(true);
 
-  const std::map<std::string, LoopType> VALID_LOOP_TYPE_ARGS{
-      {"none", LoopType::NO_LOOP},
-      {"repeat", LoopType::REPEAT},
-      {"repeat-one", LoopType::REPEAT_ONE}
-  };
-
-  const std::map<std::string, ScalingAlgo> VALID_SCALING_ALGO_ARGS{
-    {"nearest-neighbor", ScalingAlgo::NEAREST_NEIGHBOR},
-    {"box-sampling", ScalingAlgo::BOX_SAMPLING}
-  };
+  
 
   try {
     parser.parse_args(argc, argv);
@@ -244,7 +253,7 @@ int main(int argc, char** argv)
     if (VALID_LOOP_TYPE_ARGS.count(*user_loop) == 1) {
       avpd.loop_type = VALID_LOOP_TYPE_ARGS.at(*user_loop);
     } else {
-      std::cerr << "[ascii_video] Received invalid loop type '" << *user_loop << "', must be 'none', 'repeat', or 'repeat-one'" << std::endl;
+      std::cerr << "[ascii_video] Received invalid loop type '" << *user_loop << "', must be " << format_arg_map(VALID_LOOP_TYPE_ARGS, "or") << "." << std::endl;
       return EXIT_FAILURE;
     }
   }
@@ -253,7 +262,7 @@ int main(int argc, char** argv)
     if (VALID_SCALING_ALGO_ARGS.count(*user_scaling_algo) == 1) {
       avpd.scaling_algorithm = VALID_SCALING_ALGO_ARGS.at(*user_scaling_algo);
     } else {
-      std::cerr << "[ascii_video] Unrecognized scaling algorithm '" + *user_scaling_algo + "', must be 'nearest-neighbor' or 'box-sampling'" << std::endl;
+      std::cerr << "[ascii_video] Unrecognized scaling algorithm '" << *user_scaling_algo << "', must be " << format_arg_map(VALID_SCALING_ALGO_ARGS, "or") << "." << std::endl;
       return EXIT_FAILURE;
     }
   }

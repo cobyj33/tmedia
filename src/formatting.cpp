@@ -3,6 +3,8 @@
 #include "unitconvert.h"
 
 #include <cstdarg>
+#include <cstddef>
+#include <vector>
 #include <string>
 #include <stdexcept>
 #include <iomanip> // std::setprecision
@@ -207,4 +209,27 @@ bool is_int_str(std::string str) {
   }
   
   return true;
+}
+
+std::string format_list(std::vector<std::string> items, std::string conjunction) {
+  if (items.size() == 0) {
+    return "";
+  }
+
+  if (items.size() == 1) {
+    return items[0];
+  }
+
+  if (items.size() == 2) {
+    std::stringstream sstream;
+    sstream << items[0] << " " << conjunction << " " << items[1];
+    return sstream.str();
+  }
+
+  std::stringstream sstream;
+  for (std::size_t i = 0; i < items.size() - 1; i++) {
+    sstream << items[i] << ", ";
+  }
+  sstream << conjunction << " " << items[items.size() - 1];
+  return sstream.str();
 }

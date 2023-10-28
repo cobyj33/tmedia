@@ -88,6 +88,7 @@ set(COMMON_SOURCE_FILES
 ./src/asv_string.cpp
 ./src/avcurses_print.cpp
 ./src/looptype.cpp
+./src/miscutil.cpp
 ./src/scale.cpp)
 
 set(TEST_SOURCE_FILES
