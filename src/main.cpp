@@ -6,7 +6,7 @@
 #include "version.h"
 #include "avguard.h"
 #include "avcurses.h"
-#include "looptype.h"
+#include "playlist.h"
 #include "avcurses.h"
 #include "ascii.h"
 #include "wminiaudio.h"
@@ -192,15 +192,16 @@ int main(int argc, char** argv)
   }
 
   AsciiVideoProgramData avpd;
-  avpd.loop_type = LoopType::NO_LOOP;
   avpd.muted = false;
   avpd.render_loop_max_fps = 24;
   avpd.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
-  avpd.loop_type = LoopType::NO_LOOP;
   avpd.vom = VideoOutputMode::TEXT_ONLY;
   avpd.volume = 1.0;
   avpd.fullscreen = false;
   avpd.ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
+
+  LoopType loop_type = LoopType::NO_LOOP;
+  std::vector<std::string> found_media_files;
 
   for (std::size_t i = 0; i < paths.size(); i++) {
     if (paths[i].length() == 0) {
@@ -228,22 +229,22 @@ int main(int argc, char** argv)
       SI::natural::sort(media_file_paths);
 
       for (const std::string& media_file_path : media_file_paths) {
-        avpd.files.push_back(media_file_path);
+        found_media_files.push_back(media_file_path);
       }
     } else if (is_valid_media_file_path(paths[i])) {
-      avpd.files.push_back(paths[i]);
+      found_media_files.push_back(paths[i]);
     } else {
       std::cerr << "[ascii_video] Cannot open path to non-media file: " << paths[i] << std::endl;
       return EXIT_FAILURE;
     }
   }
 
-  if (avpd.files.size() == 0) {
+  if (found_media_files.size() == 0) {
     std::cerr << "[ascii_video]: at least 1 media file expected in given paths. 0 found." << std::endl;
     return EXIT_FAILURE;
   }
 
-  if (parser.get<bool>("--dump")) return program_dump_metadata(avpd.files);
+  if (parser.get<bool>("--dump")) return program_dump_metadata(found_media_files);
 
   avpd.fullscreen = parser.get<bool>("-f");
   avpd.muted = parser.get<bool>("-m");
@@ -257,7 +258,7 @@ int main(int argc, char** argv)
 
   if (std::optional<std::string> user_loop = parser.present<std::string>("--loop")) {
     if (VALID_LOOP_TYPE_ARGS.count(*user_loop) == 1) {
-      avpd.loop_type = VALID_LOOP_TYPE_ARGS.at(*user_loop);
+      loop_type = VALID_LOOP_TYPE_ARGS.at(*user_loop);
     } else {
       std::cerr << "[ascii_video] Received invalid loop type '" << *user_loop << "', must be " << format_arg_map(VALID_LOOP_TYPE_ARGS, "or") << "." << std::endl;
       return EXIT_FAILURE;
@@ -285,6 +286,8 @@ int main(int argc, char** argv)
     avpd.vom = parser.get<bool>("--background") ? VideoOutputMode::COLORED_BACKGROUND_ONLY : VideoOutputMode::COLORED;
   else if (parser.get<bool>("--grayscale"))
     avpd.vom = parser.get<bool>("--background") ? VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY : VideoOutputMode::GRAYSCALE;
+
+  avpd.playlist = Playlist(found_media_files, loop_type);
 
   return ascii_video(avpd);
 }

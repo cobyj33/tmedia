@@ -78,6 +78,7 @@ set(COMMON_SOURCE_FILES
 ./src/formatting.cpp
 ./src/wmath.cpp
 ./src/wtime.cpp
+./src/playlist.cpp
 ./src/wminiaudio.cpp
 ./src/color.cpp
 ./src/canvas.cpp
@@ -88,7 +89,6 @@ set(COMMON_SOURCE_FILES
 ./src/asv_string.cpp
 ./src/avcurses_print.cpp
 ./src/duration_checking.cpp
-./src/looptype.cpp
 ./src/miscutil.cpp
 ./src/scale.cpp)
 

@@ -1,7 +1,7 @@
 #ifndef ASCII_VIDEO_ASCII_VIDEO_H
 #define ASCII_VIDEO_ASCII_VIDEO_H
 
-#include "looptype.h"
+#include "playlist.h"
 #include "pixeldata.h"
 
 #include <optional>
@@ -19,11 +19,10 @@ enum class VideoOutputMode {
 };
 
 struct AsciiVideoProgramData {
-  std::vector<std::string> files;
+  Playlist playlist;
   double volume;
   bool muted;
   VideoOutputMode vom;
-  LoopType loop_type;
   ScalingAlgo scaling_algorithm;
   std::optional<int> render_loop_max_fps;
   bool fullscreen;

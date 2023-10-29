@@ -58,18 +58,15 @@ std::string to_filename(const std::string& path);
 int ascii_video(AsciiVideoProgramData avpd) {
   const int KEY_ESCAPE = 27;
   const double VOLUME_CHANGE_AMOUNT = 0.01;
-
-  int current_file = 0;
-  bool full_exit = false;
-
   ncurses_init();
   init_global_video_output_mode(avpd.vom);
-  
-  while (!INTERRUPT_RECEIVED && !full_exit && (std::size_t)current_file < avpd.files.size()) {
+
+  bool full_exit = false;
+  while (!INTERRUPT_RECEIVED && !full_exit) {
     erase();
-    MediaFetcher fetcher(avpd.files[current_file]);
+    PlaylistMoveCommand current_move_cmd = PlaylistMoveCommand::NEXT;
+    MediaFetcher fetcher(avpd.playlist.current());
     std::unique_ptr<ma_device_w> audio_device;
-    int next_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
 
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
       ma_device_config config = ma_device_config_init(ma_device_type_playback);
@@ -160,25 +157,20 @@ int ascii_video(AsciiVideoProgramData avpd) {
 
 
           if (input == 'l' || input == 'L') {
-            switch (avpd.loop_type) {
-              case LoopType::NO_LOOP: avpd.loop_type = LoopType::REPEAT; break;
-              case LoopType::REPEAT: avpd.loop_type = LoopType::REPEAT_ONE; break;
-              case LoopType::REPEAT_ONE: avpd.loop_type = LoopType::NO_LOOP; break;
+            switch (avpd.playlist.loop_type()) {
+              case LoopType::NO_LOOP: avpd.playlist.set_loop_type(LoopType::REPEAT); break;
+              case LoopType::REPEAT: avpd.playlist.set_loop_type(LoopType::REPEAT_ONE); break;
+              case LoopType::REPEAT_ONE: avpd.playlist.set_loop_type(LoopType::NO_LOOP); break;
             }
-            next_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
           }
 
           if (input == 'n' || input == 'N') {
-            if (avpd.loop_type == LoopType::REPEAT_ONE)
-              avpd.loop_type = LoopType::REPEAT;
-            next_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
+            current_move_cmd = PlaylistMoveCommand::SKIP;
             fetcher.dispatch_exit();
           }
 
           if (input == 'p' || input == 'P') {
-            if (avpd.loop_type == LoopType::REPEAT_ONE)
-              avpd.loop_type = LoopType::REPEAT;
-            next_file = playback_get_previous(current_file, avpd.files.size(), avpd.loop_type);
+            current_move_cmd = PlaylistMoveCommand::REWIND;
             fetcher.dispatch_exit();
           }
 
@@ -245,23 +237,21 @@ int ascii_video(AsciiVideoProgramData avpd) {
         } else {
           print_pixel_data(frame, 2, 0, COLS, LINES - 4, avpd.vom, avpd.scaling_algorithm, avpd.ascii_display_chars);
 
-          if (avpd.files.size() == 1) {
+          if (avpd.playlist.size() == 1) {
             wfill_box(stdscr, 1, 0, COLS, 1, '~');
-            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
-          } else if (avpd.files.size() > 1) {
+            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(avpd.playlist.index() + 1) + "/" + std::to_string(avpd.playlist.size()) + ") " + to_filename(avpd.playlist.current()));
+          } else if (avpd.playlist.size() > 1) {
             wfill_box(stdscr, 2, 0, COLS, 1, '~');
-            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(current_file + 1) + "/" + std::to_string(avpd.files.size()) + ") " + to_filename(avpd.files[current_file]));
-            int rewind_file = playback_get_previous(current_file, avpd.files.size(), avpd.loop_type);
-            int skip_file = playback_get_next(current_file, avpd.files.size(), avpd.loop_type);
+            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(avpd.playlist.index() + 1) + "/" + std::to_string(avpd.playlist.size()) + ") " + to_filename(avpd.playlist.current()));
 
-            if (rewind_file >= 0) {
+            if (avpd.playlist.can_move(PlaylistMoveCommand::REWIND)) {
               werasebox(stdscr, 1, 0, COLS / 2, 1);
-              mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + to_filename(avpd.files[rewind_file]));
+              mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + to_filename(avpd.playlist.peek_move(PlaylistMoveCommand::REWIND)));
             }
 
-            if (skip_file >= 0) {
+            if (avpd.playlist.can_move(PlaylistMoveCommand::SKIP)) {
               werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-              mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, to_filename(avpd.files[skip_file]) + " >");
+              mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, to_filename(avpd.playlist.peek_move(PlaylistMoveCommand::SKIP)) + " >");
             }
           }
 
@@ -271,7 +261,7 @@ int ascii_video(AsciiVideoProgramData avpd) {
 
             std::vector<std::string> bottom_labels;
             const std::string playing_str = fetcher.is_playing() ? "PLAYING" : "PAUSED";
-            const std::string loop_str = str_capslock(loop_type_to_string(avpd.loop_type)); 
+            const std::string loop_str = str_capslock(loop_type_str(avpd.playlist.loop_type())); 
             const std::string volume_str = "VOLUME: " +  std::to_string((int)(avpd.volume * 100)) + "%";
 
             bottom_labels.push_back(playing_str);
@@ -307,7 +297,8 @@ int ascii_video(AsciiVideoProgramData avpd) {
     //flush getch
     while (getch() != ERR) getch(); 
 
-    current_file = next_file;
+    if (!avpd.playlist.can_move(current_move_cmd)) break;
+    avpd.playlist.move(current_move_cmd);
   }
 
   ncurses_uninit();
