@@ -61,6 +61,31 @@ class MediaFetcher {
     std::unique_ptr<MediaDecoder> media_decoder;
     PixelData frame;
 
+    /**
+     * Locking Heirarchy:
+     * 
+     * alter_mutex - General mutations to the MediaFetcher
+     * 
+     * audio_buffer_mutex - General reads and writes to the audio_buffer. Reading
+     * and writing to the audio_buffer does not require alter_mutex to be locked,
+     * but the audio_buffer_mutex must be locked after the alter_mutex
+     * 
+     * audio_buffer_request_mutex - Mutex specifically for the audio_buffer_cond to
+     * request more audio to be generated
+     * 
+     * exit_notify_mutex - Mutex specifically for the exit_cond to notify sleeping threads
+     * that the MediaFetcher has been sent an exit dispatch 
+     * 
+     * resume_notify_mutex - Mutex specifically for the resume_cond to tell sleeping
+     * threads that the MediaFetcher has been resumed.
+     * 
+     * The locking heirarchy for the mutexes specific to condition variables are not as
+     * important, as std::scoped_lock can avoid deadlocks anyway if multiple mutexes are
+     * passed at once, and cond-paired mutexes should only be used in closed scopes
+     * for notifying and receiving a notification
+     * 
+    */
+
 
     std::mutex alter_mutex;
     std::mutex audio_buffer_mutex;
