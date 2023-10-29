@@ -43,6 +43,7 @@ const double MAX_FRAME_ASPECT_RATIO = (double)MAX_FRAME_ASPECT_RATIO_WIDTH / (do
 const int MAX_FRAME_WIDTH = 640;
 const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH / MAX_FRAME_ASPECT_RATIO;
 const int PAUSED_SLEEP_TIME_MS = 500;
+  const double DEFAULT_AVERAGE_FRAME_TIME_SEC = 1.0 / 24.0;
 
 void MediaFetcher::video_fetching_thread_func() {
   try {
@@ -117,13 +118,18 @@ void MediaFetcher::frame_video_fetching_func() {
         }
         av_frame_free(&frame_image);
       }
+      clear_av_frame_list(decoded_frames);
+      std::unique_lock<std::mutex> exit_lock(this->exit_notify_mutex);
+      if (wait_duration > 0.0 && !this->should_exit()) {
+        this->exit_cond.wait_for(exit_lock, seconds_to_chrono_nanoseconds(wait_duration)); 
+      }
+    } else { // no frame was found.
+      std::unique_lock<std::mutex> exit_lock(this->exit_notify_mutex);
+      if (!this->should_exit()) {
+        this->exit_cond.wait_for(exit_lock, seconds_to_chrono_nanoseconds(DEFAULT_AVERAGE_FRAME_TIME_SEC)); 
+      }
     }
 
-    clear_av_frame_list(decoded_frames);
-    std::unique_lock<std::mutex> exit_lock(this->exit_notify_mutex);
-    if (wait_duration > 0.0 && !this->should_exit()) {
-      this->exit_cond.wait_for(exit_lock, seconds_to_chrono_nanoseconds(wait_duration)); 
-    }
   }
 
 }
@@ -163,7 +169,6 @@ void MediaFetcher::frame_image_fetching_func() {
 
 void MediaFetcher::frame_audio_fetching_func() {
   const std::size_t AUDIO_PEEK_SIZE = 44100 / 2;
-  const double DEFAULT_AVERAGE_FRAME_TIME_SEC = 1.0 / 24.0;
 
   while (!this->should_exit()) {
     {
