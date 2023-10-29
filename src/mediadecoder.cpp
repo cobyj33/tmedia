@@ -197,7 +197,12 @@ int64_t MediaDecoder::get_ch_layout() {
     "layout from this media decoder: No audio stream decoder is available");
   }
 
-  return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channel_layout;
+  int64_t channel_layout = this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channel_layout;
+  if (channel_layout != 0) return channel_layout;
+
+  int channels = this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channels;
+  if (channels >= 0) return av_get_default_channel_layout(channels);
+  return AV_CH_LAYOUT_STEREO;
 }
 #endif
 

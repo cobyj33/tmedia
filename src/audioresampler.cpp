@@ -43,7 +43,7 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
       if (context != nullptr) {
         swr_free(&context);
       }
-      throw std::runtime_error("[AudioResampler::AudioResampler] Initialization of internal SwrContext of AudioResampler failed. Aborting...");
+      throw ascii::ffmpeg_error("[AudioResampler::AudioResampler] Initialization of internal SwrContext of AudioResampler failed. Aborting...", result);
     }
   }
 
