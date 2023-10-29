@@ -84,13 +84,19 @@ void MediaFetcher::frame_video_fetching_func() {
     {
       std::lock_guard<std::mutex> alter_mutex_lock(this->alter_mutex);
       if (this->requested_frame_dims) {
-        VideoDimensions output_frame_dim = get_bounded_dimensions(this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT,
-        this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH,
+        VideoDimensions bounded_requested_dims = get_bounded_dimensions(
         this->requested_frame_dims->width * PIXEL_ASPECT_RATIO_HEIGHT,
-        this->requested_frame_dims->height * PIXEL_ASPECT_RATIO_WIDTH);
+        this->requested_frame_dims->height * PIXEL_ASPECT_RATIO_WIDTH,
+        MAX_FRAME_WIDTH,
+        MAX_FRAME_HEIGHT);
 
-        video_converter.reset_dst_size(std::min(MAX_FRAME_WIDTH, output_frame_dim.width),
-        std::min(MAX_FRAME_HEIGHT, output_frame_dim.height));
+        VideoDimensions output_frame_dim = get_bounded_dimensions(
+        this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT,
+        this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH,
+        bounded_requested_dims.width,
+        bounded_requested_dims.height);
+
+        video_converter.reset_dst_size(output_frame_dim.width, output_frame_dim.height);
       }
     }
     
