@@ -54,6 +54,9 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
   this->m_dst_sample_fmt = dst_sample_fmt;
 
   #if HAS_AVCHANNEL_LAYOUT
+  av_channel_layout_default(&this->m_src_ch_layout, 2);
+  av_channel_layout_default(&this->m_dst_ch_layout, 2);
+
   result = av_channel_layout_copy(&this->m_src_ch_layout, src_ch_layout);
   if (result < 0) {
     throw ascii::ffmpeg_error("[AudioResampler::AudioResampler] Failed to copy source AVChannelLayout data into internal field", result);
