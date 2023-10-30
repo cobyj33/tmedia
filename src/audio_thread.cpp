@@ -8,6 +8,7 @@
 
 #include <mutex>
 #include <chrono>
+#include <system_error>
 
 extern "C" {
 #include <libavcodec/avcodec.h>

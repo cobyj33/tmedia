@@ -183,7 +183,7 @@ PixelData PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
     default: throw std::runtime_error("[PixelData::scaele] unrecognized scaling function");
   }
 
-  return std::move(PixelData(new_pixels, new_width, new_height));
+  return PixelData(new_pixels, new_width, new_height);
 }
 
 PixelData PixelData::bound(int width, int height, ScalingAlgo scaling_algorithm) const {
@@ -192,7 +192,7 @@ PixelData PixelData::bound(int width, int height, ScalingAlgo scaling_algorithm)
   }
 
   double scale_factor = get_scale_factor(this->get_width(), this->get_height(), width, height);
-  return std::move(this->scale(scale_factor, scaling_algorithm));
+  return this->scale(scale_factor, scaling_algorithm);
 }
 
 bool PixelData::equals(const PixelData& pix_data) const {
@@ -216,7 +216,7 @@ const RGBColor& PixelData::at(int row, int col) const {
 }
 
 RGBColor get_avg_color_from_area(const PixelData& pixel_data, double row, double col, double width, double height) {
-  return std::move(get_avg_color_from_area(pixel_data, (int)std::floor(row), (int)std::floor(col), (int)std::ceil(width), (int)std::ceil(height)));
+  return get_avg_color_from_area(pixel_data, (int)std::floor(row), (int)std::floor(col), (int)std::ceil(width), (int)std::ceil(height));
 }
 
 RGBColor get_avg_color_from_area(const PixelData& pixel_data, int row, int col, int width, int height) {
@@ -235,7 +235,7 @@ RGBColor get_avg_color_from_area(const PixelData& pixel_data, int row, int col, 
   }
 
   if (colors.size() > 0) {
-    return std::move(get_average_color(colors));
+    return get_average_color(colors);
   }
   return RGBColor::WHITE;
 }

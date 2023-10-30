@@ -5,6 +5,7 @@
 #include <cmath>
 #include <vector>
 #include <stdexcept>
+#include <cstdint>
 
 RGBColor RGBColor::BLACK = RGBColor(0, 0, 0);
 RGBColor RGBColor::WHITE = RGBColor(255, 255, 255);
