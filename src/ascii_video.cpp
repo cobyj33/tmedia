@@ -66,8 +66,11 @@ struct AudioCallbackData {
 };
 
 int ascii_video(AsciiVideoProgramData avpd) {
-  const int KEY_ESCAPE = 27;
-  const double VOLUME_CHANGE_AMOUNT = 0.01;
+  static constexpr int KEY_ESCAPE = 27;
+  static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
+  static constexpr int MIN_RENDER_COLS = 2;
+  static constexpr int MIN_RENDER_LINES = 2; 
+
   ncurses_init();
   init_global_video_output_mode(avpd.vom);
 
@@ -105,9 +108,9 @@ int ascii_video(AsciiVideoProgramData avpd) {
           break;
         }
 
-        {
+        if (COLS >= MIN_RENDER_COLS && LINES >= MIN_RENDER_LINES) {
           std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex);
-          fetcher.requested_frame_dims = VideoDimensions(COLS, LINES - 6);
+          fetcher.requested_frame_dims = VideoDimensions(COLS, LINES);
         }
 
         double current_system_time = 0.0; // filler data to be filled in critical section
@@ -243,7 +246,9 @@ int ascii_video(AsciiVideoProgramData avpd) {
           if (audio_device && fetcher.is_playing()) audio_device->start();
         }
 
-        if (COLS <= 20 || LINES < 10 || avpd.fullscreen) {
+        if (COLS < MIN_RENDER_COLS || LINES < MIN_RENDER_LINES) {
+          erase();
+        } else if (COLS <= 20 || LINES < 10 || avpd.fullscreen) {
           print_pixel_data(frame, 0, 0, COLS, LINES, avpd.vom, avpd.scaling_algorithm, avpd.ascii_display_chars);
         } else {
           print_pixel_data(frame, 2, 0, COLS, LINES - 4, avpd.vom, avpd.scaling_algorithm, avpd.ascii_display_chars);
