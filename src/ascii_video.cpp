@@ -32,20 +32,23 @@ extern "C" {
 }
 
 const std::string ASCII_VIDEO_CONTROLS_USAGE = "-------CONTROLS-----------\n"
-  "Space - Play and Pause \n"
-  "Up Arrow - Increase Volume 5% \n"
-  "Up Arrow - Decrease Volume 5% \n"
-  "Left Arrow - Skip backward 5 seconds\n"
-  "Right Arrow - Skip forward 5 seconds \n"
-  "Escape or Backspace or 'q' - Quit Program \n"
-  "'0' - Restart playback\n"
-  "'1' through '9' - Skip to the timestamp at n/10 of the duration (similar to youtube)\n"
-  "c - Change to color mode on supported terminals \n"
-  "g - Change to grayscale mode \n"
-  "b - Change to Background Mode on supported terminals if in Color or Grayscale mode \n"
-  "n - Go to next media file\n"
-  "p - Go to previous media file\n"
-  "l - Switch looping type of playback\n";
+  "Video and Audio Controls\n"
+  "- Space - Play and Pause\n"
+  "- Up Arrow - Increase Volume 1%\n"
+  "- Down Arrow - Decrease Volume 1%\n"
+  "- Left Arrow - Skip Backward 5 Seconds\n"
+  "- Right Arrow - Skip Forward 5 Seconds\n"
+  "- Escape or Backspace or 'q' - Quit Program\n"
+  "- '0' - Restart Playback\n"
+  "- '1' through '9' - Skip To n/10 of the Media's Duration\n"
+  "- 'L' - Switch looping type of playback (between no loop, repeat, and repeat one)\n"
+  "- 'M' - Mute/Unmute Audio\n"
+  "Video, Audio, and Image Controls\n"
+  "- 'C' - Display Color (on supported terminals)\n"
+  "- 'G' - Display Grayscale (on supported terminals)\n"
+  "- 'B' - Display no Characters (on supported terminals) (must be in color or grayscale mode)\n"
+  "- 'N' - Skip to Next Media File\n"
+  "- 'P' - Rewind to Previous Media File\n";
 
 void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode, const ScalingAlgo scaling_algorithm, const std::string& ascii_char_map);
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
@@ -163,15 +166,6 @@ int ascii_video(AsciiVideoProgramData avpd) {
             }
           }
 
-
-          if (input == 'l' || input == 'L') {
-            switch (avpd.playlist.loop_type()) {
-              case LoopType::NO_LOOP: avpd.playlist.set_loop_type(LoopType::REPEAT); break;
-              case LoopType::REPEAT: avpd.playlist.set_loop_type(LoopType::REPEAT_ONE); break;
-              case LoopType::REPEAT_ONE: avpd.playlist.set_loop_type(LoopType::NO_LOOP); break;
-            }
-          }
-
           if (input == 'n' || input == 'N') {
             current_move_cmd = PlaylistMoveCommand::SKIP;
             fetcher.dispatch_exit();
@@ -197,9 +191,17 @@ int ascii_video(AsciiVideoProgramData avpd) {
             audio_device->set_volume(avpd.volume);
           }
 
-          if (input == 'm' || input == 'M') {
+          if ((input == 'm' || input == 'M') && audio_device) {
             avpd.muted = !avpd.muted;
             audio_device_user_data.muted = avpd.muted;
+          }
+
+          if ((input == 'l' || input == 'L') && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+            switch (avpd.playlist.loop_type()) {
+              case LoopType::NO_LOOP: avpd.playlist.set_loop_type(LoopType::REPEAT); break;
+              case LoopType::REPEAT: avpd.playlist.set_loop_type(LoopType::REPEAT_ONE); break;
+              case LoopType::REPEAT_ONE: avpd.playlist.set_loop_type(LoopType::NO_LOOP); break;
+            }
           }
 
           if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
