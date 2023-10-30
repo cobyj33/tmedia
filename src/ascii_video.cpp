@@ -24,6 +24,7 @@
 #include <cctype>
 #include <stdexcept>
 #include <mutex>
+#include <atomic>
 
 extern "C" {
   #include <curses.h>
@@ -55,6 +56,12 @@ void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next
 void init_global_video_output_mode(VideoOutputMode mode);
 std::string to_filename(const std::string& path);
 
+struct AudioCallbackData {
+  MediaFetcher* fetcher;
+  std::atomic<bool> muted;
+  AudioCallbackData(MediaFetcher* fetcher, bool muted) : fetcher(fetcher), muted(muted) {}
+};
+
 int ascii_video(AsciiVideoProgramData avpd) {
   const int KEY_ESCAPE = 27;
   const double VOLUME_CHANGE_AMOUNT = 0.01;
@@ -68,13 +75,14 @@ int ascii_video(AsciiVideoProgramData avpd) {
     MediaFetcher fetcher(avpd.playlist.current());
     std::unique_ptr<ma_device_w> audio_device;
 
+    AudioCallbackData audio_device_user_data(&fetcher, avpd.muted);
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
       ma_device_config config = ma_device_config_init(ma_device_type_playback);
       config.playback.format  = ma_format_f32;
       config.playback.channels = fetcher.media_decoder->get_nb_channels();
       config.sampleRate = fetcher.media_decoder->get_sample_rate();       
       config.dataCallback = audioDataCallback;   
-      config.pUserData = &fetcher;
+      config.pUserData = (void*)(&audio_device_user_data);
 
       audio_device = std::make_unique<ma_device_w>(&config);
       audio_device->start();
@@ -191,6 +199,7 @@ int ascii_video(AsciiVideoProgramData avpd) {
 
           if (input == 'm' || input == 'M') {
             avpd.muted = !avpd.muted;
+            audio_device_user_data.muted = avpd.muted;
           }
 
           if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
@@ -262,7 +271,7 @@ int ascii_video(AsciiVideoProgramData avpd) {
             std::vector<std::string> bottom_labels;
             const std::string playing_str = fetcher.is_playing() ? "PLAYING" : "PAUSED";
             const std::string loop_str = str_capslock(loop_type_str(avpd.playlist.loop_type())); 
-            const std::string volume_str = "VOLUME: " +  std::to_string((int)(avpd.volume * 100)) + "%";
+            const std::string volume_str = "VOLUME: " + (avpd.muted ? "MUTED" : (std::to_string((int)(avpd.volume * 100)) + "%"));
 
             bottom_labels.push_back(playing_str);
             bottom_labels.push_back(loop_str);
@@ -315,16 +324,24 @@ int ascii_video(AsciiVideoProgramData avpd) {
 //  */
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
-  MediaFetcher* fetcher = (MediaFetcher*)(pDevice->pUserData);
+  const AudioCallbackData* data = (AudioCallbackData*)(pDevice->pUserData);
+  MediaFetcher* fetcher = data->fetcher;
   std::lock_guard<std::mutex> mutex_lock_guard(fetcher->audio_buffer_mutex);
+  bool muted = data->muted;
 
   if (!fetcher->is_playing() || !fetcher->audio_buffer->can_read(frameCount)) {
-    float* pFloatOutput = (float*)pOutput;
     for (ma_uint32 i = 0; i < frameCount * pDevice->playback.channels; i++) {
-      pFloatOutput[i] = 0.0001 * sin(0.10 * i);
+      ((float*)pOutput)[i] = 0.000001 * sin(0.10 * i);
     }
   } else if (fetcher->audio_buffer->can_read(frameCount)) {
-    fetcher->audio_buffer->read_into(frameCount, (float*)pOutput);
+    if (muted) {
+      for (ma_uint32 i = 0; i < frameCount * pDevice->playback.channels; i++) {
+        ((float*)pOutput)[i] = 0.000001 * sin(0.10 * i);
+      }
+      fetcher->audio_buffer->advance(frameCount);
+    } else {
+      fetcher->audio_buffer->read_into(frameCount, (float*)pOutput);
+    }
   }
 
   if (!fetcher->audio_buffer->can_read(pDevice->sampleRate * 5)) {

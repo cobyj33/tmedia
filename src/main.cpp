@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     .default_value(false)
     .implicit_value(true);
 
-  parser.add_argument("-m", "--mute")
+  parser.add_argument("-m", "--mute", "--muted")
     .help("Mute the audio playback")
     .default_value(false)
     .implicit_value(true);
