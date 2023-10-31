@@ -18,7 +18,7 @@ enum class VideoOutputMode {
   TEXT_ONLY,
 };
 
-struct AsciiVideoProgramData {
+struct TMediaProgramData {
   Playlist playlist;
   double volume;
   bool muted;
@@ -29,6 +29,6 @@ struct AsciiVideoProgramData {
   std::string ascii_display_chars;
 };
 
-int tmedia(AsciiVideoProgramData avpd);
+int tmedia(TMediaProgramData tmpd);
 
 #endif

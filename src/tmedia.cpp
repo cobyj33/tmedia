@@ -65,23 +65,23 @@ struct AudioCallbackData {
   AudioCallbackData(MediaFetcher* fetcher, bool muted) : fetcher(fetcher), muted(muted) {}
 };
 
-int tmedia(AsciiVideoProgramData avpd) {
+int tmedia(TMediaProgramData tmpd) {
   static constexpr int KEY_ESCAPE = 27;
   static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
   static constexpr int MIN_RENDER_COLS = 2;
   static constexpr int MIN_RENDER_LINES = 2; 
 
   ncurses_init();
-  init_global_video_output_mode(avpd.vom);
+  init_global_video_output_mode(tmpd.vom);
 
   bool full_exit = false;
   while (!INTERRUPT_RECEIVED && !full_exit) {
     erase();
     PlaylistMoveCommand current_move_cmd = PlaylistMoveCommand::NEXT;
-    MediaFetcher fetcher(avpd.playlist.current());
+    MediaFetcher fetcher(tmpd.playlist.current());
     std::unique_ptr<ma_device_w> audio_device;
 
-    AudioCallbackData audio_device_user_data(&fetcher, avpd.muted);
+    AudioCallbackData audio_device_user_data(&fetcher, tmpd.muted);
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
       ma_device_config config = ma_device_config_init(ma_device_type_playback);
       config.playback.format  = ma_format_f32;
@@ -92,7 +92,7 @@ int tmedia(AsciiVideoProgramData avpd) {
 
       audio_device = std::make_unique<ma_device_w>(&config);
       audio_device->start();
-      audio_device->set_volume(avpd.volume);
+      audio_device->set_volume(tmpd.volume);
     }
 
     {
@@ -140,31 +140,31 @@ int tmedia(AsciiVideoProgramData avpd) {
           }
 
           if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version
-            switch (avpd.vom) {
-              case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
-              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
+            switch (tmpd.vom) {
+              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::COLORED); break;
+              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::COLORED); break;
             }
           }
 
           if ((input == 'g' || input == 'G') && has_colors() && can_change_color()) {
-            switch (avpd.vom) {
-              case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
-              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
+            switch (tmpd.vom) {
+              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::GRAYSCALE); break;
+              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::GRAYSCALE); break;
             }
           }
 
           if ((input == 'b' || input == 'B') && has_colors() && can_change_color()) {
-            switch (avpd.vom) {
-              case VideoOutputMode::COLORED: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::COLORED); break;
-              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&avpd.vom, VideoOutputMode::GRAYSCALE); break;
+            switch (tmpd.vom) {
+              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::COLORED); break;
+              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::GRAYSCALE); break;
               case VideoOutputMode::TEXT_ONLY: break; //no-op
             }
           }
@@ -181,29 +181,29 @@ int tmedia(AsciiVideoProgramData avpd) {
 
           if (input == 'f' || input == 'F') {
             erase();
-            avpd.fullscreen = !avpd.fullscreen;
+            tmpd.fullscreen = !tmpd.fullscreen;
           }
 
           if (input == KEY_UP && audio_device) {
-            avpd.volume = clamp(avpd.volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-            audio_device->set_volume(avpd.volume);
+            tmpd.volume = clamp(tmpd.volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
+            audio_device->set_volume(tmpd.volume);
           }
 
           if (input == KEY_DOWN && audio_device) {
-            avpd.volume = clamp(avpd.volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-            audio_device->set_volume(avpd.volume);
+            tmpd.volume = clamp(tmpd.volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
+            audio_device->set_volume(tmpd.volume);
           }
 
           if ((input == 'm' || input == 'M') && audio_device) {
-            avpd.muted = !avpd.muted;
-            audio_device_user_data.muted = avpd.muted;
+            tmpd.muted = !tmpd.muted;
+            audio_device_user_data.muted = tmpd.muted;
           }
 
           if ((input == 'l' || input == 'L') && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-            switch (avpd.playlist.loop_type()) {
-              case LoopType::NO_LOOP: avpd.playlist.set_loop_type(LoopType::REPEAT); break;
-              case LoopType::REPEAT: avpd.playlist.set_loop_type(LoopType::REPEAT_ONE); break;
-              case LoopType::REPEAT_ONE: avpd.playlist.set_loop_type(LoopType::NO_LOOP); break;
+            switch (tmpd.playlist.loop_type()) {
+              case LoopType::NO_LOOP: tmpd.playlist.set_loop_type(LoopType::REPEAT); break;
+              case LoopType::REPEAT: tmpd.playlist.set_loop_type(LoopType::REPEAT_ONE); break;
+              case LoopType::REPEAT_ONE: tmpd.playlist.set_loop_type(LoopType::NO_LOOP); break;
             }
           }
 
@@ -248,26 +248,26 @@ int tmedia(AsciiVideoProgramData avpd) {
 
         if (COLS < MIN_RENDER_COLS || LINES < MIN_RENDER_LINES) {
           erase();
-        } else if (COLS <= 20 || LINES < 10 || avpd.fullscreen) {
-          print_pixel_data(frame, 0, 0, COLS, LINES, avpd.vom, avpd.scaling_algorithm, avpd.ascii_display_chars);
+        } else if (COLS <= 20 || LINES < 10 || tmpd.fullscreen) {
+          print_pixel_data(frame, 0, 0, COLS, LINES, tmpd.vom, tmpd.scaling_algorithm, tmpd.ascii_display_chars);
         } else {
-          print_pixel_data(frame, 2, 0, COLS, LINES - 4, avpd.vom, avpd.scaling_algorithm, avpd.ascii_display_chars);
+          print_pixel_data(frame, 2, 0, COLS, LINES - 4, tmpd.vom, tmpd.scaling_algorithm, tmpd.ascii_display_chars);
 
-          if (avpd.playlist.size() == 1) {
+          if (tmpd.playlist.size() == 1) {
             wfill_box(stdscr, 1, 0, COLS, 1, '~');
-            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(avpd.playlist.index() + 1) + "/" + std::to_string(avpd.playlist.size()) + ") " + to_filename(avpd.playlist.current()));
-          } else if (avpd.playlist.size() > 1) {
+            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ") " + to_filename(tmpd.playlist.current()));
+          } else if (tmpd.playlist.size() > 1) {
             wfill_box(stdscr, 2, 0, COLS, 1, '~');
-            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(avpd.playlist.index() + 1) + "/" + std::to_string(avpd.playlist.size()) + ") " + to_filename(avpd.playlist.current()));
+            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ") " + to_filename(tmpd.playlist.current()));
 
-            if (avpd.playlist.can_move(PlaylistMoveCommand::REWIND)) {
+            if (tmpd.playlist.can_move(PlaylistMoveCommand::REWIND)) {
               werasebox(stdscr, 1, 0, COLS / 2, 1);
-              mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + to_filename(avpd.playlist.peek_move(PlaylistMoveCommand::REWIND)));
+              mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + to_filename(tmpd.playlist.peek_move(PlaylistMoveCommand::REWIND)));
             }
 
-            if (avpd.playlist.can_move(PlaylistMoveCommand::SKIP)) {
+            if (tmpd.playlist.can_move(PlaylistMoveCommand::SKIP)) {
               werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-              mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, to_filename(avpd.playlist.peek_move(PlaylistMoveCommand::SKIP)) + " >");
+              mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, to_filename(tmpd.playlist.peek_move(PlaylistMoveCommand::SKIP)) + " >");
             }
           }
 
@@ -277,8 +277,8 @@ int tmedia(AsciiVideoProgramData avpd) {
 
             std::vector<std::string> bottom_labels;
             const std::string playing_str = fetcher.is_playing() ? "PLAYING" : "PAUSED";
-            const std::string loop_str = str_capslock(loop_type_str(avpd.playlist.loop_type())); 
-            const std::string volume_str = "VOLUME: " + (avpd.muted ? "MUTED" : (std::to_string((int)(avpd.volume * 100)) + "%"));
+            const std::string loop_str = str_capslock(loop_type_str(tmpd.playlist.loop_type())); 
+            const std::string volume_str = "VOLUME: " + (tmpd.muted ? "MUTED" : (std::to_string((int)(tmpd.volume * 100)) + "%"));
 
             bottom_labels.push_back(playing_str);
             bottom_labels.push_back(loop_str);
@@ -289,10 +289,10 @@ int tmedia(AsciiVideoProgramData avpd) {
         }
 
         refresh();
-        if (avpd.render_loop_max_fps) {
+        if (tmpd.render_loop_max_fps) {
           std::unique_lock<std::mutex> exit_notify_lock(fetcher.exit_notify_mutex);
           if (!fetcher.should_exit()) {
-            fetcher.exit_cond.wait_for(exit_notify_lock,  seconds_to_chrono_nanoseconds(1 / static_cast<double>(avpd.render_loop_max_fps.value())));
+            fetcher.exit_cond.wait_for(exit_notify_lock,  seconds_to_chrono_nanoseconds(1 / static_cast<double>(tmpd.render_loop_max_fps.value())));
           }
         }
       }
@@ -313,8 +313,8 @@ int tmedia(AsciiVideoProgramData avpd) {
     //flush getch
     while (getch() != ERR) getch(); 
 
-    if (!avpd.playlist.can_move(current_move_cmd)) break;
-    avpd.playlist.move(current_move_cmd);
+    if (!tmpd.playlist.can_move(current_move_cmd)) break;
+    tmpd.playlist.move(current_move_cmd);
   }
 
   ncurses_uninit();
