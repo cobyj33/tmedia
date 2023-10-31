@@ -60,7 +60,7 @@ void on_terminate() {
     std::rethrow_exception(exptr);
   }
   catch (std::exception const& ex) {
-    std::cerr << "[ascii_video] Terminated due to exception: " << ex.what() << std::endl;
+    std::cerr << "[tmedia] Terminated due to exception: " << ex.what() << std::endl;
   }
 
   std::abort();
@@ -147,7 +147,7 @@ int main(int argc, char** argv)
     .help("Set the loop type of the player (" + format_arg_map(VALID_LOOP_TYPE_ARGS, "or") + ")");
 
   parser.add_argument("--max-fps")
-    .help("Set the maximum rendering fps of ascii_video")
+    .help("Set the maximum rendering fps of tmedia")
     .scan<'i', int>();
   
   parser.add_argument("--scaling-algo")
@@ -171,7 +171,7 @@ int main(int argc, char** argv)
     parser.parse_args(argc, argv);
   }
   catch (const std::exception& err) {
-    std::cerr << "[ascii_video]: Error while parsing arguments. Call ascii_video with '--help' or with no arguments to see help message" << std::endl;
+    std::cerr << "[tmedia]: Error while parsing arguments. Call tmedia with '--help' or with no arguments to see help message" << std::endl;
     std::cerr << std::endl;
     std::cerr << err.what() << std::endl;
     return EXIT_FAILURE;
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
   }
 
   if (paths.size() == 0) {
-    std::cerr << "[ascii_video]: at least 1 path expected. 0 found. Path can be to directory or media file" << std::endl;
+    std::cerr << "[tmedia]: at least 1 path expected. 0 found. Path can be to directory or media file" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -205,7 +205,7 @@ int main(int argc, char** argv)
 
   for (std::size_t i = 0; i < paths.size(); i++) {
     if (paths[i].length() == 0) {
-      std::cerr << "[ascii_video] Cannot open empty path" << std::endl;
+      std::cerr << "[tmedia] Cannot open empty path" << std::endl;
       std::cerr << parser << std::endl;
       return EXIT_FAILURE;
     }
@@ -214,7 +214,7 @@ int main(int argc, char** argv)
     std::error_code ec;
 
     if (!std::filesystem::exists(path, ec)) {
-      std::cerr << "[ascii_video] Cannot open nonexistent path: " << paths[i] << std::endl;
+      std::cerr << "[tmedia] Cannot open nonexistent path: " << paths[i] << std::endl;
       return EXIT_FAILURE;
     }
 
@@ -234,13 +234,13 @@ int main(int argc, char** argv)
     } else if (is_valid_media_file_path(paths[i])) {
       found_media_files.push_back(paths[i]);
     } else {
-      std::cerr << "[ascii_video] Cannot open path to non-media file: " << paths[i] << std::endl;
+      std::cerr << "[tmedia] Cannot open path to non-media file: " << paths[i] << std::endl;
       return EXIT_FAILURE;
     }
   }
 
   if (found_media_files.size() == 0) {
-    std::cerr << "[ascii_video]: at least 1 media file expected in given paths. 0 found." << std::endl;
+    std::cerr << "[tmedia]: at least 1 media file expected in given paths. 0 found." << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -250,7 +250,7 @@ int main(int argc, char** argv)
   avpd.muted = parser.get<bool>("-m");
   if (std::optional<double> user_volume = parser.present<double>("--volume")) {
     if (*user_volume < 0.0 || *user_volume > 1.0) {
-      std::cerr << "[ascii_video] Received invalid volume " << *user_volume << ". Volume must be between 0.0 and 1.0 inclusive" << std::endl;
+      std::cerr << "[tmedia] Received invalid volume " << *user_volume << ". Volume must be between 0.0 and 1.0 inclusive" << std::endl;
       return EXIT_FAILURE;
     }
     avpd.volume = *user_volume;
@@ -260,7 +260,7 @@ int main(int argc, char** argv)
     if (VALID_LOOP_TYPE_ARGS.count(*user_loop) == 1) {
       loop_type = VALID_LOOP_TYPE_ARGS.at(*user_loop);
     } else {
-      std::cerr << "[ascii_video] Received invalid loop type '" << *user_loop << "', must be " << format_arg_map(VALID_LOOP_TYPE_ARGS, "or") << "." << std::endl;
+      std::cerr << "[tmedia] Received invalid loop type '" << *user_loop << "', must be " << format_arg_map(VALID_LOOP_TYPE_ARGS, "or") << "." << std::endl;
       return EXIT_FAILURE;
     }
   }
@@ -269,7 +269,7 @@ int main(int argc, char** argv)
     if (VALID_SCALING_ALGO_ARGS.count(*user_scaling_algo) == 1) {
       avpd.scaling_algorithm = VALID_SCALING_ALGO_ARGS.at(*user_scaling_algo);
     } else {
-      std::cerr << "[ascii_video] Unrecognized scaling algorithm '" << *user_scaling_algo << "', must be " << format_arg_map(VALID_SCALING_ALGO_ARGS, "or") << "." << std::endl;
+      std::cerr << "[tmedia] Unrecognized scaling algorithm '" << *user_scaling_algo << "', must be " << format_arg_map(VALID_SCALING_ALGO_ARGS, "or") << "." << std::endl;
       return EXIT_FAILURE;
     }
   }
@@ -314,7 +314,7 @@ int program_dump_metadata(const std::vector<std::string>& files) {
 
       MediaType media_type = media_type_from_avformat_context(format_context);
       std::string media_type_str = media_type_to_string(media_type);
-      std::cerr << std::endl << "[ascii_video]: Detected media Type: " << media_type_str << std::endl;
+      std::cerr << std::endl << "[tmedia]: Detected media Type: " << media_type_str << std::endl;
 
       avformat_close_input(&format_context);
     }

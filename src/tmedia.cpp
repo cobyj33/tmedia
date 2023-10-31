@@ -305,7 +305,7 @@ int tmedia(AsciiVideoProgramData avpd) {
     fetcher.join();
 
     if (fetcher.has_error()) {
-      std::cerr << "[ascii_video]: Media Fetcher Error: " << fetcher.get_error() << std::endl;
+      std::cerr << "[tmedia]: Media Fetcher Error: " << fetcher.get_error() << std::endl;
       ncurses_uninit();
       return EXIT_FAILURE;
     }
