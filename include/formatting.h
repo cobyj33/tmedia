@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_STRING_FORMATTING
-#define ASCII_VIDEO_STRING_FORMATTING
+#ifndef TMEDIA_FORMATTING_H
+#define TMEDIA_FORMATTING_H
 
 #include <string>
 #include <vector>

@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_VIDEO_CONVERTER_INCLUDE
-#define ASCII_VIDEO_VIDEO_CONVERTER_INCLUDE
+#ifndef TMEDIA_VIDEO_CONVERTER_H
+#define TMEDIA_VIDEO_CONVERTER_H
 
 extern "C" {
   #include <libavutil/frame.h>

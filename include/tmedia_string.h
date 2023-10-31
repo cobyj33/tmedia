@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_ASV_STRING_H
-#define ASCII_VIDEO_ASV_STRING_H
+#ifndef TMEDIA_TMEDIA_STRING_H
+#define TMEDIA_TMEDIA_STRING_H
 
 #include <cstdarg>
 #include <string>

@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_AV_CURSES
-#define ASCII_VIDEO_AV_CURSES
+#ifndef TMEDIA_AV_CURSES_H
+#define TMEDIA_AV_CURSES_H
 /**
  * @file avcyrses.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)

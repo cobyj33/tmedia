@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_MEDIA_CLOCK
-#define ASCII_VIDEO_MEDIA_CLOCK
+#ifndef TMEDIA_MEDIA_CLOCK_H
+#define TMEDIA_MEDIA_CLOCK_H
 
 #include <atomic>
 

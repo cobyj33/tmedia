@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_STREAM_DECODER_INCLUDE
-#define ASCII_VIDEO_STREAM_DECODER_INCLUDE
+#ifndef TMEDIA_STREAM_DECODER_H
+#define TMEDIA_STREAM_DECODER_H
 
 #include <stdexcept>
 #include <string>

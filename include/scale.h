@@ -1,9 +1,9 @@
-#ifndef ASCII_VIDEO_IMAGE
-#define ASCII_VIDEO_IMAGE
+#ifndef TMEDIA_IMAGE_H
+#define TMEDIA_IMAGE_H
 /**
  * @file scale.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
- * @brief Common functions for image manipulation in ascii_video
+ * @brief Common functions for image manipulation in tmedia
  * @version 0.1
  * @date 2023-01-24
  * 

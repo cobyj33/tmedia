@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_BOILER
-#define ASCII_VIDEO_BOILER
+#ifndef TMEDIA_BOILER_H
+#define TMEDIA_BOILER_H
 
 #include <string>
 

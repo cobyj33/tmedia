@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_AUDIO_IMAGE_H
-#define ASCII_VIDEO_AUDIO_IMAGE_H
+#ifndef TMEDIA_AUDIO_IMAGE_H
+#define TMEDIA_AUDIO_IMAGE_H
 
 #include "pixeldata.h"
 #include <memory>

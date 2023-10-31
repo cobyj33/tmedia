@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_THREADS
-#define ASCII_VIDEO_THREADS
+#ifndef TMEDIA_THREADS_H
+#define TMEDIA_THREADS_H
 
 /**
  * @brief Sleep the current thread for the given number of nanoseconds

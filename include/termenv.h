@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_OUTPUT_H
-#define ASCII_VIDEO_OUTPUT_H
+#ifndef TMEDIA_OUTPUT_H
+#define TMEDIA_OUTPUT_H
 
 #include <atomic>
 

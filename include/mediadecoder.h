@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_MEDIA_DECODER_H
-#define ASCII_VIDEO_MEDIA_DECODER_H
+#ifndef TMEDIA_MEDIA_DECODER_H
+#define TMEDIA_MEDIA_DECODER_H
 
 
 #include "streamdecoder.h"

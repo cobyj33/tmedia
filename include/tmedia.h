@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_ASCII_VIDEO_H
-#define ASCII_VIDEO_ASCII_VIDEO_H
+#ifndef TMEDIA_TMEDIA_H
+#define TMEDIA_TMEDIA_H
 
 #include "playlist.h"
 #include "pixeldata.h"

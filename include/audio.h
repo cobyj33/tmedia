@@ -1,9 +1,9 @@
-#ifndef ASCII_VIDEO_AUDIO_IMPLEMENTATION
-#define ASCII_VIDEO_AUDIO_IMPLEMENTATION
+#ifndef TMEDIA_AUDIO_H
+#define TMEDIA_AUDIO_H
 /**
  * @file audio.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
- * @brief Common functions for audio manipulation in ascii_video
+ * @brief Common functions for audio manipulation in tmedia
  * @version 0.1
  * @date 2023-01-24
  * 

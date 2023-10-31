@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_DECODE
-#define ASCII_VIDEO_DECODE
+#ifndef TMEDIA_DECODE_H
+#define TMEDIA_DECODE_H
 
 #include <vector>
 #include <deque>

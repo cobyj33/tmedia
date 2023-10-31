@@ -1,7 +1,7 @@
-#ifndef ASCII_VIDEO_AVCURSES_INTERNAL_H
-#define ASCII_VIDEO_AVCURSES_INTERNAL_H
+#ifndef TMEDIA_AVCURSES_INTERNAL_H
+#define TMEDIA_AVCURSES_INTERNAL_H
 
-#ifndef ASCII_VIDEO_AVCURSES_INTERNAL_IMPLEMENTATION
+#ifndef TMEDIA_AVCURSES_INTERNAL_IMPLEMENTATION
 #error "Cannot include internal avcurses implementation details in public api. Include exposed functions through avcurses.h instead"
 #endif
 

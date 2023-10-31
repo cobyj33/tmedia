@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_ASCII
-#define ASCII_VIDEO_ASCII
+#ifndef TMEDIA_ASCII_H
+#define TMEDIA_ASCII_H
 #include <cstdint>
 #include <vector>
 #include <string>

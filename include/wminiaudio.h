@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_W_MINIAUDIO_H
-#define ASCII_VIDEO_W_MINIAUDIO_H
+#ifndef TMEDIA_W_MINIAUDIO_H
+#define TMEDIA_W_MINIAUDIO_H
 
 extern "C" {
 #include <miniaudio.h>

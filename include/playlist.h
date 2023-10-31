@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_PLAYLIST_H
-#define ASCII_VIDEO_PLAYLIST_H
+#ifndef TMEDIA_PLAYLIST_H
+#define TMEDIA_PLAYLIST_H
 
 #include <cstddef>
 

@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_COLOR
-#define ASCII_VIDEO_COLOR
+#ifndef TMEDIA_COLOR_H
+#define TMEDIA_COLOR_H
 
 #include <vector>
 

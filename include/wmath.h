@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_WRAPPER_MATH
-#define ASCII_VIDEO_WRAPPER_MATH
+#ifndef TMEDIA_W_MATH_H
+#define TMEDIA_W_MATH_H
 
 
 int signum(int num);

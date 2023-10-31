@@ -2,18 +2,14 @@
 
 #include "color.h"
 #include "wmath.h"
-#define ASCII_VIDEO_AVCURSES_INTERNAL_IMPLEMENTATION
+#define TMEDIA_AVCURSES_INTERNAL_IMPLEMENTATION
 #include "internal/avcurses_internal.h"
-#undef ASCII_VIDEO_AVCURSES_INTERNAL_IMPLEMENTATION
+#undef TMEDIA_AVCURSES_INTERNAL_IMPLEMENTATION
 
 #include <cmath>
 #include <vector>
 #include <stdexcept>
 #include <string>
-
-
-
-
 
 extern "C" {
 #include <curses.h>

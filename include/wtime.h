@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_WRAPPER_TIME
-#define ASCII_VIDEO_WRAPPER_TIME
+#ifndef TMEDIA_W_TIME_H
+#define TMEDIA_W_TIME_H
 
 #include <chrono>
 

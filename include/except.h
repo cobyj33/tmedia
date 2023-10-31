@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_EXCEPT_INCLUDE
-#define ASCII_VIDEO_EXCEPT_INCLUDE
+#ifndef TMEDIA_EXCEPT_H
+#define TMEDIA_EXCEPT_H
 
 #include <stdexcept>
 #include <string>

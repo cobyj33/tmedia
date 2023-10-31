@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_MEDIA_TYPE_H
-#define ASCII_VIDEO_MEDIA_TYPE_H
+#ifndef TMEDIA_MEDIA_TYPE_H
+#define TMEDIA_MEDIA_TYPE_H
 
 #include <string>
 

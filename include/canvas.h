@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_CANVAS_H
-#define ASCII_VIDEO_CANVAS_H
+#ifndef TMEDIA_CANVAS_H
+#define TMEDIA_CANVAS_H
 
 #include <vector>
 #include <memory>

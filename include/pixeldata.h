@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_PIXEL_DATA
-#define ASCII_VIDEO_PIXEL_DATA
+#ifndef TMEDIA_PIXEL_DATA_H
+#define TMEDIA_PIXEL_DATA_H
 
 #include <cstdint>
 #include <vector>

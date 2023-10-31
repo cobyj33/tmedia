@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_AVGUARD
-#define ASCII_VIDEO_AVGUARD
+#ifndef TMEDIA_AVGUARD_H
+#define TMEDIA_AVGUARD_H
 
 extern "C" {
   #include <libavutil/version.h>

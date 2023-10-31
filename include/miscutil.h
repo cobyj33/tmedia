@@ -1,5 +1,5 @@
-#ifndef ASCII_VIDEO_MISC_UTIL_H
-#define ASCII_VIDEO_MISC_UTIL_H
+#ifndef TMEDIA_MISC_UTIL_H
+#define TMEDIA_MISC_UTIL_H
 
 #include <map>
 #include <vector>
