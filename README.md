@@ -1,5 +1,5 @@
 
-# TMedia
+# tmedia
 
 ![gif](/assets/readme/ascii-320.gif)
 
@@ -14,7 +14,19 @@ Written in C++ 17
 ![example vscode](assets/readme/vscode.png)
 ![example volcano](assets/readme/volcano.gif)
 ![example keybiard](assets/readme/keyboard_man.gif)
-![example audio-playback](assets/readme/audio_playing_ascii_video_480.png)
+![example audio-playback](assets/readme/audio_playing_tmedia_480.png)
+
+## Table of Contents
+
+- [Supports](#supports)
+- [Media Controls](#media-controls)
+- [Installing](#installing)
+  - [Dependencies](#dependencies)
+  - [Ubuntu/Debian Linux](#ubuntudebian-linux)
+- [Bug and Feature Reporting](#bug-and-feature-reporting)
+- [Acknowledgements](#acknowledgments)
+  - [Bundled 3rd-party libraries](#bundled-3rd-party-libraries)
+  - [Inspiration and Resources](#inspiration-and-resources)
 
 ## Supports
 
@@ -45,20 +57,30 @@ Written in C++ 17
   - 'N' - Skip to Next Media File
   - 'P' - Rewind to Previous Media File
 
-All of these controls can also be seen when calling ascii_video with no args or
+All of these controls can also be seen when calling tmedia with no args or
 with --help
 
-## Dependencies
 
-* [curses](https://invisible-island.net/ncurses/)
-* [FFmpeg](https://ffmpeg.org/)
-* [cmake](https://cmake.org/)
+## Installing
 
-### Ubuntu/Debian
+### Dependencies
+
+* [curses](https://invisible-island.net/ncurses/) - Terminal Output
+* [FFmpeg](https://ffmpeg.org/) - Multimedia decoding, scaling, and resampling
+* [cmake](https://cmake.org/) - Building
+* [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/) - Finding ffmpeg libs
+
+### Ubuntu/Debian Linux
 
 ```bash
 sudo apt-get update
-sudo apt-get install build-essential cmake pkg-config libavdevice-dev libncurses-dev
+sudo apt-get install git build-essential cmake pkg-config libavdevice-dev libncurses-dev
+```
+
+Next, clone this repository to your desired directory with
+
+```bash
+git clone https://github.com/cobyj33/tmedia.git
 ```
 
 run these 4 commands in the terminal, starting from
@@ -70,18 +92,35 @@ cd build
 cmake ../
 make -j$(nproc)
 ```
-
-The file "ascii_video" should appear once the build finishes, and can be
+The file "tmedia" should appear once the build finishes, and can be
 symlinked to an area on your PATH if you want to use it anywhere
 
-On non-Debian/Ubuntu distros, ascii_video's installation is currently untested,
-but I don't see why it wouldn't be possible
+## Windows
 
-On Windows, WSL 2 currently has to be used to use ascii_video
+Currently for windows, WSL 2 running Debian/Ubuntu must be used to run tmedia.
+
+After running WSL 2 with Debian/Ubuntu Linux, you can follow the installation
+directions under [Ubuntu/Debian Linux](#ubuntudebian-linux)
+
+> Currently, anything outside of Ubuntu/Debian is not tested. That being said,
+> if you have the libav libraries from FFmpeg and the curses libraries available, 
+> building tmedia should still work with all dependencies. If you need help with this,
+> I'll be happy to help in an issue.
+
+## Bug and Feature Reporting
+
+If there are any problems with installing or using tmedia, or any requested feature,
+please leave an issue at the [github repo](https://www.github.com/cobyj33/tmedia)
+and I'll be sure to help. 
 
 ## Acknowledgments
 
-Inspiration, code snippets, etc.
+### Bundled 3rd-party libraries
+
+* [miniaudio](https://miniaud.io/) - Cross-platform audio playback ([github](https://github.com/mackron/miniaudio))
+* [Natural Sort](https://github.com/scopeInfinity/NaturalSort) - Natural Sorting and Comparison: For sorting directory files
+
+### Inspiration and Resources
 
 * [ncurses 3D renderer](https://github.com/youngbrycecode/RenderEngine)
   * [video-series](https://www.youtube.com/playlist?list=PLg4mWef4l7Qzxs_Fa2DrgZeJKAbG3b7ue)
@@ -89,5 +128,6 @@ Inspiration, code snippets, etc.
 * [Coding Video into Text by The Coding Train on Youtube](https://www.youtube.com/watch?v=55iwMYv8tGI)
   * [The Coding Train](https://www.youtube.com/c/TheCodingTrain)
 * [How to Write a Video Player in Less Than 1000 Lines](http://dranger.com/ffmpeg/)
+
 
 ![gif](/assets/readme/ascii-320.gif)
