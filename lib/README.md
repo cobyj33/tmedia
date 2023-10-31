@@ -24,3 +24,8 @@ A testing framework for C++ 11+, which allows me to unit test sections of my cod
 Used to properly order playback of audio files in a directory, especially in playlist/album/mixtape
 type directories where each song starts with a number indicating it's location in
 the tracklist
+
+## SPSC Queue | [Github](https://github.com/rigtorp/SPSCQueue/tree/master)
+
+"A single producer single consumer wait-free and lock-free fixed size queue written in C++11." (README.md),
+Used for lock-free realtime audio output.
