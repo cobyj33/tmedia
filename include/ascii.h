@@ -7,9 +7,6 @@
 #include "pixeldata.h"
 
 extern const std::string ASCII_STANDARD_CHAR_MAP;
-extern const std::string ASCII_EXTENDED_CHAR_MAP;
-extern const std::string UNICODE_BOX_CHAR_MAP;
-extern const std::string UNICODE_STIPPLE_CHAR_MAP;
 
 char get_char_from_value(const std::string& characters, uint8_t value);
 char get_char_from_rgb(const std::string& characters, const RGBColor& color);

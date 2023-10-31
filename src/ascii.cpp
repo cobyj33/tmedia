@@ -9,9 +9,6 @@ extern "C" {
 }
 
 const std::string ASCII_STANDARD_CHAR_MAP = "@%#*+=-:_.";
-const std::string ASCII_EXTENDED_CHAR_MAP = "@MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry%%1v7l+it[]{}?j|()=~!-/<>\"^_';,:`.";
-const std::string UNICODE_BOX_CHAR_MAP = "█▉▊▋▌▍▎▏";
-const std::string UNICODE_STIPPLE_CHAR_MAP = "░▒▓";
 
 char get_char_from_value(const std::string& characters, uint8_t value) {
   return characters[ (size_t)value * (characters.length() - 1) / 255 ];

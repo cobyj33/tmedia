@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     {"box-sampling", ScalingAlgo::BOX_SAMPLING}
   };
   
-  argparse::ArgumentParser parser("ascii_video", ASCII_VIDEO_VERSION);
+  argparse::ArgumentParser parser("tmedia", TMEDIA_VERSION);
 
   parser.add_argument("paths")
     .help("The the paths to files or directories to be played.\n"
