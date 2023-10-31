@@ -1,4 +1,4 @@
-#include "avcurses.h"
+#include "tmcurses.h"
 
 #include "tmedia_string.h" 
 extern "C" {

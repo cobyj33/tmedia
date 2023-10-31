@@ -1,7 +1,7 @@
-#ifndef TMEDIA_AV_CURSES_H
-#define TMEDIA_AV_CURSES_H
+#ifndef TMEDIA_TM_CURSES_H
+#define TMEDIA_TM_CURSES_H
 /**
- * @file avcyrses.h
+ * @file tmcyrses.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
  * @brief NCurses routines initialize curses, to pre-load color maps, and to quickly fetch colors based on RGB Values
  * @version 0.1
@@ -21,7 +21,7 @@ extern "C" {
 typedef short curses_color_pair_t;
 typedef short curses_color_t;
 
-enum class AVNCursesColorPalette {  
+enum class TMNCursesColorPalette {  
   RGB,
   GRAYSCALE
 };
@@ -43,7 +43,7 @@ void werasebox(WINDOW* window, int y, int x, int width, int height);
  * @brief Initialize ncurses's color palette for a given enum
  * In it's current implementation, this function will load 7^3 (216) colors into the ncurses color palette
  */
-void ncurses_set_color_palette(AVNCursesColorPalette);
+void ncurses_set_color_palette(TMNCursesColorPalette);
 
 /**
  * @brief Find the closest registered ncurses color pair integer to the inputted RGBColor.

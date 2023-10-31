@@ -66,8 +66,6 @@ set(COMMON_SOURCE_FILES
 ./src/audio.cpp
 ./src/audiobuffer.cpp
 ./src/audioresampler.cpp
-./src/avcurses_print.cpp
-./src/avcurses.cpp
 ./src/boiler.cpp
 ./src/canvas.cpp
 ./src/color.cpp
@@ -84,6 +82,8 @@ set(COMMON_SOURCE_FILES
 ./src/scale.cpp
 ./src/sleep.cpp
 ./src/streamdecoder.cpp
+./src/tmcurses_print.cpp
+./src/tmcurses.cpp
 ./src/tmedia_string.cpp
 ./src/video_thread.cpp
 ./src/videoconverter.cpp

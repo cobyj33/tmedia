@@ -1,10 +1,10 @@
-#include "avcurses.h"
+#include "tmcurses.h"
 
 #include "color.h"
 #include "wmath.h"
-#define TMEDIA_AVCURSES_INTERNAL_IMPLEMENTATION
-#include "internal/avcurses_internal.h"
-#undef TMEDIA_AVCURSES_INTERNAL_IMPLEMENTATION
+#define TMEDIA_TMCURSES_INTERNAL_IMPLEMENTATION
+#include "internal/tmcurses_internal.h"
+#undef TMEDIA_TMCURSES_INTERNAL_IMPLEMENTATION
 
 #include <cmath>
 #include <vector>
@@ -25,7 +25,7 @@ void ncurses_init() {
   initscr();
   savetty();
   ncurses_init_color();
-  ncurses_set_color_palette(AVNCursesColorPalette::RGB);
+  ncurses_set_color_palette(TMNCursesColorPalette::RGB);
   cbreak();
   // nocbreak();
   noecho();
@@ -160,7 +160,7 @@ void ncurses_uninit_color() {
   curses_colors_initialized = false;
 }
 
-void ncurses_set_color_palette(AVNCursesColorPalette colorPalette) {
+void ncurses_set_color_palette(TMNCursesColorPalette colorPalette) {
   if (!can_change_color())
     throw std::runtime_error("[ncurses_set_color_palette]: Cannot initialize ncurses color palette, "
     "The current terminal does not support changing colors");
@@ -170,8 +170,8 @@ void ncurses_set_color_palette(AVNCursesColorPalette colorPalette) {
     "color output was not initialized with ncurses_init_color first");
 
   switch (colorPalette) {
-    case AVNCursesColorPalette::RGB: available_colors = ncurses_init_rgb_color_palette(); break;
-    case AVNCursesColorPalette::GRAYSCALE: available_colors = ncurses_init_grayscale_color_palette(); break;
+    case TMNCursesColorPalette::RGB: available_colors = ncurses_init_rgb_color_palette(); break;
+    case TMNCursesColorPalette::GRAYSCALE: available_colors = ncurses_init_grayscale_color_palette(); break;
   }
 
   ncurses_init_color_pairs();
@@ -208,10 +208,10 @@ curses_color_pair_t get_closest_ncurses_color_pair(const RGBColor& input) {
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 
-std::string ncurses_color_palette_string(AVNCursesColorPalette colorPalette) {
+std::string ncurses_color_palette_string(TMNCursesColorPalette colorPalette) {
   switch (colorPalette) {
-    case AVNCursesColorPalette::RGB: return "rgb";
-    case AVNCursesColorPalette::GRAYSCALE: return "grayscale";
+    case TMNCursesColorPalette::RGB: return "rgb";
+    case TMNCursesColorPalette::GRAYSCALE: return "grayscale";
   }
   return "unknown";
 }

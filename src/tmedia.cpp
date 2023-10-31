@@ -3,7 +3,7 @@
 #include "mediafetcher.h"
 #include "wminiaudio.h"
 #include "pixeldata.h"
-#include "avcurses.h"
+#include "tmcurses.h"
 #include "signalstate.h"
 #include "wtime.h"
 #include "wmath.h"
@@ -366,9 +366,9 @@ std::string to_filename(const std::string& path_str) {
 void init_global_video_output_mode(VideoOutputMode mode) {
   switch (mode) {
     case VideoOutputMode::COLORED:
-    case VideoOutputMode::COLORED_BACKGROUND_ONLY: ncurses_set_color_palette(AVNCursesColorPalette::RGB); break;
+    case VideoOutputMode::COLORED_BACKGROUND_ONLY: ncurses_set_color_palette(TMNCursesColorPalette::RGB); break;
     case VideoOutputMode::GRAYSCALE:
-    case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: ncurses_set_color_palette(AVNCursesColorPalette::GRAYSCALE); break;
+    case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: ncurses_set_color_palette(TMNCursesColorPalette::GRAYSCALE); break;
     case VideoOutputMode::TEXT_ONLY: break;
   }
 }

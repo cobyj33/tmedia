@@ -1,12 +1,12 @@
-#ifndef TMEDIA_AVCURSES_INTERNAL_H
-#define TMEDIA_AVCURSES_INTERNAL_H
+#ifndef TMEDIA_TMCURSES_INTERNAL_H
+#define TMEDIA_TMCURSES_INTERNAL_H
 
-#ifndef TMEDIA_AVCURSES_INTERNAL_IMPLEMENTATION
-#error "Cannot include internal avcurses implementation details in public api. Include exposed functions through avcurses.h instead"
+#ifndef TMEDIA_TMCURSES_INTERNAL_IMPLEMENTATION
+#error "Cannot include internal tmcurses implementation details in public api. Include exposed functions through tmcurses.h instead"
 #endif
 
 #include "color.h"
-#include "avcurses.h"
+#include "tmcurses.h"
 #include <string>
 
 void ncurses_init_color();
@@ -29,7 +29,7 @@ struct CursesColorPair {
   CursesColorPair(const CursesColorPair& cp) : fg(cp.fg), bg(cp.bg) {}
 };
 
-std::string ncurses_color_palette_string(AVNCursesColorPalette colorPalette);
+std::string ncurses_color_palette_string(TMNCursesColorPalette colorPalette);
 
 RGBColor ncurses_get_color_number_content(curses_color_t);
 ColorPair ncurses_get_pair_number_content(curses_color_pair_t);
