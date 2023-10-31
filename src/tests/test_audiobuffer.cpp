@@ -14,10 +14,6 @@ float* get_mock_frames(int nb_channels, int nb_samples) {
 }
 
 TEST_CASE("Audio buffer", "[structure]") {
-  const int NB_CHANNELS = 2;
-  const int SAMPLE_RATE = 44100;
-  const double EXPECTED_BUFFER_TIME = 20;
-
   AudioBuffer audio_buffer(2, 44100);
 
   REQUIRE_FALSE( audio_buffer.can_read(1) );
