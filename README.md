@@ -1,11 +1,6 @@
-
 # tmedia
 
-![gif](/assets/readme/ascii-320.gif)
-
-Terminal media player
-
-Written in C++ 17
+C++ 17 Terminal Media Player
 
 ## Example Output
 
@@ -128,6 +123,3 @@ and I'll be sure to help.
 * [Coding Video into Text by The Coding Train on Youtube](https://www.youtube.com/watch?v=55iwMYv8tGI)
   * [The Coding Train](https://www.youtube.com/c/TheCodingTrain)
 * [How to Write a Video Player in Less Than 1000 Lines](http://dranger.com/ffmpeg/)
-
-
-![gif](/assets/readme/ascii-320.gif)
