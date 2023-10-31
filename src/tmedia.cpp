@@ -89,6 +89,8 @@ int tmedia(TMediaProgramData tmpd) {
       config.sampleRate = fetcher.media_decoder->get_sample_rate();       
       config.dataCallback = audioDataCallback;   
       config.pUserData = (void*)(&audio_device_user_data);
+      config.noPreSilencedOutputBuffer = MA_TRUE;
+      config.noClip = MA_TRUE;
 
       audio_device = std::make_unique<ma_device_w>(&config);
       audio_device->start();
