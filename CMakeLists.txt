@@ -19,22 +19,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 #Used in configuring version file
-set(ASCII_VIDEO_VERSION_MAJOR 0)
-set(ASCII_VIDEO_VERSION_MINOR 5)
-set(ASCII_VIDEO_VERSION_PATCH 0)
-set(ASCII_VIDEO_VERSION "${ASCII_VIDEO_VERSION_MAJOR}.${ASCII_VIDEO_VERSION_MINOR}.${ASCII_VIDEO_VERSION_PATCH}")
+set(TMEDIA_VERSION_MAJOR 0)
+set(TMEDIA_VERSION_MINOR 5)
+set(TMEDIA_VERSION_PATCH 0)
+set(TMEDIA_VERSION "${TMEDIA_VERSION_MAJOR}.${TMEDIA_VERSION_MINOR}.${TMEDIA_VERSION_PATCH}")
 
 set(LOCAL_NCURSES_LIB ${CMAKE_SOURCE_DIR}/lib/ncurses)
 set(LOCAL_FFMPEG_LIB ${CMAKE_SOURCE_DIR}/lib/ffmpeg)
 
-set(ASV_COMPILE_OPTIONS -Wall -Wextra -Wpedantic)
+set(TMEDIA_COMPILE_OPTIONS -Wall -Wextra -Wpedantic)
 if (MSVC)
-  set(ASV_COMPILE_OPTIONS /std:c++17 /W4 /WX)
+  set(TMEDIA_COMPILE_OPTIONS /std:c++17 /W4 /WX)
 endif()
 
-set(ASCII_VIDEO_SUPPORTED_LANGUAGES CXX C)
+set(TMEDIA_SUPPORTED_LANGUAGES CXX C)
 if (APPLE)
-  list (APPEND ASCII_VIDEO_SUPPORTED_LANGUAGES OBJC OBJCXX)
+  list (APPEND TMEDIA_SUPPORTED_LANGUAGES OBJC OBJCXX)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -47,11 +47,11 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   message(FATAL_ERROR "Building in-source is not supported! Create a build dir and run cmake from there")
 endif()
 
-option(ASCII_VIDEO_BUILD_TESTS "Build Testing Executable for ascii_video" OFF)
-option(FIND_FFMPEG "Find FFmpeg Libraries on system rather than build FFmpeg alongside ascii_video" ON)
-option(FIND_CURSES "Find Curses Libraries on system rather than build NCurses alongside ascii_video" ON)
+option(TMEDIA_BUILD_TESTS "Build Testing Executable for tmedia" OFF)
+option(FIND_FFMPEG "Find FFmpeg Libraries on system rather than build FFmpeg alongside tmedia" ON)
+option(FIND_CURSES "Find Curses Libraries on system rather than build NCurses alongside tmedia" ON)
 
-message("Options: ASCII_VIDEO_BUILD_TESTS: " ${ASCII_VIDEO_BUILD_TESTS})
+message("Options: TMEDIA_BUILD_TESTS: " ${TMEDIA_BUILD_TESTS})
 message("Options: FIND_FFMPEG: " ${FIND_FFMPEG})
 message("Options: FIND_CURSES: " ${FIND_CURSES})
 message("Options: NCURSES_EXTRA_CONFIGURE_FLAGS: " ${NCURSES_EXTRA_CONFIGURE_FLAGS})
@@ -86,7 +86,7 @@ set(COMMON_SOURCE_FILES
 ./src/mediadecoder.cpp
 ./src/mediatype.cpp
 ./src/pixeldata.cpp
-./src/asv_string.cpp
+./src/tmedia_string.cpp
 ./src/avcurses_print.cpp
 ./src/duration_checking.cpp
 ./src/miscutil.cpp
@@ -136,12 +136,12 @@ set(FFMPEG_BUILD_OPTIONS --prefix=${CMAKE_BINARY_DIR}
 # Note that this is automatically set to be nonfree license
 
 
-project(ascii_video
-VERSION ${ASCII_VIDEO_VERSION}
-LANGUAGES ${ASCII_VIDEO_SUPPORTED_LANGUAGES}
+project(tmedia
+VERSION ${TMEDIA_VERSION}
+LANGUAGES ${TMEDIA_SUPPORTED_LANGUAGES}
 DESCRIPTION "Terminal video media player")
 
-add_executable(ascii_video ${COMMON_SOURCE_FILES} ./src/main.cpp ./src/ascii_video.cpp)
+add_executable(tmedia ${COMMON_SOURCE_FILES} ./src/main.cpp ./src/tmedia.cpp)
 
 
 if(FIND_CURSES)
@@ -188,7 +188,7 @@ if(FIND_FFMPEG)
   libswresample
   libswscale)
 
-  target_link_libraries(ascii_video PRIVATE PkgConfig::LIBAV)
+  target_link_libraries(tmedia PRIVATE PkgConfig::LIBAV)
 else()
   if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU"))
     list(APPEND FFMPEG_BUILD_OPTIONS --extra-cflags=-g)
@@ -229,12 +229,12 @@ target_include_directories(miniaudio PRIVATE ./lib/miniaudio)
 
 set(ARGPARSE_BUILD_TESTS OFF CACHE INTERNAL "Turn off building argparse tests")
 set(ARGPARSE_BUILD_SAMPLES OFF CACHE INTERNAL "Turn off building argparse samples")
+set(ARGPARSE_INSTALL OFF CACHE INTERNAL "Turn off argparse install target")
 FetchContent_Declare(
     argparse
     GIT_REPOSITORY https://github.com/p-ranav/argparse.git
 )
 FetchContent_MakeAvailable(argparse)
-
 
 add_library(NaturalSort INTERFACE)
 target_include_directories(NaturalSort INTERFACE ./lib/NaturalSort)
@@ -259,17 +259,16 @@ else()
   message("\nUsing FFmpeg Global Configuration")
 endif()
 
-target_compile_features(ascii_video PRIVATE cxx_std_17)
-target_include_directories(ascii_video PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
-target_link_libraries(ascii_video PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> argparse NaturalSort ${CMAKE_DL_LIBS})
-
+target_compile_features(tmedia PRIVATE cxx_std_17)
+target_include_directories(tmedia PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
+target_link_libraries(tmedia PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> argparse NaturalSort ${CMAKE_DL_LIBS})
+target_compile_options(tmedia PRIVATE ${TMEDIA_COMPILE_OPTIONS})
 if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
-  add_dependencies(ascii_video ${TARGET_DEPENDENCIES})
+  add_dependencies(tmedia ${TARGET_DEPENDENCIES})
 endif()
 
-target_compile_options(ascii_video PRIVATE ${ASV_COMPILE_OPTIONS})
 
-if (ASCII_VIDEO_BUILD_TESTS)
+if (TMEDIA_BUILD_TESTS)
   message("Configured to build testing executable")
   FetchContent_Declare(
     Catch2
@@ -279,17 +278,15 @@ if (ASCII_VIDEO_BUILD_TESTS)
 
   FetchContent_MakeAvailable(Catch2)
 
-  add_executable(ascii_tests ${COMMON_SOURCE_FILES} ${TEST_SOURCE_FILES})
-  target_compile_options(ascii_video PRIVATE ${ASV_COMPILE_OPTIONS})
-
-  target_include_directories(ascii_tests PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio)
-  target_compile_features(ascii_tests PRIVATE cxx_std_17)
-  target_link_libraries(ascii_tests PRIVATE Catch2::Catch2WithMain ${FFMPEG_LIBS} ${CURSES_LIBRARIES} PkgConfig::LIBAV $<TARGET_OBJECTS:miniaudio> ${CMAKE_DL_LIBS})
+  add_executable(tmedia_tests ${COMMON_SOURCE_FILES} ${TEST_SOURCE_FILES})
+  target_compile_options(tmedia_tests PRIVATE ${TMEDIA_COMPILE_OPTIONS})
+  target_include_directories(tmedia_tests PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio)
+  target_compile_features(tmedia_tests PRIVATE cxx_std_17)
+  target_link_libraries(tmedia_tests PRIVATE Catch2::Catch2WithMain ${FFMPEG_LIBS} ${CURSES_LIBRARIES} PkgConfig::LIBAV $<TARGET_OBJECTS:miniaudio> ${CMAKE_DL_LIBS})
 
   if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
-    add_dependencies(ascii_tests ${TARGET_DEPENDENCIES})
+    add_dependencies(tmedia_tests ${TARGET_DEPENDENCIES})
   endif()
-
 else()
   message("Configured to NOT build testing executable")
 endif()

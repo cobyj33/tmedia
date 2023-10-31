@@ -13,9 +13,9 @@
 #include "sleep.h"
 #include "wmath.h"
 #include "boiler.h"
-#include "asv_string.h"
+#include "tmedia_string.h"
 #include "miscutil.h"
-#include "ascii_video.h"
+#include "tmedia.h"
 
 #include <cstdlib>
 #include <cctype>
@@ -107,7 +107,7 @@ int main(int argc, char** argv)
     "Directories will be expanded so any media files inside them will be played.")
     .nargs(argparse::nargs_pattern::any);
 
-  parser.add_description(ASCII_VIDEO_CONTROLS_USAGE);
+  parser.add_description(TMEDIA_CONTROLS_USAGE);
 
   parser.add_argument("-c", "--color")
     .default_value(false)
@@ -289,7 +289,7 @@ int main(int argc, char** argv)
 
   avpd.playlist = Playlist(found_media_files, loop_type);
 
-  return ascii_video(avpd);
+  return tmedia(avpd);
 }
 
 int program_print_ffmpeg_version() {

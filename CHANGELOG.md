@@ -1,5 +1,10 @@
 
-# ascii_video ChangeLog
+# tmedia ChangeLog
+
+## October 30, 2023
+
+Change name to tmedia to better reflect ability to view and play video, audio,
+and image files in the terminal.
 
 ## April 13, 2023
 

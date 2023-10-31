@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 
-extern const std::string ASCII_VIDEO_CONTROLS_USAGE;
+extern const std::string TMEDIA_CONTROLS_USAGE;
 
 enum class VideoOutputMode {
   COLORED,
@@ -29,6 +29,6 @@ struct AsciiVideoProgramData {
   std::string ascii_display_chars;
 };
 
-int ascii_video(AsciiVideoProgramData avpd);
+int tmedia(AsciiVideoProgramData avpd);
 
 #endif

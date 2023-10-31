@@ -1,6 +1,6 @@
 #include "avcurses.h"
 
-#include "asv_string.h" 
+#include "tmedia_string.h" 
 extern "C" {
   #include <curses.h>
 }

@@ -1,5 +1,5 @@
 
-# ASCII Video
+# TMedia
 
 ![gif](/assets/readme/ascii-320.gif)
 

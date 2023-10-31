@@ -1,4 +1,4 @@
-#include "ascii_video.h"
+#include "tmedia.h"
 
 #include "mediafetcher.h"
 #include "wminiaudio.h"
@@ -8,7 +8,7 @@
 #include "wtime.h"
 #include "wmath.h"
 #include "wtime.h"
-#include "asv_string.h"
+#include "tmedia_string.h"
 #include "ascii.h"
 #include "sleep.h"
 #include "formatting.h"
@@ -31,7 +31,7 @@ extern "C" {
   #include <miniaudio.h>
 }
 
-const std::string ASCII_VIDEO_CONTROLS_USAGE = "-------CONTROLS-----------\n"
+const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "Video and Audio Controls\n"
   "- Space - Play and Pause\n"
   "- Up Arrow - Increase Volume 1%\n"
@@ -65,7 +65,7 @@ struct AudioCallbackData {
   AudioCallbackData(MediaFetcher* fetcher, bool muted) : fetcher(fetcher), muted(muted) {}
 };
 
-int ascii_video(AsciiVideoProgramData avpd) {
+int tmedia(AsciiVideoProgramData avpd) {
   static constexpr int KEY_ESCAPE = 27;
   static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
   static constexpr int MIN_RENDER_COLS = 2;
