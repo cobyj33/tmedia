@@ -3,7 +3,7 @@
 
 ## Testing files
 
-While I don't include images, videos, and audio directly into the ascii_video
+While I don't include images, videos, and audio directly into the tmedia
 repo, here are some good sources that I use to make sure many different file
 formats and sizes work well.
 
