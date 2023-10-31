@@ -2,7 +2,7 @@
 #include "boiler.h"
 
 #include "decode.h"
-#include "except.h"
+#include "ffmpeg_error.h"
 
 #include <cstring>
 #include <stdexcept>
@@ -23,7 +23,7 @@ AVFormatContext* open_format_context(const std::string& file_path) {
     if (format_context != nullptr) {
       avformat_close_input(&format_context);
     }
-    throw ascii::ffmpeg_error("Failed to open format context input for " + file_path, result);
+    throw ffmpeg_error("Failed to open format context input for " + file_path, result);
   }
 
   result = avformat_find_stream_info(format_context, NULL);
@@ -31,7 +31,7 @@ AVFormatContext* open_format_context(const std::string& file_path) {
     if (format_context != nullptr) {
       avformat_close_input(&format_context);
     }
-    throw ascii::ffmpeg_error("Failed to find stream info for " + file_path, result);
+    throw ffmpeg_error("Failed to find stream info for " + file_path, result);
   }
 
   if (format_context != nullptr) {
@@ -75,7 +75,7 @@ bool is_valid_media_file_path(const std::string& path_str) {
     AVFormatContext* fmt_ctx = open_format_context(path_str);
     avformat_close_input(&fmt_ctx);
     return true;
-  } catch (const ascii::ffmpeg_error& e) {
+  } catch (const ffmpeg_error& e) {
     return false;
   }
 

@@ -6,7 +6,7 @@
 #include "decode.h"
 #include "boiler.h"
 #include "videoconverter.h"
-#include "except.h"
+#include "ffmpeg_error.h"
 #include "streamdecoder.h"
 
 #include <stdexcept>

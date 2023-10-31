@@ -1,7 +1,7 @@
 #include "audioresampler.h"
 
 #include "avguard.h"
-#include "except.h"
+#include "ffmpeg_error.h"
 
 #include <stdexcept>
 
@@ -34,7 +34,7 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
     if (context != nullptr) {
       swr_free(&context);
     }
-    throw ascii::ffmpeg_error("[AudioResampler::AudioResampler] Allocation of internal SwrContext of AudioResampler failed. Aborting...", result);
+    throw ffmpeg_error("[AudioResampler::AudioResampler] Allocation of internal SwrContext of AudioResampler failed. Aborting...", result);
   } else if (context == nullptr) {
     throw std::runtime_error("[AudioResampler::AudioResampler] Allocation of internal SwrContext of AudioResampler failed. Aborting...");
   } else {
@@ -43,7 +43,7 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
       if (context != nullptr) {
         swr_free(&context);
       }
-      throw ascii::ffmpeg_error("[AudioResampler::AudioResampler] Initialization of internal SwrContext of AudioResampler failed. Aborting...", result);
+      throw ffmpeg_error("[AudioResampler::AudioResampler] Initialization of internal SwrContext of AudioResampler failed. Aborting...", result);
     }
   }
 
@@ -59,12 +59,12 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
 
   result = av_channel_layout_copy(&this->m_src_ch_layout, src_ch_layout);
   if (result < 0) {
-    throw ascii::ffmpeg_error("[AudioResampler::AudioResampler] Failed to copy source AVChannelLayout data into internal field", result);
+    throw ffmpeg_error("[AudioResampler::AudioResampler] Failed to copy source AVChannelLayout data into internal field", result);
   }
 
   result = av_channel_layout_copy(&this->m_dst_ch_layout, dst_ch_layout);
   if (result < 0) {
-    throw ascii::ffmpeg_error("[AudioResampler::AudioResampler] Failed to copy destination AVChannelLayout data into internal field", result);
+    throw ffmpeg_error("[AudioResampler::AudioResampler] Failed to copy destination AVChannelLayout data into internal field", result);
   }
   #else
   this->m_dst_ch_layout = dst_ch_layout;
@@ -106,7 +106,7 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
     #if HAS_AVCHANNEL_LAYOUT
     result = av_channel_layout_copy(&resampled_frame->ch_layout, &this->m_dst_ch_layout);
     if (result < 0) {
-      throw ascii::ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to copy destination audio channel layout", result);
+      throw ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to copy destination audio channel layout", result);
     }
     #else 
     resampled_frame->channel_layout = this->m_dst_ch_layout;
@@ -125,7 +125,7 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
       case AVERROR_INPUT_CHANGED: {
         result = swr_config_frame(this->m_context, resampled_frame, original);
         if (result != 0) {
-          throw ascii::ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to reconfigure resampling context", result);
+          throw ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to reconfigure resampling context", result);
         }
 
         result = swr_convert_frame(this->m_context, resampled_frame, original);
@@ -139,7 +139,7 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
     if (resampled_frame != nullptr) {
       av_frame_free(&resampled_frame);
     }
-    throw ascii::ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to resample audio frame", result);
+    throw ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to resample audio frame", result);
 }
 
 int AudioResampler::get_src_sample_rate() {

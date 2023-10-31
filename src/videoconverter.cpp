@@ -1,6 +1,6 @@
 #include "videoconverter.h"
 
-#include "except.h"
+#include "ffmpeg_error.h"
 #include "avguard.h"
 
 #include <stdexcept>
