@@ -92,6 +92,9 @@ int tmedia(TMediaProgramData tmpd) {
       config.pUserData = (void*)(&audio_device_user_data);
       config.noPreSilencedOutputBuffer = MA_TRUE;
       config.noClip = MA_TRUE;
+      config.periodSizeInFrames = 0;
+      config.periodSizeInMilliseconds = 10;
+      config.periods = 3;
 
       audio_device = std::make_unique<ma_device_w>(&config);
       audio_device->start();
