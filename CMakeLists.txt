@@ -89,7 +89,6 @@ set(COMMON_SOURCE_FILES
 ./src/tmedia_string.cpp
 ./src/avcurses_print.cpp
 ./src/duration_checking.cpp
-./src/miscutil.cpp
 ./src/scale.cpp)
 
 set(TEST_SOURCE_FILES
