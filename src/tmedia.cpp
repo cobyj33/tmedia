@@ -48,7 +48,8 @@ const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "- 'G' - Display Grayscale (on supported terminals)\n"
   "- 'B' - Display no Characters (on supported terminals) (must be in color or grayscale mode)\n"
   "- 'N' - Skip to Next Media File\n"
-  "- 'P' - Rewind to Previous Media File\n";
+  "- 'P' - Rewind to Previous Media File\n"
+  "- 'R' - Fully Refresh the Screen\n";
 
 void print_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode, const ScalingAlgo scaling_algorithm, const std::string& ascii_char_map);
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
@@ -138,7 +139,10 @@ int tmedia(TMediaProgramData tmpd) {
 
           if (input == KEY_RESIZE) {
             erase();
-            refresh();
+          }
+
+          if (input == 'r' || input == 'R') {
+            erase();
           }
 
           if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version

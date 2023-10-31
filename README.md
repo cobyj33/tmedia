@@ -51,10 +51,10 @@ C++ 17 Terminal Media Player
   - 'B' - Display no Characters (on supported terminals) (must be in color or grayscale mode)
   - 'N' - Skip to Next Media File
   - 'P' - Rewind to Previous Media File
+  - 'R' - Fully Refresh the Screen
 
 All of these controls can also be seen when calling tmedia with no args or
 with --help
-
 
 ## Installing
 
