@@ -174,7 +174,7 @@ void MediaFetcher::frame_image_fetching_func() {
 }
 
 void MediaFetcher::frame_audio_fetching_func() {
-  const std::size_t AUDIO_PEEK_SIZE = 44100 / 2;
+  static constexpr int AUDIO_MAX_PEEK_SIZE = 44100 / 2;
 
   while (!this->should_exit()) {
     {
@@ -200,11 +200,13 @@ void MediaFetcher::frame_audio_fetching_func() {
 
     {
       std::lock_guard<std::mutex> buffer_read_lock(this->audio_buffer_mutex);
-      std::size_t to_peek = std::min(this->audio_buffer->get_nb_can_read(), AUDIO_PEEK_SIZE);
-      if (to_peek == 0) {
+      const int peek_size = std::min(this->audio_buffer->get_nb_can_read(), AUDIO_MAX_PEEK_SIZE);
+      if (peek_size == 0) {
+        sleep_for_ms(10);
         continue;
       }
-      audio_buffer_view = this->audio_buffer->peek_into(to_peek);
+
+      audio_buffer_view = this->audio_buffer->peek_into(peek_size);
     }
 
     std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);

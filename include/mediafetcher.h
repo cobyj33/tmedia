@@ -4,7 +4,7 @@
 #include "mediaclock.h"
 #include "pixeldata.h"
 #include "mediadecoder.h"
-#include "audiobuffer.h"
+#include "audioringbuffer.h"
 #include "audioresampler.h"
 #include "scale.h"
 
@@ -41,18 +41,13 @@ class MediaFetcher {
     void frame_image_fetching_func();
     void frame_audio_fetching_func();
 
-
-    void audio_sync_thread_func();
     void audio_fetching_thread_func();
-    void buffer_size_management_thread_func();
 
     std::string file_path;
     MediaClock clock;
     std::atomic<bool> in_use;
     std::optional<std::string> error;
 
-
-    int load_next_audio(); // Not thread-safe, lock alter_mutex and audio_buffer_mutex first
   public:
 
     MediaType media_type;
@@ -97,7 +92,7 @@ class MediaFetcher {
     std::mutex resume_notify_mutex;
     std::condition_variable resume_cond;
     
-    std::unique_ptr<AudioBuffer> audio_buffer;
+    std::unique_ptr<AudioRingBuffer> audio_buffer;
 
     std::optional<VideoDimensions> requested_frame_dims;
 

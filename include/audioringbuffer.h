@@ -6,7 +6,7 @@
 #include <mutex>
 
 /**
- * Non-Self Overwriting Ring Buffer Implementation
+ * Constant size Non-Self Overwriting Ring Buffer Implementation
 */
 class AudioRingBuffer {
   private: 
@@ -20,7 +20,6 @@ class AudioRingBuffer {
 
     void advance(std::size_t nb_frames);
   public:
-    std::mutex read_write_mutex;
 
     AudioRingBuffer(int size, int nb_channels, int sample_rate);
 
@@ -29,7 +28,7 @@ class AudioRingBuffer {
 
     void clear();
 
-    // Every function under this line requires holding onto the read_write_mutex
+    // Every function under this line requires holding onto a read_write_mutex
     // to be thread-safe
 
     int get_nb_can_read();
