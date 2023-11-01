@@ -34,9 +34,8 @@ void MediaFetcher::audio_dispatch_thread_func() {
 }
 
 void MediaFetcher::audio_fetching_thread_func() {
-  const int AUDIO_THREAD_ITERATION_SLEEP_MS = 25;
-  const int AUDIO_THREAD_PAUSED_SLEEP_MS = 25;
-  const int AUDIO_THREAD_BUFFER_FULL_RETRY_MS = 10;
+  static constexpr int AUDIO_THREAD_PAUSED_SLEEP_MS = 25;
+  static constexpr int AUDIO_BUFFER_TRY_WRITE_WAIT_MS = 25;
 
   try { // super try block :)
     AudioResampler audio_resampler(
@@ -63,7 +62,7 @@ void MediaFetcher::audio_fetching_thread_func() {
         std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
         
         for (int i = 0; i < (int)audio_frames.size(); i++) {
-          while (!this->audio_buffer->try_write_into(audio_frames[i]->nb_samples, (float*)(audio_frames[i]->data[0]), 20)) {
+          while (!this->audio_buffer->try_write_into(audio_frames[i]->nb_samples, (float*)(audio_frames[i]->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
             if (this->should_exit()) break;
           }
         }

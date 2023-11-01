@@ -75,14 +75,13 @@ struct AudioCallbackData {
 
 void audio_queue_fill_thread_func(MediaFetcher* source_fetcher, moodycamel::BlockingReaderWriterCircularBuffer<float>* dest_queue) {
   static constexpr int SOURCE_READ_BUFFER_SIZE = 1024; // must be less than size of dest_queue
-  static constexpr int BUFFER_FULL_RETRY_WAIT_MS = 5;
-  static constexpr int FETCHER_PAUSED_WAIT_FOR_MS = 20;
+  static constexpr int AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS = 20;
   const int nb_channels = source_fetcher->audio_buffer->get_nb_channels();
   const int intermediary_frames_size = SOURCE_READ_BUFFER_SIZE / nb_channels;
   float intermediary[SOURCE_READ_BUFFER_SIZE];
 
   while (!source_fetcher->should_exit()) {
-    while (!source_fetcher->audio_buffer->try_read_into(intermediary_frames_size, intermediary, 20)) {
+    while (!source_fetcher->audio_buffer->try_read_into(intermediary_frames_size, intermediary, AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS)) {
       if (source_fetcher->should_exit()) break;
     }
 

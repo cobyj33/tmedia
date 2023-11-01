@@ -174,7 +174,8 @@ void MediaFetcher::frame_image_fetching_func() {
 }
 
 void MediaFetcher::frame_audio_fetching_func() {
-  static constexpr int AUDIO_MAX_PEEK_SIZE = 44100 / 2;
+  static constexpr int AUDIO_PEEK_SIZE = 1024;
+  static constexpr int AUDIO_PEEK_TRY_WAIT_MS = 100;
 
   while (!this->should_exit()) {
     {
@@ -202,7 +203,7 @@ void MediaFetcher::frame_audio_fetching_func() {
 
     {
       std::lock_guard<std::mutex> buffer_read_lock(this->audio_buffer_mutex);
-      audio_buffer_view = this->audio_buffer->try_peek_into(1024, 100);
+      audio_buffer_view = this->audio_buffer->try_peek_into(AUDIO_PEEK_SIZE, AUDIO_PEEK_TRY_WAIT_MS);
     }
 
     if (audio_buffer_view.size() > 0) {
