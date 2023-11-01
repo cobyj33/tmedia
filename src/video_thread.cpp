@@ -202,10 +202,7 @@ void MediaFetcher::frame_audio_fetching_func() {
 
     {
       std::lock_guard<std::mutex> buffer_read_lock(this->audio_buffer_mutex);
-      const int peek_size = std::min(this->audio_buffer->get_nb_can_read(), AUDIO_MAX_PEEK_SIZE);
-      if (peek_size > 0) {
-        audio_buffer_view = this->audio_buffer->peek_into(peek_size);
-      }
+      audio_buffer_view = this->audio_buffer->try_peek_into(1024, 100);
     }
 
     if (audio_buffer_view.size() > 0) {

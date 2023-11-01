@@ -39,7 +39,7 @@ static constexpr int KEY_ESCAPE = 27;
 static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
 static constexpr int MIN_RENDER_COLS = 2;
 static constexpr int MIN_RENDER_LINES = 2; 
-static constexpr int AUDIO_QUEUE_SIZE = 4096;
+static constexpr int AUDIO_QUEUE_SIZE = 8192;
 
 void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next);
 void init_global_video_output_mode(VideoOutputMode mode);
@@ -75,10 +75,9 @@ struct AudioCallbackData {
 void audio_queue_fill_thread_func(MediaFetcher* source_fetcher, rigtorp::SPSCQueue<float>* dest_queue) {
   static constexpr int SOURCE_READ_BUFFER_SIZE = 512; // must be less than size of dest_queue
   static constexpr int BUFFER_FULL_RETRY_WAIT_MS = 5;
-  static constexpr int FETCHER_PAUSED_WAIT_FOR_MS = 500;
+  static constexpr int FETCHER_PAUSED_WAIT_FOR_MS = 20;
   const int nb_channels = source_fetcher->audio_buffer->get_nb_channels();
   const int intermediary_frames_size = SOURCE_READ_BUFFER_SIZE / nb_channels;
-  const int dest_queue_frames_size = dest_queue->capacity() / nb_channels;
   float intermediary[SOURCE_READ_BUFFER_SIZE];
 
   while (!source_fetcher->should_exit()) {
@@ -89,15 +88,8 @@ void audio_queue_fill_thread_func(MediaFetcher* source_fetcher, rigtorp::SPSCQue
       }
     }
 
-    {
-      std::lock_guard<std::mutex> buffer_reading_lock(source_fetcher->audio_buffer_mutex);
-      if (source_fetcher->audio_buffer->get_nb_can_read() < dest_queue_frames_size * 2) {
-        std::lock_guard<std::mutex> audio_buffer_request_lock(source_fetcher->audio_buffer_request_mutex);
-        source_fetcher->audio_buffer_cond.notify_one();
-      }
-
-      if (source_fetcher->audio_buffer->get_nb_can_read() < intermediary_frames_size) continue;
-      source_fetcher->audio_buffer->read_into(intermediary_frames_size, intermediary);
+    while (!source_fetcher->audio_buffer->try_read_into(intermediary_frames_size, intermediary, 20)) {
+      if (source_fetcher->should_exit()) break;
     }
 
     for (int i = 0; i < SOURCE_READ_BUFFER_SIZE; i++) {

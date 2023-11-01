@@ -4,8 +4,7 @@
 #include <stdexcept>
 #include <system_error>
 
-AudioRingBuffer::AudioRingBuffer(int size, int nb_channels, int sample_rate) {
-  this->m_sample_rate = sample_rate;
+AudioRingBuffer::AudioRingBuffer(int size, int nb_channels) {
   this->m_nb_channels = nb_channels;
   this->m_ring_buffer.reserve(size);
   this->m_head = 0;
@@ -15,10 +14,6 @@ AudioRingBuffer::AudioRingBuffer(int size, int nb_channels, int sample_rate) {
 
 int AudioRingBuffer::get_nb_channels() {
   return this->m_nb_channels;
-}
-
-int AudioRingBuffer::get_sample_rate() {
-  return this->m_sample_rate;
 }
 
 void AudioRingBuffer::clear() {
