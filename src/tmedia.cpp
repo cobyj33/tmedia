@@ -16,6 +16,7 @@
 #include "tmedia_render.h"
 
 #include <rigtorp/SPSCQueue.h>
+#include "readerwritercircularbuffer.h"
 
 #include <memory>
 #include <vector>
@@ -67,13 +68,13 @@ const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 
 struct AudioCallbackData {
-  rigtorp::SPSCQueue<float>* audio_queue;
+  moodycamel::BlockingReaderWriterCircularBuffer<float>* audio_queue;
   std::atomic<bool> muted;
-  AudioCallbackData(rigtorp::SPSCQueue<float>* audio_queue, bool muted) : audio_queue(audio_queue), muted(muted) {}
+  AudioCallbackData(moodycamel::BlockingReaderWriterCircularBuffer<float>* audio_queue, bool muted) : audio_queue(audio_queue), muted(muted) {}
 };
 
-void audio_queue_fill_thread_func(MediaFetcher* source_fetcher, rigtorp::SPSCQueue<float>* dest_queue) {
-  static constexpr int SOURCE_READ_BUFFER_SIZE = 512; // must be less than size of dest_queue
+void audio_queue_fill_thread_func(MediaFetcher* source_fetcher, moodycamel::BlockingReaderWriterCircularBuffer<float>* dest_queue) {
+  static constexpr int SOURCE_READ_BUFFER_SIZE = 1024; // must be less than size of dest_queue
   static constexpr int BUFFER_FULL_RETRY_WAIT_MS = 5;
   static constexpr int FETCHER_PAUSED_WAIT_FOR_MS = 20;
   const int nb_channels = source_fetcher->audio_buffer->get_nb_channels();
@@ -81,21 +82,12 @@ void audio_queue_fill_thread_func(MediaFetcher* source_fetcher, rigtorp::SPSCQue
   float intermediary[SOURCE_READ_BUFFER_SIZE];
 
   while (!source_fetcher->should_exit()) {
-    {
-      std::unique_lock<std::mutex> resume_notify_lock(source_fetcher->resume_notify_mutex);
-      while (!source_fetcher->is_playing() && !source_fetcher->should_exit()) {
-        source_fetcher->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(FETCHER_PAUSED_WAIT_FOR_MS));
-      }
-    }
-
     while (!source_fetcher->audio_buffer->try_read_into(intermediary_frames_size, intermediary, 20)) {
       if (source_fetcher->should_exit()) break;
     }
 
     for (int i = 0; i < SOURCE_READ_BUFFER_SIZE; i++) {
-      while (!dest_queue->try_push(intermediary[i])) {
-        sleep_for_ms(BUFFER_FULL_RETRY_WAIT_MS);
-      };
+      dest_queue->wait_enqueue(intermediary[i]);
     }
   }
 }
@@ -103,10 +95,10 @@ void audio_queue_fill_thread_func(MediaFetcher* source_fetcher, rigtorp::SPSCQue
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
   const AudioCallbackData* data = (AudioCallbackData*)(pDevice->pUserData);
   for (ma_uint32 i = 0; i < frameCount * pDevice->playback.channels; i++) {
-    if (data->audio_queue->front() != nullptr) {
-      if (!data->muted) ((float*)pOutput)[i] = *data->audio_queue->front();
+    float sample;
+    if (data->audio_queue->try_dequeue(sample)) {
+      if (!data->muted) ((float*)pOutput)[i] = sample;
       else ((float*)pOutput)[i] = 0.0001 * sin(i * 0.01); // just garbage, but keeps audio device "active"
-      data->audio_queue->pop();
     } else {
       ((float*)pOutput)[i] = 0.0001 * sin(i * 0.01); // just garbage, but keeps audio device "active"
     }
@@ -129,7 +121,7 @@ int tmedia(TMediaProgramData tmpd) {
     fetcher.requested_frame_dims = VideoDimensions(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
 
     std::unique_ptr<ma_device_w> audio_device;
-    rigtorp::SPSCQueue<float> audio_queue(AUDIO_QUEUE_SIZE);
+    moodycamel::BlockingReaderWriterCircularBuffer<float> audio_queue(AUDIO_QUEUE_SIZE);
     AudioCallbackData audio_device_user_data(&audio_queue, tmpd.muted);
     std::thread audio_queue_fill_thread;
 
@@ -360,7 +352,8 @@ int tmedia(TMediaProgramData tmpd) {
     }
 
     if (audio_device) audio_device->stop();
-    while (audio_queue.front() != nullptr) audio_queue.pop(); //flush audio_queue (REALLY IMPORTANT!)
+    float audio_queue_popped_sample;
+    while (audio_queue.try_dequeue(audio_queue_popped_sample)) {} //flush audio_queue (REALLY IMPORTANT!)
     if (audio_queue_fill_thread.joinable()) audio_queue_fill_thread.join();
     fetcher.join();
 
