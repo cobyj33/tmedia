@@ -230,9 +230,6 @@ endif()
 add_library(miniaudio OBJECT ./lib/miniaudio/miniaudio.c)
 target_include_directories(miniaudio PRIVATE ./lib/miniaudio)
 
-set(ARGPARSE_BUILD_TESTS OFF CACHE INTERNAL "Turn off building argparse tests")
-set(ARGPARSE_BUILD_SAMPLES OFF CACHE INTERNAL "Turn off building argparse samples")
-set(ARGPARSE_INSTALL OFF CACHE INTERNAL "Turn off argparse install target")
 FetchContent_Declare(
     argparse
     GIT_REPOSITORY https://github.com/p-ranav/argparse.git
