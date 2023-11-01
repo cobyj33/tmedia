@@ -187,14 +187,16 @@ void MediaFetcher::frame_audio_fetching_func() {
     
     std::vector<float> audio_buffer_view;
     int nb_channels = this->audio_buffer->get_nb_channels();
-    int audio_frame_rows = MAX_FRAME_HEIGHT;
-    int audio_frame_cols = MAX_FRAME_WIDTH;
+    VideoDimensions audio_frame_dims(MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
 
     {
       std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
       if (this->requested_frame_dims) {
-        audio_frame_rows = std::min(MAX_FRAME_HEIGHT, this->requested_frame_dims->height);
-        audio_frame_cols = std::min(MAX_FRAME_WIDTH, this->requested_frame_dims->width);
+        audio_frame_dims = get_bounded_dimensions(
+        this->requested_frame_dims->width,
+        this->requested_frame_dims->height,
+        MAX_FRAME_WIDTH,
+        MAX_FRAME_HEIGHT);
       }
     }
 
@@ -209,7 +211,7 @@ void MediaFetcher::frame_audio_fetching_func() {
 
     std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
     audio_bound_volume(mono, 1, 1.0);
-    PixelData audio_visualization = generate_audio_view_amplitude_averaged(mono, audio_frame_rows, audio_frame_cols);
+    PixelData audio_visualization = generate_audio_view_amplitude_averaged(mono, audio_frame_dims.height, audio_frame_dims.width);
 
     {
       std::lock_guard<std::mutex> player_lock(this->alter_mutex);
