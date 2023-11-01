@@ -84,6 +84,7 @@ set(COMMON_SOURCE_FILES
 ./src/streamdecoder.cpp
 ./src/tmcurses_print.cpp
 ./src/tmcurses.cpp
+./src/tmedia_render.cpp
 ./src/tmedia_string.cpp
 ./src/video_thread.cpp
 ./src/videoconverter.cpp

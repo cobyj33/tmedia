@@ -16,6 +16,7 @@
 #include "tmedia_string.h"
 #include "miscutil.h"
 #include "tmedia.h"
+#include "tmedia_vom.h"
 
 #include <cstdlib>
 #include <cctype>

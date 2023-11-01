@@ -51,8 +51,6 @@ class MediaFetcher {
     std::atomic<bool> in_use;
     std::optional<std::string> error;
 
-    std::mutex resume_notify_mutex;
-    std::condition_variable resume_cond;
 
     int load_next_audio(); // Not thread-safe, lock alter_mutex and audio_buffer_mutex first
   public:
@@ -96,6 +94,9 @@ class MediaFetcher {
     std::mutex exit_notify_mutex;
     std::condition_variable exit_cond;
 
+    std::mutex resume_notify_mutex;
+    std::condition_variable resume_cond;
+    
     std::unique_ptr<AudioBuffer> audio_buffer;
 
     std::optional<VideoDimensions> requested_frame_dims;

@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <iomanip> // std::setprecision
 #include <sstream>
+#include <filesystem>
 
 
 std::string double_to_fixed_string(double num, int decimal_places) {
@@ -232,4 +233,8 @@ std::string format_list(std::vector<std::string> items, std::string conjunction)
   }
   sstream << conjunction << " " << items[items.size() - 1];
   return sstream.str();
+}
+
+std::string to_filename(const std::string& path_str) {
+  return std::filesystem::path(path_str).filename().string();
 }

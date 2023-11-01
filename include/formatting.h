@@ -34,7 +34,7 @@ std::string double_to_fixed_string(double num, int decimal_places);
 
 bool is_int_str(std::string str);
 
-
+std::string to_filename(const std::string& path);
 
 std::string format_list(std::vector<std::string> items, std::string conjunction);
 

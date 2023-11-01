@@ -3,20 +3,13 @@
 
 #include "playlist.h"
 #include "pixeldata.h"
+#include "tmedia_vom.h"
 
 #include <optional>
 #include <vector>
 #include <string>
 
 extern const std::string TMEDIA_CONTROLS_USAGE;
-
-enum class VideoOutputMode {
-  COLORED,
-  GRAYSCALE,
-  COLORED_BACKGROUND_ONLY,
-  GRAYSCALE_BACKGROUND_ONLY,
-  TEXT_ONLY,
-};
 
 struct TMediaProgramData {
   Playlist playlist;
