@@ -133,6 +133,7 @@ int tmedia(TMediaProgramData tmpd) {
     erase();
     PlaylistMoveCommand current_move_cmd = PlaylistMoveCommand::NEXT;
     MediaFetcher fetcher(tmpd.playlist.current());
+    fetcher.requested_frame_dims = VideoDimensions(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
 
     std::unique_ptr<ma_device_w> audio_device;
     rigtorp::SPSCQueue<float> audio_queue(AUDIO_QUEUE_SIZE);
@@ -161,25 +162,12 @@ int tmedia(TMediaProgramData tmpd) {
       audio_device->set_volume(tmpd.volume);
     }
 
-    std::optional<int> LAST_COLS;
-    std::optional<int> LAST_LINES;
-
     try {
       while (!fetcher.should_exit()) { // never break without setting in_use to false
         PixelData frame;
         if (INTERRUPT_RECEIVED) {
           fetcher.dispatch_exit();
           break;
-        }
-
-        if (COLS >= MIN_RENDER_COLS && LINES >= MIN_RENDER_LINES) {
-          if (LAST_COLS && LAST_LINES && (*LAST_COLS != COLS || *LAST_LINES != LINES)) {
-            std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex);
-            fetcher.requested_frame_dims = VideoDimensions(COLS, LINES);
-            erase();
-          }
-          LAST_COLS = COLS;
-          LAST_LINES = LINES;
         }
 
         double current_system_time = 0.0; // filler data to be filled in critical section
@@ -204,6 +192,10 @@ int tmedia(TMediaProgramData tmpd) {
           }
 
           if (input == KEY_RESIZE) {
+            if (COLS >= MIN_RENDER_COLS && LINES >= MIN_RENDER_LINES) {
+              std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex);
+              fetcher.requested_frame_dims = VideoDimensions(COLS, LINES);
+            }
             erase();
           }
 
