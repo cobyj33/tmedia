@@ -28,7 +28,7 @@ MediaFetcher::MediaFetcher(const std::string& file_path) {
 
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    this->audio_buffer = std::move(std::make_unique<AudioBuffer>(this->media_decoder->get_nb_channels(), this->media_decoder->get_sample_rate()));
+    this->audio_buffer = std::move(std::make_unique<AudioRingBuffer>(44100 / 2, this->media_decoder->get_nb_channels(), this->media_decoder->get_sample_rate()));
   }
 }
 
@@ -106,41 +106,7 @@ double MediaFetcher::get_time(double current_system_time) const {
  * For threadsafety, both alter_mutex and buffer_read_mutex must be locked
 */
 double MediaFetcher::get_desync_time(double current_system_time) const {
-  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO) && this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
-    double current_playback_time = this->get_time(current_system_time);
-    double desync = std::abs(this->audio_buffer->get_time() - current_playback_time); // in our implementation, only the audio buffer can really get desynced from our MediaClock
-    return desync;
-  }
   return 0.0; // if there is only one stream, there cannot be desync 
-}
-
-/**
- * Convencience method for loading audio.
- * 
- * Requires both the alter_mutex and the audio_buffer_mutex to be locked
-*/
-int MediaFetcher::load_next_audio() {
-  if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error("[MediaFetcher::load_next_audio_frames] Cannot load "
-    "next audio frames, Media Fetcher does not have any audio stream to load data from");
-  }
-
-  AudioResampler audio_resampler(
-  this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
-  this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate());
-
-  int written_samples = 0;
-  std::vector<AVFrame*> next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);
-  std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
-  for (int i = 0; i < (int)audio_frames.size(); i++) {
-    this->audio_buffer->write((float*)(audio_frames[i]->data[0]), audio_frames[i]->nb_samples);
-    written_samples += audio_frames[i]->nb_samples;
-  }
-
-  clear_av_frame_list(next_raw_audio_frames);
-  clear_av_frame_list(audio_frames);
-
-  return written_samples;
 }
 
 /**
@@ -159,17 +125,8 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   if (ret < 0)
     return ret;
   
-  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) { // refilling on time jumps helps prevent playback crackling when the audio buffer gets cleared
-    const int AUDIO_BUFFER_MAXIMUM_REFILL_FRAME_SIZE = 16384;
-    const int MAX_LOAD_ITERATIONS = 5; 
-    this->audio_buffer->clear_and_restart_at(target_time);
-
-    int total_written = 0;
-    for (int i = 0; i < MAX_LOAD_ITERATIONS && total_written < AUDIO_BUFFER_MAXIMUM_REFILL_FRAME_SIZE; i++) {
-      int samples_written = this->load_next_audio();
-      if (samples_written == 0) break; // eof
-      total_written += samples_written;
-    }
+  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    this->audio_buffer->clear();
   }
   
   this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time
@@ -188,11 +145,6 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
 */
 void MediaFetcher::begin() {
   this->in_use = true;
-
-  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO))
-    for (int i = 0; i < 10; i++)
-      this->load_next_audio();
-
   this->clock.init(system_clock_sec());
 
   std::thread initialized_duration_checking_thread(&MediaFetcher::duration_checking_thread_func, this);

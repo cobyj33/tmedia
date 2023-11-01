@@ -35,6 +35,12 @@ extern "C" {
   #include <miniaudio.h>
 }
 
+static constexpr int KEY_ESCAPE = 27;
+static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
+static constexpr int MIN_RENDER_COLS = 2;
+static constexpr int MIN_RENDER_LINES = 2; 
+static constexpr int AUDIO_QUEUE_SIZE = 4096;
+
 void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next);
 void init_global_video_output_mode(VideoOutputMode mode);
 
@@ -85,12 +91,12 @@ void audio_queue_fill_thread_func(MediaFetcher* source_fetcher, rigtorp::SPSCQue
 
     {
       std::lock_guard<std::mutex> buffer_reading_lock(source_fetcher->audio_buffer_mutex);
-      if (!source_fetcher->audio_buffer->can_read(dest_queue_frames_size)) {
+      if (source_fetcher->audio_buffer->get_nb_can_read() < dest_queue_frames_size * 2) {
         std::lock_guard<std::mutex> audio_buffer_request_lock(source_fetcher->audio_buffer_request_mutex);
         source_fetcher->audio_buffer_cond.notify_one();
       }
 
-      if (!source_fetcher->audio_buffer->can_read(intermediary_frames_size)) continue;
+      if (source_fetcher->audio_buffer->get_nb_can_read() < intermediary_frames_size) continue;
       source_fetcher->audio_buffer->read_into(intermediary_frames_size, intermediary);
     }
 
@@ -119,11 +125,6 @@ void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma
 
 
 int tmedia(TMediaProgramData tmpd) {
-  static constexpr int KEY_ESCAPE = 27;
-  static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
-  static constexpr int MIN_RENDER_COLS = 2;
-  static constexpr int MIN_RENDER_LINES = 2; 
-  static constexpr int AUDIO_QUEUE_SIZE = 4096;
 
   ncurses_init();
   init_global_video_output_mode(tmpd.vom);
@@ -161,6 +162,7 @@ int tmedia(TMediaProgramData tmpd) {
       audio_device->start();
       audio_device->set_volume(tmpd.volume);
     }
+    
 
     try {
       while (!fetcher.should_exit()) { // never break without setting in_use to false
