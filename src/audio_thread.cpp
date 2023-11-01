@@ -76,7 +76,7 @@ void MediaFetcher::audio_fetching_thread_func() {
         }
 
         clear_av_frame_list(audio_frames);
-      } 
+      }
       clear_av_frame_list(next_raw_audio_frames);
 
       if (!this->should_exit()) {

@@ -201,22 +201,20 @@ void MediaFetcher::frame_audio_fetching_func() {
     {
       std::lock_guard<std::mutex> buffer_read_lock(this->audio_buffer_mutex);
       const int peek_size = std::min(this->audio_buffer->get_nb_can_read(), AUDIO_MAX_PEEK_SIZE);
-      if (peek_size == 0) {
-        sleep_for_ms(10);
-        continue;
+      if (peek_size > 0) {
+        audio_buffer_view = this->audio_buffer->peek_into(peek_size);
       }
-
-      audio_buffer_view = this->audio_buffer->peek_into(peek_size);
     }
 
-    std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
-    audio_bound_volume(mono, 1, 1.0);
-    PixelData audio_visualization = generate_audio_view_amplitude_averaged(mono, audio_frame_rows, audio_frame_cols);
+    if (audio_buffer_view.size() > 0) {
+      std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
+      audio_bound_volume(mono, 1, 1.0);
+      PixelData audio_visualization = generate_audio_view_amplitude_averaged(mono, audio_frame_rows, audio_frame_cols);
 
-    {
       std::lock_guard<std::mutex> player_lock(this->alter_mutex);
       this->frame = audio_visualization;
     }
+
 
     std::unique_lock<std::mutex> exit_lock(this->exit_notify_mutex);
     if (!this->should_exit()) {
