@@ -28,7 +28,7 @@ MediaFetcher::MediaFetcher(const std::string& file_path) {
 
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    this->audio_buffer = std::move(std::make_unique<AudioRingBuffer>(44100 / 2, this->media_decoder->get_nb_channels(), this->media_decoder->get_sample_rate()));
+    this->audio_buffer = std::move(std::make_unique<BlockingAudioRingBuffer>(44100 / 2, this->media_decoder->get_nb_channels()));
   }
 }
 

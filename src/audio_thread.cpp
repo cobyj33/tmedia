@@ -63,26 +63,14 @@ void MediaFetcher::audio_fetching_thread_func() {
         std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
         
         for (int i = 0; i < (int)audio_frames.size(); i++) {
-          std::unique_lock<std::mutex> audio_buffer_lock(this->audio_buffer_mutex);
-          while (this->audio_buffer->get_nb_can_write() < audio_frames[i]->nb_samples && !this->should_exit()) {
-            audio_buffer_lock.unlock();
-            sleep_for_ms(AUDIO_THREAD_BUFFER_FULL_RETRY_MS);
-            audio_buffer_lock.lock();
-          }
-
-          if (this->audio_buffer->get_nb_can_write() >= audio_frames[i]->nb_samples) {
-            this->audio_buffer->write_into(audio_frames[i]->nb_samples, (float*)(audio_frames[i]->data[0]));  
+          while (!this->audio_buffer->try_write_into(audio_frames[i]->nb_samples, (float*)(audio_frames[i]->data[0]), 20)) {
+            if (this->should_exit()) break;
           }
         }
 
         clear_av_frame_list(audio_frames);
       }
       clear_av_frame_list(next_raw_audio_frames);
-
-      if (!this->should_exit()) {
-        std::unique_lock<std::mutex> audio_buffer_fill_notify_lock(this->audio_buffer_request_mutex);
-        this->audio_buffer_cond.wait_for(audio_buffer_fill_notify_lock, std::chrono::milliseconds(AUDIO_THREAD_ITERATION_SLEEP_MS));
-      }
     }
   } catch (std::exception const& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);

@@ -4,7 +4,7 @@
 #include "mediaclock.h"
 #include "pixeldata.h"
 #include "mediadecoder.h"
-#include "audioringbuffer.h"
+#include "blocking_audioringbuffer.h"
 #include "audioresampler.h"
 #include "scale.h"
 
@@ -92,7 +92,7 @@ class MediaFetcher {
     std::mutex resume_notify_mutex;
     std::condition_variable resume_cond;
     
-    std::unique_ptr<AudioRingBuffer> audio_buffer;
+    std::unique_ptr<BlockingAudioRingBuffer> audio_buffer;
 
     std::optional<VideoDimensions> requested_frame_dims;
 

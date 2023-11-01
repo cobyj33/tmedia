@@ -66,6 +66,7 @@ set(COMMON_SOURCE_FILES
 ./src/audio.cpp
 ./src/audioresampler.cpp
 ./src/audioringbuffer.cpp
+./src/blocking_audioringbuffer.cpp
 ./src/boiler.cpp
 ./src/canvas.cpp
 ./src/color.cpp
