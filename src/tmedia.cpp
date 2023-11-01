@@ -40,7 +40,14 @@ static constexpr int KEY_ESCAPE = 27;
 static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
 static constexpr int MIN_RENDER_COLS = 2;
 static constexpr int MIN_RENDER_LINES = 2; 
-static constexpr int AUDIO_QUEUE_SIZE = 8192;
+
+// audio constants
+
+static constexpr int AUDIO_QUEUE_SIZE = 4096;
+static constexpr int FETCHER_AUDIO_READING_BLOCK_SIZE = 256;
+static constexpr int MINIAUDIO_PERIOD_SIZE_FRAMES = 0;
+static constexpr int MINIAUDIO_PERIOD_SIZE_MS = 10;
+static constexpr int MINIAUDIO_PERIODS = 3;
 
 void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next);
 void init_global_video_output_mode(VideoOutputMode mode);
@@ -74,18 +81,17 @@ struct AudioCallbackData {
 };
 
 void audio_queue_fill_thread_func(MediaFetcher* source_fetcher, moodycamel::BlockingReaderWriterCircularBuffer<float>* dest_queue) {
-  static constexpr int SOURCE_READ_BUFFER_SIZE = 1024; // must be less than size of dest_queue
   static constexpr int AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS = 20;
   const int nb_channels = source_fetcher->audio_buffer->get_nb_channels();
-  const int intermediary_frames_size = SOURCE_READ_BUFFER_SIZE / nb_channels;
-  float intermediary[SOURCE_READ_BUFFER_SIZE];
+  const int intermediary_frames_size = FETCHER_AUDIO_READING_BLOCK_SIZE / nb_channels;
+  float intermediary[FETCHER_AUDIO_READING_BLOCK_SIZE];
 
   while (!source_fetcher->should_exit()) {
     while (!source_fetcher->audio_buffer->try_read_into(intermediary_frames_size, intermediary, AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS)) {
       if (source_fetcher->should_exit()) break;
     }
 
-    for (int i = 0; i < SOURCE_READ_BUFFER_SIZE; i++) {
+    for (int i = 0; i < FETCHER_AUDIO_READING_BLOCK_SIZE; i++) {
       dest_queue->wait_enqueue(intermediary[i]);
     }
   }
@@ -135,9 +141,9 @@ int tmedia(TMediaProgramData tmpd) {
       config.pUserData = (void*)(&audio_device_user_data);
       config.noPreSilencedOutputBuffer = MA_TRUE;
       config.noClip = MA_TRUE;
-      config.periodSizeInFrames = 0;
-      config.periodSizeInMilliseconds = 10;
-      config.periods = 3;
+      config.periodSizeInFrames = MINIAUDIO_PERIOD_SIZE_FRAMES;
+      config.periodSizeInMilliseconds = MINIAUDIO_PERIOD_SIZE_MS;
+      config.periods = MINIAUDIO_PERIODS;
 
       std::thread initialized_audio_queue_fill_thread(audio_queue_fill_thread_func, &fetcher, &audio_queue);
       audio_queue_fill_thread.swap(initialized_audio_queue_fill_thread);
