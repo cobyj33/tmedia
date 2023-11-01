@@ -10,7 +10,8 @@
 class AudioRingBuffer {
   private: 
     std::vector<float> m_ring_buffer;
-    int m_size;
+    int m_size_frames;
+    int m_size_samples;
     int m_nb_channels;
 
     int m_head;
@@ -18,7 +19,7 @@ class AudioRingBuffer {
   public:
 
 
-    AudioRingBuffer(int size, int nb_channels);
+    AudioRingBuffer(int frame_capacity, int nb_channels);
 
     int get_nb_channels();
 
@@ -27,8 +28,8 @@ class AudioRingBuffer {
     // Every function under this line requires holding onto a read_write_mutex
     // to be thread-safe
 
-    int get_nb_can_read();
-    int get_nb_can_write();
+    int get_frames_can_read();
+    int get_frames_can_write();
 
     void read_into(int nb_frames, float* out);
 

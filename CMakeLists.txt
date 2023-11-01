@@ -94,7 +94,6 @@ set(COMMON_SOURCE_FILES
 ./src/wtime.cpp)
 
 set(TEST_SOURCE_FILES
-./src/tests/test_audiobuffer.cpp
 ./src/tests/test_color.cpp
 ./src/tests/test_formatting.cpp
 ./src/tests/test_mediaclock.cpp

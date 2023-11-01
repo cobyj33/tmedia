@@ -15,7 +15,7 @@ class BlockingAudioRingBuffer {
     std::condition_variable cond;
 
   public:
-    BlockingAudioRingBuffer(int size, int nb_channels);
+    BlockingAudioRingBuffer(int frame_capcity, int nb_channels);
 
     int get_nb_channels();
 

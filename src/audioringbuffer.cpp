@@ -4,12 +4,19 @@
 #include <stdexcept>
 #include <system_error>
 
-AudioRingBuffer::AudioRingBuffer(int size, int nb_channels) {
+/**
+ * Implementation details:
+ * 
+ * m_head and m_tail are INDEXES into the internal AudioRingBuffer vector.
+*/
+
+AudioRingBuffer::AudioRingBuffer(int frame_capacity, int nb_channels) {
   this->m_nb_channels = nb_channels;
-  this->m_ring_buffer.reserve(size);
   this->m_head = 0;
   this->m_tail = 1;
-  this->m_size = size;
+  this->m_size_frames = frame_capacity;
+  this->m_size_samples = frame_capacity * nb_channels;
+  this->m_ring_buffer.reserve(this->m_size_samples);
 }
 
 int AudioRingBuffer::get_nb_channels() {
@@ -21,35 +28,35 @@ void AudioRingBuffer::clear() {
   this->m_tail = 1;
 }
 
-int AudioRingBuffer::get_nb_can_read() {
+int AudioRingBuffer::get_frames_can_read() {
   if (this->m_head < this->m_tail) return (this->m_tail - this->m_head) / this->m_nb_channels;
-  if (this->m_tail < this->m_head) return (this->m_size - this->m_head + this->m_tail) / this->m_nb_channels;
+  if (this->m_tail < this->m_head) return (this->m_size_samples - this->m_head + this->m_tail) / this->m_nb_channels;
   return 0;
 }
 
-int AudioRingBuffer::get_nb_can_write() {
-  if (this->m_head < this->m_tail) return (this->m_size - this->m_tail + this->m_head) / this->m_nb_channels;
+int AudioRingBuffer::get_frames_can_write() {
+  if (this->m_head < this->m_tail) return (this->m_size_samples - this->m_tail + this->m_head) / this->m_nb_channels;
   if (this->m_tail < this->m_head) return (this->m_head - this->m_tail) / this->m_nb_channels;
   return 0;
 }
 
 void AudioRingBuffer::read_into(int nb_frames, float* out) {
-  if (this->get_nb_can_read() < nb_frames) {
+  if (this->get_frames_can_read() < nb_frames) {
     throw std::runtime_error("[AudioRingBuffer::read_into] Cannot read " + 
-    std::to_string(nb_frames) + " frames ( size: " + std::to_string(this->m_size) + " can read: " + std::to_string(this->get_nb_can_read()) + ")"); 
+    std::to_string(nb_frames) + " frames ( size: " + std::to_string(this->m_size_frames) + " can read: " + std::to_string(this->get_frames_can_read()) + ")"); 
   }
 
   for (int i = 0; i < nb_frames * this->m_nb_channels; i++) {
     out[i] = this->m_ring_buffer[this->m_head];
     this->m_head++;
-    if (this->m_head >= this->m_size) this->m_head = 0;
+    if (this->m_head >= this->m_size_samples) this->m_head = 0;
   }
 }
 
 void AudioRingBuffer::peek_into(int nb_frames, float* out) {
-  if (this->get_nb_can_read() < nb_frames) {
+  if (this->get_frames_can_read() < nb_frames) {
     throw std::runtime_error("[AudioRingBuffer::peek_into] Cannot read " + 
-    std::to_string(nb_frames) + " frames ( size: " + std::to_string(this->m_size) + " can read: " + std::to_string(this->get_nb_can_read()) + ")"); 
+    std::to_string(nb_frames) + " frames ( size: " + std::to_string(this->m_size_frames) + " can read: " + std::to_string(this->get_frames_can_read()) + ")"); 
   }
 
   int original_head = this->m_head;
@@ -69,15 +76,15 @@ std::vector<float> AudioRingBuffer::peek_into(int nb_frames) {
 }
 
 void AudioRingBuffer::write_into(int nb_frames, float* in) {
-  if (this->get_nb_can_write() < nb_frames) {
+  if (this->get_frames_can_write() < nb_frames) {
     throw std::runtime_error("[AudioRingBuffer::write_into] Cannot write " + 
-    std::to_string(nb_frames) + " frames ( size: " + std::to_string(this->m_size) + " can write: " + std::to_string(this->get_nb_can_write()) + ")"); 
+    std::to_string(nb_frames) + " frames ( size: " + std::to_string(this->m_size_frames) + " can write: " + std::to_string(this->get_frames_can_write()) + ")"); 
   }
 
   for (int i = 0; i < nb_frames * this->m_nb_channels; i++) {
     this->m_ring_buffer[this->m_tail] = in[i];
     this->m_tail++;
-    if (this->m_tail >= this->m_size) this->m_tail = 0;
+    if (this->m_tail >= this->m_size_samples) this->m_tail = 0;
   }
 }
 

@@ -8,8 +8,8 @@
 #include <utility>
 #include <chrono>
 
-BlockingAudioRingBuffer::BlockingAudioRingBuffer(int size, int nb_channels) {
-  this->m_ring_buffer = std::move(std::make_unique<AudioRingBuffer>(size, nb_channels));
+BlockingAudioRingBuffer::BlockingAudioRingBuffer(int frame_capacity, int nb_channels) {
+  this->m_ring_buffer = std::move(std::make_unique<AudioRingBuffer>(frame_capacity, nb_channels));
 }
 
 int BlockingAudioRingBuffer::get_nb_channels() {
@@ -24,7 +24,7 @@ void BlockingAudioRingBuffer::clear() {
 
 void BlockingAudioRingBuffer::read_into(int nb_frames, float* out) {
   std::unique_lock<std::mutex> lock(this->mutex);
-  while (this->m_ring_buffer->get_nb_can_read() < nb_frames) {
+  while (this->m_ring_buffer->get_frames_can_read() < nb_frames) {
     this->cond.wait(lock);
   }
 
@@ -34,11 +34,11 @@ void BlockingAudioRingBuffer::read_into(int nb_frames, float* out) {
 
 bool BlockingAudioRingBuffer::try_read_into(int nb_frames, float* out, int milliseconds) {
   std::unique_lock<std::mutex> lock(this->mutex);
-  if (this->m_ring_buffer->get_nb_can_read() < nb_frames) {
+  if (this->m_ring_buffer->get_frames_can_read() < nb_frames) {
     this->cond.wait_for(lock, std::chrono::milliseconds(milliseconds));
   }
 
-  if (this->m_ring_buffer->get_nb_can_read() >= nb_frames) {
+  if (this->m_ring_buffer->get_frames_can_read() >= nb_frames) {
     this->m_ring_buffer->read_into(nb_frames, out);
     this->cond.notify_one();
     return true;
@@ -51,7 +51,7 @@ bool BlockingAudioRingBuffer::try_read_into(int nb_frames, float* out, int milli
 
 void BlockingAudioRingBuffer::peek_into(int nb_frames, float* out) {
   std::unique_lock<std::mutex> lock(this->mutex);
-  while (this->m_ring_buffer->get_nb_can_read() < nb_frames) {
+  while (this->m_ring_buffer->get_frames_can_read() < nb_frames) {
     this->cond.wait(lock);
   }
 
@@ -61,7 +61,7 @@ void BlockingAudioRingBuffer::peek_into(int nb_frames, float* out) {
 
 std::vector<float> BlockingAudioRingBuffer::peek_into(int nb_frames) {
   std::unique_lock<std::mutex> lock(this->mutex);
-  while (this->m_ring_buffer->get_nb_can_read() < nb_frames) {
+  while (this->m_ring_buffer->get_frames_can_read() < nb_frames) {
     this->cond.wait(lock);
   }
 
@@ -72,11 +72,11 @@ std::vector<float> BlockingAudioRingBuffer::peek_into(int nb_frames) {
 
 std::vector<float> BlockingAudioRingBuffer::try_peek_into(int nb_frames, int milliseconds) {
   std::unique_lock<std::mutex> lock(this->mutex);
-  if (this->m_ring_buffer->get_nb_can_read() < nb_frames) {
+  if (this->m_ring_buffer->get_frames_can_read() < nb_frames) {
     this->cond.wait_for(lock, std::chrono::milliseconds(milliseconds));
   }
 
-  if (this->m_ring_buffer->get_nb_can_read() >= nb_frames) {
+  if (this->m_ring_buffer->get_frames_can_read() >= nb_frames) {
     std::vector<float> peek = this->m_ring_buffer->peek_into(nb_frames);
     this->cond.notify_one();
     return peek;
@@ -88,7 +88,7 @@ std::vector<float> BlockingAudioRingBuffer::try_peek_into(int nb_frames, int mil
 
 void BlockingAudioRingBuffer::write_into(int nb_frames, float* in) {
   std::unique_lock<std::mutex> lock(this->mutex);
-  while (this->m_ring_buffer->get_nb_can_write() < nb_frames) {
+  while (this->m_ring_buffer->get_frames_can_write() < nb_frames) {
     this->cond.wait(lock);
   }
 
@@ -98,11 +98,11 @@ void BlockingAudioRingBuffer::write_into(int nb_frames, float* in) {
 
 bool BlockingAudioRingBuffer::try_write_into(int nb_frames, float* in, int milliseconds) {
   std::unique_lock<std::mutex> lock(this->mutex);
-  if (this->m_ring_buffer->get_nb_can_write() < nb_frames) {
+  if (this->m_ring_buffer->get_frames_can_write() < nb_frames) {
     this->cond.wait_for(lock, std::chrono::milliseconds(milliseconds));
   }
 
-  if (this->m_ring_buffer->get_nb_can_write() >= nb_frames) {
+  if (this->m_ring_buffer->get_frames_can_write() >= nb_frames) {
     this->m_ring_buffer->write_into(nb_frames, in);
     this->cond.notify_one();
     return true;
