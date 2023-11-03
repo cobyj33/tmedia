@@ -192,6 +192,10 @@ int tmedia(TMediaProgramData tmpd) {
 
           if (input == 'r' || input == 'R') {
             erase();
+            if (audio_device && fetcher.is_playing()) {
+              audio_device->stop();
+              audio_device->start();
+            }
           }
 
           if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version
