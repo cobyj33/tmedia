@@ -3,7 +3,6 @@
 
 #include <cstddef>
 
-#include <optional>
 #include <vector>
 #include <string>
 
@@ -36,14 +35,22 @@ std::string loop_type_str(LoopType loop_type);
 */
 class Playlist {
   private:
-    LoopType m_loop_type;
     std::vector<std::string> m_files;
 
-    int m_current_index;
+    std::vector<int> m_queue_indexes;
+    int m_queue_index;
+
+    LoopType m_loop_type;
+    bool m_shuffled;
   public:
 
     Playlist();
     Playlist(std::vector<std::string> media_files, LoopType loop_type);
+
+    bool shuffled();
+    void shuffle();
+    void unshuffle();
+    void toggle_shuffle();
 
     std::size_t size() const noexcept;
     void set_loop_type(LoopType loop_type) noexcept;

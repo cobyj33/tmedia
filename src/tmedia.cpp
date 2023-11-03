@@ -266,6 +266,10 @@ int tmedia(TMediaProgramData tmpd) {
             }
           }
 
+          if ((input == 's' || input == 'S') && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
+            tmpd.playlist.toggle_shuffle();
+          }
+
           if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
             std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex); 
             switch (fetcher.is_playing()) {
@@ -314,9 +318,11 @@ int tmedia(TMediaProgramData tmpd) {
 
           if (tmpd.playlist.size() == 1) {
             wfill_box(stdscr, 1, 0, COLS, 1, '~');
+            werasebox(stdscr, 0, 0, COLS, 1);
             mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ") " + to_filename(tmpd.playlist.current()));
           } else if (tmpd.playlist.size() > 1) {
             wfill_box(stdscr, 2, 0, COLS, 1, '~');
+            werasebox(stdscr, 0, 0, COLS, 2);
             mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ") " + to_filename(tmpd.playlist.current()));
 
             if (tmpd.playlist.can_move(PlaylistMoveCommand::REWIND)) {
@@ -338,8 +344,10 @@ int tmedia(TMediaProgramData tmpd) {
             const std::string playing_str = fetcher.is_playing() ? "PLAYING" : "PAUSED";
             const std::string loop_str = str_capslock(loop_type_str(tmpd.playlist.loop_type())); 
             const std::string volume_str = "VOLUME: " + (tmpd.muted ? "MUTED" : (std::to_string((int)(tmpd.volume * 100)) + "%"));
+            const std::string shuffled_str = tmpd.playlist.shuffled() ? "SHUFFLED" : "NOT SHUFFLED";
 
             bottom_labels.push_back(playing_str);
+            if (tmpd.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
             bottom_labels.push_back(loop_str);
             if (audio_device) bottom_labels.push_back(volume_str);
             werasebox(stdscr, LINES - 1, 0, COLS, 1);
