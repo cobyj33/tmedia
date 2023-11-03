@@ -174,8 +174,12 @@ void MediaFetcher::frame_image_fetching_func() {
 }
 
 void MediaFetcher::frame_audio_fetching_func() {
-  static constexpr int AUDIO_PEEK_SIZE = 1024;
   static constexpr int AUDIO_PEEK_TRY_WAIT_MS = 100;
+  static constexpr int AUDIO_PEEK_SAMPLE_SIZE = 2048;
+
+  const int nb_channels = this->audio_buffer->get_nb_channels();
+  float audio_peek_buffer[AUDIO_PEEK_SAMPLE_SIZE];
+  const int audio_peek_buffer_size_frames = AUDIO_PEEK_SAMPLE_SIZE / nb_channels;
 
   while (!this->should_exit()) {
     {
@@ -185,7 +189,6 @@ void MediaFetcher::frame_audio_fetching_func() {
       }
     }
 
-    
     VideoDimensions audio_frame_dims(MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
 
     {
@@ -199,15 +202,13 @@ void MediaFetcher::frame_audio_fetching_func() {
       }
     }
 
-    std::vector<float> audio_buffer_view = this->audio_buffer->try_peek_into(AUDIO_PEEK_SIZE, AUDIO_PEEK_TRY_WAIT_MS);
-
-    if (audio_buffer_view.size() > 0) {
-      int nb_channels = this->audio_buffer->get_nb_channels();
+    if (this->audio_buffer->try_peek_into(audio_peek_buffer_size_frames, audio_peek_buffer, AUDIO_PEEK_TRY_WAIT_MS)) {
+      std::vector<float> audio_buffer_view(audio_peek_buffer, audio_peek_buffer + AUDIO_PEEK_SAMPLE_SIZE);
       std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
       audio_bound_volume(mono, 1, 1.0);
       PixelData audio_visualization = generate_audio_view_amplitude_averaged(mono, audio_frame_dims.height, audio_frame_dims.width);
 
-      std::lock_guard<std::mutex> player_lock(this->alter_mutex);
+      std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
       this->frame = audio_visualization;
     }
 

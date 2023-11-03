@@ -25,6 +25,8 @@ class BlockingAudioRingBuffer {
     bool try_read_into(int nb_frames, float* out, int milliseconds);
 
     void peek_into(int nb_frames, float* out);
+    bool try_peek_into(int nb_frames, float* out, int milliseconds);
+    
     std::vector<float> peek_into(int nb_frames);
     std::vector<float> try_peek_into(int nb_frames, int milliseconds);
 

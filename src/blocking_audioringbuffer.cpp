@@ -59,6 +59,22 @@ void BlockingAudioRingBuffer::peek_into(int nb_frames, float* out) {
   this->cond.notify_one();
 }
 
+bool BlockingAudioRingBuffer::try_peek_into(int nb_frames, float* out, int milliseconds) {
+  std::unique_lock<std::mutex> lock(this->mutex);
+  if (this->m_ring_buffer->get_frames_can_read() < nb_frames) {
+    this->cond.wait_for(lock, std::chrono::milliseconds(milliseconds));
+  }
+
+  if (this->m_ring_buffer->get_frames_can_read() >= nb_frames) {
+    this->m_ring_buffer->peek_into(nb_frames, out);
+    this->cond.notify_one();
+    return true;
+  }
+  this->cond.notify_one();
+  return false;
+}
+
+
 std::vector<float> BlockingAudioRingBuffer::peek_into(int nb_frames) {
   std::unique_lock<std::mutex> lock(this->mutex);
   while (this->m_ring_buffer->get_frames_can_read() < nb_frames) {
