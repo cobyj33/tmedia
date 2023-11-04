@@ -99,13 +99,13 @@ void audio_queue_fill_thread_func(MediaFetcher* source_fetcher, moodycamel::Bloc
 
 void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
   const AudioCallbackData* data = (AudioCallbackData*)(pDevice->pUserData);
+  float sample;
   for (ma_uint32 i = 0; i < frameCount * pDevice->playback.channels; i++) {
-    float sample;
     if (data->audio_queue->try_dequeue(sample)) {
       if (!data->muted) ((float*)pOutput)[i] = sample;
-      else ((float*)pOutput)[i] = 0.0001 * sin(i * 0.01); // just garbage, but keeps audio device "active"
+      else ((float*)pOutput)[i] = 0.0f;
     } else {
-      ((float*)pOutput)[i] = 0.0001 * sin(i * 0.01); // just garbage, but keeps audio device "active"
+      ((float*)pOutput)[i] = 0.0f;
     }
   }
 
