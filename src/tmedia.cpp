@@ -126,7 +126,8 @@ int tmedia(TMediaProgramData tmpd) {
     fetcher.requested_frame_dims = VideoDimensions(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
 
     std::unique_ptr<ma_device_w> audio_device;
-    moodycamel::BlockingReaderWriterCircularBuffer<float> audio_queue(AUDIO_QUEUE_SIZE_FRAMES * fetcher.media_decoder->get_nb_channels());
+    const int audio_queue_init_size = AUDIO_QUEUE_SIZE_FRAMES * (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO) ? fetcher.media_decoder->get_nb_channels() : 1);
+    moodycamel::BlockingReaderWriterCircularBuffer<float> audio_queue(audio_queue_init_size);
     AudioCallbackData audio_device_user_data(&audio_queue, tmpd.muted);
     std::thread audio_queue_fill_thread;
 
