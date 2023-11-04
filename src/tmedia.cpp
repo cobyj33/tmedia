@@ -303,6 +303,8 @@ int tmedia(TMediaProgramData tmpd) {
         if (requested_jump) {
           if (audio_device && fetcher.is_playing()) audio_device->stop();
           {
+            float dump;
+            while (audio_queue.try_dequeue(dump)) {} // safe, since the audio_device is not consuming anymore
             std::scoped_lock<std::mutex, std::mutex> total_lock{fetcher.alter_mutex, fetcher.audio_buffer_mutex};
             fetcher.jump_to_time(clamp(requested_jump_time, 0.0, fetcher.get_duration()), system_clock_sec());
           }
