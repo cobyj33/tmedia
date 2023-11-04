@@ -87,8 +87,8 @@ void MediaFetcher::frame_video_fetching_func() {
         VideoDimensions bounded_requested_dims = get_bounded_dimensions(
         this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT,
         this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH,
-        this->requested_frame_dims->width * PIXEL_ASPECT_RATIO_HEIGHT,
-        this->requested_frame_dims->height * PIXEL_ASPECT_RATIO_WIDTH);
+        this->requested_frame_dims->width,
+        this->requested_frame_dims->height);
 
         VideoDimensions output_frame_dim = get_bounded_dimensions(
         bounded_requested_dims.width,
