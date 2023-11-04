@@ -43,10 +43,10 @@ static constexpr int MIN_RENDER_LINES = 2;
 
 // audio constants
 
-static constexpr int AUDIO_QUEUE_SIZE = 4096;
-static constexpr int FETCHER_AUDIO_READING_BLOCK_SIZE = 256;
+static constexpr int AUDIO_QUEUE_SIZE_FRAMES = 4096;
+static constexpr int FETCHER_AUDIO_READING_BLOCK_SIZE = 1024;
 static constexpr int MINIAUDIO_PERIOD_SIZE_FRAMES = 0;
-static constexpr int MINIAUDIO_PERIOD_SIZE_MS = 10;
+static constexpr int MINIAUDIO_PERIOD_SIZE_MS = 75;
 static constexpr int MINIAUDIO_PERIODS = 3;
 
 void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next);
@@ -126,7 +126,7 @@ int tmedia(TMediaProgramData tmpd) {
     fetcher.requested_frame_dims = VideoDimensions(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
 
     std::unique_ptr<ma_device_w> audio_device;
-    moodycamel::BlockingReaderWriterCircularBuffer<float> audio_queue(AUDIO_QUEUE_SIZE);
+    moodycamel::BlockingReaderWriterCircularBuffer<float> audio_queue(AUDIO_QUEUE_SIZE_FRAMES * fetcher.media_decoder->get_nb_channels());
     AudioCallbackData audio_device_user_data(&audio_queue, tmpd.muted);
     std::thread audio_queue_fill_thread;
 
