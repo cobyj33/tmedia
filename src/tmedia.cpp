@@ -124,6 +124,7 @@ int tmedia(TMediaProgramData tmpd) {
     PlaylistMoveCommand current_move_cmd = PlaylistMoveCommand::NEXT;
     MediaFetcher fetcher(tmpd.playlist.current());
     fetcher.requested_frame_dims = VideoDimensions(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
+    VideoDimensions last_frame_dims;
 
     std::unique_ptr<ma_device_w> audio_device;
     const int audio_queue_init_size = AUDIO_QUEUE_SIZE_FRAMES * (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO) ? fetcher.media_decoder->get_nb_channels() : 1);
@@ -312,6 +313,10 @@ int tmedia(TMediaProgramData tmpd) {
           if (audio_device && fetcher.is_playing()) audio_device->start();
         }
 
+        if (frame.get_width() != last_frame_dims.width || frame.get_height() != last_frame_dims.height) {
+          erase();
+        }
+
         if (COLS < MIN_RENDER_COLS || LINES < MIN_RENDER_LINES) {
           erase();
         } else if (COLS <= 20 || LINES < 10 || tmpd.fullscreen) {
@@ -359,6 +364,7 @@ int tmedia(TMediaProgramData tmpd) {
         }
 
         refresh();
+        last_frame_dims = VideoDimensions(frame.get_width(), frame.get_height());
         if (tmpd.render_loop_max_fps) {
           std::unique_lock<std::mutex> exit_notify_lock(fetcher.exit_notify_mutex);
           if (!fetcher.should_exit()) {
