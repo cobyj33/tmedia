@@ -150,8 +150,8 @@ int tmedia(TMediaProgramData tmpd) {
       std::thread initialized_audio_queue_fill_thread(audio_queue_fill_thread_func, &fetcher, &audio_queue);
       audio_queue_fill_thread.swap(initialized_audio_queue_fill_thread);
       audio_device = std::make_unique<ma_device_w>(&config);
-      audio_device->start();
       audio_device->set_volume(tmpd.volume);
+      audio_device->start();
     }
     
 
