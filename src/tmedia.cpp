@@ -143,6 +143,7 @@ int tmedia(TMediaProgramData tmpd) {
       config.pUserData = (void*)(&audio_device_user_data);
       config.noPreSilencedOutputBuffer = MA_TRUE;
       config.noClip = MA_TRUE;
+      config.noFixedSizedCallback = MA_TRUE;
       config.periodSizeInFrames = MINIAUDIO_PERIOD_SIZE_FRAMES;
       config.periodSizeInMilliseconds = MINIAUDIO_PERIOD_SIZE_MS;
       config.periods = MINIAUDIO_PERIODS;
