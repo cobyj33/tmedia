@@ -384,8 +384,8 @@ int tmedia(TMediaProgramData tmpd) {
     fetcher.join();
 
     if (fetcher.has_error()) {
-      std::cerr << "[tmedia]: Media Fetcher Error: " << fetcher.get_error() << std::endl;
       ncurses_uninit();
+      std::cerr << "[tmedia]: Media Fetcher Error: " << fetcher.get_error() << std::endl;
       return EXIT_FAILURE;
     }
 
