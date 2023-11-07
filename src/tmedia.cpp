@@ -164,17 +164,22 @@ int tmedia(TMediaProgramData tmpd) {
           break;
         }
 
-        double current_system_time = 0.0; // filler data to be filled in critical section
-        double requested_jump_time = 0.0; // filler data to be filled in critical section
-        double timestamp = 0.0; // filler data to be filled in critical section
+        double current_system_time = 0.0; // filler, data to be filled in critical section
+        double requested_jump_time = 0.0; // filler, data to be filled in critical section
+        double timestamp = 0.0; // filler, data to be filled in critical section
         bool requested_jump = false;
 
         {
+          static constexpr double MAX_AUDIO_DESYNC_AMOUNT_SECONDS = 0.6;  
           std::lock_guard<std::mutex> _alter_lock(fetcher.alter_mutex);
           current_system_time = system_clock_sec(); // set in here, since locking the mutex could take an undetermined amount of time
           timestamp = fetcher.get_time(current_system_time);
           requested_jump_time = timestamp;
           frame = fetcher.frame;
+
+          if (fetcher.get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_AMOUNT_SECONDS) {
+            requested_jump = true;
+          }
         }
 
         int input = ERR;

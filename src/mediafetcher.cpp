@@ -28,7 +28,11 @@ MediaFetcher::MediaFetcher(const std::string& file_path) {
 
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    this->audio_buffer = std::move(std::make_unique<BlockingAudioRingBuffer>(44100 * 5, this->media_decoder->get_nb_channels()));
+    static constexpr int INTERNAL_AUDIO_BUFFER_LENGTH_SECONDS = 5;
+    const int sample_rate = this->media_decoder->get_sample_rate();
+    const int nb_channels = this->media_decoder->get_nb_channels();
+    const int frame_capacity = sample_rate * INTERNAL_AUDIO_BUFFER_LENGTH_SECONDS;
+    this->audio_buffer = std::move(std::make_unique<BlockingAudioRingBuffer>(frame_capacity, nb_channels, sample_rate, 0.0));
   }
 }
 
@@ -103,10 +107,19 @@ double MediaFetcher::get_time(double current_system_time) const {
 }
 
 /**
- * For threadsafety, both alter_mutex and buffer_read_mutex must be locked
+ * For threadsafety, alter_mutex must be locked
 */
 double MediaFetcher::get_desync_time(double current_system_time) const {
-  return 0.0; // if there is only one stream, there cannot be desync 
+  if (this->media_type == MediaType::IMAGE) {
+    throw std::runtime_error("[MediaFetcher::get_desync_time] Cannot get desync time of image media");
+  }
+
+  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    double playback_time = this->get_time(current_system_time);
+    double audio_time = this->audio_buffer->get_buffer_current_time();
+    return std::abs(audio_time - playback_time);
+  }
+  return 0.0; // Video doesn't really get desynced since the video thread syncs itself to the MediaClock
 }
 
 /**
@@ -126,7 +139,7 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
     return ret;
   
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    this->audio_buffer->clear();
+    this->audio_buffer->clear(target_time);
   }
   
   this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time

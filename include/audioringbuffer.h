@@ -14,16 +14,27 @@ class AudioRingBuffer {
     int m_size_samples;
     int m_nb_channels;
 
+    int m_sample_rate;
+    double m_start_time;
+    std::size_t m_frames_read;
+
     int m_head;
     int m_tail;
+
   public:
 
 
-    AudioRingBuffer(int frame_capacity, int nb_channels);
+    AudioRingBuffer(int frame_capacity, int nb_channels, int sample_rate, double playback_start_time);
 
     int get_nb_channels();
+    int get_sample_rate();
 
-    void clear();
+    void clear(double new_start_time);
+
+    double get_buffer_current_time();
+    double get_buffer_end_time();
+    bool is_time_in_bounds(double playback_time);
+    void set_time_in_bounds(double playback_time);
 
     // Every function under this line requires holding onto a read_write_mutex
     // to be thread-safe
