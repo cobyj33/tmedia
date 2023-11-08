@@ -110,10 +110,6 @@ double MediaFetcher::get_time(double current_system_time) const {
  * For threadsafety, alter_mutex must be locked
 */
 double MediaFetcher::get_desync_time(double current_system_time) const {
-  if (this->media_type == MediaType::IMAGE) {
-    throw std::runtime_error("[MediaFetcher::get_desync_time] Cannot get desync time of image media");
-  }
-
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     double playback_time = this->get_time(current_system_time);
     double audio_time = this->audio_buffer->get_buffer_current_time();
