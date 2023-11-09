@@ -52,6 +52,8 @@ static constexpr int MINIAUDIO_PERIODS = 3;
 void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next);
 void init_global_video_output_mode(VideoOutputMode mode);
 
+const char* loop_type_str_short(LoopType loop_type);
+
 const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "Video and Audio Controls\n"
   "- Space - Play and Pause\n"
@@ -327,26 +329,68 @@ int tmedia(TMediaProgramData tmpd) {
           erase();
         } else if (COLS <= 20 || LINES < 10 || tmpd.fullscreen) {
           render_pixel_data(frame, 0, 0, COLS, LINES, tmpd.vom, tmpd.scaling_algorithm, tmpd.ascii_display_chars);
-        } else {
+        } else if (COLS < 60) {
+          static constexpr int FILE_NAME_MARGIN = 5;
           render_pixel_data(frame, 2, 0, COLS, LINES - 4, tmpd.vom, tmpd.scaling_algorithm, tmpd.ascii_display_chars);
+
+          wfill_box(stdscr, 1, 0, COLS, 1, '~');
+          werasebox(stdscr, 0, 0, COLS, 1);
+          const std::string current_playlist_index_str = "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ")";
+          const std::string current_playlist_file_display = (tmpd.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + to_filename(tmpd.playlist.current());
+          mvwaddstr_center(stdscr, 0, FILE_NAME_MARGIN, COLS - (FILE_NAME_MARGIN * 2), current_playlist_file_display);
+
+          if (tmpd.playlist.size() > 1) {
+            if (tmpd.playlist.can_move(PlaylistMoveCommand::REWIND)) {
+              mvwaddstr_left(stdscr, 0, 0, COLS, "<");
+            }
+
+            if (tmpd.playlist.can_move(PlaylistMoveCommand::SKIP)) {
+              mvwaddstr_right(stdscr, 0, 0, COLS, ">");
+            }
+          }
+
+          if (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO) {
+            wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
+            wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
+
+            std::vector<std::string> bottom_labels;
+            const std::string playing_str = fetcher.is_playing() ? ">" : "||";
+            const std::string loop_str = loop_type_str_short(tmpd.playlist.loop_type()); 
+            const std::string volume_str = tmpd.muted ? "M" : (std::to_string((int)(tmpd.volume * 100)) + "%");
+            const std::string shuffled_str = tmpd.playlist.shuffled() ? "S" : "NS";
+
+            bottom_labels.push_back(playing_str);
+            if (tmpd.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
+            bottom_labels.push_back(loop_str);
+            if (audio_device) bottom_labels.push_back(volume_str);
+            werasebox(stdscr, LINES - 1, 0, COLS, 1);
+            wprint_labels(stdscr, bottom_labels, LINES - 1, 0, COLS);
+          }
+        } else {
+          static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
+          render_pixel_data(frame, 2, 0, COLS, LINES - 4, tmpd.vom, tmpd.scaling_algorithm, tmpd.ascii_display_chars);
+
+          werasebox(stdscr, 0, 0, COLS, 2);
+          const std::string current_playlist_index_str = "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ")";
+          const std::string current_playlist_file_display = (tmpd.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + to_filename(tmpd.playlist.current());
+          mvwaddstr_center(stdscr, 0, CURRENT_FILE_NAME_MARGIN, COLS - (CURRENT_FILE_NAME_MARGIN * 2), current_playlist_file_display);
 
           if (tmpd.playlist.size() == 1) {
             wfill_box(stdscr, 1, 0, COLS, 1, '~');
-            werasebox(stdscr, 0, 0, COLS, 1);
-            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ") " + to_filename(tmpd.playlist.current()));
-          } else if (tmpd.playlist.size() > 1) {
+          } else {
+            static constexpr int MOVE_FILE_NAME_MIDDLE_MARGIN = 5;
             wfill_box(stdscr, 2, 0, COLS, 1, '~');
-            werasebox(stdscr, 0, 0, COLS, 2);
-            mvwaddstr_center(stdscr, 0, 0, COLS, "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ") " + to_filename(tmpd.playlist.current()));
-
             if (tmpd.playlist.can_move(PlaylistMoveCommand::REWIND)) {
+              static constexpr int ARROW_MARGIN_SPACE = 2;
               werasebox(stdscr, 1, 0, COLS / 2, 1);
-              mvwaddstr_left(stdscr, 1, 0, COLS / 2, "< " + to_filename(tmpd.playlist.peek_move(PlaylistMoveCommand::REWIND)));
+              mvwaddstr_left(stdscr, 1, ARROW_MARGIN_SPACE, COLS / 2 - MOVE_FILE_NAME_MIDDLE_MARGIN - ARROW_MARGIN_SPACE, to_filename(tmpd.playlist.peek_move(PlaylistMoveCommand::REWIND)));
+              mvwaddstr_left(stdscr, 1, 0, COLS / 2 - MOVE_FILE_NAME_MIDDLE_MARGIN, "< ");
             }
 
             if (tmpd.playlist.can_move(PlaylistMoveCommand::SKIP)) {
               werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-              mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, to_filename(tmpd.playlist.peek_move(PlaylistMoveCommand::SKIP)) + " >");
+              mvwaddstr_right(stdscr, 1, COLS / 2 + MOVE_FILE_NAME_MIDDLE_MARGIN, COLS / 2 - MOVE_FILE_NAME_MIDDLE_MARGIN - 2, to_filename(tmpd.playlist.peek_move(PlaylistMoveCommand::SKIP)));
+              mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, ">");
             }
           }
 
@@ -421,4 +465,13 @@ void init_global_video_output_mode(VideoOutputMode mode) {
 void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next) {
   init_global_video_output_mode(next);
   *current = next;
+}
+
+const char* loop_type_str_short(LoopType loop_type) {
+  switch (loop_type) {
+    case LoopType::NO_LOOP: return "NL";
+    case LoopType::REPEAT: return "R";
+    case LoopType::REPEAT_ONE: return "RO";
+  }
+  throw std::runtime_error("[loop_type_str_short] Could not identify loop_type");
 }
