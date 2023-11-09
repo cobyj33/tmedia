@@ -154,6 +154,14 @@ int main(int argc, char** argv)
   parser.add_argument("--scaling-algo")
     .help("Set the scaling algorithm to use when rendering frames  (" + format_arg_map(VALID_SCALING_ALGO_ARGS, "or") + ")");
 
+  parser.add_argument("-s", "--shuffle")
+    .help("Shuffle the given playlist")
+    .default_value(false)
+    .implicit_value(true);
+
+  parser.add_argument("--chars")
+    .help("The characters from darkest to lightest to use as display");
+
   parser.add_argument("--ffmpeg-version")
     .help("Print the version of linked FFmpeg libraries")
     .default_value(false)
@@ -164,9 +172,6 @@ int main(int argc, char** argv)
     .help("Print the version of linked Curses libraries")
     .default_value(false)
     .implicit_value(true);
-
-  parser.add_argument("--chars")
-    .help("The characters from darkest to lightest to use as display");
 
   try {
     parser.parse_args(argc, argv);
@@ -289,6 +294,10 @@ int main(int argc, char** argv)
     tmpd.vom = parser.get<bool>("--background") ? VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY : VideoOutputMode::GRAYSCALE;
 
   tmpd.playlist = Playlist(found_media_files, loop_type);
+
+  if (parser.get<bool>("--shuffle")) {
+    tmpd.playlist.shuffle();
+  }
 
   return tmedia(tmpd);
 }
