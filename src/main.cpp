@@ -351,8 +351,8 @@ int program_print_curses_version() {
 }
 
 int program_dump_metadata(const std::vector<std::string>& files) {
-  try {
-    for (const std::string& file : files) {
+  for (const std::string& file : files) {
+    try {
       dump_file_info(file);
       AVFormatContext* format_context = open_format_context(file);
 
@@ -361,10 +361,9 @@ int program_dump_metadata(const std::vector<std::string>& files) {
       std::cerr << std::endl << "[tmedia]: Detected media Type: " << media_type_str << std::endl;
 
       avformat_close_input(&format_context);
+    } catch (const std::runtime_error& err) {
+      std::cerr << "[program_dump_metadata] error while dumping metadata file " << file << ": " << err.what() << std::endl;
     }
-  } catch (const std::runtime_error& err) {
-    std::cerr << "Error while dumping metadata: " << err.what() << std::endl;
-    return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
 }
