@@ -93,12 +93,22 @@ void StreamDecoder::reset() {
 
 std::vector<AVFrame*> StreamDecoder::decode_next() {
   std::vector<AVFrame*> decoded_frames;
+  static constexpr int ALLOWED_FAILURES = 5;
 
-  try {
-    decoded_frames = std::move(decode_packet_queue(this->codec_context, this->packet_queue, this->media_type));
-  } catch (std::runtime_error const& e) {
-    throw std::runtime_error("[StreamDecoder::decode_next] Could not decode next "
-    "video packet: " + std::string(e.what()));
+  bool decoding_error_thrown = true; //init to true so loop runs
+  for (int i = 0; i <= ALLOWED_FAILURES && decoding_error_thrown; i++) {
+    decoding_error_thrown = false;
+
+    try {
+      decoded_frames = decode_packet_queue(this->codec_context, this->packet_queue, this->media_type);
+    } catch (ffmpeg_error const& e) {
+      decoding_error_thrown = true;
+      if (i >= ALLOWED_FAILURES) {
+        throw std::runtime_error("[StreamDecoder::decode_next] Could not decode next " + 
+        std::string(av_get_media_type_string(this->media_type)) + " packet: " + std::string(e.what()));
+      }
+    }
+
   }
   
   return decoded_frames;

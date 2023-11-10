@@ -28,7 +28,7 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
   result = avcodec_send_packet(video_codec_context, video_packet);
   if (result < 0) {
     return video_frames;
-    // throw ffmpeg_error("Error while sending video packet: ", result);
+    throw ffmpeg_error("[decode_video_packet] error while sending video packet: ", result);
   }
 
   AVFrame* video_frame = av_frame_alloc();
@@ -42,8 +42,7 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
       } else {
         av_frame_free(&video_frame);
         clear_av_frame_list(video_frames);
-        return video_frames;
-        // throw ffmpeg_error("Error while receiving video frames during decoding:", result);
+        throw ffmpeg_error("[decode_video_packet] error while receiving video frames during decoding:", result);
       }
     }
 
@@ -54,9 +53,7 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
       av_frame_free(&saved_frame);
       av_frame_free(&video_frame);
       clear_av_frame_list(video_frames);
-      return video_frames;
-
-      // throw ffmpeg_error("ERROR while referencing video frames during decoding:", result);
+      throw ffmpeg_error("[decode_video_packet] error while referencing video frames during decoding:", result);
     }
 
     video_frames.push_back(saved_frame);
@@ -76,14 +73,14 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
 
   result = avcodec_send_packet(audio_codec_context, audio_packet);
   if (result < 0) {
-    throw ffmpeg_error("[decode_audio_packet] ERROR WHILE SENDING AUDIO PACKET ", result);
+    throw ffmpeg_error("[decode_audio_packet] error while sending audio packet ", result);
   }
 
   AVFrame* audio_frame = av_frame_alloc();
   result = avcodec_receive_frame(audio_codec_context, audio_frame);
   if (result < 0) { // if EAGAIN, caller should catch and send more data
     av_frame_free(&audio_frame);
-    throw ffmpeg_error("[decode_audio_packet] FATAL ERROR WHILE RECEIVING AUDIO FRAME ", result);
+    throw ffmpeg_error("[decode_audio_packet] error while receiving audio frame ", result);
   }
 
   while (result == 0) {
@@ -93,7 +90,7 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
       clear_av_frame_list(audio_frames);
       av_frame_free(&saved_frame);
       av_frame_free(&audio_frame);
-      throw ffmpeg_error("[decode_audio_packet] ERROR WHILE REFERENCING AUDIO FRAMES DURING DECODING ", result);
+      throw ffmpeg_error("[decode_audio_packet] error while referencing audio frames during decoding ", result);
     }
 
     av_frame_unref(audio_frame);
