@@ -14,6 +14,16 @@ enum class MediaType {
   IMAGE
 };
 
+typedef std::map<std::string, std::map<std::string, std::string>> MetadataCache;
+
+std::map<std::string, std::string> get_file_metadata(const std::string& file);
+std::map<std::string, std::string> get_format_context_metadata(AVFormatContext* fmt_ctx);
+
+void metadata_cache_cache(std::string file, MetadataCache& cache);
+bool metadata_cache_has_file(std::string file, MetadataCache& cache);
+bool metadata_cache_has(std::string file, std::string key, MetadataCache& cache);
+std::string metadata_cache_get(std::string file, std::string key, MetadataCache& cache);
+
 std::string media_type_to_string(MediaType media_type);
 MediaType media_type_from_avformat_context(AVFormatContext* format_context);
 
@@ -38,6 +48,7 @@ AVFormatContext* open_format_context(const std::string& file_path);
  * @param file_path The path of the file to open from the current working directory
  */
 void dump_file_info(const std::string& file_path);
+void dump_format_context(AVFormatContext* format_context);
 
 /**
  * @brief Return the duration of the media file
@@ -49,7 +60,6 @@ void dump_file_info(const std::string& file_path);
  */
 double get_file_duration(const std::string& file_path);
 
-std::map<std::string, std::string> get_format_context_metadata(AVFormatContext* fmt_ctx);
 
 bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVMediaType media_type);
 

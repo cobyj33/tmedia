@@ -54,6 +54,8 @@ void init_global_video_output_mode(VideoOutputMode mode);
 
 const char* loop_type_str_short(LoopType loop_type);
 
+std::string get_media_file_display_name(std::string abs_path, MetadataCache& metadata_cache);
+
 const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "Video and Audio Controls\n"
   "- Space - Play and Pause\n"
@@ -121,6 +123,7 @@ int tmedia(TMediaProgramData tmpd) {
   init_global_video_output_mode(tmpd.vom);
 
   bool full_exit = false;
+  MetadataCache metadata_cache;
   while (!INTERRUPT_RECEIVED && !full_exit) {
     erase();
     PlaylistMoveCommand current_move_cmd = PlaylistMoveCommand::NEXT;
@@ -340,7 +343,7 @@ int tmedia(TMediaProgramData tmpd) {
           wfill_box(stdscr, 1, 0, COLS, 1, '~');
           werasebox(stdscr, 0, 0, COLS, 1);
           const std::string current_playlist_index_str = "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ")";
-          const std::string current_playlist_file_display = (tmpd.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + to_filename(tmpd.playlist.current());
+          const std::string current_playlist_file_display = (tmpd.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + get_media_file_display_name(tmpd.playlist.current(), metadata_cache);
           mvwaddstr_center(stdscr, 0, FILE_NAME_MARGIN, COLS - (FILE_NAME_MARGIN * 2), current_playlist_file_display);
 
           if (tmpd.playlist.size() > 1) {
@@ -376,7 +379,7 @@ int tmedia(TMediaProgramData tmpd) {
 
           werasebox(stdscr, 0, 0, COLS, 2);
           const std::string current_playlist_index_str = "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ")";
-          const std::string current_playlist_file_display = (tmpd.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + to_filename(tmpd.playlist.current());
+          const std::string current_playlist_file_display = (tmpd.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + get_media_file_display_name(tmpd.playlist.current(), metadata_cache);
           mvwaddstr_center(stdscr, 0, CURRENT_FILE_NAME_MARGIN, COLS - (CURRENT_FILE_NAME_MARGIN * 2), current_playlist_file_display);
 
           if (tmpd.playlist.size() == 1) {
@@ -387,13 +390,13 @@ int tmedia(TMediaProgramData tmpd) {
             if (tmpd.playlist.can_move(PlaylistMoveCommand::REWIND)) {
               static constexpr int ARROW_MARGIN_SPACE = 2;
               werasebox(stdscr, 1, 0, COLS / 2, 1);
-              mvwaddstr_left(stdscr, 1, ARROW_MARGIN_SPACE, COLS / 2 - MOVE_FILE_NAME_MIDDLE_MARGIN - ARROW_MARGIN_SPACE, to_filename(tmpd.playlist.peek_move(PlaylistMoveCommand::REWIND)));
+              mvwaddstr_left(stdscr, 1, ARROW_MARGIN_SPACE, COLS / 2 - MOVE_FILE_NAME_MIDDLE_MARGIN - ARROW_MARGIN_SPACE, get_media_file_display_name(tmpd.playlist.peek_move(PlaylistMoveCommand::REWIND), metadata_cache));
               mvwaddstr_left(stdscr, 1, 0, COLS / 2 - MOVE_FILE_NAME_MIDDLE_MARGIN, "< ");
             }
 
             if (tmpd.playlist.can_move(PlaylistMoveCommand::SKIP)) {
               werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-              mvwaddstr_right(stdscr, 1, COLS / 2 + MOVE_FILE_NAME_MIDDLE_MARGIN, COLS / 2 - MOVE_FILE_NAME_MIDDLE_MARGIN - 2, to_filename(tmpd.playlist.peek_move(PlaylistMoveCommand::SKIP)));
+              mvwaddstr_right(stdscr, 1, COLS / 2 + MOVE_FILE_NAME_MIDDLE_MARGIN, COLS / 2 - MOVE_FILE_NAME_MIDDLE_MARGIN - 2, get_media_file_display_name(tmpd.playlist.peek_move(PlaylistMoveCommand::SKIP), metadata_cache));
               mvwaddstr_right(stdscr, 1, COLS / 2, COLS / 2, ">");
             }
           }
@@ -453,6 +456,19 @@ int tmedia(TMediaProgramData tmpd) {
 
   ncurses_uninit();
   return EXIT_SUCCESS;
+}
+
+std::string get_media_file_display_name(std::string abs_path, MetadataCache& metadata_cache) {
+  metadata_cache_cache(abs_path, metadata_cache);
+  bool has_artist = metadata_cache_has(abs_path, "artist", metadata_cache);
+  bool has_title = metadata_cache_has(abs_path, "title", metadata_cache);
+
+  if (has_artist && has_title) {
+    return metadata_cache_get(abs_path, "artist", metadata_cache) + " - " + metadata_cache_get(abs_path, "title", metadata_cache);
+  } else if (has_title) {
+    return metadata_cache_get(abs_path, "title", metadata_cache);
+  }
+  return to_filename(abs_path);
 }
 
 
