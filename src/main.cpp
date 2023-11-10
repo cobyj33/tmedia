@@ -45,6 +45,7 @@ extern "C" {
 int program_print_ffmpeg_version();
 int program_print_curses_version();
 int program_dump_metadata(const std::vector<std::string>& files);
+std::vector<std::string> resolve_cli_paths(const std::vector<std::string>& paths, bool recursive);
 
 bool INTERRUPT_RECEIVED = false; //defined as extern in signalstate.h
 void interrupt_handler(int) {
@@ -71,6 +72,7 @@ template <typename T>
 std::string format_arg_map(std::map<std::string, T> map, std::string conjunction) {
   return format_list(transform_vec(get_strmap_keys(map), [](std::string str) { return "'" + str + "'"; }), conjunction);
 }
+
 
 int main(int argc, char** argv)
 {
@@ -162,6 +164,11 @@ int main(int argc, char** argv)
   parser.add_argument("--chars")
     .help("The characters from darkest to lightest to use as display");
 
+  parser.add_argument("-r", "--recursive")
+    .help("Read through directories recursively to find media files")
+    .default_value(false)
+    .implicit_value(true);
+
   parser.add_argument("--ffmpeg-version")
     .help("Print the version of linked FFmpeg libraries")
     .default_value(false)
@@ -209,41 +216,14 @@ int main(int argc, char** argv)
   LoopType loop_type = LoopType::NO_LOOP;
   std::vector<std::string> found_media_files;
 
-  for (std::size_t i = 0; i < paths.size(); i++) {
-    if (paths[i].length() == 0) {
-      std::cerr << "[tmedia] Cannot open empty path" << std::endl;
-      std::cerr << parser << std::endl;
-      return EXIT_FAILURE;
-    }
-
-    std::filesystem::path path(paths[i]);
-    std::error_code ec;
-
-    if (!std::filesystem::exists(path, ec)) {
-      std::cerr << "[tmedia] Cannot open nonexistent path: " << paths[i] << std::endl;
-      return EXIT_FAILURE;
-    }
-
-    if (std::filesystem::is_directory(path, ec)) {
-      std::vector<std::string> media_file_paths;
-      for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(path)) {
-        if (is_valid_media_file_path(entry.path().string())) {
-          media_file_paths.push_back(entry.path().string());
-        }
-      }
-
-      SI::natural::sort(media_file_paths);
-
-      for (const std::string& media_file_path : media_file_paths) {
-        found_media_files.push_back(media_file_path);
-      }
-    } else if (is_valid_media_file_path(paths[i])) {
-      found_media_files.push_back(paths[i]);
-    } else {
-      std::cerr << "[tmedia] Cannot open path to non-media file: " << paths[i] << std::endl;
-      return EXIT_FAILURE;
-    }
+  try {
+    found_media_files = resolve_cli_paths(paths, parser.get<bool>("--recursive"));
+  } catch (const std::runtime_error& err) {
+    std::cerr << "[tmedia] Error while resolving inputted paths: " << err.what() << std::endl;
+    return EXIT_FAILURE;
   }
+
+  
 
   if (found_media_files.size() == 0) {
     std::cerr << "[tmedia]: at least 1 media file expected in given paths. 0 found." << std::endl;
@@ -309,6 +289,60 @@ int program_print_ffmpeg_version() {
   std::cout << "libswresample: " << LIBSWRESAMPLE_VERSION_MAJOR << ":" << LIBSWRESAMPLE_VERSION_MINOR << ":" << LIBSWRESAMPLE_VERSION_MICRO << std::endl;
   std::cout << "libswscale: " << LIBSWSCALE_VERSION_MAJOR << ":" << LIBSWSCALE_VERSION_MINOR << ":" << LIBSWSCALE_VERSION_MICRO << std::endl;
   return EXIT_SUCCESS;
+}
+
+std::vector<std::string> resolve_cli_path(std::string path_str, bool recursive) {
+  std::vector<std::string> resolved_paths;
+
+  if (path_str.length() == 0) {
+    throw std::runtime_error("[resolve_cli_path] Cannot open empty path");
+  }
+
+  std::filesystem::path path(path_str);
+  std::error_code ec;
+
+  if (!std::filesystem::exists(path, ec)) {
+    throw std::runtime_error("[resolve_cli_path] Cannot open nonexistent path: " + path_str);
+  }
+
+  if (std::filesystem::is_directory(path, ec)) {
+    std::vector<std::string> media_file_paths;
+    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(path)) {
+      if (std::filesystem::is_directory(entry.path(), ec) && recursive) {
+        std::vector<std::string> child_resolved_paths = resolve_cli_path(entry.path(), recursive);
+        for (const std::string& child_path : child_resolved_paths) {
+          resolved_paths.push_back(child_path);
+        }
+      } else if (is_valid_media_file_path(entry.path().string())) {
+        media_file_paths.push_back(entry.path().string());
+      }
+    }
+
+    SI::natural::sort(media_file_paths);
+
+    for (const std::string& media_file_path : media_file_paths) {
+      resolved_paths.push_back(media_file_path);
+    }
+  } else if (is_valid_media_file_path(path_str)) {
+    resolved_paths.push_back(path_str);
+  } else {
+    throw std::runtime_error("[resolve_cli_path] Cannot open path to non-media file: " + path_str);
+  }
+
+  return resolved_paths;
+}
+
+std::vector<std::string> resolve_cli_paths(const std::vector<std::string>& paths, bool recursive) {
+  std::vector<std::string> valid_paths;
+
+  for (std::size_t i = 0; i < paths.size(); i++) {
+    std::vector<std::string> resolved = resolve_cli_path(paths[i], recursive);
+    for (std::size_t i = 0; i < resolved.size(); i++) {
+      valid_paths.push_back(resolved[i]);
+    }
+  }
+
+  return valid_paths;
 }
 
 int program_print_curses_version() {
