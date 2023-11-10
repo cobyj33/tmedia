@@ -70,7 +70,7 @@ void Playlist::move(PlaylistMoveCommand move_cmd) {
   // unfortunate edge case, if we are going to the next file, and we are shuffled, and we are at the second to last song, we need to 
   if ((move_cmd == PlaylistMoveCommand::NEXT || move_cmd == PlaylistMoveCommand::SKIP) &&
   this->m_shuffled && (std::size_t)this->m_queue_index == this->m_queue_indexes.size() - 2) {
-    this->shuffle();
+    this->shuffle(true);
   }
 }
 
@@ -91,18 +91,16 @@ bool Playlist::shuffled() {
   return this->m_shuffled;
 }
 
-void Playlist::toggle_shuffle() {
-  this->m_shuffled ? this->unshuffle() : this->shuffle();
-}
-
-void Playlist::shuffle() {
+void Playlist::shuffle(bool keep_current_file_first) {
   if (this->m_queue_indexes.size() > 1) {
-    int current_media_index = this->m_queue_indexes[this->m_queue_index];
-
-    int tmp = this->m_queue_indexes[0];
-    this->m_queue_indexes[0] = current_media_index;
-    this->m_queue_indexes[this->m_queue_index] = tmp;
-    effolkronium::random_thread_local::shuffle(this->m_queue_indexes.begin() + 1, this->m_queue_indexes.end());
+    if (keep_current_file_first) {
+      int tmp = this->m_queue_indexes[0];
+      this->m_queue_indexes[0] = this->m_queue_indexes[this->m_queue_index];
+      this->m_queue_indexes[this->m_queue_index] = tmp;
+      effolkronium::random_thread_local::shuffle(this->m_queue_indexes.begin() + 1, this->m_queue_indexes.end());
+    } else {
+      effolkronium::random_thread_local::shuffle(this->m_queue_indexes);
+    }
     this->m_queue_index = 0;
   }
 

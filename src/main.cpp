@@ -276,7 +276,7 @@ int main(int argc, char** argv)
   tmpd.playlist = Playlist(found_media_files, loop_type);
 
   if (parser.get<bool>("--shuffle")) {
-    tmpd.playlist.shuffle();
+    tmpd.playlist.shuffle(false);
   }
 
   return tmedia(tmpd);

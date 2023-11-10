@@ -48,9 +48,8 @@ class Playlist {
     Playlist(std::vector<std::string> media_files, LoopType loop_type);
 
     bool shuffled();
-    void shuffle();
+    void shuffle(bool keep_current_file_first);
     void unshuffle();
-    void toggle_shuffle();
 
     std::size_t size() const noexcept;
     void set_loop_type(LoopType loop_type) noexcept;

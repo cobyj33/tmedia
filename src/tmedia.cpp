@@ -277,7 +277,11 @@ int tmedia(TMediaProgramData tmpd) {
           }
 
           if ((input == 's' || input == 'S') && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-            tmpd.playlist.toggle_shuffle();
+            if (!tmpd.playlist.shuffled()) {
+              tmpd.playlist.shuffle(true);
+            } else {
+              tmpd.playlist.unshuffle();
+            }
           }
 
           if (input == ' ' && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
