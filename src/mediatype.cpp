@@ -5,11 +5,10 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <set>
-#include <string_view>
 
 extern "C" {
   #include <libavformat/avformat.h>
+  #include <libavutil/avstring.h>
 }
 
 std::string media_type_to_string(MediaType media_type) {
@@ -34,19 +33,19 @@ std::string media_type_to_string(MediaType media_type) {
 */
 
 MediaType media_type_from_avformat_context(AVFormatContext* format_context) {
-  static const std::set<std::string_view> image_iformat_names{"image2", "png_pipe", "webp_pipe"};
-  static const std::set<std::string_view> audio_iformat_names{"wav", "ogg", "mp3", "flac"};
-  static const std::set<std::string_view> video_iformat_names{"flv"};
+  const char* image_iformat_names = "image2,png_pipe,webp_pipe";
+  const char* audio_iformat_names = "wav,ogg,mp3,flac";
+  const char* video_iformat_names = "flv";
 
-  if (image_iformat_names.count(format_context->iformat->name) == 1) {
+  if (av_match_list(format_context->iformat->name, image_iformat_names, ',')) {
     return MediaType::IMAGE;
   } 
 
-  if (audio_iformat_names.count(format_context->iformat->name) == 1) {
+  if (av_match_list(format_context->iformat->name, audio_iformat_names, ',')) {
     return MediaType::AUDIO;
   }
 
-  if (video_iformat_names.count(format_context->iformat->name) == 1) {
+  if (av_match_list(format_context->iformat->name, video_iformat_names, ',')) {
     return MediaType::VIDEO;
   }
 
