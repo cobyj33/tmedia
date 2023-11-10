@@ -23,7 +23,7 @@ AVFormatContext* open_format_context(const std::string& file_path) {
     if (format_context != nullptr) {
       avformat_close_input(&format_context);
     }
-    throw ffmpeg_error("Failed to open format context input for " + file_path, result);
+    throw ffmpeg_error("[open_format_context] Failed to open format context input for " + file_path, result);
   }
 
   result = avformat_find_stream_info(format_context, NULL);
@@ -31,13 +31,13 @@ AVFormatContext* open_format_context(const std::string& file_path) {
     if (format_context != nullptr) {
       avformat_close_input(&format_context);
     }
-    throw ffmpeg_error("Failed to find stream info for " + file_path, result);
+    throw ffmpeg_error("[open_format_context] Failed to find stream info for " + file_path, result);
   }
 
   if (format_context != nullptr) {
     return format_context;
   }
-  throw std::runtime_error("Failed to open format context input, unknown error occured");
+  throw std::runtime_error("[open_format_context] Failed to open format context input, unknown error occured");
 }
 
 void dump_file_info(const std::string& file_path) {
