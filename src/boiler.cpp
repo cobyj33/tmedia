@@ -3,6 +3,7 @@
 
 #include "decode.h"
 #include "ffmpeg_error.h"
+#include "formatting.h"
 
 #include <cstring>
 #include <stdexcept>
@@ -70,6 +71,13 @@ bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVM
     }
   }
   return false;
+}
+
+bool probably_valid_media_file_path(const std::string& path_str) {
+  std::string filename = to_filename(path_str);
+  AVOutputFormat* fmt = av_guess_format(NULL, filename.c_str(), NULL);
+  if (fmt != NULL) return true;
+  return is_valid_media_file_path(path_str);
 }
 
 bool is_valid_media_file_path(const std::string& path_str) {

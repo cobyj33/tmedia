@@ -313,7 +313,7 @@ std::vector<std::string> resolve_cli_path(std::string path_str, bool recursive) 
         for (const std::string& child_path : child_resolved_paths) {
           resolved_paths.push_back(child_path);
         }
-      } else if (is_valid_media_file_path(entry.path().string())) {
+      } else if (probably_valid_media_file_path(entry.path().string())) {
         media_file_paths.push_back(entry.path().string());
       }
     }
@@ -323,7 +323,7 @@ std::vector<std::string> resolve_cli_path(std::string path_str, bool recursive) 
     for (const std::string& media_file_path : media_file_paths) {
       resolved_paths.push_back(media_file_path);
     }
-  } else if (is_valid_media_file_path(path_str)) {
+  } else if (probably_valid_media_file_path(path_str)) {
     resolved_paths.push_back(path_str);
   } else {
     throw std::runtime_error("[resolve_cli_path] Cannot open path to non-media file: " + path_str);
