@@ -15,6 +15,7 @@
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavutil/log.h>
+#include <libavutil/dict.h>
 #include <libavutil/avstring.h>
 }
 
@@ -45,6 +46,17 @@ AVFormatContext* open_format_context(const std::string& file_path) {
     return format_context;
   }
   throw std::runtime_error("[open_format_context] Failed to open format context input, unknown error occured");
+}
+
+std::map<std::string, std::string> get_format_context_metadata(AVFormatContext* fmt_ctx) {
+  std::map<std::string, std::string> dict;
+  const AVDictionaryEntry *tag = NULL;
+
+  while ((tag = av_dict_get(fmt_ctx->metadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
+    dict[tag->key] = tag->value;
+  }
+
+  return dict;
 }
 
 void dump_file_info(const std::string& file_path) {

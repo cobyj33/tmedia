@@ -23,9 +23,10 @@ MediaDecoder::MediaDecoder(const std::string& file_path, std::set<enum AVMediaTy
     this->format_context = open_format_context(file_path);
   } catch (std::runtime_error const& e) {
     throw std::runtime_error("[MediaDecoder::MediaDecoder] Could not allocate Media Decoder of " + file_path +  " because of error while fetching file format data: " + e.what());
-  } 
+  }
 
   this->media_type = media_type_from_avformat_context(this->format_context);
+  this->metadata = get_format_context_metadata(this->format_context);
 
   for (const enum AVMediaType& stream_type : requested_streams) {
     try {

@@ -2,6 +2,7 @@
 #define TMEDIA_BOILER_H
 
 #include <string>
+#include <map>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -47,6 +48,8 @@ void dump_file_info(const std::string& file_path);
  * @return The duration of the media file at the selected path in seconds
  */
 double get_file_duration(const std::string& file_path);
+
+std::map<std::string, std::string> get_format_context_metadata(AVFormatContext* fmt_ctx);
 
 bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVMediaType media_type);
 

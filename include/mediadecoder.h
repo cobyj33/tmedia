@@ -19,6 +19,7 @@ class MediaDecoder {
     AVFormatContext* format_context;
     std::map<enum AVMediaType, std::unique_ptr<StreamDecoder>> stream_decoders;
     MediaType media_type;
+    std::map<std::string, std::string> metadata;
 
     int fetch_next(int requested_packet_count);
   public:
