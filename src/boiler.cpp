@@ -88,10 +88,10 @@ std::map<std::string, std::string> get_format_context_metadata(AVFormatContext* 
   std::map<std::string, std::string> dict;
 
   std::vector<AVDictionary*> metadata_dicts;
-  metadata_dicts.push_back(fmt_ctx->metadata);
   for (unsigned int i = 0; i < fmt_ctx->nb_streams; i++) {
     metadata_dicts.push_back(fmt_ctx->streams[i]->metadata);
   }
+  metadata_dicts.push_back(fmt_ctx->metadata); // any main file metadata overrides any specific stream metadata
 
   for (const AVDictionary* avdict : metadata_dicts) {
     const AVDictionaryEntry *tag = NULL;
