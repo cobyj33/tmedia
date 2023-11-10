@@ -77,7 +77,6 @@ set(COMMON_SOURCE_FILES
 ./src/mediaclock.cpp
 ./src/mediadecoder.cpp
 ./src/mediafetcher.cpp
-./src/mediatype.cpp
 ./src/pixeldata.cpp
 ./src/playlist.cpp
 ./src/scale.cpp

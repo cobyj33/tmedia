@@ -7,6 +7,15 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
+enum class MediaType {
+  VIDEO,
+  AUDIO,
+  IMAGE
+};
+
+std::string media_type_to_string(MediaType media_type);
+MediaType media_type_from_avformat_context(AVFormatContext* format_context);
+
 bool is_valid_media_file_path(const std::string& path_str);
 
 /**
