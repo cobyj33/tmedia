@@ -174,6 +174,15 @@ void MediaFetcher::frame_image_fetching_func() {
 }
 
 void MediaFetcher::frame_audio_fetching_func() {
+  if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) { // assume attached pic
+    try {
+      this->frame_image_fetching_func();
+      return;
+    } catch (const std::runtime_error& e) {
+      // no-op, Image decoding error, continue on with visualization
+    }
+  }
+
   static constexpr int AUDIO_PEEK_TRY_WAIT_MS = 100;
   static constexpr int AUDIO_PEEK_MAX_SAMPLE_SIZE = 2048;
   float audio_peek_buffer[AUDIO_PEEK_MAX_SAMPLE_SIZE];
