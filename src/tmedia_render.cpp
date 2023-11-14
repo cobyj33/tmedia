@@ -29,12 +29,7 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in
   const std::string formatted_passed_time = format_duration(time_in_seconds);
   const std::string formatted_duration = format_duration(duration_in_seconds);
   const std::string current_time_string = formatted_passed_time + " / " + formatted_duration;
-  TMLabelStyle duration_label_style;
-  duration_label_style.row = y;
-  duration_label_style.col = x;
-  duration_label_style.width = width;
-  duration_label_style.align = TMAlign::LEFT;
-  
+  TMLabelStyle duration_label_style(y, x, width, TMAlign::LEFT, 0, 0);
   tm_mvwaddstr_label(window, duration_label_style, current_time_string.c_str());
 
   const int progress_bar_width = width - current_time_string.length() - PADDING_BETWEEN_ELEMENTS;
@@ -77,12 +72,7 @@ void wprint_labels(WINDOW* window, std::vector<std::string>& labels, int y, int 
 
   int section_size = width / labels.size();
   for (std::size_t i = 0; i < labels.size(); i++) {
-    TMLabelStyle label_style;
-    label_style.row = y;
-    label_style.col = x + section_size * static_cast<int>(i);
-    label_style.width = section_size;
-    label_style.align = TMAlign::CENTER;
-
+    TMLabelStyle label_style(y, x + section_size * static_cast<int>(i), section_size, TMAlign::CENTER, 0, 0);
     tm_mvwaddstr_label(window, label_style, labels[i].c_str());
   }
 }

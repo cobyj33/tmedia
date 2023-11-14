@@ -18,6 +18,15 @@ TMLabelStyle::TMLabelStyle() {
   this->margin_right = 0;
 }
 
+TMLabelStyle::TMLabelStyle(int row, int col, int width, TMAlign align, int margin_left, int margin_right) {
+  this->row = row;
+  this->col = col;
+  this->width = width;
+  this->align = align;
+  this->margin_left = margin_left;
+  this->margin_right = margin_right;
+}
+
 void tm_mvwaddstr_label(WINDOW* window, TMLabelStyle label_style, const std::string& str) {
   const int requested_text_area_col_start = label_style.col + label_style.margin_left;
   const int requested_text_area_col_end = label_style.col + label_style.width - label_style.margin_right; // not inclusive

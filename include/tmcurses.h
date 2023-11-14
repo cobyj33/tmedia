@@ -45,6 +45,7 @@ struct TMLabelStyle {
   int margin_right;
 
   TMLabelStyle();
+  TMLabelStyle(int row, int col, int width, TMAlign align, int margin_left, int margin_right);
 };
 
 void tm_mvwaddstr_label(WINDOW* window, TMLabelStyle label_style, const std::string& str);

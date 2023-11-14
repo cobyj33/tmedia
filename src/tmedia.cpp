@@ -345,30 +345,17 @@ int tmedia(TMediaProgramData tmpd) {
           const std::string current_playlist_index_str = "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ")";
           const std::string current_playlist_media_str = get_media_file_display_name(tmpd.playlist.current(), metadata_cache);
           const std::string current_playlist_file_display = (tmpd.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + current_playlist_media_str;
-          TMLabelStyle current_playlist_display_style;
-          current_playlist_display_style.row = 0;
-          current_playlist_display_style.col = 0;
-          current_playlist_display_style.width = COLS;
-          current_playlist_display_style.align = TMAlign::CENTER;
-          current_playlist_display_style.margin_left = CURRENT_FILE_NAME_MARGIN;
-          current_playlist_display_style.margin_right = CURRENT_FILE_NAME_MARGIN;
+          TMLabelStyle current_playlist_display_style(0, 0, COLS, TMAlign::CENTER, CURRENT_FILE_NAME_MARGIN, CURRENT_FILE_NAME_MARGIN);
           tm_mvwaddstr_label(stdscr, current_playlist_display_style, current_playlist_file_display);
 
           if (tmpd.playlist.size() > 1) {
             if (tmpd.playlist.can_move(PlaylistMoveCommand::REWIND)) {
-              TMLabelStyle style;
-              style.row = 0;
-              style.col = 0;
-              style.width = COLS;
+              TMLabelStyle style(0, 0, COLS, TMAlign::LEFT, 0, 0);
               tm_mvwaddstr_label(stdscr, style, "<");
             }
 
             if (tmpd.playlist.can_move(PlaylistMoveCommand::SKIP)) {
-              TMLabelStyle style;
-              style.row = 0;
-              style.col = 0;
-              style.width = COLS;
-              style.align = TMAlign::RIGHT;
+              TMLabelStyle style(0, 0, COLS, TMAlign::RIGHT, 0, 0);
               tm_mvwaddstr_label(stdscr, style, ">");
             }
           }
@@ -398,13 +385,7 @@ int tmedia(TMediaProgramData tmpd) {
           const std::string current_playlist_index_str = "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ")";
           const std::string current_playlist_media_str = get_media_file_display_name(tmpd.playlist.current(), metadata_cache);
           const std::string current_playlist_file_display = (tmpd.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + current_playlist_media_str;
-          TMLabelStyle current_playlist_display_style;
-          current_playlist_display_style.row = 0;
-          current_playlist_display_style.col = 0;
-          current_playlist_display_style.width = COLS;
-          current_playlist_display_style.align = TMAlign::CENTER;
-          current_playlist_display_style.margin_left = CURRENT_FILE_NAME_MARGIN;
-          current_playlist_display_style.margin_right = CURRENT_FILE_NAME_MARGIN;
+          TMLabelStyle current_playlist_display_style(0, 0, COLS, TMAlign::CENTER, CURRENT_FILE_NAME_MARGIN, CURRENT_FILE_NAME_MARGIN);
           tm_mvwaddstr_label(stdscr, current_playlist_display_style, current_playlist_file_display);
 
           if (tmpd.playlist.size() == 1) {
@@ -415,27 +396,14 @@ int tmedia(TMediaProgramData tmpd) {
             if (tmpd.playlist.can_move(PlaylistMoveCommand::REWIND)) {
               werasebox(stdscr, 1, 0, COLS / 2, 1);
               const std::string rewind_display_string = "< " + get_media_file_display_name(tmpd.playlist.peek_move(PlaylistMoveCommand::REWIND), metadata_cache);
-              TMLabelStyle rewind_display_style;
-              rewind_display_style.row = 1;
-              rewind_display_style.col = 0;
-              rewind_display_style.width = COLS / 2;
-              rewind_display_style.align = TMAlign::LEFT;
-              rewind_display_style.margin_right = MOVE_FILE_NAME_MIDDLE_MARGIN;
-
+              TMLabelStyle rewind_display_style(1, 0, COLS / 2, TMAlign::LEFT, 0, MOVE_FILE_NAME_MIDDLE_MARGIN);
               tm_mvwaddstr_label(stdscr, rewind_display_style, rewind_display_string);
             }
 
             if (tmpd.playlist.can_move(PlaylistMoveCommand::SKIP)) {
               werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
               const std::string skip_display_string = get_media_file_display_name(tmpd.playlist.peek_move(PlaylistMoveCommand::SKIP), metadata_cache) + " >";
-              TMLabelStyle skip_display_string_style;
-              skip_display_string_style.row = 1;
-              skip_display_string_style.col = COLS / 2;
-              skip_display_string_style.width = COLS / 2;
-              skip_display_string_style.align = TMAlign::RIGHT;
-              skip_display_string_style.margin_left = 0;
-              skip_display_string_style.margin_right = 0;
-
+              TMLabelStyle skip_display_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, MOVE_FILE_NAME_MIDDLE_MARGIN, 0);
               tm_mvwaddstr_label(stdscr, skip_display_string_style, skip_display_string);
             }
           }
