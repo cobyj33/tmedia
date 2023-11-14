@@ -12,6 +12,21 @@ extern "C" {
 }
 
 VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat dst_pix_fmt, int src_width, int src_height, enum AVPixelFormat src_pix_fmt) {
+  if (dst_width <= 0 || dst_height <= 0) {
+    throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have non-zero destination dimensions: "
+    " (got width of " + std::to_string(dst_width) + " and height of " + std::to_string(dst_height) + " )");
+  }
+  if (src_width <= 0 || src_height <= 0) {
+    throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have non-zero source dimensions: "
+    " (got width of " + std::to_string(src_width) + " and height of " + std::to_string(src_height) + " )");
+  }
+  if (src_pix_fmt == AV_PIX_FMT_NONE) {
+    throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have defined source pixel format: got AV_PIX_FMT_NONE");
+  }
+  if (dst_pix_fmt == AV_PIX_FMT_NONE) {
+    throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have defined dest pixel format: got AV_PIX_FMT_NONE");
+  }
+
   this->m_context = sws_getContext(
       src_width, src_height, src_pix_fmt, 
       dst_width, dst_height, dst_pix_fmt, 
