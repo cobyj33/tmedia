@@ -30,12 +30,26 @@ void ncurses_init();
 bool ncurses_is_initialized();
 void ncurses_uninit();
 
-void mvwaddstr_center(WINDOW* window, int row, int col, int width, const std::string& str);
-void mvwaddstr_left(WINDOW* window, int row, int col, int width, const std::string& str);
-void mvwaddstr_right(WINDOW* window, int row, int col, int width, const std::string& str);
-void mvwprintw_center(WINDOW* window, int row, int col, int width, const char* format, ...);
-void mvwprintw_left(WINDOW* window, int y, int x, int width, const char* format, ...);
-void mvwprintw_right(WINDOW* window, int y, int x, int width, const char* format, ...);
+enum class TMAlign {
+  LEFT = 0,
+  RIGHT,
+  CENTER
+};
+
+struct TMLabelStyle {
+  int row;
+  int col;
+  int width;
+  TMAlign align;
+  int margin_left;
+  int margin_right;
+
+  TMLabelStyle();
+};
+
+void tm_mvwaddstr_label(WINDOW* window, TMLabelStyle label_style, const std::string& str);
+void tm_mvwprintw_label(WINDOW* window, TMLabelStyle label_style, const char* format, ...);
+
 void wfill_box(WINDOW* window, int y, int x, int width, int height, char ch);
 void werasebox(WINDOW* window, int y, int x, int width, int height);
 
