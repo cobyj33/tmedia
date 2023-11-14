@@ -189,8 +189,6 @@ void MediaFetcher::frame_audio_fetching_func() {
 
   const int nb_channels = this->audio_buffer->get_nb_channels();
   const int audio_peek_buffer_size_frames = AUDIO_PEEK_MAX_SAMPLE_SIZE / nb_channels;
-  // actual fetched sample size, as truncation can happen if "AUDIO_PEEK_MAX_SAMPLE_SIZE % nb_channels != 0" 
-  const int audio_peek_buffer_size_samples = audio_peek_buffer_size_frames * nb_channels;
 
   while (!this->should_exit()) {
     {
@@ -217,7 +215,7 @@ void MediaFetcher::frame_audio_fetching_func() {
       std::unique_ptr<Visualizer> visualizer;
       {
         std::scoped_lock<std::mutex> alter_lock(this->alter_mutex);
-        visualizer = this->audio_visualizer->clone();
+        if (this->audio_visualizer) visualizer = this->audio_visualizer->clone();
       }
 
       if (visualizer) {
