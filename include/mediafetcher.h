@@ -6,6 +6,7 @@
 #include "mediadecoder.h"
 #include "blocking_audioringbuffer.h"
 #include "audioresampler.h"
+#include "audio_visualizer.h"
 #include "scale.h"
 
 #include <memory>
@@ -47,6 +48,7 @@ class MediaFetcher {
     MediaClock clock;
     std::atomic<bool> in_use;
     std::optional<std::string> error;
+    std::unique_ptr<Visualizer> audio_visualizer;
 
   public:
 

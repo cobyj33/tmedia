@@ -3,7 +3,7 @@
 #include "termenv.h"
 #include "decode.h"
 #include "audio.h"
-#include "audio_image.h"
+#include "audio_visualizer.h"
 #include "sleep.h"
 #include "scale.h"
 #include "wtime.h"
@@ -214,13 +214,17 @@ void MediaFetcher::frame_audio_fetching_func() {
     }
 
     if (this->audio_buffer->try_peek_into(audio_peek_buffer_size_frames, audio_peek_buffer, AUDIO_PEEK_TRY_WAIT_MS)) {
-      std::vector<float> audio_buffer_view(audio_peek_buffer, audio_peek_buffer + audio_peek_buffer_size_samples);
-      std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
-      audio_bound_volume(mono, 1, 1.0);
-      PixelData audio_visualization = generate_audio_view_amplitude_averaged(mono, audio_frame_dims.height, audio_frame_dims.width);
+      std::unique_ptr<Visualizer> visualizer;
+      {
+        std::scoped_lock<std::mutex> alter_lock(this->alter_mutex);
+        visualizer = this->audio_visualizer->clone();
+      }
 
-      std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
-      this->frame = audio_visualization;
+      if (visualizer) {
+        PixelData frame = visualizer->visualize(audio_peek_buffer, audio_peek_buffer_size_frames, nb_channels, audio_frame_dims.width, audio_frame_dims.height);
+        std::scoped_lock<std::mutex> alter_lock(this->alter_mutex);
+        this->frame = frame;
+      }
     }
 
 

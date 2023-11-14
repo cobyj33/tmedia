@@ -61,8 +61,8 @@ set(TARGET_DEPENDENCIES "")
 
 set(COMMON_SOURCE_FILES 
 ./src/ascii.cpp
-./src/audio_image.cpp
 ./src/audio_thread.cpp
+./src/audio_visualizer.cpp
 ./src/audio.cpp
 ./src/audioresampler.cpp
 ./src/audioringbuffer.cpp

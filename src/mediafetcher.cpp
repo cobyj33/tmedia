@@ -6,6 +6,7 @@
 #include "wmath.h"
 #include "formatting.h"
 #include "audioresampler.h"
+#include "audio_visualizer.h"
 
 #include <string>
 #include <memory>
@@ -25,6 +26,7 @@ MediaFetcher::MediaFetcher(const std::string& file_path) {
   std::set<enum AVMediaType> requested_stream_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
   this->media_decoder = std::move(std::make_unique<MediaDecoder>(file_path, requested_stream_types));
   this->media_type = this->media_decoder->get_media_type();
+  this->audio_visualizer = std::move(std::make_unique<AmplitudeAbs>());
 
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
