@@ -27,7 +27,6 @@ void ncurses_init() {
   ncurses_init_color();
   ncurses_set_color_palette(TMNCursesColorPalette::RGB);
   cbreak();
-  // nocbreak();
   noecho();
   nodelay(stdscr, true);
   timeout(5);
@@ -60,15 +59,32 @@ void ncurses_uninit() {
 }
 
 
-const int COLOR_MAP_SIDE = 7;
-const int MAX_TERMINAL_COLORS = 256;
-const int MAX_TERMINAL_COLOR_PAIRS = 256;
-const int DEFAULT_TERMINAL_COLOR_COUNT = 8;
+static constexpr int COLOR_MAP_SIDE = 7;
+static constexpr int MAX_TERMINAL_COLORS = 256;
+static constexpr int MAX_TERMINAL_COLOR_PAIRS = 256;
+static constexpr int DEFAULT_TERMINAL_COLOR_COUNT = 8;
+
+/**
+ * Some terminals (namely Windows Terminal) dont want to return to their
+ * normal color scheme on ncurses return.
+ * Luckily, Windows Terminal only uses 16 colors in their internal color scheme, 
+ * so we just ignore them and offset the internal color palette by 16.
+ * It is important to note that this could be larger than COLORS if COLORS < 16.
+ * 
+ * While this usually reduces our 256 color palette to 240 colors, the 7x7x7 
+ * color_map and color_pairs_map can only hold 216 colors anyway so it isn't
+ * much of a problem
+*/
+static constexpr int COLOR_PALETTE_START = 16;
+
+/**
+ * Its important to not mix the Color Palette's colors and the terminals standard
+ * default colors not only for not messing with a terminals default 16 color palette,
+ * but also because in color palettes like grayscale, we wouldn't want a stray
+ * COLOR_RED or COLOR_GREEN color pair returning from get_ncurses_color_pair 
+*/
 
 bool curses_colors_initialized = false;
-
-std::vector<RGBColor> terminal_default_colors;
-std::vector<CursesColorPair> terminal_default_color_pairs;
 
 /**
  * @brief A RGB mapping of NCURSES color pairs to a 3D Discrete Color space, where each side of the color space is COLOR_MAP_SIDE steps long
@@ -78,9 +94,9 @@ std::vector<CursesColorPair> terminal_default_color_pairs;
 curses_color_pair_t color_pairs_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
 curses_color_t color_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
 
-int available_colors = 0;
+int available_color_palette_colors = 0;
 
-int available_color_pairs = 0;
+int available_color_palette_color_pairs = 0;
 
 // --------------------------------------------------------------
 // --------------------------------------------------------------
@@ -101,30 +117,9 @@ void ncurses_init_color() {
   start_color();
   use_default_colors();
 
-
-  terminal_default_colors.clear();
-  terminal_default_color_pairs.clear();
-
-  const curses_color_t COLORS_AVAILABLE = std::min(COLORS, MAX_TERMINAL_COLORS);
-  const curses_color_pair_t COLOR_PAIRS_AVAILABLE = std::min(COLOR_PAIRS, MAX_TERMINAL_COLOR_PAIRS);
-
-  for (curses_color_t i = 0; i < COLORS_AVAILABLE; i++)
-    terminal_default_colors.push_back(ncurses_get_color_number_content(i));
-
-  for (curses_color_pair_t i = 0; i < COLOR_PAIRS_AVAILABLE; i++) {
-    short fg, bg;
-    int res = pair_content(i, &fg, &bg);
-    if (res == ERR) {
-      terminal_default_color_pairs.push_back(CursesColorPair(COLOR_WHITE, COLOR_BLACK));
-    }
-    else {
-      terminal_default_color_pairs.push_back(CursesColorPair(fg, bg));
-    }
-  }
-
   curses_colors_initialized = true;
-  available_colors = DEFAULT_TERMINAL_COLOR_COUNT;
-  available_color_pairs = 0;
+  available_color_palette_colors = 0;
+  available_color_palette_color_pairs = 0;
 
   ncurses_init_color_pairs();
   ncurses_init_color_maps();
@@ -136,27 +131,8 @@ void ncurses_uninit_color() {
   if (!curses_colors_initialized)
     return;
 
-  start_color();
-
-  if (can_change_color()) // return colors to defaults
-  {
-    for (size_t i = 0; i < terminal_default_colors.size(); i++) {
-      RGBColor color = terminal_default_colors[i];
-      init_color(i, (short)(color.red * 1000 / 255), (short)(color.green * 1000 / 255), (short)(color.blue * 1000 / 255));
-    }
-
-    for (size_t i = 0; i < terminal_default_color_pairs.size(); i++) {
-      CursesColorPair color_pair = terminal_default_color_pairs[i];
-      init_pair(i, color_pair.fg, color_pair.bg);
-    }
-  }
-
-  terminal_default_colors.clear();
-  terminal_default_color_pairs.clear();
-
-  available_colors = 0;
-  available_color_pairs = 0;
-
+  available_color_palette_colors = 0;
+  available_color_palette_color_pairs = 0;
   curses_colors_initialized = false;
 }
 
@@ -169,9 +145,10 @@ void ncurses_set_color_palette(TMNCursesColorPalette colorPalette) {
     "ncurses color palette, The terminal's "
     "color output was not initialized with ncurses_init_color first");
 
+  available_color_palette_colors = 0;
   switch (colorPalette) {
-    case TMNCursesColorPalette::RGB: available_colors = ncurses_init_rgb_color_palette(); break;
-    case TMNCursesColorPalette::GRAYSCALE: available_colors = ncurses_init_grayscale_color_palette(); break;
+    case TMNCursesColorPalette::RGB: available_color_palette_colors = ncurses_init_rgb_color_palette(); break;
+    case TMNCursesColorPalette::GRAYSCALE: available_color_palette_colors = ncurses_init_grayscale_color_palette(); break;
   }
 
   ncurses_init_color_pairs();
@@ -228,15 +205,15 @@ ColorPair ncurses_get_pair_number_content(curses_color_pair_t pair) {
   return ColorPair(ncurses_get_color_number_content(fgi), ncurses_get_color_number_content(bgi));
 }
 
-
-
 int ncurses_init_rgb_color_palette() {
   const short NCURSES_COLOR_COMPONENT_MAX = 1000;
-  const short COLORS_AVAILABLE = std::min(COLORS, MAX_TERMINAL_COLORS);
-  const double BOX_SIZE = NCURSES_COLOR_COMPONENT_MAX / std::cbrt(COLORS_AVAILABLE);
+  const short MAX_COLORS = std::min(COLORS, MAX_TERMINAL_COLORS);
+  const short CHANGEABLE_COLORS = MAX_COLORS - COLOR_PALETTE_START;
+  if (CHANGEABLE_COLORS <= 0) return 0;
 
-  int color_index = 0;
+  const double BOX_SIZE = NCURSES_COLOR_COMPONENT_MAX / std::cbrt(CHANGEABLE_COLORS);
 
+  int color_index = COLOR_PALETTE_START;
   for (double r = 0; r < (double)NCURSES_COLOR_COMPONENT_MAX; r += BOX_SIZE)
     for (double g = 0; g < (double)NCURSES_COLOR_COMPONENT_MAX; g += BOX_SIZE)
       for (double b = 0; b < (double)NCURSES_COLOR_COMPONENT_MAX; b += BOX_SIZE)
@@ -248,24 +225,28 @@ int ncurses_init_rgb_color_palette() {
 
 int ncurses_init_grayscale_color_palette() {
   const short NCURSES_COLOR_COMPONENT_MAX = 1000;
-  const short COLORS_AVAILABLE = std::min(COLORS, MAX_TERMINAL_COLORS);
+  const short MAX_COLORS = std::min(COLORS, MAX_TERMINAL_COLORS);
+  const short CHANGEABLE_COLORS = MAX_COLORS - COLOR_PALETTE_START;
+  if (CHANGEABLE_COLORS <= 0) return 0;
 
-  for (short i = 0; i < COLORS_AVAILABLE; i++) {
-    const short grayscale_value = i * NCURSES_COLOR_COMPONENT_MAX / COLORS_AVAILABLE;
-    init_color(i, grayscale_value, grayscale_value, grayscale_value);
+  for (short i = 0; i < CHANGEABLE_COLORS; i++) {
+    const short grayscale_value = i * NCURSES_COLOR_COMPONENT_MAX / CHANGEABLE_COLORS;
+    init_color(i + COLOR_PALETTE_START, grayscale_value, grayscale_value, grayscale_value);
   }
 
-  return COLORS_AVAILABLE;
+  return MAX_COLORS;
 }
 
-void ncurses_init_color_pairs()
-{
-  for (int i = 0; i < available_colors; i++) {
-    RGBColor color = ncurses_get_color_number_content(i);
+void ncurses_init_color_pairs() {
+  const int COLOR_PAIRS_TO_INIT = std::min(COLOR_PAIRS - COLOR_PALETTE_START, available_color_palette_colors);
+  for (int i = 0; i < COLOR_PAIRS_TO_INIT; i++) {
+    curses_color_t color_index = i + COLOR_PALETTE_START;
+    RGBColor color = ncurses_get_color_number_content(color_index);
     RGBColor complementary = color.get_complementary();
-    init_pair(i, ncurses_find_best_initialized_color_number(complementary), i);
+    init_pair(color_index, ncurses_find_best_initialized_color_number(complementary), color_index);
   }
-  available_color_pairs = available_colors;
+
+  available_color_palette_color_pairs = COLOR_PAIRS_TO_INIT;
 }
 
 void ncurses_init_color_maps() {
@@ -281,31 +262,33 @@ void ncurses_init_color_maps() {
 }
 
 curses_color_t ncurses_find_best_initialized_color_number(RGBColor& input) {
-  curses_color_t best_color = -1;
+  curses_color_t best_color_index = -1;
   double best_distance = (double)INT32_MAX;
-  for (curses_color_t i = 0; i < available_colors; i++) {
-    RGBColor current_color = ncurses_get_color_number_content(i);
+  for (curses_color_t i = 0; i < available_color_palette_colors; i++) {
+    curses_color_t color_index = i + COLOR_PALETTE_START;
+    RGBColor current_color = ncurses_get_color_number_content(color_index);
     double distance = current_color.distance_squared(input);
     if (distance < best_distance) {
-      best_color = i;
+      best_color_index = color_index;
       best_distance = distance;
     }
   }
 
-  return best_color;
+  return best_color_index;
 }
 
 curses_color_pair_t ncurses_find_best_initialized_color_pair(RGBColor& input) {
-  curses_color_pair_t best_pair = -1;
+  curses_color_pair_t best_pair_index = -1;
   double best_distance = (double)INT32_MAX;
-  for (curses_color_pair_t i = 0; i < available_color_pairs; i++) {
-    ColorPair color_pair = ncurses_get_pair_number_content(i);
+  for (curses_color_pair_t i = 0; i < available_color_palette_color_pairs; i++) {
+    curses_color_pair_t color_pair_index = i + COLOR_PALETTE_START;
+    ColorPair color_pair = ncurses_get_pair_number_content(color_pair_index);
     const double distance = color_pair.bg.distance_squared(input);
     if (distance < best_distance) {
-      best_pair = i;
+      best_pair_index = color_pair_index;
       best_distance = distance;
     }
   }
 
-  return best_pair;
+  return best_pair_index;
 }
