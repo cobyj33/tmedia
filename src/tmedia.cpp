@@ -401,10 +401,13 @@ int tmedia(TMediaProgramData tmpd) {
             }
 
             if (tmpd.playlist.can_move(PlaylistMoveCommand::SKIP)) {
+              static constexpr int RIGHT_ARROW_MARGIN = 3;
               werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-              const std::string skip_display_string = get_media_file_display_name(tmpd.playlist.peek_move(PlaylistMoveCommand::SKIP), metadata_cache) + " >";
-              TMLabelStyle skip_display_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, MOVE_FILE_NAME_MIDDLE_MARGIN, 0);
+              const std::string skip_display_string = get_media_file_display_name(tmpd.playlist.peek_move(PlaylistMoveCommand::SKIP), metadata_cache);
+              TMLabelStyle skip_display_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, MOVE_FILE_NAME_MIDDLE_MARGIN, RIGHT_ARROW_MARGIN);
+              TMLabelStyle right_arrow_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, 0, 0);
               tm_mvwaddstr_label(stdscr, skip_display_string_style, skip_display_string);
+              tm_mvwaddstr_label(stdscr, right_arrow_string_style, " >");
             }
           }
 
