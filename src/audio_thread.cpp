@@ -20,20 +20,7 @@ extern "C" {
 
 void MediaFetcher::audio_dispatch_thread_func() {
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) return;
-  std::thread audio_fetching_thread;
-
-  try {
-    std::thread initialized_audio_fetching_thread(&MediaFetcher::audio_fetching_thread_func, this);
-    audio_fetching_thread.swap(initialized_audio_fetching_thread);
-  } catch (const std::system_error& err) {
-    std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
-    this->dispatch_exit(err.what());
-  }
-
-  if (audio_fetching_thread.joinable()) audio_fetching_thread.join();
-}
-
-void MediaFetcher::audio_fetching_thread_func() {
+  
   static constexpr int AUDIO_THREAD_PAUSED_SLEEP_MS = 25;
   static constexpr int AUDIO_BUFFER_TRY_WRITE_WAIT_MS = 25;
 
