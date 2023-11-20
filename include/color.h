@@ -4,8 +4,14 @@
 #include <vector>
 
 /**
- * @brief A representation of an RGB Color
+ * @brief A representation of an RGB Color with R, G, and B channels in the
+ * range 0-255
  * 
+ * Note that while RGBColor assumes that colors are in the range 0-255, colors
+ * in different ranges can still be stored inside of a RGBColor object. The user
+ * should strongly stick to using color channels in the range 0-255 inclusive though
+ * and only convert to different ranges when completely necessary, such as interacting
+ * with curses colors in the range 0-1000.
  */
 class RGBColor {
   public:
@@ -50,7 +56,7 @@ int get_grayscale(int r, int g, int b);
  * @param input The color to check against the color list
  * @param colors The color list to check for the closest color
  * @return The index of the closest color to **input** within the given color list
- * @throws If the color list given is empty
+ * @throws std::runtime_error If the color list given is empty
  */
 int find_closest_color_index(RGBColor& input, std::vector<RGBColor>& colors);
 
@@ -60,7 +66,7 @@ int find_closest_color_index(RGBColor& input, std::vector<RGBColor>& colors);
  * @param input The color to check against the color list
  * @param colors The color list to check for the closest color
  * @return The closest color to **input** within the given color list
- * @throws If the color list given is empty
+ * @throws std::runtime_error If the color list given is empty
  */
 RGBColor find_closest_color(RGBColor& input, std::vector<RGBColor>& colors);
 

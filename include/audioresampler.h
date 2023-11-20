@@ -12,8 +12,10 @@ extern "C" {
 }
 
 /**
- * @brief Basic wrapper around FFmpeg's SwrContext, which provides a context for FFmpeg for audio resampling, audio format conversion, and audio rematrixing 
+ * Basic RAII wrapper around FFmpeg's SwrContext
  * 
+ * Used to easily convert audio AVFrame structs between different sample rates,
+ * sample formats, and channel layouts
  */
 class AudioResampler {
   private:

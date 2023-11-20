@@ -13,6 +13,22 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
+/**
+ * StreamDecoder largely wraps around easy decoding functions defined in
+ * decode.h
+*/
+
+/**
+ * An abstraction upon an AVCodecContext and an AVStream which allows for easy
+ * decoding of sequential AVFrame data from a given stream
+ * 
+ * Note that the StreamDecoder's lifetime must not be longer than the
+ * AVFormatContext which is used to create it.
+ * 
+ * Note that a StreamDecoder is not responsible for putting the packets needed
+ * for decoding into its own packet queue. This is the responsibility of the
+ * MediaDecoder class described in mediadecoder.h
+*/
 class StreamDecoder {
   private:
     enum AVMediaType media_type;

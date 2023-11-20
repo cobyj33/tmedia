@@ -5,8 +5,6 @@
 int signum(int num);
 int signum(double num);
 
-double frand();
-
 int clamp(int value, int bounds_1, int bounds_2);
 double clamp(double value, double bounds_1, double bounds_2);
 long clamp(long value, long bounds_1, long bounds_2);

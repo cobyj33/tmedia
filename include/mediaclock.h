@@ -3,6 +3,9 @@
 
 #include <atomic>
 
+/**
+ *  
+*/
 class MediaClock {
   private:
     std::atomic<bool> m_playing;

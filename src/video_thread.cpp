@@ -1,6 +1,5 @@
 #include "mediafetcher.h"
 
-#include "termenv.h"
 #include "decode.h"
 #include "audio.h"
 #include "audio_visualizer.h"
@@ -24,13 +23,20 @@ extern "C" {
  * The purpose of the video thread is to update the current MediaFetcher's frame for rendering
  * 
  * This is done in different ways depending on if a video is available in the current media type or not
+ * 
  * If the currently attached media is a video:
  *  The video thread will update the current frame to be the correct frame according to the MediaFetcher's current
  *  playback timestamp
  * 
+ * If the currently attached media is an image:
+ *  The video thread will read the cover art and exit
+ * 
  * If the currently attached media is audio:
- *  The video thread will update the current frame to be a snapshot of the wave of audio data currently being
- *  processed. 
+ *  If there is an attached cover art to the current audio file:
+ *    The video thread will read the cover art and exit
+ *  else:
+ *    The video thread will update the current frame to be a snapshot of the wave of audio data currently being
+ *    processed. 
 */
 
 const int PIXEL_ASPECT_RATIO_WIDTH = 2; // account for non-square shape of terminal characters
@@ -40,10 +46,14 @@ const int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PIXEL_ASPECT_RATIO_HEIGHT;
 const int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PIXEL_ASPECT_RATIO_WIDTH;
 const double MAX_FRAME_ASPECT_RATIO = (double)MAX_FRAME_ASPECT_RATIO_WIDTH / (double)MAX_FRAME_ASPECT_RATIO_HEIGHT;
 
+// I found that past a width of 640 characters,
+// the terminal starts to stutter terribly on most terminal emulators, so we just
+// bound the image to this amount
+
 const int MAX_FRAME_WIDTH = 640;
 const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH / MAX_FRAME_ASPECT_RATIO;
-const int PAUSED_SLEEP_TIME_MS = 500;
-  const double DEFAULT_AVERAGE_FRAME_TIME_SEC = 1.0 / 24.0;
+const int PAUSED_SLEEP_TIME_MS = 100;
+const double DEFAULT_AVERAGE_FRAME_TIME_SEC = 1.0 / 24.0;
 
 void MediaFetcher::video_fetching_thread_func() {
   try {

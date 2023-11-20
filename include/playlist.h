@@ -23,7 +23,8 @@ enum class LoopType {
 std::string loop_type_str(LoopType loop_type);
 
 /**
- * Currently, the files passed in at construction are immutable. This is of course
+ * Currently, the files passed in at construction are immutable, as files cannot
+ * be added or removed.
  * 
  * Currently, The passed in files at construction aren't checked for if they are actual valid
  * media file paths, if they are valid paths, or even if they are paths at all. The

@@ -16,10 +16,7 @@ class ma_device_w {
 
     void start();
     void stop();
-    // ma_device_state get_state();
-
     void set_volume(double volume);
-
 
     ~ma_device_w();
 };

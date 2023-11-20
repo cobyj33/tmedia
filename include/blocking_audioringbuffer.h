@@ -7,6 +7,10 @@
 #include <condition_variable>
 #include <memory>
 
+/**
+ * Blocking wrapper of the AudioRingBuffer class.
+ * For multithreaded access handled through locks and conditional variables 
+*/
 class BlockingAudioRingBuffer {
   private:
     std::unique_ptr<AudioRingBuffer> m_ring_buffer;

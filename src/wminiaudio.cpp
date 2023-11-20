@@ -9,15 +9,14 @@ extern "C" {
 }
 
 /**
- * There seems to be some sort of miniaudio glitch where stopping and starting
- * audio with a gap of around 10 seconds in between the calls makes the audio
- * device playback get corrupted somehow? I don't know, but definitely note
- * that a work around for now is just to write null data to the device callback
- * instead of actually stopping the device
+ * We just completely uninitialize and reinitialize the internal ma_device on
+ * start and stop because of some weird pulseaudio resync 
  * 
- * It seems to be a problem with ALSA, but maybe it's a problem with miniaudio,
- * or maybe it's a problem with Windows Subsystem for Linux. That's why we have this
- * weird getaround with the uninitializing and reinitializing of audio devices
+ * This allows so that if we can detect that the audio callback is not being
+ * fired fast enough to keep up with our actual media playback, we can just
+ * restart the ma_device and restore the audio playback.
+ * 
+ * Pretty duct taped together
  * 
  * Don't delete the commented start and stop functions, as they SHOULD work, and
  * I need to test them more on different environments.
@@ -69,14 +68,6 @@ void ma_device_w::start() {
 void ma_device_w::stop() {
   ma_device_uninit(&this->device);
 }
-
-/**
- * Disabled for now. It won't be accurate because of the implementation of start and stop, which
- * would make this return ma_device_state_uninitialized when stopped
-*/
-// ma_device_state ma_device_w::get_state() {
-//   return ma_device_get_state(&this->device);
-// }
 
 void ma_device_w::set_volume(double volume) {
   double clamped_volume = clamp(volume, 0.0, 1.0);

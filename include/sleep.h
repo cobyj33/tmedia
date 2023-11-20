@@ -1,11 +1,15 @@
-#ifndef TMEDIA_THREADS_H
-#define TMEDIA_THREADS_H
+#ifndef  TMEDIA_SLEEP_H
+#define  TMEDIA_SLEEP_H
+
+/**
+ * Simple routines for 
+*/
 
 /**
  * @brief Sleep the current thread for the given number of nanoseconds
  * @param nanoseconds The number of nanoseconds to make the current thread sleep
  */
-void sleep_for(long nanoseconds);
+void sleep_for_ns(long nanoseconds);
 
 /**
  * @brief Sleep the current thread for the given number of seconds
@@ -19,9 +23,5 @@ void sleep_for_sec(double secs);
  */
 void sleep_for_ms(long ms);
 
-/**
- * @brief Sleep the current thread quickly and wake up almost immediately
- */
-void sleep_quick();
 
 #endif

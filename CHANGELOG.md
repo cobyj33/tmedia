@@ -1,6 +1,13 @@
 
 # tmedia ChangeLog
 
+## November 19, 2023
+Rename sleep_for to sleep_for_ns
+
+Remove sleep_quick. If there is a time where polling requires sleeping for less
+than a few milliseconds minimum, there probably just needs to be a redesign rather
+than crutching on an unreliable sleep_quick.
+
 ## October 30, 2023
 
 Change name to tmedia to better reflect ability to view and play video, audio,

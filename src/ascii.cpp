@@ -11,18 +11,20 @@ extern "C" {
 const std::string ASCII_STANDARD_CHAR_MAP = "@%#*+=-:_.";
 
 char get_char_from_value(const std::string& characters, uint8_t value) {
-  return characters[ (size_t)value * (characters.length() - 1) / 255 ];
+  return characters[ (std::size_t)value * (characters.length() - 1) / 255 ];
 }
 
 RGBColor get_rgb_from_char(const std::string& characters, char ch) {
   for (int i = 0; i < (int)characters.size(); i++) {
     if (ch == characters[i]) {
-      uint8_t val = i * 255 / (characters.size() - 1); 
+      int val = i * 255 / (characters.size() - 1); 
       return RGBColor(val);
     }
   }
   
-  throw std::runtime_error("Cannot get color value from char " + std::to_string(ch) + ", character \"" + std::to_string(ch) + "\" not found in string: " + characters);
+  throw std::runtime_error("[get_rgb_from_char] Cannot get color value from char " +
+  std::to_string(ch) + ", character \"" + std::to_string(ch) +
+  "\" not found in string: " + characters);
 }
 
 char get_char_from_rgb(const std::string& characters, const RGBColor& color) {

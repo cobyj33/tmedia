@@ -14,6 +14,13 @@ extern "C" {
   #include <libavutil/avutil.h>
 }
 
+/**
+ * 
+ * Acts as a high level interface between a media file and that file's media streams
+ * Encapsulates data about the file format and 
+ * 
+ * Allows seeking
+*/
 class MediaDecoder {
   private:
     AVFormatContext* format_context;

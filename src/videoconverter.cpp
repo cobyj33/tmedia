@@ -16,13 +16,16 @@ VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat
     throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have non-zero destination dimensions: "
     " (got width of " + std::to_string(dst_width) + " and height of " + std::to_string(dst_height) + " )");
   }
+
   if (src_width <= 0 || src_height <= 0) {
     throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have non-zero source dimensions: "
     " (got width of " + std::to_string(src_width) + " and height of " + std::to_string(src_height) + " )");
   }
+
   if (src_pix_fmt == AV_PIX_FMT_NONE) {
     throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have defined source pixel format: got AV_PIX_FMT_NONE");
   }
+
   if (dst_pix_fmt == AV_PIX_FMT_NONE) {
     throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have defined dest pixel format: got AV_PIX_FMT_NONE");
   }
@@ -33,7 +36,7 @@ VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat
       SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
 
   if (this->m_context == nullptr) {
-    throw std::runtime_error("[VideoConverter::VideoConverter] Allocation of internal SwsContext of Video Converter failed. Aborting...");
+    throw std::runtime_error("[VideoConverter::VideoConverter] Allocation of internal SwsContext of Video Converter failed");
   }
   
   this->m_dst_width = dst_width;
@@ -54,7 +57,7 @@ void VideoConverter::reset_dst_size(int dst_width, int dst_height) {
       dst_width, dst_height, this->m_dst_pix_fmt, 
       SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
   if (this->m_context == nullptr) {
-    throw std::runtime_error("[VideoConverter::reset_dst_size] Allocation of internal SwsContext of Video Converter failed. Aborting...");
+    throw std::runtime_error("[VideoConverter::reset_dst_size] Allocation of internal SwsContext of Video Converter failed");
   }
 
   this->m_dst_width = dst_width;
@@ -82,8 +85,8 @@ AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
   
   int err = av_frame_get_buffer(resized_video_frame, 1); //watch this alignment
   if (err) {
-    throw std::runtime_error("[VideoConverter::convert_video_frame] Failure on "
-    "allocating buffers for resized video frame" + av_strerror_string(err));
+    throw ffmpeg_error("[VideoConverter::convert_video_frame] Failure on "
+    "allocating buffers for resized video frame", err);
   }
 
   (void)sws_scale(this->m_context, (uint8_t const * const *)original->data, original->linesize, 0, original->height, resized_video_frame->data, resized_video_frame->linesize);

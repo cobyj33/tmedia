@@ -4,9 +4,6 @@
 #include <stdexcept>
 #include <string>
 
-double frand() {
-  return rand() / (double)RAND_MAX;
-}
 
 int signum(int num) {
   if (num < 0) return -1;

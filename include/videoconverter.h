@@ -7,7 +7,8 @@ extern "C" {
 }
 
 /**
- * @brief Basic wrapper around FFmpeg's SwsContext, which provides a context for FFmpeg for image rescaling and pixel format conversions
+ * Basic RAII wrapper around FFmpeg's SwsContext, which provides a context
+ * for FFmpeg for image rescaling and pixel format conversions
  */
 class VideoConverter {
   private:
@@ -26,6 +27,10 @@ class VideoConverter {
             int src_height,
             enum AVPixelFormat src_pix_fmt);
 
+    /**
+     * 
+     * The returned video frame must be freed by the caller with av_frame_free.
+    */
     AVFrame* convert_video_frame(AVFrame* original);
 
     int get_src_width();

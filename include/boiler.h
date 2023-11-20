@@ -1,6 +1,16 @@
 #ifndef TMEDIA_BOILER_H
 #define TMEDIA_BOILER_H
 
+/**
+ * @file boiler.h
+ * @author Jacoby Johnson (jacobyajohnson@gmail.com)
+ * @brief Boilerplate reducing functions for various miscellaneous FFmpeg operations
+ * @version 0.1
+ * @date 2023-11-19
+ * 
+ * @copyright Copyright (c) 2023
+ */
+
 #include <string>
 #include <map>
 
@@ -51,7 +61,7 @@ void dump_file_info(const std::string& file_path);
 void dump_format_context(AVFormatContext* format_context);
 
 /**
- * @brief Return the duration of the media file
+ * @brief Return the duration of the media file in seconds
  * @param file_path The path of the file to open from the current working directory
  * 
  * @throws std::runtime_error if a format context could not be opened for the corresponding file name

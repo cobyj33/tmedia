@@ -7,7 +7,10 @@ extern "C" {
   #include <libavcodec/version.h>
 }
 
-/** AVFrame.duration introduced in libavutil version 57.30.100 */
+/**
+ * Various macros to define when various FFmpeg features were added and 
+ * deprecated
+*/
 
 #define HAS_AVFRAME_DURATION LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 30, 100)
 #define HAS_AVCHANNEL_LAYOUT LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 24, 100)

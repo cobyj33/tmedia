@@ -5,7 +5,9 @@
 #include <cstddef>
 
 /**
- * Constant size Non-Self Overwriting Ring Buffer Implementation
+ * Constant-Sized Non-Self Overwriting Ring Buffer for audio
+ * 
+ * 
 */
 class AudioRingBuffer {
   private: 

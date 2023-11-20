@@ -5,6 +5,11 @@
 
 #include <mutex>
 
+
+/**
+ * Simple MediaFetcher thread that constantly polls the media clock to check
+ * if the clock has surpassed the loaded media's duration.
+*/
 void MediaFetcher::duration_checking_thread_func() {
   if (this->media_type == MediaType::IMAGE) return;
   const int DURATION_CHECKING_LOOP_TIME_MS = 100;

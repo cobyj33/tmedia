@@ -4,6 +4,9 @@
 #include "pixeldata.h"
 #include <memory>
 
+/**
+ * General strategy class for generating audio data from any inputted audio frames
+*/
 class Visualizer {
   public:
     virtual PixelData visualize(float* frames, int nb_frames, int nb_channels, int width, int height) = 0;

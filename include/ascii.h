@@ -1,10 +1,22 @@
 #ifndef TMEDIA_ASCII_H
 #define TMEDIA_ASCII_H
+
+#include "color.h"
+#include "pixeldata.h"
+
 #include <cstdint>
 #include <vector>
 #include <string>
-#include "color.h"
-#include "pixeldata.h"
+
+/**
+ * @file ascii.h
+ * @author Jacoby Johnson (jacobyajohnson@gmail.com)
+ * @brief Common functions for converting from colors to ascii characters
+ * @version 0.1
+ * @date 2023-01-24
+ * 
+ * @copyright Copyright (c) 2023
+ */
 
 extern const std::string ASCII_STANDARD_CHAR_MAP;
 

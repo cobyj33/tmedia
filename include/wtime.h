@@ -4,7 +4,14 @@
 #include <chrono>
 
 /**
- * @return Return the current system time in seconds
+ * Wrappers for boilerplate of fetching the current time
+ * from the system monotonic clock and converting between
+ * std::chrono units
+*/
+
+/**
+ * Return the current system time in seconds from the system's
+ * monotonic clock
  */
 double system_clock_sec();
 

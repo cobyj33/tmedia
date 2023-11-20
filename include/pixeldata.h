@@ -1,16 +1,28 @@
 #ifndef TMEDIA_PIXEL_DATA_H
 #define TMEDIA_PIXEL_DATA_H
+/**
+ * @file audio.h
+ * @author Jacoby Johnson (jacobyajohnson@gmail.com)
+ * @brief Common functions for audio manipulation in tmedia
+ * @version 0.1
+ * @date 2023-01-24
+ * 
+ * @copyright Copyright (c) 2023
+ */
+
+#include "color.h"
 
 #include <cstdint>
 #include <vector>
 #include <memory>
 
-#include "color.h"
-
 extern "C" {
 #include <libavutil/frame.h>
 }
 
+/**
+ * Different Scaling Algorithms used in 
+*/
 enum class ScalingAlgo {
   BOX_SAMPLING,
   NEAREST_NEIGHBOR
@@ -18,6 +30,16 @@ enum class ScalingAlgo {
 
 typedef RGBColor FillFunction(int row, int col);
 
+/**
+ * An immutable raw image bitmap class to handle transferring and storing image
+ * data portably.
+ * 
+ * PixelData's immutability allows copying from one PixelData instance to another
+ * to be extremely cheap, as PixelData's only need to copy a pointer
+ * to the internal image data instead of copying every pixel in the bitmap.
+ * The internal image data will be uninitialized once the final reference to
+ * the given internal bitmap is erased.
+*/
 class PixelData {
   private:
     std::shared_ptr<std::vector<RGBColor>> pixels;
@@ -34,8 +56,6 @@ class PixelData {
     PixelData(const std::vector< std::vector<uint8_t> >& raw_grayscale_data);
     PixelData(const std::vector<RGBColor>& colors, int width, int height);
     PixelData(std::shared_ptr<std::vector<RGBColor>> colors, int width, int height);
-    // PixelData(std::vector< std::vector<RGBColor> >& raw_rgb_data, int width, int height);
-    // PixelData(std::vector<uint8_t>& raw_grayscale_data, int width, int height);
     PixelData(int width, int height);
     PixelData(AVFrame* video_frame);
     PixelData(const PixelData& pix_data);
