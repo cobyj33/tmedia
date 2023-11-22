@@ -1,4 +1,4 @@
-#include "tmedia_render.h"
+#include "tmedia_tui_elems.h"
 
 #include "pixeldata.h"
 #include "ascii.h"
@@ -61,7 +61,6 @@ void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_c
       }
     }
   }
-
 }
 
 void wprint_labels(WINDOW* window, std::vector<std::string>& labels, int y, int x, int width) {

@@ -1,0 +1,147 @@
+#include "tmedia.h"
+
+#include "playlist.h"
+#include "tmedia_tui_elems.h"
+#include "tmcurses.h"
+#include "formatting.h"
+#include "metadata.h"
+
+#include <stdexcept>
+
+extern "C" {
+  #include <curses.h>
+}
+
+static constexpr int MIN_RENDER_COLS = 2;
+static constexpr int MIN_RENDER_LINES = 2;
+
+const char* loop_type_str_short(LoopType loop_type);
+
+void TMediaRenderer::render_tui(const TMediaProgramState tmps) {
+  if (tmps.frame.get_width() != this->last_frame_dims.width || tmps.frame.get_height() != this->last_frame_dims.height) {
+    erase();
+  }
+
+  if (COLS < MIN_RENDER_COLS || LINES < MIN_RENDER_LINES) {
+    erase();
+  } else if (COLS <= 20 || LINES < 10 || tmps.fullscreen) {
+      this->render_tui_fullscreen(tmps);
+  } else if (COLS < 60) {
+    this->render_tui_compact(tmps);
+  } else {
+    this->render_tui_large(tmps);
+  }
+
+  this->last_frame_dims = VideoDimensions(tmps.frame.get_width(), tmps.frame.get_height());
+}
+
+void TMediaRenderer::render_tui_fullscreen(const TMediaProgramState tmps) {
+  render_pixel_data(tmps.frame, 0, 0, COLS, LINES, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+}
+
+void TMediaRenderer::render_tui_compact(const TMediaProgramState tmps) {
+  static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
+  render_pixel_data(tmps.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+
+  wfill_box(stdscr, 1, 0, COLS, 1, '~');
+  werasebox(stdscr, 0, 0, COLS, 1);
+  const std::string current_playlist_index_str = "(" + std::to_string(tmps.playlist.index() + 1) + "/" + std::to_string(tmps.playlist.size()) + ")";
+  const std::string current_playlist_media_str = get_media_file_display_name(tmps.playlist.current(), this->metadata_cache);
+  const std::string current_playlist_file_display = (tmps.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + current_playlist_media_str;
+  TMLabelStyle current_playlist_display_style(0, 0, COLS, TMAlign::CENTER, CURRENT_FILE_NAME_MARGIN, CURRENT_FILE_NAME_MARGIN);
+  tm_mvwaddstr_label(stdscr, current_playlist_display_style, current_playlist_file_display);
+
+  if (tmps.playlist.size() > 1) {
+    if (tmps.playlist.can_move(PlaylistMoveCommand::REWIND)) {
+      TMLabelStyle style(0, 0, COLS, TMAlign::LEFT, 0, 0);
+      tm_mvwaddstr_label(stdscr, style, "<");
+    }
+
+    if (tmps.playlist.can_move(PlaylistMoveCommand::SKIP)) {
+      TMLabelStyle style(0, 0, COLS, TMAlign::RIGHT, 0, 0);
+      tm_mvwaddstr_label(stdscr, style, ">");
+    }
+  }
+
+  if (tmps.media_type == MediaType::VIDEO || tmps.media_type == MediaType::AUDIO) {
+    wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
+    wprint_playback_bar(stdscr, LINES - 2, 0, COLS, tmps.media_time_secs, tmps.media_duration_secs);
+
+    std::vector<std::string> bottom_labels;
+    const std::string playing_str = tmps.is_playing ? ">" : "||";
+    const std::string loop_str = loop_type_str_short(tmps.playlist.loop_type()); 
+    const std::string volume_str = tmps.muted ? "M" : (std::to_string((int)(tmps.volume * 100)) + "%");
+    const std::string shuffled_str = tmps.playlist.shuffled() ? "S" : "NS";
+
+    bottom_labels.push_back(playing_str);
+    if (tmps.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
+    bottom_labels.push_back(loop_str);
+    if (tmps.has_audio_output) bottom_labels.push_back(volume_str);
+    werasebox(stdscr, LINES - 1, 0, COLS, 1);
+    wprint_labels(stdscr, bottom_labels, LINES - 1, 0, COLS);
+  }
+
+}
+
+void TMediaRenderer::render_tui_large(const TMediaProgramState tmps) {
+  static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
+  render_pixel_data(tmps.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+
+  werasebox(stdscr, 0, 0, COLS, 2);
+  const std::string current_playlist_index_str = "(" + std::to_string(tmps.playlist.index() + 1) + "/" + std::to_string(tmps.playlist.size()) + ")";
+  const std::string current_playlist_media_str = get_media_file_display_name(tmps.playlist.current(), this->metadata_cache);
+  const std::string current_playlist_file_display = (tmps.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + current_playlist_media_str;
+  TMLabelStyle current_playlist_display_style(0, 0, COLS, TMAlign::CENTER, CURRENT_FILE_NAME_MARGIN, CURRENT_FILE_NAME_MARGIN);
+  tm_mvwaddstr_label(stdscr, current_playlist_display_style, current_playlist_file_display);
+
+  if (tmps.playlist.size() == 1) {
+    wfill_box(stdscr, 1, 0, COLS, 1, '~');
+  } else {
+    static constexpr int MOVE_FILE_NAME_MIDDLE_MARGIN = 5;
+    wfill_box(stdscr, 2, 0, COLS, 1, '~');
+    if (tmps.playlist.can_move(PlaylistMoveCommand::REWIND)) {
+      werasebox(stdscr, 1, 0, COLS / 2, 1);
+      const std::string rewind_media_file_display_string = get_media_file_display_name(tmps.playlist.peek_move(PlaylistMoveCommand::REWIND), this->metadata_cache);
+      const std::string rewind_display_string = "< " + rewind_media_file_display_string;
+      TMLabelStyle rewind_display_style(1, 0, COLS / 2, TMAlign::LEFT, 0, MOVE_FILE_NAME_MIDDLE_MARGIN);
+      tm_mvwaddstr_label(stdscr, rewind_display_style, rewind_display_string);
+    }
+
+    if (tmps.playlist.can_move(PlaylistMoveCommand::SKIP)) {
+      static constexpr int RIGHT_ARROW_MARGIN = 3;
+      werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
+      const std::string skip_display_string = get_media_file_display_name(tmps.playlist.peek_move(PlaylistMoveCommand::SKIP), this->metadata_cache);
+      TMLabelStyle skip_display_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, MOVE_FILE_NAME_MIDDLE_MARGIN, RIGHT_ARROW_MARGIN);
+      TMLabelStyle right_arrow_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, 0, 0);
+      tm_mvwaddstr_label(stdscr, skip_display_string_style, skip_display_string);
+      tm_mvwaddstr_label(stdscr, right_arrow_string_style, " >");
+    }
+  }
+
+  if (tmps.media_type == MediaType::VIDEO || tmps.media_type == MediaType::AUDIO) {
+    wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
+    wprint_playback_bar(stdscr, LINES - 2, 0, COLS, tmps.media_time_secs, tmps.media_duration_secs);
+
+    std::vector<std::string> bottom_labels;
+    const std::string playing_str = tmps.is_playing ? "PLAYING" : "PAUSED";
+    const std::string loop_str = str_capslock(loop_type_str(tmps.playlist.loop_type())); 
+    const std::string volume_str = "VOLUME: " + (tmps.muted ? "MUTED" : (std::to_string((int)(tmps.volume * 100)) + "%"));
+    const std::string shuffled_str = tmps.playlist.shuffled() ? "SHUFFLED" : "NOT SHUFFLED";
+
+    bottom_labels.push_back(playing_str);
+    if (tmps.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
+    bottom_labels.push_back(loop_str);
+    if (tmps.has_audio_output) bottom_labels.push_back(volume_str);
+    werasebox(stdscr, LINES - 1, 0, COLS, 1);
+    wprint_labels(stdscr, bottom_labels, LINES - 1, 0, COLS);
+  }
+}
+
+const char* loop_type_str_short(LoopType loop_type) {
+  switch (loop_type) {
+    case LoopType::NO_LOOP: return "NL";
+    case LoopType::REPEAT: return "R";
+    case LoopType::REPEAT_ONE: return "RO";
+  }
+  throw std::runtime_error("[loop_type_str_short] Could not identify loop_type");
+}

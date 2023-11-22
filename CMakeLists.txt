@@ -78,6 +78,7 @@ set(COMMON_SOURCE_FILES
 ./src/mediaclock.cpp
 ./src/mediadecoder.cpp
 ./src/mediafetcher.cpp
+./src/metadata.cpp
 ./src/pixeldata.cpp
 ./src/playlist.cpp
 ./src/scale.cpp
@@ -85,7 +86,8 @@ set(COMMON_SOURCE_FILES
 ./src/streamdecoder.cpp
 ./src/tmcurses_print.cpp
 ./src/tmcurses.cpp
-./src/tmedia_render.cpp
+./src/tmedia_tui.cpp
+./src/tmedia_tui_elems.cpp
 ./src/video_thread.cpp
 ./src/videoconverter.cpp
 ./src/wmath.cpp

@@ -203,14 +203,14 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
-  TMediaProgramData tmpd;
-  tmpd.muted = false;
-  tmpd.render_loop_max_fps = 24;
-  tmpd.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
-  tmpd.vom = VideoOutputMode::TEXT_ONLY;
-  tmpd.volume = 1.0;
-  tmpd.fullscreen = false;
-  tmpd.ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
+  TMediaStartupState tmss;
+  tmss.muted = false;
+  tmss.refresh_rate_fps = 24;
+  tmss.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+  tmss.vom = VideoOutputMode::TEXT_ONLY;
+  tmss.volume = 1.0;
+  tmss.fullscreen = false;
+  tmss.ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
 
   LoopType loop_type = LoopType::NO_LOOP;
   std::vector<std::string> found_media_files;
@@ -231,14 +231,14 @@ int main(int argc, char** argv)
 
   if (parser.get<bool>("--dump")) return program_dump_metadata(found_media_files);
 
-  tmpd.fullscreen = parser.get<bool>("-f");
-  tmpd.muted = parser.get<bool>("-m");
+  tmss.fullscreen = parser.get<bool>("-f");
+  tmss.muted = parser.get<bool>("-m");
   if (std::optional<double> user_volume = parser.present<double>("--volume")) {
     if (*user_volume < 0.0 || *user_volume > 1.0) {
       std::cerr << "[tmedia] Received invalid volume " << *user_volume << ". Volume must be between 0.0 and 1.0 inclusive" << std::endl;
       return EXIT_FAILURE;
     }
-    tmpd.volume = *user_volume;
+    tmss.volume = *user_volume;
   }
 
   if (std::optional<std::string> user_loop = parser.present<std::string>("--loop")) {
@@ -252,7 +252,7 @@ int main(int argc, char** argv)
 
   if (std::optional<std::string> user_scaling_algo = parser.present<std::string>("--scaling-algo")) {
     if (VALID_SCALING_ALGO_ARGS.count(*user_scaling_algo) == 1) {
-      tmpd.scaling_algorithm = VALID_SCALING_ALGO_ARGS.at(*user_scaling_algo);
+      tmss.scaling_algorithm = VALID_SCALING_ALGO_ARGS.at(*user_scaling_algo);
     } else {
       std::cerr << "[tmedia] Unrecognized scaling algorithm '" << *user_scaling_algo << "', must be " << format_arg_map(VALID_SCALING_ALGO_ARGS, "or") << "." << std::endl;
       return EXIT_FAILURE;
@@ -260,25 +260,25 @@ int main(int argc, char** argv)
   }
 
   if (std::optional<int> user_max_fps = parser.present<int>("--max-fps")) {
-    tmpd.render_loop_max_fps = user_max_fps.value() <= 0 ? std::nullopt : user_max_fps;
+    tmss.refresh_rate_fps = user_max_fps.value() <= 0 ? 10000 : user_max_fps.value();
   }
 
   if (std::optional<std::string> user_ascii_display_chars = parser.present<std::string>("--chars")) {
-    tmpd.ascii_display_chars = *user_ascii_display_chars;
+    tmss.ascii_display_chars = *user_ascii_display_chars;
   }
 
   if (parser.get<bool>("--color"))
-    tmpd.vom = parser.get<bool>("--background") ? VideoOutputMode::COLORED_BACKGROUND_ONLY : VideoOutputMode::COLORED;
+    tmss.vom = parser.get<bool>("--background") ? VideoOutputMode::COLORED_BACKGROUND_ONLY : VideoOutputMode::COLORED;
   else if (parser.get<bool>("--grayscale"))
-    tmpd.vom = parser.get<bool>("--background") ? VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY : VideoOutputMode::GRAYSCALE;
+    tmss.vom = parser.get<bool>("--background") ? VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY : VideoOutputMode::GRAYSCALE;
 
-  tmpd.playlist = Playlist(found_media_files, loop_type);
+  tmss.playlist = Playlist(found_media_files, loop_type);
 
   if (parser.get<bool>("--shuffle")) {
-    tmpd.playlist.shuffle(false);
+    tmss.playlist.shuffle(false);
   }
 
-  return tmedia(tmpd);
+  return tmedia(tmss);
 }
 
 int program_print_ffmpeg_version() {

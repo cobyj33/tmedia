@@ -12,7 +12,7 @@
 #include "sleep.h"
 #include "formatting.h"
 #include "tmedia_vom.h"
-#include "tmedia_render.h"
+#include "tmedia_tui_elems.h"
 #include "audioout.h"
 
 #include <rigtorp/SPSCQueue.h>
@@ -47,8 +47,6 @@ void init_global_video_output_mode(VideoOutputMode mode);
 
 const char* loop_type_str_short(LoopType loop_type);
 
-std::string get_media_file_display_name(std::string abs_path, MetadataCache& metadata_cache);
-
 const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "Video and Audio Controls\n"
   "- Space - Play and Pause\n"
@@ -69,20 +67,50 @@ const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "- 'P' - Rewind to Previous Media File\n"
   "- 'R' - Fully Refresh the Screen\n";
 
-int tmedia(TMediaProgramData tmpd) {
+TMediaProgramState tmss_to_tmps(TMediaStartupState tmss) {
+  TMediaProgramState tmps;
+  tmps.ascii_display_chars = tmss.ascii_display_chars;
+  tmps.fullscreen = tmss.fullscreen;
+  tmps.is_playing = false;
+  tmps.media_duration_secs = 0.0;
+  tmps.media_time_secs = 0.0;
+  tmps.media_type = MediaType::VIDEO;
+  tmps.muted = false;
+  tmps.playlist = tmss.playlist;
+  tmps.refresh_rate_fps = tmss.refresh_rate_fps;
+  tmps.scaling_algorithm = tmss.scaling_algorithm;
+  tmps.volume = tmss.volume;
+  tmps.vom = tmss.vom;
+  tmps.quit = false;
+  tmps.has_audio_output = false;
+  return tmps;
+}
 
+int tmedia_main_loop(TMediaProgramState tmps);
+
+int tmedia(TMediaStartupState tmss) {
   ncurses_init();
-  init_global_video_output_mode(tmpd.vom);
+  erase();
+  TMediaProgramState tmps = tmss_to_tmps(tmss);
+  init_global_video_output_mode(tmss.vom);
+  int res = tmedia_main_loop(tmps);
+  ncurses_uninit();
+  return res;
+}
 
-  bool full_exit = false;
-  MetadataCache metadata_cache;
-  while (!INTERRUPT_RECEIVED && !full_exit) {
-    erase();
+int tmedia_main_loop(TMediaProgramState tmps) {
+  TMediaRenderer renderer;
+
+  while (!INTERRUPT_RECEIVED && !tmps.quit) {
     PlaylistMoveCommand current_move_cmd = PlaylistMoveCommand::NEXT;
-    MediaFetcher fetcher(tmpd.playlist.current());
+    MediaFetcher fetcher(tmps.playlist.current());
     fetcher.requested_frame_dims = VideoDimensions(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
-    VideoDimensions last_frame_dims;
     std::unique_ptr<MAAudioOut> audio_output;
+
+    tmps.is_playing = false;
+    tmps.media_duration_secs = fetcher.get_duration();
+    tmps.media_type = fetcher.media_type;
+    tmps.has_audio_output = false;
 
     fetcher.begin();
 
@@ -94,31 +122,34 @@ int tmedia(TMediaProgramData tmpd) {
             float_buffer[i] = 0.0f;
       });
 
-      audio_output->set_volume(tmpd.volume);
+      tmps.has_audio_output = true;
+      audio_output->set_volume(tmps.volume);
       audio_output->start();
     }
     
 
     try {
       while (!fetcher.should_exit()) { // never break without setting in_use to false
-        PixelData frame;
         if (INTERRUPT_RECEIVED) {
           fetcher.dispatch_exit();
           break;
         }
 
+        if (tmps.media_type == MediaType::VIDEO || tmps.media_type == MediaType::AUDIO) {
+          tmps.is_playing = fetcher.is_playing();
+        }
+
         double current_system_time = 0.0; // filler, data to be filled in critical section
         double requested_jump_time = 0.0; // filler, data to be filled in critical section
-        double timestamp = 0.0; // filler, data to be filled in critical section
         bool requested_jump = false;
 
         {
           static constexpr double MAX_AUDIO_DESYNC_AMOUNT_SECONDS = 0.6;  
           std::lock_guard<std::mutex> _alter_lock(fetcher.alter_mutex);
           current_system_time = system_clock_sec(); // set in here, since locking the mutex could take an undetermined amount of time
-          timestamp = fetcher.get_time(current_system_time);
-          requested_jump_time = timestamp;
-          frame = fetcher.frame;
+          tmps.media_time_secs = fetcher.get_time(current_system_time);
+          requested_jump_time = tmps.media_time_secs;
+          tmps.frame = fetcher.frame;
 
           if (fetcher.get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_AMOUNT_SECONDS) {
             requested_jump = true;
@@ -129,7 +160,7 @@ int tmedia(TMediaProgramData tmpd) {
         while ((input = getch()) != ERR) { // Go through and process all the batched input
           if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b' || input == 'q' || input == 'Q') {
             fetcher.dispatch_exit();
-            full_exit = true;
+            tmps.quit = true;
             break; // break out of input != ERR
           }
 
@@ -150,31 +181,31 @@ int tmedia(TMediaProgramData tmpd) {
           }
 
           if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version
-            switch (tmpd.vom) {
-              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::COLORED); break;
-              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::COLORED); break;
+            switch (tmps.vom) {
+              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmps.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmps.vom, VideoOutputMode::COLORED); break;
+              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::COLORED); break;
             }
           }
 
           if ((input == 'g' || input == 'G') && has_colors() && can_change_color()) {
-            switch (tmpd.vom) {
-              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::GRAYSCALE); break;
-              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::GRAYSCALE); break;
+            switch (tmps.vom) {
+              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmps.vom, VideoOutputMode::GRAYSCALE); break;
+              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmps.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::TEXT_ONLY); break;
+              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::GRAYSCALE); break;
             }
           }
 
           if ((input == 'b' || input == 'B') && has_colors() && can_change_color()) {
-            switch (tmpd.vom) {
-              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::COLORED); break;
-              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmpd.vom, VideoOutputMode::GRAYSCALE); break;
+            switch (tmps.vom) {
+              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmps.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
+              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmps.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
+              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::COLORED); break;
+              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::GRAYSCALE); break;
               case VideoOutputMode::TEXT_ONLY: break; //no-op
             }
           }
@@ -191,37 +222,37 @@ int tmedia(TMediaProgramData tmpd) {
 
           if (input == 'f' || input == 'F') {
             erase();
-            tmpd.fullscreen = !tmpd.fullscreen;
+            tmps.fullscreen = !tmps.fullscreen;
           }
 
           if (input == KEY_UP && audio_output) {
-            tmpd.volume = clamp(tmpd.volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-            audio_output->set_volume(tmpd.volume);
+            tmps.volume = clamp(tmps.volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
+            audio_output->set_volume(tmps.volume);
           }
 
           if (input == KEY_DOWN && audio_output) {
-            tmpd.volume = clamp(tmpd.volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-            audio_output->set_volume(tmpd.volume);
+            tmps.volume = clamp(tmps.volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
+            audio_output->set_volume(tmps.volume);
           }
 
           if ((input == 'm' || input == 'M') && audio_output) {
-            tmpd.muted = !tmpd.muted;
-            audio_output->set_muted(tmpd.muted);
+            tmps.muted = !tmps.muted;
+            audio_output->set_muted(tmps.muted);
           }
 
           if ((input == 'l' || input == 'L') && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-            switch (tmpd.playlist.loop_type()) {
-              case LoopType::NO_LOOP: tmpd.playlist.set_loop_type(LoopType::REPEAT); break;
-              case LoopType::REPEAT: tmpd.playlist.set_loop_type(LoopType::REPEAT_ONE); break;
-              case LoopType::REPEAT_ONE: tmpd.playlist.set_loop_type(LoopType::NO_LOOP); break;
+            switch (tmps.playlist.loop_type()) {
+              case LoopType::NO_LOOP: tmps.playlist.set_loop_type(LoopType::REPEAT); break;
+              case LoopType::REPEAT: tmps.playlist.set_loop_type(LoopType::REPEAT_ONE); break;
+              case LoopType::REPEAT_ONE: tmps.playlist.set_loop_type(LoopType::NO_LOOP); break;
             }
           }
 
           if ((input == 's' || input == 'S') && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
-            if (!tmpd.playlist.shuffled()) {
-              tmpd.playlist.shuffle(true);
+            if (!tmps.playlist.shuffled()) {
+              tmps.playlist.shuffle(true);
             } else {
-              tmpd.playlist.unshuffle();
+              tmps.playlist.unshuffle();
             }
           }
 
@@ -264,111 +295,10 @@ int tmedia(TMediaProgramData tmpd) {
           if (audio_output && fetcher.is_playing()) audio_output->start();
         }
 
-        if (frame.get_width() != last_frame_dims.width || frame.get_height() != last_frame_dims.height) {
-          erase();
-        }
-
-        if (COLS < MIN_RENDER_COLS || LINES < MIN_RENDER_LINES) {
-          erase();
-        } else if (COLS <= 20 || LINES < 10 || tmpd.fullscreen) {
-          render_pixel_data(frame, 0, 0, COLS, LINES, tmpd.vom, tmpd.scaling_algorithm, tmpd.ascii_display_chars);
-        } else if (COLS < 60) {
-          static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
-          render_pixel_data(frame, 2, 0, COLS, LINES - 4, tmpd.vom, tmpd.scaling_algorithm, tmpd.ascii_display_chars);
-
-          wfill_box(stdscr, 1, 0, COLS, 1, '~');
-          werasebox(stdscr, 0, 0, COLS, 1);
-          const std::string current_playlist_index_str = "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ")";
-          const std::string current_playlist_media_str = get_media_file_display_name(tmpd.playlist.current(), metadata_cache);
-          const std::string current_playlist_file_display = (tmpd.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + current_playlist_media_str;
-          TMLabelStyle current_playlist_display_style(0, 0, COLS, TMAlign::CENTER, CURRENT_FILE_NAME_MARGIN, CURRENT_FILE_NAME_MARGIN);
-          tm_mvwaddstr_label(stdscr, current_playlist_display_style, current_playlist_file_display);
-
-          if (tmpd.playlist.size() > 1) {
-            if (tmpd.playlist.can_move(PlaylistMoveCommand::REWIND)) {
-              TMLabelStyle style(0, 0, COLS, TMAlign::LEFT, 0, 0);
-              tm_mvwaddstr_label(stdscr, style, "<");
-            }
-
-            if (tmpd.playlist.can_move(PlaylistMoveCommand::SKIP)) {
-              TMLabelStyle style(0, 0, COLS, TMAlign::RIGHT, 0, 0);
-              tm_mvwaddstr_label(stdscr, style, ">");
-            }
-          }
-
-          if (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO) {
-            wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
-            wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
-
-            std::vector<std::string> bottom_labels;
-            const std::string playing_str = fetcher.is_playing() ? ">" : "||";
-            const std::string loop_str = loop_type_str_short(tmpd.playlist.loop_type()); 
-            const std::string volume_str = tmpd.muted ? "M" : (std::to_string((int)(tmpd.volume * 100)) + "%");
-            const std::string shuffled_str = tmpd.playlist.shuffled() ? "S" : "NS";
-
-            bottom_labels.push_back(playing_str);
-            if (tmpd.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
-            bottom_labels.push_back(loop_str);
-            if (audio_output) bottom_labels.push_back(volume_str);
-            werasebox(stdscr, LINES - 1, 0, COLS, 1);
-            wprint_labels(stdscr, bottom_labels, LINES - 1, 0, COLS);
-          }
-        } else {
-          static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
-          render_pixel_data(frame, 2, 0, COLS, LINES - 4, tmpd.vom, tmpd.scaling_algorithm, tmpd.ascii_display_chars);
-
-          werasebox(stdscr, 0, 0, COLS, 2);
-          const std::string current_playlist_index_str = "(" + std::to_string(tmpd.playlist.index() + 1) + "/" + std::to_string(tmpd.playlist.size()) + ")";
-          const std::string current_playlist_media_str = get_media_file_display_name(tmpd.playlist.current(), metadata_cache);
-          const std::string current_playlist_file_display = (tmpd.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + current_playlist_media_str;
-          TMLabelStyle current_playlist_display_style(0, 0, COLS, TMAlign::CENTER, CURRENT_FILE_NAME_MARGIN, CURRENT_FILE_NAME_MARGIN);
-          tm_mvwaddstr_label(stdscr, current_playlist_display_style, current_playlist_file_display);
-
-          if (tmpd.playlist.size() == 1) {
-            wfill_box(stdscr, 1, 0, COLS, 1, '~');
-          } else {
-            static constexpr int MOVE_FILE_NAME_MIDDLE_MARGIN = 5;
-            wfill_box(stdscr, 2, 0, COLS, 1, '~');
-            if (tmpd.playlist.can_move(PlaylistMoveCommand::REWIND)) {
-              werasebox(stdscr, 1, 0, COLS / 2, 1);
-              const std::string rewind_display_string = "< " + get_media_file_display_name(tmpd.playlist.peek_move(PlaylistMoveCommand::REWIND), metadata_cache);
-              TMLabelStyle rewind_display_style(1, 0, COLS / 2, TMAlign::LEFT, 0, MOVE_FILE_NAME_MIDDLE_MARGIN);
-              tm_mvwaddstr_label(stdscr, rewind_display_style, rewind_display_string);
-            }
-
-            if (tmpd.playlist.can_move(PlaylistMoveCommand::SKIP)) {
-              static constexpr int RIGHT_ARROW_MARGIN = 3;
-              werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-              const std::string skip_display_string = get_media_file_display_name(tmpd.playlist.peek_move(PlaylistMoveCommand::SKIP), metadata_cache);
-              TMLabelStyle skip_display_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, MOVE_FILE_NAME_MIDDLE_MARGIN, RIGHT_ARROW_MARGIN);
-              TMLabelStyle right_arrow_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, 0, 0);
-              tm_mvwaddstr_label(stdscr, skip_display_string_style, skip_display_string);
-              tm_mvwaddstr_label(stdscr, right_arrow_string_style, " >");
-            }
-          }
-
-          if (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO) {
-            wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
-            wprint_playback_bar(stdscr, LINES - 2, 0, COLS, timestamp, fetcher.get_duration());
-
-            std::vector<std::string> bottom_labels;
-            const std::string playing_str = fetcher.is_playing() ? "PLAYING" : "PAUSED";
-            const std::string loop_str = str_capslock(loop_type_str(tmpd.playlist.loop_type())); 
-            const std::string volume_str = "VOLUME: " + (tmpd.muted ? "MUTED" : (std::to_string((int)(tmpd.volume * 100)) + "%"));
-            const std::string shuffled_str = tmpd.playlist.shuffled() ? "SHUFFLED" : "NOT SHUFFLED";
-
-            bottom_labels.push_back(playing_str);
-            if (tmpd.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
-            bottom_labels.push_back(loop_str);
-            if (audio_output) bottom_labels.push_back(volume_str);
-            werasebox(stdscr, LINES - 1, 0, COLS, 1);
-            wprint_labels(stdscr, bottom_labels, LINES - 1, 0, COLS);
-          }
-        }
+        renderer.render_tui(tmps);
 
         refresh();
-        last_frame_dims = VideoDimensions(frame.get_width(), frame.get_height());
-        if (tmpd.render_loop_max_fps) sleep_for_sec(1.0 / static_cast<double>(tmpd.render_loop_max_fps.value()));
+        sleep_for_sec(1.0 / static_cast<double>(tmps.refresh_rate_fps));
       }
     } catch (const std::exception& err) {
       std::lock_guard<std::mutex> lock(fetcher.alter_mutex);
@@ -376,36 +306,17 @@ int tmedia(TMediaProgramData tmpd) {
     }
 
     fetcher.join();
-
     if (fetcher.has_error()) {
-      ncurses_uninit();
-      std::cerr << "[tmedia]: Media Fetcher Error: " << fetcher.get_error() << std::endl;
-      return EXIT_FAILURE;
+      throw std::runtime_error("[tmedia]: Media Fetcher Error: " + fetcher.get_error());
     }
 
     //flush getch
     while (getch() != ERR) getch(); 
-
-
-    if (!tmpd.playlist.can_move(current_move_cmd)) break;
-    tmpd.playlist.move(current_move_cmd);
+    if (!tmps.playlist.can_move(current_move_cmd)) break;
+    tmps.playlist.move(current_move_cmd);
   }
 
-  ncurses_uninit();
   return EXIT_SUCCESS;
-}
-
-std::string get_media_file_display_name(std::string abs_path, MetadataCache& metadata_cache) {
-  metadata_cache_cache(abs_path, metadata_cache);
-  bool has_artist = metadata_cache_has(abs_path, "artist", metadata_cache);
-  bool has_title = metadata_cache_has(abs_path, "title", metadata_cache);
-
-  if (has_artist && has_title) {
-    return metadata_cache_get(abs_path, "artist", metadata_cache) + " - " + metadata_cache_get(abs_path, "title", metadata_cache);
-  } else if (has_title) {
-    return metadata_cache_get(abs_path, "title", metadata_cache);
-  }
-  return to_filename(abs_path);
 }
 
 
@@ -422,13 +333,4 @@ void init_global_video_output_mode(VideoOutputMode mode) {
 void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next) {
   init_global_video_output_mode(next);
   *current = next;
-}
-
-const char* loop_type_str_short(LoopType loop_type) {
-  switch (loop_type) {
-    case LoopType::NO_LOOP: return "NL";
-    case LoopType::REPEAT: return "R";
-    case LoopType::REPEAT_ONE: return "RO";
-  }
-  throw std::runtime_error("[loop_type_str_short] Could not identify loop_type");
 }

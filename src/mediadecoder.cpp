@@ -2,6 +2,7 @@
 
 #include "avguard.h"
 #include "boiler.h"
+#include "metadata.h"
 #include "decode.h"
 #include "formatting.h"
 

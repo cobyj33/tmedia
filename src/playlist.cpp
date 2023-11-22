@@ -36,14 +36,14 @@ std::size_t Playlist::size() const noexcept {
   return this->m_files.size();
 }
 
-std::string Playlist::current() {
+std::string Playlist::current() const {
   if (this->m_files.size() == 0) {
     throw std::runtime_error("[Playlist::current] Cannot access current file of empty playlist");
   }
   return this->m_files[this->index()];
 }
 
-LoopType Playlist::loop_type() noexcept {
+LoopType Playlist::loop_type() const noexcept {
   return this->m_loop_type;
 }
 
@@ -74,7 +74,7 @@ void Playlist::move(PlaylistMoveCommand move_cmd) {
   }
 }
 
-std::string Playlist::peek_move(PlaylistMoveCommand move_cmd) {
+std::string Playlist::peek_move(PlaylistMoveCommand move_cmd) const {
   int next = playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd);
   if (next < 0) {
     throw std::runtime_error("[Playlist::peek_move] can not commit move" + playlist_move_cmd_str(move_cmd)); 
@@ -87,7 +87,7 @@ bool Playlist::can_move(PlaylistMoveCommand move_cmd) const noexcept {
   return playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd) >= 0;
 }
 
-bool Playlist::shuffled() {
+bool Playlist::shuffled() const {
   return this->m_shuffled;
 }
 

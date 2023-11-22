@@ -48,19 +48,19 @@ class Playlist {
     Playlist();
     Playlist(std::vector<std::string> media_files, LoopType loop_type);
 
-    bool shuffled();
+    bool shuffled() const;
     void shuffle(bool keep_current_file_first);
     void unshuffle();
 
     std::size_t size() const noexcept;
     void set_loop_type(LoopType loop_type) noexcept;
-    LoopType loop_type() noexcept;
+    LoopType loop_type() const noexcept;
 
     int index() const;
-    std::string current();
+    std::string current() const;
 
     void move(PlaylistMoveCommand move_cmd);
-    std::string peek_move(PlaylistMoveCommand move_cmd);
+    std::string peek_move(PlaylistMoveCommand move_cmd) const;
     bool can_move(PlaylistMoveCommand move_cmd) const noexcept;
 };
 

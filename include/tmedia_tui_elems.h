@@ -1,5 +1,5 @@
-#ifndef TMEDIA_TMEDIA_RENDER_H
-#define TMEDIA_TMEDIA_RENDER_H
+#ifndef TMEDIA_TMEDIA_TUI_ELEMS_H
+#define TMEDIA_TMEDIA_TUI_ELEMS_H
 
 #include "pixeldata.h"
 #include "tmedia_vom.h"
