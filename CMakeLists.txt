@@ -64,6 +64,7 @@ set(COMMON_SOURCE_FILES
 ./src/audio_thread.cpp
 ./src/audio_visualizer.cpp
 ./src/audio.cpp
+./src/audioout.cpp
 ./src/audioresampler.cpp
 ./src/audioringbuffer.cpp
 ./src/blocking_audioringbuffer.cpp
@@ -85,7 +86,6 @@ set(COMMON_SOURCE_FILES
 ./src/tmcurses_print.cpp
 ./src/tmcurses.cpp
 ./src/tmedia_render.cpp
-./src/tmedia_string.cpp
 ./src/video_thread.cpp
 ./src/videoconverter.cpp
 ./src/wmath.cpp

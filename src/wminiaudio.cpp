@@ -33,6 +33,7 @@ ma_device_w::ma_device_w(const ma_device_config *pConfig) {
   }
   this->config_cache = *pConfig;
   this->volume_cache = 1.0;
+  this->m_playing = false;
 }
 
 // void ma_device_w::start() {
@@ -63,16 +64,33 @@ void ma_device_w::start() {
   if (log != MA_SUCCESS) {
     throw std::runtime_error("[ma_device_w::start] Failed to start playback: Miniaudio Error: " + std::string(ma_result_description(log)));
   }
+
+  this->m_playing = true;
 }
 
 void ma_device_w::stop() {
   ma_device_uninit(&this->device);
+  this->m_playing = false;
+}
+
+bool ma_device_w::playing() {
+  return this->m_playing;
 }
 
 void ma_device_w::set_volume(double volume) {
   double clamped_volume = clamp(volume, 0.0, 1.0);
   ma_device_set_master_volume(&this->device, clamped_volume);
   this->volume_cache = clamped_volume;
+}
+
+double ma_device_w::get_volume() {
+  float res;
+  ma_result err = ma_device_get_master_volume(&this->device, &res);
+  if (err != MA_SUCCESS) {
+    throw std::runtime_error("[ma_device_w::get_volume] Failed to get miniaudio volume: Miniaudio Error: " + std::string(ma_result_description(err)));
+  }
+  
+  return res;
 }
 
 ma_device_w::~ma_device_w() {

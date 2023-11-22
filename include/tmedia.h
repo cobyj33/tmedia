@@ -22,6 +22,24 @@ struct TMediaProgramData {
   std::string ascii_display_chars;
 };
 
+struct TMediaProgramState {
+  Playlist playlist;
+  double volume;
+  bool muted;
+};
+
+struct TMediaTUIState {
+  PixelData frame;
+  VideoOutputMode vom;
+  ScalingAlgo scaling_algorithm;
+  std::string ascii_display_chars;
+  std::optional<int> render_loop_max_fps;
+  bool fullscreen;
+};
+
+
 int tmedia(TMediaProgramData tmpd);
+void tmedia_handle_key(int key);
+void tmedia_render_tui(TMediaProgramState program_state, TMediaTUIState tui_state);
 
 #endif

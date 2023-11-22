@@ -10,6 +10,8 @@
 #include <iomanip> // std::setprecision
 #include <sstream>
 #include <filesystem>
+#include <cctype>
+#include <cstdlib>
 
 
 std::string double_to_fixed_string(double num, int decimal_places) {
@@ -237,4 +239,53 @@ std::string format_list(std::vector<std::string> items, std::string conjunction)
 
 std::string to_filename(const std::string& path_str) {
   return std::filesystem::path(path_str).filename().string();
+}
+
+std::string sprintf_str(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    std::string str = vsprintf_str(format, args);
+    va_end(args);
+    return str;
+}
+
+std::string vsprintf_str(const char* format, va_list args) {
+    va_list writing_args, reading_args;
+    va_copy(reading_args, args);
+    va_copy(writing_args, args);
+
+    int alloc_size = vsnprintf(nullptr, 0, format, reading_args);
+    va_end(reading_args);
+    if (alloc_size < 0) {
+      va_end(writing_args);
+      throw std::runtime_error("[vsprintf_str] vsnprintf error return value: " + std::to_string(alloc_size));
+    }
+
+    char* cstr = (char*)malloc(sizeof(char) * (alloc_size + 1));
+    if (cstr == nullptr) {
+        va_end(writing_args);
+        throw std::bad_alloc();
+    }
+
+    vsnprintf(cstr, alloc_size + 1, format, writing_args);
+    va_end(writing_args);
+
+    std::string string(cstr);
+    free(cstr);
+    return string;
+}
+
+std::string str_bound(const std::string& str, std::size_t max_size) {
+  if (str.length() > max_size) {
+    return str.substr(0, max_size);
+  }
+  return str;
+}
+
+std::string str_capslock(const std::string& str) {
+  std::string out;
+  for (std::size_t i = 0; i < str.length(); i++) {
+    out += std::toupper(str.at(i));
+  }
+  return out;
 }

@@ -8,12 +8,12 @@
 #include "wtime.h"
 #include "wmath.h"
 #include "wtime.h"
-#include "tmedia_string.h"
 #include "ascii.h"
 #include "sleep.h"
 #include "formatting.h"
 #include "tmedia_vom.h"
 #include "tmedia_render.h"
+#include "audioout.h"
 
 #include <rigtorp/SPSCQueue.h>
 #include "readerwritercircularbuffer.h"
@@ -41,13 +41,6 @@ static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
 static constexpr int MIN_RENDER_COLS = 2;
 static constexpr int MIN_RENDER_LINES = 2; 
 
-// audio constants
-
-static constexpr int AUDIO_QUEUE_SIZE_FRAMES = 4096;
-static constexpr int FETCHER_AUDIO_READING_BLOCK_SIZE = 1024;
-static constexpr int MINIAUDIO_PERIOD_SIZE_FRAMES = 0;
-static constexpr int MINIAUDIO_PERIOD_SIZE_MS = 75;
-static constexpr int MINIAUDIO_PERIODS = 3;
 
 void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next);
 void init_global_video_output_mode(VideoOutputMode mode);
@@ -76,44 +69,10 @@ const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "- 'P' - Rewind to Previous Media File\n"
   "- 'R' - Fully Refresh the Screen\n";
 
-void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
+std::function<void(float*, int)> fetcher_on_data(MediaFetcher* fetcher) {
+  return [fetcher] (float* ) {
 
-struct AudioCallbackData {
-  moodycamel::BlockingReaderWriterCircularBuffer<float>* audio_queue;
-  std::atomic<bool> muted;
-  AudioCallbackData(moodycamel::BlockingReaderWriterCircularBuffer<float>* audio_queue, bool muted) : audio_queue(audio_queue), muted(muted) {}
-};
-
-void audio_queue_fill_thread_func(MediaFetcher* source_fetcher, moodycamel::BlockingReaderWriterCircularBuffer<float>* dest_queue) {
-  static constexpr int AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS = 20;
-  const int nb_channels = source_fetcher->audio_buffer->get_nb_channels();
-  const int intermediary_frames_size = FETCHER_AUDIO_READING_BLOCK_SIZE / nb_channels;
-  float intermediary[FETCHER_AUDIO_READING_BLOCK_SIZE];
-
-  while (!source_fetcher->should_exit()) {
-    while (!source_fetcher->audio_buffer->try_read_into(intermediary_frames_size, intermediary, AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS)) {
-      if (source_fetcher->should_exit()) break;
-    }
-
-    for (int i = 0; i < FETCHER_AUDIO_READING_BLOCK_SIZE; i++) {
-      dest_queue->wait_enqueue(intermediary[i]);
-    }
   }
-}
-
-void audioDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
-  const AudioCallbackData* data = (AudioCallbackData*)(pDevice->pUserData);
-  float sample;
-  for (ma_uint32 i = 0; i < frameCount * pDevice->playback.channels; i++) {
-    if (data->audio_queue->try_dequeue(sample)) {
-      if (!data->muted) ((float*)pOutput)[i] = sample;
-      else ((float*)pOutput)[i] = 0.0f;
-    } else {
-      ((float*)pOutput)[i] = 0.0f;
-    }
-  }
-
-  (void)pInput;
 }
 
 
@@ -130,34 +89,20 @@ int tmedia(TMediaProgramData tmpd) {
     MediaFetcher fetcher(tmpd.playlist.current());
     fetcher.requested_frame_dims = VideoDimensions(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
     VideoDimensions last_frame_dims;
-
-    std::unique_ptr<ma_device_w> audio_device;
-    const int audio_queue_init_size = AUDIO_QUEUE_SIZE_FRAMES * (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO) ? fetcher.media_decoder->get_nb_channels() : 1);
-    moodycamel::BlockingReaderWriterCircularBuffer<float> audio_queue(audio_queue_init_size);
-    AudioCallbackData audio_device_user_data(&audio_queue, tmpd.muted);
-    std::thread audio_queue_fill_thread;
+    std::unique_ptr<MAAudioOut> audio_output;
 
     fetcher.begin();
 
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-      ma_device_config config = ma_device_config_init(ma_device_type_playback);
-      config.playback.format  = ma_format_f32;
-      config.playback.channels = fetcher.media_decoder->get_nb_channels();
-      config.sampleRate = fetcher.media_decoder->get_sample_rate();       
-      config.dataCallback = audioDataCallback;   
-      config.pUserData = (void*)(&audio_device_user_data);
-      config.noPreSilencedOutputBuffer = MA_TRUE;
-      config.noClip = MA_TRUE;
-      config.noFixedSizedCallback = MA_TRUE;
-      config.periodSizeInFrames = MINIAUDIO_PERIOD_SIZE_FRAMES;
-      config.periodSizeInMilliseconds = MINIAUDIO_PERIOD_SIZE_MS;
-      config.periods = MINIAUDIO_PERIODS;
+      audio_output = std::make_unique<MAAudioOut>(fetcher.media_decoder->get_nb_channels(), fetcher.media_decoder->get_sample_rate(), [&fetcher] (float* float_buffer, int nb_frames) {
+        bool success = fetcher.audio_buffer->try_read_into(nb_frames, float_buffer, 5);
+        if (!success)
+          for (int i = 0; i < nb_frames * fetcher.media_decoder->get_nb_channels(); i++)
+            float_buffer[i] = 0.0f;
+      });
 
-      std::thread initialized_audio_queue_fill_thread(audio_queue_fill_thread_func, &fetcher, &audio_queue);
-      audio_queue_fill_thread.swap(initialized_audio_queue_fill_thread);
-      audio_device = std::make_unique<ma_device_w>(&config);
-      audio_device->set_volume(tmpd.volume);
-      audio_device->start();
+      audio_output->set_volume(tmpd.volume);
+      audio_output->start();
     }
     
 
@@ -205,9 +150,9 @@ int tmedia(TMediaProgramData tmpd) {
 
           if (input == 'r' || input == 'R') {
             erase();
-            if (audio_device && fetcher.is_playing()) {
-              audio_device->stop();
-              audio_device->start();
+            if (audio_output && audio_output->playing()) {
+              audio_output->stop();
+              audio_output->start();
             }
           }
 
@@ -256,19 +201,19 @@ int tmedia(TMediaProgramData tmpd) {
             tmpd.fullscreen = !tmpd.fullscreen;
           }
 
-          if (input == KEY_UP && audio_device) {
+          if (input == KEY_UP && audio_output) {
             tmpd.volume = clamp(tmpd.volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-            audio_device->set_volume(tmpd.volume);
+            audio_output->set_volume(tmpd.volume);
           }
 
-          if (input == KEY_DOWN && audio_device) {
+          if (input == KEY_DOWN && audio_output) {
             tmpd.volume = clamp(tmpd.volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-            audio_device->set_volume(tmpd.volume);
+            audio_output->set_volume(tmpd.volume);
           }
 
-          if ((input == 'm' || input == 'M') && audio_device) {
+          if ((input == 'm' || input == 'M') && audio_output) {
             tmpd.muted = !tmpd.muted;
-            audio_device_user_data.muted = tmpd.muted;
+            audio_output->set_muted(tmpd.muted);
           }
 
           if ((input == 'l' || input == 'L') && (fetcher.media_type == MediaType::VIDEO || fetcher.media_type == MediaType::AUDIO)) {
@@ -291,11 +236,11 @@ int tmedia(TMediaProgramData tmpd) {
             std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex); 
             switch (fetcher.is_playing()) {
               case true:  {
-                if (audio_device) audio_device->stop();
+                if (audio_output) audio_output->stop();
                 fetcher.pause(current_system_time);
               } break;
               case false: {
-                if (audio_device) audio_device->start();
+                if (audio_output) audio_output->start();
                 fetcher.resume(current_system_time);
               } break;
             }
@@ -318,14 +263,12 @@ int tmedia(TMediaProgramData tmpd) {
         } // Ending of "while (input != ERR)"
 
         if (requested_jump) {
-          if (audio_device && fetcher.is_playing()) audio_device->stop();
+          if (audio_output && fetcher.is_playing()) audio_output->stop();
           {
-            float dump;
-            while (audio_queue.try_dequeue(dump)) {} // safe, since the audio_device is not consuming anymore
             std::scoped_lock<std::mutex, std::mutex> total_lock{fetcher.alter_mutex, fetcher.audio_buffer_mutex};
             fetcher.jump_to_time(clamp(requested_jump_time, 0.0, fetcher.get_duration()), system_clock_sec());
           }
-          if (audio_device && fetcher.is_playing()) audio_device->start();
+          if (audio_output && fetcher.is_playing()) audio_output->start();
         }
 
         if (frame.get_width() != last_frame_dims.width || frame.get_height() != last_frame_dims.height) {
@@ -373,7 +316,7 @@ int tmedia(TMediaProgramData tmpd) {
             bottom_labels.push_back(playing_str);
             if (tmpd.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
             bottom_labels.push_back(loop_str);
-            if (audio_device) bottom_labels.push_back(volume_str);
+            if (audio_output) bottom_labels.push_back(volume_str);
             werasebox(stdscr, LINES - 1, 0, COLS, 1);
             wprint_labels(stdscr, bottom_labels, LINES - 1, 0, COLS);
           }
@@ -424,7 +367,7 @@ int tmedia(TMediaProgramData tmpd) {
             bottom_labels.push_back(playing_str);
             if (tmpd.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
             bottom_labels.push_back(loop_str);
-            if (audio_device) bottom_labels.push_back(volume_str);
+            if (audio_output) bottom_labels.push_back(volume_str);
             werasebox(stdscr, LINES - 1, 0, COLS, 1);
             wprint_labels(stdscr, bottom_labels, LINES - 1, 0, COLS);
           }
@@ -444,10 +387,6 @@ int tmedia(TMediaProgramData tmpd) {
       fetcher.dispatch_exit(err.what());
     }
 
-    if (audio_device) audio_device->stop();
-    float audio_queue_popped_sample;
-    while (audio_queue.try_dequeue(audio_queue_popped_sample)) {} //flush audio_queue (REALLY IMPORTANT!)
-    if (audio_queue_fill_thread.joinable()) audio_queue_fill_thread.join();
     fetcher.join();
 
     if (fetcher.has_error()) {

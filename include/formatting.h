@@ -38,4 +38,9 @@ std::string to_filename(const std::string& path);
 
 std::string format_list(std::vector<std::string> items, std::string conjunction);
 
+std::string str_bound(const std::string& str, std::size_t max_size);
+std::string vsprintf_str(const char* format, va_list args);
+std::string sprintf_str(const char* format, ...);
+std::string str_capslock(const std::string& str);
+
 #endif
