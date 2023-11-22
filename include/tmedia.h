@@ -8,6 +8,8 @@
 #include "boiler.h"
 #include "scale.h"
 
+#include "audioout.h"
+#include "mediafetcher.h"
 
 #include <optional>
 #include <vector>
@@ -26,6 +28,73 @@ struct TMediaStartupState {
   bool fullscreen;
   std::string ascii_display_chars;
 };
+
+// class TMediaViewState {
+//   PixelData frame;
+//   VideoOutputMode vom;
+//   ScalingAlgo scaling_algorithm;
+//   bool fullscreen;
+//   std::string ascii_display_chars;
+// };
+
+// class TMediaPlayer {
+//   private:
+//     Playlist* playlist;
+//     MediaFetcher* media;
+//     AudioOut* audio_output;
+//     double m_volume;
+//     bool m_muted;
+//     int refresh_rate_fps;
+
+//   public:
+//     TMediaPlayer(std::string source);
+
+//     void run();
+
+//     void start();
+//     void stop();
+//     void toggle_playback();
+
+//     void skip();
+//     void rewind();
+    
+//     bool playing();
+//     double volume();
+//     bool muted();
+//     double duration();
+//     double time(double current_system_time);
+
+//     void mute();
+//     void set_volume();
+//     void seek(double media_time, double current_system_time);
+// };
+
+// struct TMediaState {
+//   Playlist* playlist;
+//   MediaFetcher* media;
+//   AudioOut* audio_output;
+
+//   bool quit;
+//   PixelData frame;
+
+//   VideoOutputMode vom;
+//   bool fullscreen;
+//   ScalingAlgo scaling_algorithm;
+//   std::string ascii_display_chars;
+// };
+
+// typedef std::function<void(TMediaState*, double current_system_time)> TMediaCommand;
+
+// TMediaCommand tmedia_toggle_playback_command();
+// TMediaCommand exit_command();
+// TMediaCommand toggle_shuffle_command();
+// TMediaCommand toggle_mute_command();
+// TMediaCommand toggle_loop_command();
+// TMediaCommand skip_command();
+// TMediaCommand rewind_command();
+// TMediaCommand seek_command(double time);
+// TMediaCommand seek_offset_command(double offset_time);
+// TMediaCommand image_output_command(VideoOutputMode vom);
 
 struct TMediaProgramState {
   Playlist playlist;
@@ -60,24 +129,8 @@ class TMediaRenderer {
     void render_tui_large(const TMediaProgramState tmps);
   
   public:
-    void render_tui(TMediaProgramState tmps);
+    void render_tui(const TMediaProgramState tmps);
 };
-
-
-// struct ExitAction {};
-// struct IncrementVolumeAction { double increment; };
-// struct SeekAction { double time; };
-// struct SeekRelativeAction { double offset; };
-// struct ToggleMuteAction {};
-// struct PlayAction {};
-// struct PauseAction {};
-// struct TogglePlayAction {};
-// struct SkipAction {};
-// struct RewindAction {};
-// struct GrayscaleAction {};
-// struct BackgroundAction {};
-// struct ColorAction {};
-// struct LoopAction {};
 
 void tmedia_handle_key(int key);
 

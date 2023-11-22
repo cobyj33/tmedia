@@ -73,7 +73,7 @@ void ma_device_w::stop() {
   this->m_playing = false;
 }
 
-bool ma_device_w::playing() {
+bool ma_device_w::playing() const {
   return this->m_playing;
 }
 
@@ -83,13 +83,13 @@ void ma_device_w::set_volume(double volume) {
   this->volume_cache = clamped_volume;
 }
 
-double ma_device_w::get_volume() {
+double ma_device_w::get_volume() const {
   float res;
-  ma_result err = ma_device_get_master_volume(&this->device, &res);
+  ma_result err = ma_device_get_master_volume((ma_device*)&this->device, &res);
   if (err != MA_SUCCESS) {
     throw std::runtime_error("[ma_device_w::get_volume] Failed to get miniaudio volume: Miniaudio Error: " + std::string(ma_result_description(err)));
   }
-  
+
   return res;
 }
 

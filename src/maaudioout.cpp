@@ -1,4 +1,5 @@
 #include "audioout.h"
+#include "maaudioout.h"
 
 #include "wmath.h"
 
@@ -79,7 +80,7 @@ MAAudioOut::MAAudioOut(int nb_channels, int sample_rate, std::function<void(floa
   this->m_audio_device = std::make_unique<ma_device_w>(&config);
 }
 
-bool MAAudioOut::playing() {
+bool MAAudioOut::playing() const {
   return this->m_audio_device->playing();
 }
 
@@ -96,11 +97,11 @@ void MAAudioOut::stop() {
   if (this->audio_queue_fill_thread.joinable()) this->audio_queue_fill_thread.join();
 }
 
-double MAAudioOut::volume() {
+double MAAudioOut::volume() const {
   return this->m_audio_device->get_volume();
 }
 
-bool MAAudioOut::muted() {
+bool MAAudioOut::muted() const {
   return this->m_muted;
 }
 

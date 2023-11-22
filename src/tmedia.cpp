@@ -13,7 +13,7 @@
 #include "formatting.h"
 #include "tmedia_vom.h"
 #include "tmedia_tui_elems.h"
-#include "audioout.h"
+#include "maaudioout.h"
 
 #include <rigtorp/SPSCQueue.h>
 #include "readerwritercircularbuffer.h"
@@ -115,8 +115,9 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     fetcher.begin();
 
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+      static constexpr int AUDIO_BUFFER_TRY_READ_MS = 5;
       audio_output = std::make_unique<MAAudioOut>(fetcher.media_decoder->get_nb_channels(), fetcher.media_decoder->get_sample_rate(), [&fetcher] (float* float_buffer, int nb_frames) {
-        bool success = fetcher.audio_buffer->try_read_into(nb_frames, float_buffer, 5);
+        bool success = fetcher.audio_buffer->try_read_into(nb_frames, float_buffer, AUDIO_BUFFER_TRY_READ_MS);
         if (!success)
           for (int i = 0; i < nb_frames * fetcher.media_decoder->get_nb_channels(); i++)
             float_buffer[i] = 0.0f;
@@ -129,7 +130,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     
 
     try {
-      while (!fetcher.should_exit()) { // never break without setting in_use to false
+      while (!fetcher.should_exit()) { // never break without using dispatch_exit on fetcher to false
         if (INTERRUPT_RECEIVED) {
           fetcher.dispatch_exit();
           break;
@@ -318,6 +319,47 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
   return EXIT_SUCCESS;
 }
+
+// void tmedia_handle_key(int key) {
+//   switch (key) {
+
+//   }
+// }
+
+// TMediaCommand tmedia_toggle_playback_command() {
+//   return [] (TMediaState* tms, double current_system_time) {
+//     std::lock_guard<std::mutex> alter_lock(tms->media->alter_mutex); 
+//     switch (tms->media->is_playing()) {
+//       case true:  {
+//         if (tms->audio_output != nullptr) tms->audio_output->stop();
+//         tms->media->pause(current_system_time);
+//       } break;
+//       case false: {
+//         if (tms->audio_output != nullptr) tms->audio_output->start();
+//         tms->media->resume(current_system_time);
+//       } break;
+//     }
+//   };
+// }
+
+// TMediaCommand exit_command() {
+//   return [] (TMediaState* tms, double current_system_time) {
+//     tms->quit = true;
+//     tms->media->dispatch_exit();
+//   };
+// }
+
+// TMediaCommand toggle_shuffle_command() {
+
+// }
+
+// TMediaCommand toggle_mute_command();
+// TMediaCommand toggle_loop_command();
+// TMediaCommand skip_command();
+// TMediaCommand rewind_command();
+// TMediaCommand seek_command(double time);
+// TMediaCommand seek_offset_command(double offset_time);
+// TMediaCommand image_output_command(VideoOutputMode vom);
 
 
 void init_global_video_output_mode(VideoOutputMode mode) {

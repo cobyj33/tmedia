@@ -64,7 +64,7 @@ set(COMMON_SOURCE_FILES
 ./src/audio_thread.cpp
 ./src/audio_visualizer.cpp
 ./src/audio.cpp
-./src/audioout.cpp
+./src/maaudioout.cpp
 ./src/audioresampler.cpp
 ./src/audioringbuffer.cpp
 ./src/blocking_audioringbuffer.cpp

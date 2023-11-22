@@ -20,8 +20,8 @@ class ma_device_w {
     void start();
     void stop();
     void set_volume(double volume);
-    double get_volume();
-    bool playing();
+    double get_volume() const;
+    bool playing() const;
 
     ~ma_device_w();
 };
