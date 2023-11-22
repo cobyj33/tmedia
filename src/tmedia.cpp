@@ -69,13 +69,6 @@ const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "- 'P' - Rewind to Previous Media File\n"
   "- 'R' - Fully Refresh the Screen\n";
 
-std::function<void(float*, int)> fetcher_on_data(MediaFetcher* fetcher) {
-  return [fetcher] (float* ) {
-
-  }
-}
-
-
 int tmedia(TMediaProgramData tmpd) {
 
   ncurses_init();
@@ -265,7 +258,7 @@ int tmedia(TMediaProgramData tmpd) {
         if (requested_jump) {
           if (audio_output && fetcher.is_playing()) audio_output->stop();
           {
-            std::scoped_lock<std::mutex, std::mutex> total_lock{fetcher.alter_mutex, fetcher.audio_buffer_mutex};
+            std::scoped_lock<std::mutex> total_lock{fetcher.alter_mutex};
             fetcher.jump_to_time(clamp(requested_jump_time, 0.0, fetcher.get_duration()), system_clock_sec());
           }
           if (audio_output && fetcher.is_playing()) audio_output->start();
@@ -375,12 +368,7 @@ int tmedia(TMediaProgramData tmpd) {
 
         refresh();
         last_frame_dims = VideoDimensions(frame.get_width(), frame.get_height());
-        if (tmpd.render_loop_max_fps) {
-          std::unique_lock<std::mutex> exit_notify_lock(fetcher.exit_notify_mutex);
-          if (!fetcher.should_exit()) {
-            fetcher.exit_cond.wait_for(exit_notify_lock,  seconds_to_chrono_nanoseconds(1 / static_cast<double>(tmpd.render_loop_max_fps.value())));
-          }
-        }
+        if (tmpd.render_loop_max_fps) sleep_for_sec(1.0 / static_cast<double>(tmpd.render_loop_max_fps.value()));
       }
     } catch (const std::exception& err) {
       std::lock_guard<std::mutex> lock(fetcher.alter_mutex);

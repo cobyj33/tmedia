@@ -24,11 +24,23 @@ extern "C" {
 }
 
 /**
- * 
- * Notes for use:
- * 
- * If both must be locked, ALWAYS lock the alter_mutex before the audio_buffer_mutex
+   * Locking Heirarchy:
+   * 
+   * alter_mutex - General mutations to the MediaFetcher
+   * 
+   * exit_notify_mutex - Mutex specifically for the exit_cond to notify sleeping threads
+   * that the MediaFetcher has been sent an exit dispatch 
+   * 
+   * resume_notify_mutex - Mutex specifically for the resume_cond to tell sleeping
+   * threads that the MediaFetcher has been resumed.
+   * 
+   * The locking heirarchy for the mutexes specific to condition variables are not as
+   * important, as std::scoped_lock can avoid deadlocks anyway if multiple mutexes are
+   * passed at once, and cond-paired mutexes should only be used in closed scopes
+   * for notifying and receiving a notification
+   * 
 */
+
 class MediaFetcher {
   private:
     std::thread video_thread;
@@ -50,49 +62,22 @@ class MediaFetcher {
     std::optional<std::string> error;
     std::unique_ptr<Visualizer> audio_visualizer;
 
-  public:
-
-    MediaType media_type;
-    std::unique_ptr<MediaDecoder> media_decoder;
-    PixelData frame;
-
-    /**
-     * Locking Heirarchy:
-     * 
-     * alter_mutex - General mutations to the MediaFetcher
-     * 
-     * audio_buffer_mutex - General reads and writes to the audio_buffer. Reading
-     * and writing to the audio_buffer does not require alter_mutex to be locked,
-     * but the audio_buffer_mutex must be locked after the alter_mutex
-     * 
-     * audio_buffer_request_mutex - Mutex specifically for the audio_buffer_cond to
-     * request more audio to be generated
-     * 
-     * exit_notify_mutex - Mutex specifically for the exit_cond to notify sleeping threads
-     * that the MediaFetcher has been sent an exit dispatch 
-     * 
-     * resume_notify_mutex - Mutex specifically for the resume_cond to tell sleeping
-     * threads that the MediaFetcher has been resumed.
-     * 
-     * The locking heirarchy for the mutexes specific to condition variables are not as
-     * important, as std::scoped_lock can avoid deadlocks anyway if multiple mutexes are
-     * passed at once, and cond-paired mutexes should only be used in closed scopes
-     * for notifying and receiving a notification
-     * 
-    */
-
-
-    std::mutex alter_mutex;
-    std::mutex audio_buffer_mutex;
-
-    std::mutex audio_buffer_request_mutex;
-    std::condition_variable audio_buffer_cond;
 
     std::mutex exit_notify_mutex;
     std::condition_variable exit_cond;
 
     std::mutex resume_notify_mutex;
     std::condition_variable resume_cond;
+
+  public:
+
+    MediaType media_type;
+    std::unique_ptr<MediaDecoder> media_decoder;
+    PixelData frame;
+
+    std::mutex alter_mutex;
+
+    
     
     std::unique_ptr<BlockingAudioRingBuffer> audio_buffer;
 
@@ -128,7 +113,7 @@ class MediaFetcher {
      * @return The current time of playback since 0:00 in seconds
      */
     double get_time(double current_system_time) const; // Not thread-safe, lock alter_mutex first
-    double get_desync_time(double current_system_time) const; // Not thread-safe, lock alter_mutex and audio_buffer_mutex first
+    double get_desync_time(double current_system_time) const; // Not thread-safe, lock alter_mutex first
 
     /**
      * @brief Moves the MediaFetcher's playback to a certain time (including video and audio streams)
@@ -139,7 +124,7 @@ class MediaFetcher {
      * @param current_system_time The current system time
      * @throws If the target time is not in the boudns of the video's playtime
      */
-    int jump_to_time(double target_time, double current_system_time); // Not thread-safe, lock alter_mutex and audio_buffer_mutex first
+    int jump_to_time(double target_time, double current_system_time); // Not thread-safe, lock alter_mutex first
 };
 
 

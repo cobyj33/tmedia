@@ -46,10 +46,9 @@ void MediaFetcher::dispatch_exit(std::string err) {
 }
 
 void MediaFetcher::dispatch_exit() {
-  std::scoped_lock<std::mutex, std::mutex, std::mutex> notification_locks(this->exit_notify_mutex, this->audio_buffer_request_mutex, this->resume_notify_mutex);
+  std::scoped_lock<std::mutex, std::mutex> notification_locks(this->exit_notify_mutex, this->resume_notify_mutex);
   this->in_use = false;
   this->exit_cond.notify_all();
-  this->audio_buffer_cond.notify_all();
   this->resume_cond.notify_all();
 }
 
@@ -141,8 +140,6 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   }
   
   this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time
-  std::unique_lock<std::mutex> audio_buffer_request_lock(this->audio_buffer_request_mutex);
-  this->audio_buffer_cond.notify_one();
   return ret;
 }
 
@@ -150,9 +147,6 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
  * Cannot be called inside video_fetching_thread or audio_fetching_thread at all
  * 
  * Writes some audio to the audio buffer initially, and starts the audio and video threads
- * 
- * Note that if the user should lock the audio_buffer_mutex before calling this function
- * if another thread is already attempting to read from the audio buffer
 */
 void MediaFetcher::begin() {
   this->in_use = true;
