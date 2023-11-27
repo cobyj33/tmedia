@@ -17,31 +17,31 @@ static constexpr int MIN_RENDER_LINES = 2;
 
 const char* loop_type_str_short(LoopType loop_type);
 
-void TMediaRenderer::render_tui(const TMediaProgramState tmps) {
-  if (tmps.frame.get_width() != this->last_frame_dims.width || tmps.frame.get_height() != this->last_frame_dims.height) {
+void TMediaRenderer::render_tui(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
+  if (snapshot.frame.get_width() != this->last_frame_dims.width || snapshot.frame.get_height() != this->last_frame_dims.height) {
     erase();
   }
 
   if (COLS < MIN_RENDER_COLS || LINES < MIN_RENDER_LINES) {
     erase();
   } else if (COLS <= 20 || LINES < 10 || tmps.fullscreen) {
-      this->render_tui_fullscreen(tmps);
+      this->render_tui_fullscreen(tmps, snapshot);
   } else if (COLS < 60) {
-    this->render_tui_compact(tmps);
+    this->render_tui_compact(tmps, snapshot);
   } else {
-    this->render_tui_large(tmps);
+    this->render_tui_large(tmps, snapshot);
   }
 
-  this->last_frame_dims = VideoDimensions(tmps.frame.get_width(), tmps.frame.get_height());
+  this->last_frame_dims = VideoDimensions(snapshot.frame.get_width(), snapshot.frame.get_height());
 }
 
-void TMediaRenderer::render_tui_fullscreen(const TMediaProgramState tmps) {
-  render_pixel_data(tmps.frame, 0, 0, COLS, LINES, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+void TMediaRenderer::render_tui_fullscreen(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
+  render_pixel_data(snapshot.frame, 0, 0, COLS, LINES, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
 }
 
-void TMediaRenderer::render_tui_compact(const TMediaProgramState tmps) {
+void TMediaRenderer::render_tui_compact(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
   static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
-  render_pixel_data(tmps.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+  render_pixel_data(snapshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
 
   wfill_box(stdscr, 1, 0, COLS, 1, '~');
   werasebox(stdscr, 0, 0, COLS, 1);
@@ -63,12 +63,12 @@ void TMediaRenderer::render_tui_compact(const TMediaProgramState tmps) {
     }
   }
 
-  if (tmps.media_type == MediaType::VIDEO || tmps.media_type == MediaType::AUDIO) {
+  if (snapshot.media_type == MediaType::VIDEO || snapshot.media_type == MediaType::AUDIO) {
     wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
-    wprint_playback_bar(stdscr, LINES - 2, 0, COLS, tmps.media_time_secs, tmps.media_duration_secs);
+    wprint_playback_bar(stdscr, LINES - 2, 0, COLS, snapshot.media_time_secs, snapshot.media_duration_secs);
 
     std::vector<std::string> bottom_labels;
-    const std::string playing_str = tmps.is_playing ? ">" : "||";
+    const std::string playing_str = tmps.playing ? ">" : "||";
     const std::string loop_str = loop_type_str_short(tmps.playlist.loop_type()); 
     const std::string volume_str = tmps.muted ? "M" : (std::to_string((int)(tmps.volume * 100)) + "%");
     const std::string shuffled_str = tmps.playlist.shuffled() ? "S" : "NS";
@@ -76,16 +76,16 @@ void TMediaRenderer::render_tui_compact(const TMediaProgramState tmps) {
     bottom_labels.push_back(playing_str);
     if (tmps.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
     bottom_labels.push_back(loop_str);
-    if (tmps.has_audio_output) bottom_labels.push_back(volume_str);
+    if (snapshot.has_audio_output) bottom_labels.push_back(volume_str);
     werasebox(stdscr, LINES - 1, 0, COLS, 1);
     wprint_labels(stdscr, bottom_labels, LINES - 1, 0, COLS);
   }
 
 }
 
-void TMediaRenderer::render_tui_large(const TMediaProgramState tmps) {
+void TMediaRenderer::render_tui_large(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
   static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
-  render_pixel_data(tmps.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+  render_pixel_data(snapshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
 
   werasebox(stdscr, 0, 0, COLS, 2);
   const std::string current_playlist_index_str = "(" + std::to_string(tmps.playlist.index() + 1) + "/" + std::to_string(tmps.playlist.size()) + ")";
@@ -118,12 +118,12 @@ void TMediaRenderer::render_tui_large(const TMediaProgramState tmps) {
     }
   }
 
-  if (tmps.media_type == MediaType::VIDEO || tmps.media_type == MediaType::AUDIO) {
+  if (snapshot.media_type == MediaType::VIDEO || snapshot.media_type == MediaType::AUDIO) {
     wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
-    wprint_playback_bar(stdscr, LINES - 2, 0, COLS, tmps.media_time_secs, tmps.media_duration_secs);
+    wprint_playback_bar(stdscr, LINES - 2, 0, COLS, snapshot.media_time_secs, snapshot.media_duration_secs);
 
     std::vector<std::string> bottom_labels;
-    const std::string playing_str = tmps.is_playing ? "PLAYING" : "PAUSED";
+    const std::string playing_str = tmps.playing ? "PLAYING" : "PAUSED";
     const std::string loop_str = str_capslock(loop_type_str(tmps.playlist.loop_type())); 
     const std::string volume_str = "VOLUME: " + (tmps.muted ? "MUTED" : (std::to_string((int)(tmps.volume * 100)) + "%"));
     const std::string shuffled_str = tmps.playlist.shuffled() ? "SHUFFLED" : "NOT SHUFFLED";
@@ -131,7 +131,7 @@ void TMediaRenderer::render_tui_large(const TMediaProgramState tmps) {
     bottom_labels.push_back(playing_str);
     if (tmps.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
     bottom_labels.push_back(loop_str);
-    if (tmps.has_audio_output) bottom_labels.push_back(volume_str);
+    if (snapshot.has_audio_output) bottom_labels.push_back(volume_str);
     werasebox(stdscr, LINES - 1, 0, COLS, 1);
     wprint_labels(stdscr, bottom_labels, LINES - 1, 0, COLS);
   }

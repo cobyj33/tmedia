@@ -72,10 +72,7 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState tmss) {
   TMediaProgramState tmps;
   tmps.ascii_display_chars = tmss.ascii_display_chars;
   tmps.fullscreen = tmss.fullscreen;
-  tmps.is_playing = false;
-  tmps.media_duration_secs = 0.0;
-  tmps.media_time_secs = 0.0;
-  tmps.media_type = MediaType::VIDEO;
+  tmps.playing = false;
   tmps.muted = false;
   tmps.playlist = tmss.playlist;
   tmps.refresh_rate_fps = tmss.refresh_rate_fps;
@@ -83,7 +80,6 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState tmss) {
   tmps.volume = tmss.volume;
   tmps.vom = tmss.vom;
   tmps.quit = false;
-  tmps.has_audio_output = false;
   return tmps;
 }
 
@@ -108,11 +104,6 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     fetcher.requested_frame_dims = VideoDimensions(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
     std::unique_ptr<MAAudioOut> audio_output;
 
-    tmps.is_playing = false;
-    tmps.media_duration_secs = fetcher.get_duration();
-    tmps.media_type = fetcher.media_type;
-    tmps.has_audio_output = false;
-
     fetcher.begin();
 
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
@@ -124,34 +115,33 @@ int tmedia_main_loop(TMediaProgramState tmps) {
             float_buffer[i] = 0.0f;
       });
 
-      tmps.has_audio_output = true;
       audio_output->set_volume(tmps.volume);
+      audio_output->set_muted(tmps.muted);
       audio_output->start();
     }
     
 
     try {
       while (!fetcher.should_exit()) { // never break without using dispatch_exit on fetcher to false
+        PixelData frame;
+
         if (INTERRUPT_RECEIVED) {
           fetcher.dispatch_exit();
           break;
         }
 
-        if (tmps.media_type == MediaType::VIDEO || tmps.media_type == MediaType::AUDIO) {
-          tmps.is_playing = fetcher.is_playing();
-        }
-
-        double current_system_time = 0.0; // filler, data to be filled in critical section
-        double requested_jump_time = 0.0; // filler, data to be filled in critical section
+        double current_system_time;
+        double requested_jump_time;
+        double current_media_time;
         bool requested_jump = false;
 
         {
           static constexpr double MAX_AUDIO_DESYNC_AMOUNT_SECONDS = 0.6;  
           std::lock_guard<std::mutex> _alter_lock(fetcher.alter_mutex);
           current_system_time = system_clock_sec(); // set in here, since locking the mutex could take an undetermined amount of time
-          tmps.media_time_secs = fetcher.get_time(current_system_time);
-          requested_jump_time = tmps.media_time_secs;
-          tmps.frame = fetcher.frame;
+          current_media_time = fetcher.get_time(current_system_time);
+          requested_jump_time = current_media_time;
+          frame = fetcher.frame;
 
           if (fetcher.get_desync_time(current_system_time) > MAX_AUDIO_DESYNC_AMOUNT_SECONDS) {
             requested_jump = true;
@@ -297,7 +287,14 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           if (audio_output && fetcher.is_playing()) audio_output->start();
         }
 
-        renderer.render_tui(tmps);
+        TMediaProgramSnapshot snapshot;
+        snapshot.frame = frame;
+        snapshot.has_audio_output = audio_output ? true : false;
+        snapshot.media_time_secs = current_media_time;
+        snapshot.media_duration_secs = fetcher.get_duration();
+        snapshot.media_type = fetcher.media_type;
+
+        renderer.render_tui(tmps, snapshot);
 
         refresh();
         sleep_for_sec(1.0 / static_cast<double>(tmps.refresh_rate_fps));

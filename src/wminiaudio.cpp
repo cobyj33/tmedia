@@ -17,9 +17,6 @@ extern "C" {
  * restart the ma_device and restore the audio playback.
  * 
  * Pretty duct taped together
- * 
- * Don't delete the commented start and stop functions, as they SHOULD work, and
- * I need to test them more on different environments.
 */
 
 ma_device_w::ma_device_w(const ma_device_config *pConfig) {
@@ -35,20 +32,6 @@ ma_device_w::ma_device_w(const ma_device_config *pConfig) {
   this->volume_cache = 1.0;
   this->m_playing = false;
 }
-
-// void ma_device_w::start() {
-//   ma_result log = ma_device_start(&this->device);
-//   if (log != MA_SUCCESS) {
-//     throw std::runtime_error("[ma_device_w::ma_device_w] Failed to start playback: Miniaudio Error: " + std::string(ma_result_description(log)));
-//   }
-// }
-
-// void ma_device_w::stop() {
-//   ma_result log = ma_device_stop(&this->device);
-//   if (log != MA_SUCCESS) {
-//     throw std::runtime_error("[ma_device_w::ma_device_w] Failed to stop playback: Miniaudio Error: " + std::string(ma_result_description(log)));
-//   }
-// }
 
 void ma_device_w::start() {
   ma_device_state device_state = ma_device_get_state(&this->device);
