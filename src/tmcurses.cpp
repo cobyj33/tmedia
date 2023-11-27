@@ -145,6 +145,26 @@ void ncurses_set_color_palette(TMNCursesColorPalette colorPalette) {
   ncurses_init_color_maps();
 }
 
+void ncurses_set_color_palette_custom(Palette colorPalette) {
+  if (!curses_colors_initialized) return;
+  const short MAX_COLORS = std::min(COLORS, MAX_TERMINAL_COLORS);
+  const short CHANGEABLE_COLORS = MAX_COLORS - COLOR_PALETTE_START;
+  if (CHANGEABLE_COLORS <= 0) return;
+
+  available_color_palette_colors = 0;
+  for (RGBColor color : colorPalette) {
+    init_color(available_color_palette_colors++ + COLOR_PALETTE_START, 
+    (short)(color.red * 1000 / 255),
+    (short)(color.green * 1000 / 255),
+    (short)(color.blue * 1000 / 255));
+    if (available_color_palette_colors >= CHANGEABLE_COLORS) break;
+  }
+
+  ncurses_init_color_pairs();
+  ncurses_init_color_maps();
+
+}
+
 curses_color_t get_closest_ncurses_color(const RGBColor& input) {
   if (!curses_colors_initialized) return 0; // just return a default 0 to no-op
 

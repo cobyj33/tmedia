@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <string>
+#include <filesystem>
 
 enum class PlaylistMoveCommand {
   NEXT,
@@ -34,6 +35,103 @@ std::string loop_type_str(LoopType loop_type);
  * For example, when skipping with move(PlaylistMoveCommand::SKIP) while loop_type() == LoopType::REPEAT_ONE,
  * loop_type() will then be turned to REPEAT
 */
+
+/**
+ * 
+ * 
+ * A playlist can additionally enqueue and dequeue files for immediate playback.
+ * 
+ * 
+ * Desired Behavior:
+ * 
+ * default:
+ * 
+ * loop->no_loop (default state):
+ *   next:
+ *     If there is no next file in the playlist, then the next command is invalid
+ *     If there is a next file, continue onto that next file
+ *   skip:
+ *     If there is no next file in the playlist, then the skip command is invalid
+ *     If there is a next file, skip to that next file
+ *   rewind:
+ *     If there is no previous value, then remain on the current file
+ *     
+ * loop->repeat: 
+ *   next:
+ *     If there is no next file in the playlist, then the next command is invalid
+ *     If there is a next file, continue onto that next file
+ *   skip:
+ *     If there is no next file in the playlist, then the skip command is invalid
+ *     If there is a next file, skip to that next file
+ *   rewind:
+ *     If there is no previous value, then remain on the current file
+ * 
+ * loop->repeat_one: 
+ *   next:
+ *     Simply repeat the current file
+ *   skip:
+ *     Simply repeat the current file!
+ *   rewind:
+ *     Simply repeat the current file!
+ *  
+ *   * note that the 
+ * 
+ * 
+ * shuffle -> on:
+ *  loop->no_loop: 
+ *  loop->repeat: 
+ *  loop->repeat_one:
+*/
+
+
+// class Playlist {
+//   private:
+//     std::vector<std::filesystem::path> m_files;
+
+//     std::vector<int> m_queue_indexes;
+//     int m_queue_index;
+//     circular_stack<int, 100> played;
+//     
+
+//     LoopType m_loop_type;
+//     bool m_shuffled;
+//   public:
+
+//     Playlist();
+//     Playlist(std::vector<std::string> media_files, LoopType loop_type);
+
+//     bool shuffled() const;
+//     void shuffle(bool keep_current_file_first);
+//     void unshuffle();
+
+//     std::size_t size() const noexcept;
+//     void set_loop_type(LoopType loop_type) noexcept;
+//     LoopType loop_type() const noexcept;
+
+//     int index() const;
+//     std::string current() const;
+
+//     void move(PlaylistMoveCommand move_cmd);
+//     std::string peek_move(PlaylistMoveCommand move_cmd) const;
+//     bool can_move(PlaylistMoveCommand move_cmd) const noexcept;
+// };
+
+class IPlaylist {
+  virtual void size() = 0;
+  virtual void loop_type() = 0;
+  virtual void set_loop_type() = 0;
+  virtual int index() const = 0;
+  virtual std::filesystem::path current() const = 0;
+
+  virtual void move(PlaylistMoveCommand move_cmd) = 0;
+  virtual std::filesystem::path peek_move(PlaylistMoveCommand move_cmd) const = 0;
+  virtual bool can_move(PlaylistMoveCommand move_cmd) const noexcept = 0;
+};
+
+// class UnshuffledPlaylist {
+
+// };
+
 class Playlist {
   private:
     std::vector<std::string> m_files;

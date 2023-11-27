@@ -42,5 +42,6 @@ std::string str_bound(const std::string& str, std::size_t max_size);
 std::string vsprintf_str(const char* format, va_list args);
 std::string sprintf_str(const char* format, ...);
 std::string str_capslock(const std::string& str);
+std::string str_trim(std::string src, std::string trimchars);
 
 #endif

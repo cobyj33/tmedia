@@ -207,4 +207,14 @@ TEST_CASE("Formatting", "[functions]") {
     std::string seventy_hours_format = format_duration(ONE_HOUR * 70);
     REQUIRE(seventy_hours_format == "70:00:00");
   }
+
+  SECTION("trim") {
+    REQUIRE(str_trim("    Trimmed   String       ", " ") == "Trimmed   String");
+    REQUIRE(str_trim("Trimmed   String       ", " ") == "Trimmed   String");
+    REQUIRE(str_trim("    Trimmed   String", " ") == "Trimmed   String");
+    
+    REQUIRE(str_trim(" www  w Trimmed ww String       wwwwww", " w") == "Trimmed ww String");
+    REQUIRE(str_trim("    Trimmed   String       \r\n", " \r\n") == "Trimmed   String");
+    REQUIRE(str_trim(" _ !! w !Trimmed !__w_!  String_w   __w    ", " w_!") == "Trimmed !__w_!  String");
+  }
 }

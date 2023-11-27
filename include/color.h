@@ -2,6 +2,7 @@
 #define TMEDIA_COLOR_H
 
 #include <vector>
+#include <cstddef>
 
 /**
  * @brief A representation of an RGB Color with R, G, and B channels in the
@@ -28,6 +29,7 @@ class RGBColor {
     RGBColor(const RGBColor& color) : red(color.red), green(color.green), blue(color.blue) {}
 
     void operator=(const RGBColor& color);
+    bool operator==(const RGBColor& color) const;
 
     double distance(const RGBColor& other) const;
     double distance_squared(const RGBColor& other) const;
@@ -36,6 +38,15 @@ class RGBColor {
     bool is_grayscale() const;
     RGBColor create_grayscale() const;
     int get_grayscale_value() const;
+};
+
+
+class RGBColorHashFunction {
+public:
+    // Ripped from http://www.beosil.com/download/CollisionDetectionHashing_VMV03.pdf pg 666 sec 4.1 paragraph 2
+    std::size_t operator()(const RGBColor& rgb) const {
+      return (73856093UL * (std::size_t)rgb.red) ^ (19349663UL * (std::size_t)rgb.green) ^ (83492791UL * (std::size_t)rgb.blue);
+    }
 };
 
 /**

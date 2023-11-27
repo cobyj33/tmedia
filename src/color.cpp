@@ -67,6 +67,11 @@ bool RGBColor::equals(const RGBColor& other) const {
   return this->red == other.red && this->green == other.green && this->blue == other.blue;
 }
 
+bool RGBColor::operator==(const RGBColor& other) const {
+  return this->red == other.red && this->green == other.green && this->blue == other.blue;
+}
+
+
 
 RGBColor find_closest_color(RGBColor& input, std::vector<RGBColor>& colors) {
   int index = find_closest_color_index(input, colors);

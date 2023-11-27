@@ -22,6 +22,7 @@
 #include <string>
 
 #include "color.h"
+#include "palette.h"
 extern "C" {
   #include <curses.h>
 }
@@ -73,6 +74,7 @@ void werasebox(WINDOW* window, int y, int x, int width, int height);
  * @brief Initialize ncurses's color palette for a given preset color palette. 
  */
 void ncurses_set_color_palette(TMNCursesColorPalette);
+void ncurses_set_color_palette_custom(Palette);
 
 /**
  * @brief Find the closest registered ncurses color pair integer to the inputted RGBColor.

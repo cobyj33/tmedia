@@ -29,6 +29,8 @@ struct TMediaStartupState {
   std::string ascii_display_chars;
 };
 
+TMediaStartupState tmedia_parse_cli(int argc, char** argv);
+
 // class TMediaViewState {
 //   PixelData frame;
 //   VideoOutputMode vom;
@@ -37,7 +39,7 @@ struct TMediaStartupState {
 //   std::string ascii_display_chars;
 // };
 
-// class TMediaPlayer {
+// class TMediaPlayerHandle {
 //   private:
 //     Playlist* playlist;
 //     MediaFetcher* media;

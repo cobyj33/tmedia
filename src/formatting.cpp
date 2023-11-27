@@ -28,6 +28,27 @@ std::string double_to_fixed_string(double num, int decimal_places) {
 }
 
 
+std::string str_trim(std::string src, std::string trimchars) {
+  if (src.empty()) return "";
+  if (trimchars.empty()) return src;
+
+  std::size_t start_index = 0;
+  std::size_t end_index = src.length() - 1;
+
+  while (start_index < src.length() - 1) {
+    if (trimchars.find(src[start_index]) == std::string::npos) break;
+    start_index++;
+  }
+
+  while (end_index > 0) {
+    if (trimchars.find(src[end_index]) == std::string::npos) break;
+    end_index--;
+  }
+
+  if (end_index < start_index) return "";
+  return src.substr(start_index, end_index - start_index + 1);
+}
+
 std::string get_formatted_string(std::string format, ...) {
   va_list args;
   va_start(args, format);

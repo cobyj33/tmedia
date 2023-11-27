@@ -14,6 +14,7 @@
 #include "tmedia_vom.h"
 #include "tmedia_tui_elems.h"
 #include "maaudioout.h"
+#include "palette.h"
 
 #include <rigtorp/SPSCQueue.h>
 #include "readerwritercircularbuffer.h"

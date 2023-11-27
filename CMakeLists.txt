@@ -79,6 +79,8 @@ set(COMMON_SOURCE_FILES
 ./src/mediadecoder.cpp
 ./src/mediafetcher.cpp
 ./src/metadata.cpp
+./src/palette.cpp
+./src/palette_io.cpp
 ./src/pixeldata.cpp
 ./src/playlist.cpp
 ./src/scale.cpp
@@ -101,6 +103,7 @@ set(TEST_SOURCE_FILES
 ./src/tests/test_pixeldata.cpp
 ./src/tests/test_scale.cpp
 ./src/tests/test_unitconvert.cpp
+./src/tests/test_palette_io_gpl.cpp
 ./src/tests/test_wmath.cpp
 )
 
@@ -148,7 +151,13 @@ add_executable(tmedia ${COMMON_SOURCE_FILES} ./src/main.cpp ./src/tmedia.cpp)
 
 
 if(FIND_CURSES)
-  find_package(Curses REQUIRED)
+  set(CURSES_NEED_WIDE ON)
+  find_package(Curses)
+
+  if (NOT CURSES_FOUND)
+    set(CURSES_NEED_WIDE OFF)
+    find_package(Curses REQUIRED)
+  endif()
 elseif(NOT FIND_CURSES AND (UNIX OR APPLE OR MINGW OR CYGWIN))
 
   if (CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU"))
@@ -178,7 +187,7 @@ elseif(NOT FIND_CURSES AND (UNIX OR APPLE OR MINGW OR CYGWIN))
 
   set(CURSES_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}ncurses${CMAKE_SHARED_LIBRARY_SUFFIX}
   ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}form${CMAKE_SHARED_LIBRARY_SUFFIX})
-  set(CURSES_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/ncurses)
+  set(CURSES_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/ncurses)
 else()
   message(WARNING "Currently, Non-Unix builds are completely untested. Good luck.")
 endif()
@@ -257,7 +266,7 @@ endif()
 message("\nCurses Libraries:")
 printlist("${CURSES_LIBRARIES}")
 message("\nCurses Include Directories:")
-printlist("${CURSES_INCLUDE_DIR}")
+printlist("${CURSES_INCLUDE_DIRS}")
 
 if(NOT FIND_FFMPEG)
   message("\nFFmpeg Libraries:")
@@ -269,7 +278,7 @@ else()
 endif()
 
 target_compile_features(tmedia PRIVATE cxx_std_17)
-target_include_directories(tmedia PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
+target_include_directories(tmedia PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
 target_link_libraries(tmedia PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> argparse NaturalSort SPSCQueue readerwriterqueue random ${CMAKE_DL_LIBS})
 target_compile_options(tmedia PRIVATE ${TMEDIA_COMPILE_OPTIONS})
 if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
@@ -289,7 +298,7 @@ if (TMEDIA_BUILD_TESTS)
 
   add_executable(tmedia_tests ${COMMON_SOURCE_FILES} ${TEST_SOURCE_FILES})
   target_compile_options(tmedia_tests PRIVATE ${TMEDIA_COMPILE_OPTIONS})
-  target_include_directories(tmedia_tests PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIR} ./include ./lib/miniaudio)
+  target_include_directories(tmedia_tests PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS} ./include ./lib/miniaudio)
   target_compile_features(tmedia_tests PRIVATE cxx_std_17)
   target_link_libraries(tmedia_tests PRIVATE Catch2::Catch2WithMain ${FFMPEG_LIBS} ${CURSES_LIBRARIES} PkgConfig::LIBAV $<TARGET_OBJECTS:miniaudio> SPSCQueue readerwriterqueue random ${CMAKE_DL_LIBS})
 
