@@ -73,6 +73,11 @@ enum class TMediaCommand {
 
   // Visual commands
   SET_VIDEO_OUTPUT_MODE,
+  RESIZE,
+  REFRESH,
+  FULLSCREEN,
+  NO_FULLSCREEN,
+  TOGGLE_FULLSCREEN,
 
   // volume controls
   SET_VOLUME,
@@ -87,7 +92,7 @@ struct TMediaCommandData {
 
 class TMediaCommandHandler {
   public:
-    virtual std::vector<TMediaCommandData> process_input() = 0;
+    virtual std::vector<TMediaCommandData> process_input(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) = 0;
 };
 
 class TMediaRenderer {
@@ -109,7 +114,7 @@ class TMediaCursesRenderer : public TMediaRenderer {
 
 class TMediaCursesCommandHandler : public TMediaCommandHandler {
   public:
-    std::vector<TMediaCommandData> process_input();
+    std::vector<TMediaCommandData> process_input(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);
 };
 
 
