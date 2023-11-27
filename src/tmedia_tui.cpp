@@ -17,7 +17,7 @@ static constexpr int MIN_RENDER_LINES = 2;
 
 const char* loop_type_str_short(LoopType loop_type);
 
-void TMediaRenderer::render_tui(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
+void TMediaCursesRenderer::render(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
   if (snapshot.frame.get_width() != this->last_frame_dims.width || snapshot.frame.get_height() != this->last_frame_dims.height) {
     erase();
   }
@@ -35,11 +35,11 @@ void TMediaRenderer::render_tui(const TMediaProgramState tmps, const TMediaProgr
   this->last_frame_dims = VideoDimensions(snapshot.frame.get_width(), snapshot.frame.get_height());
 }
 
-void TMediaRenderer::render_tui_fullscreen(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
+void TMediaCursesRenderer::render_tui_fullscreen(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
   render_pixel_data(snapshot.frame, 0, 0, COLS, LINES, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
 }
 
-void TMediaRenderer::render_tui_compact(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
+void TMediaCursesRenderer::render_tui_compact(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
   static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
   render_pixel_data(snapshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
 
@@ -83,7 +83,7 @@ void TMediaRenderer::render_tui_compact(const TMediaProgramState tmps, const TMe
 
 }
 
-void TMediaRenderer::render_tui_large(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
+void TMediaCursesRenderer::render_tui_large(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
   static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
   render_pixel_data(snapshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
 

@@ -96,7 +96,7 @@ int tmedia(TMediaStartupState tmss) {
 }
 
 int tmedia_main_loop(TMediaProgramState tmps) {
-  TMediaRenderer renderer;
+  TMediaCursesRenderer renderer;
 
   while (!INTERRUPT_RECEIVED && !tmps.quit) {
     PlaylistMoveCommand current_move_cmd = PlaylistMoveCommand::NEXT;
@@ -294,7 +294,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         snapshot.media_duration_secs = fetcher.get_duration();
         snapshot.media_type = fetcher.media_type;
 
-        renderer.render_tui(tmps, snapshot);
+        renderer.render(tmps, snapshot);
 
         refresh();
         sleep_for_sec(1.0 / static_cast<double>(tmps.refresh_rate_fps));

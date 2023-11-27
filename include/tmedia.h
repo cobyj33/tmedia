@@ -17,19 +17,43 @@
 
 extern const std::string TMEDIA_CONTROLS_USAGE;
 
+
 struct TMediaStartupState {
   Playlist playlist;
   double volume;
   bool muted;
   int refresh_rate_fps;
-  
   VideoOutputMode vom;
   ScalingAlgo scaling_algorithm;
   bool fullscreen;
   std::string ascii_display_chars;
 };
 
+int tmedia(TMediaStartupState tmpd);
+
+//currently unimplemented
 TMediaStartupState tmedia_parse_cli(int argc, char** argv);
+
+struct TMediaProgramState {
+  Playlist playlist;
+  double volume;
+  bool muted;
+  bool quit;
+  bool fullscreen;
+  int refresh_rate_fps;
+  bool playing;
+  ScalingAlgo scaling_algorithm;
+  VideoOutputMode vom;
+  std::string ascii_display_chars;
+};
+
+struct TMediaProgramSnapshot {
+  PixelData frame;
+  MediaType media_type;
+  double media_duration_secs;
+  double media_time_secs;
+  bool has_audio_output;
+};
 
 enum class TMediaCommand {
   // playlist commands
@@ -58,32 +82,20 @@ enum class TMediaCommand {
 
 struct TMediaCommandData {
   TMediaCommand name;
-  std::string payload;
+  std::string payload; // serialized string of sent data
 };
 
-struct TMediaProgramState {
-  Playlist playlist;
-  double volume;
-  bool muted;
-  bool quit;
-  bool fullscreen;
-  int refresh_rate_fps;
-  bool playing;
-  ScalingAlgo scaling_algorithm;
-  VideoOutputMode vom;
-  std::string ascii_display_chars;
+class TMediaCommandHandler {
+  public:
+    virtual std::vector<TMediaCommandData> process_input() = 0;
 };
-
-struct TMediaProgramSnapshot {
-  PixelData frame;
-  MediaType media_type;
-  double media_duration_secs;
-  double media_time_secs;
-  bool has_audio_output;
-};
-
 
 class TMediaRenderer {
+  public:
+    virtual void render(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) = 0;
+};
+
+class TMediaCursesRenderer : public TMediaRenderer {
   private:
     MetadataCache metadata_cache;
     VideoDimensions last_frame_dims;
@@ -92,12 +104,13 @@ class TMediaRenderer {
     void render_tui_large(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);
   
   public:
-    void render_tui(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);
+    void render(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);
 };
 
-void tmedia_handle_key(int key);
+class TMediaCursesCommandHandler : public TMediaCommandHandler {
+  public:
+    std::vector<TMediaCommandData> process_input();
+};
 
-
-int tmedia(TMediaStartupState tmpd);
 
 #endif
