@@ -85,8 +85,8 @@ class MediaFetcher {
 
     MediaFetcher(const std::string& file_path);
 
-    void begin(); // Only to be called by owning thread
-    void join(); // Only to be called by owning thread after in_use is set to false
+    void begin(double current_system_time); // Only to be called by owning thread
+    void join(double current_system_time); // Only to be called by owning thread after in_use is set to false
 
     /**
      * @brief Returns the duration in seconds of the currently playing media

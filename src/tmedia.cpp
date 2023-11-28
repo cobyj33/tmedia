@@ -72,7 +72,6 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState tmss) {
   TMediaProgramState tmps;
   tmps.ascii_display_chars = tmss.ascii_display_chars;
   tmps.fullscreen = tmss.fullscreen;
-  tmps.playing = false;
   tmps.muted = false;
   tmps.playlist = tmss.playlist;
   tmps.refresh_rate_fps = tmss.refresh_rate_fps;
@@ -103,8 +102,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     MediaFetcher fetcher(tmps.playlist.current());
     fetcher.requested_frame_dims = VideoDimensions(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
     std::unique_ptr<MAAudioOut> audio_output;
-
-    fetcher.begin();
+    fetcher.begin(system_clock_sec());
 
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
       static constexpr int AUDIO_BUFFER_TRY_READ_MS = 5;
@@ -289,6 +287,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
         TMediaProgramSnapshot snapshot;
         snapshot.frame = frame;
+        snapshot.playing = fetcher.is_playing();
         snapshot.has_audio_output = audio_output ? true : false;
         snapshot.media_time_secs = current_media_time;
         snapshot.media_duration_secs = fetcher.get_duration();
@@ -304,7 +303,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
       fetcher.dispatch_exit(err.what());
     }
 
-    fetcher.join();
+    fetcher.join(system_clock_sec());
     if (fetcher.has_error()) {
       throw std::runtime_error("[tmedia]: Media Fetcher Error: " + fetcher.get_error());
     }

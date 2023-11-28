@@ -68,7 +68,7 @@ void TMediaCursesRenderer::render_tui_compact(const TMediaProgramState tmps, con
     wprint_playback_bar(stdscr, LINES - 2, 0, COLS, snapshot.media_time_secs, snapshot.media_duration_secs);
 
     std::vector<std::string> bottom_labels;
-    const std::string playing_str = tmps.playing ? ">" : "||";
+    const std::string playing_str = snapshot.playing ? ">" : "||";
     const std::string loop_str = loop_type_str_short(tmps.playlist.loop_type()); 
     const std::string volume_str = tmps.muted ? "M" : (std::to_string((int)(tmps.volume * 100)) + "%");
     const std::string shuffled_str = tmps.playlist.shuffled() ? "S" : "NS";
@@ -123,7 +123,7 @@ void TMediaCursesRenderer::render_tui_large(const TMediaProgramState tmps, const
     wprint_playback_bar(stdscr, LINES - 2, 0, COLS, snapshot.media_time_secs, snapshot.media_duration_secs);
 
     std::vector<std::string> bottom_labels;
-    const std::string playing_str = tmps.playing ? "PLAYING" : "PAUSED";
+    const std::string playing_str = snapshot.playing ? "PLAYING" : "PAUSED";
     const std::string loop_str = str_capslock(loop_type_str(tmps.playlist.loop_type())); 
     const std::string volume_str = "VOLUME: " + (tmps.muted ? "MUTED" : (std::to_string((int)(tmps.volume * 100)) + "%"));
     const std::string shuffled_str = tmps.playlist.shuffled() ? "SHUFFLED" : "NOT SHUFFLED";

@@ -41,7 +41,6 @@ struct TMediaProgramState {
   bool quit;
   bool fullscreen;
   int refresh_rate_fps;
-  bool playing;
   ScalingAlgo scaling_algorithm;
   VideoOutputMode vom;
   std::string ascii_display_chars;
@@ -50,6 +49,7 @@ struct TMediaProgramState {
 struct TMediaProgramSnapshot {
   PixelData frame;
   MediaType media_type;
+  bool playing;
   double media_duration_secs;
   double media_time_secs;
   bool has_audio_output;

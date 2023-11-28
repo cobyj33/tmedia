@@ -148,9 +148,9 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
  * 
  * Writes some audio to the audio buffer initially, and starts the audio and video threads
 */
-void MediaFetcher::begin() {
+void MediaFetcher::begin(double current_system_time) {
   this->in_use = true;
-  this->clock.init(system_clock_sec());
+  this->clock.init(current_system_time);
 
   std::thread initialized_duration_checking_thread(&MediaFetcher::duration_checking_thread_func, this);
   duration_checking_thread.swap(initialized_duration_checking_thread);
@@ -163,9 +163,9 @@ void MediaFetcher::begin() {
 /**
  * Cannot be called inside video_fetching_thread or audio_fetching_thread at all
 */
-void MediaFetcher::join() {
+void MediaFetcher::join(double current_system_time) {
   this->in_use = false; // the user can set this as well if they want, but this is to make sure that the threads WILL end regardless
-  if (this->media_type != MediaType::IMAGE && this->is_playing()) this->pause(system_clock_sec());
+  if (this->media_type != MediaType::IMAGE && this->is_playing()) this->pause(current_system_time);
   this->video_thread.join();
   this->duration_checking_thread.join();
   this->audio_thread.join();
