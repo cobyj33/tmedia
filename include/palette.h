@@ -7,5 +7,7 @@
 typedef std::unordered_set<RGBColor, RGBColorHashFunction> Palette;
 
 bool palette_equals(Palette& first, Palette& second);
+Palette palette_color_cube(int side);
+Palette palette_grayscale(int entry_count);
 
 #endif

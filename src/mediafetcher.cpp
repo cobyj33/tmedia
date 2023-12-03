@@ -120,7 +120,7 @@ double MediaFetcher::get_desync_time(double current_system_time) const {
 }
 
 /**
- * For threadsafety, both alter_mutex and buffer_read_mutex must be locked
+ * For threadsafety, both alter_mutex must be locked
 */
 int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   
@@ -143,11 +143,6 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   return ret;
 }
 
-/**
- * Cannot be called inside video_fetching_thread or audio_fetching_thread at all
- * 
- * Writes some audio to the audio buffer initially, and starts the audio and video threads
-*/
 void MediaFetcher::begin(double current_system_time) {
   this->in_use = true;
   this->clock.init(current_system_time);
@@ -160,9 +155,6 @@ void MediaFetcher::begin(double current_system_time) {
   audio_thread.swap(initialized_audio_thread);
 }
 
-/**
- * Cannot be called inside video_fetching_thread or audio_fetching_thread at all
-*/
 void MediaFetcher::join(double current_system_time) {
   this->in_use = false; // the user can set this as well if they want, but this is to make sure that the threads WILL end regardless
   if (this->media_type != MediaType::IMAGE && this->is_playing()) this->pause(current_system_time);

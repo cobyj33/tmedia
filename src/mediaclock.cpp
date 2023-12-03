@@ -6,7 +6,6 @@ MediaClock::MediaClock() {
   this->m_start_time = 0.0;
   this->m_paused_time = 0.0;
   this->m_skipped_time = 0.0;
-  this->m_speed = 1.0;
   this->m_playing = false;
 };
 
@@ -29,7 +28,6 @@ void MediaClock::init(double current_system_time) {
 
   this->m_playing = true;
   this->m_start_time = current_system_time;
-  this->m_speed = 1.0;
   this->m_skipped_time = 0.0;
   this->m_paused_time = 0.0;
 };
@@ -57,18 +55,6 @@ bool MediaClock::is_playing() const {
   return this->m_playing;
 };
 
-
-double MediaClock::get_speed() const {
-  return this->m_speed;
-};
-
-void MediaClock::set_speed(double amount) {
-  this->m_speed = amount;
-}
-
-void MediaClock::change_speed(double offset) {
-  this->set_speed(this->m_speed + offset);
-};
 
 double MediaClock::get_time(double current_system_time) const {
   switch (this->m_playing) {

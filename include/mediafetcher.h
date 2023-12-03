@@ -62,7 +62,6 @@ class MediaFetcher {
     std::optional<std::string> error;
     std::unique_ptr<Visualizer> audio_visualizer;
 
-
     std::mutex exit_notify_mutex;
     std::condition_variable exit_cond;
 
@@ -73,14 +72,10 @@ class MediaFetcher {
 
     MediaType media_type;
     std::unique_ptr<MediaDecoder> media_decoder;
+    std::unique_ptr<BlockingAudioRingBuffer> audio_buffer;
     PixelData frame;
 
     std::mutex alter_mutex;
-
-    
-    
-    std::unique_ptr<BlockingAudioRingBuffer> audio_buffer;
-
     std::optional<VideoDimensions> requested_frame_dims;
 
     MediaFetcher(const std::string& file_path);
