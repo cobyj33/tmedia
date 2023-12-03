@@ -16,7 +16,6 @@
 #include "maaudioout.h"
 #include "palette.h"
 
-#include <rigtorp/SPSCQueue.h>
 #include "readerwritercircularbuffer.h"
 
 #include <memory>

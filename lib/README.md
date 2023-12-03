@@ -25,7 +25,11 @@ Used to properly order playback of audio files in a directory, especially in pla
 type directories where each song starts with a number indicating it's location in
 the tracklist
 
-## SPSC Queue | [Github](https://github.com/rigtorp/SPSCQueue/tree/master)
+## readerwriterqueue | [Github](https://github.com/cameron314/readerwriterqueue)
 
-"A single producer single consumer wait-free and lock-free fixed size queue written in C++11." (README.md),
+A single producer single consumer wait-free and lock-free fixed size queue written in C++11.
 Used for lock-free realtime audio output.
+
+## random | [Github](https://github.com/effolkronium/random)
+
+A nice C++11 random number library, used only for shuffling playlists as of now.

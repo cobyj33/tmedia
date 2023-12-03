@@ -114,7 +114,8 @@ and I'll be sure to help.
 
 * [miniaudio](https://miniaud.io/) - Cross-platform audio playback ([github](https://github.com/mackron/miniaudio))
 * [Natural Sort](https://github.com/scopeInfinity/NaturalSort) - Natural Sorting and Comparison: For sorting directory files
-* [SPSC Queue](https://github.com/rigtorp/SPSCQueue/tree/master) - Lock free SPSC Queue for consistent realtime audio
+* [readerwriterqueue](https://github.com/cameron314/readerwriterqueue) - Lock free SPSC Circular Buffer for consistent realtime audio
+* [random](https://github.com/effolkronium/random) - "Random for modern C++ with convenient API" (README.md)
 
 ### Inspiration and Resources
 

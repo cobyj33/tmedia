@@ -248,9 +248,6 @@ FetchContent_MakeAvailable(argparse)
 add_library(NaturalSort INTERFACE)
 target_include_directories(NaturalSort INTERFACE ./lib/NaturalSort)
 
-add_library(SPSCQueue INTERFACE)
-target_include_directories(SPSCQueue INTERFACE ./lib/SPSCQueue)
-
 add_library(readerwriterqueue INTERFACE)
 target_include_directories(readerwriterqueue INTERFACE ./lib/readerwriterqueue)
 
@@ -279,7 +276,7 @@ endif()
 
 target_compile_features(tmedia PRIVATE cxx_std_17)
 target_include_directories(tmedia PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
-target_link_libraries(tmedia PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> argparse NaturalSort SPSCQueue readerwriterqueue random ${CMAKE_DL_LIBS})
+target_link_libraries(tmedia PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> argparse NaturalSort readerwriterqueue random ${CMAKE_DL_LIBS})
 target_compile_options(tmedia PRIVATE ${TMEDIA_COMPILE_OPTIONS})
 if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
   add_dependencies(tmedia ${TARGET_DEPENDENCIES})
@@ -300,7 +297,7 @@ if (TMEDIA_BUILD_TESTS)
   target_compile_options(tmedia_tests PRIVATE ${TMEDIA_COMPILE_OPTIONS})
   target_include_directories(tmedia_tests PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS} ./include ./lib/miniaudio)
   target_compile_features(tmedia_tests PRIVATE cxx_std_17)
-  target_link_libraries(tmedia_tests PRIVATE Catch2::Catch2WithMain ${FFMPEG_LIBS} ${CURSES_LIBRARIES} PkgConfig::LIBAV $<TARGET_OBJECTS:miniaudio> SPSCQueue readerwriterqueue random ${CMAKE_DL_LIBS})
+  target_link_libraries(tmedia_tests PRIVATE Catch2::Catch2WithMain ${FFMPEG_LIBS} ${CURSES_LIBRARIES} PkgConfig::LIBAV $<TARGET_OBJECTS:miniaudio> readerwriterqueue random ${CMAKE_DL_LIBS})
 
   if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
     add_dependencies(tmedia_tests ${TARGET_DEPENDENCIES})
