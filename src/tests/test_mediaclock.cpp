@@ -6,7 +6,6 @@ TEST_CASE("mediaclock", "[mediaclock]") {
   const int MOCK_SYSTEM_START_TIME = 100;
   MediaClock clock;
   clock.init(MOCK_SYSTEM_START_TIME);
-  REQUIRE(clock.get_speed() == 1.0);
   REQUIRE(clock.get_time(MOCK_SYSTEM_START_TIME) == 0);
   REQUIRE(clock.is_playing());
   

@@ -5,22 +5,48 @@
 #include <filesystem>
 #include <optional>
 
+namespace tmedia {
+  struct DSTOptions {
+    bool ignore_images;
+    bool ignore_audio;
+    bool ignore_video;
+    bool recurse;
+  };
 
-struct SearchPathOptions {
-  std::optional<bool> ignore_images;
-  std::optional<bool> ignore_audio;
-  std::optional<bool> ignore_video;
-  std::optional<bool> recurse;
+  enum class DSTPropValue {
+    TRUE,
+    FALSE,
+    INHERIT
+  };
+
+  struct DSTNodeProps {
+    DSTPropValue ignore_images;
+    DSTPropValue ignore_audio;
+    DSTPropValue ignore_video;
+    DSTPropValue recurse;
+  };
+
+  class DirectorySearchTree {
+    private:
+      struct DirectorySearchNode {
+        DirectorySearchNode* parent;
+        std::string section;
+        std::vector<std::unique_ptr<DirectorySearchNode>> children;
+        DSTNodeProps props;
+      };
+
+      std::unique_ptr<DirectorySearchNode> root;
+    
+    public:
+      DSTOptions options;
+      DirectorySearchTree(DSTOptions options);
+
+      bool has_path(std::filesystem::path path, DSTNodeProps props) const noexcept;
+      bool remove_path(std::filesystem::path path, DSTNodeProps props);
+      bool add_path(std::filesystem::path path, DSTNodeProps props);
+      std::vector<std::filesystem::path> get_media_files(std::filesystem::path path, DSTNodeProps props) const;
+  };
 };
 
-struct SearchPath {
-  std::filesystem::path path;
-  SearchPathOptions options;
-};
-
-class DirectorySearch {
-  std::vector<std::filesystem::path> omitted;
-  std::vector<SearchPath> paths_to_search;
-};
 
 #endif

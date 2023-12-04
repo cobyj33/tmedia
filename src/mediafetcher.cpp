@@ -90,7 +90,7 @@ std::string MediaFetcher::get_error() {
  * Thread-Safe
 */
 bool MediaFetcher::has_media_stream(enum AVMediaType media_type) const {
-  return this->media_decoder->has_media_decoder(media_type);
+  return this->media_decoder->has_stream_decoder(media_type);
 }
 
 /**

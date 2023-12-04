@@ -316,48 +316,6 @@ int tmedia_main_loop(TMediaProgramState tmps) {
   return EXIT_SUCCESS;
 }
 
-// void tmedia_handle_key(int key) {
-//   switch (key) {
-
-//   }
-// }
-
-// TMediaCommand tmedia_toggle_playback_command() {
-//   return [] (TMediaState* tms, double current_system_time) {
-//     std::lock_guard<std::mutex> alter_lock(tms->media->alter_mutex); 
-//     switch (tms->media->is_playing()) {
-//       case true:  {
-//         if (tms->audio_output != nullptr) tms->audio_output->stop();
-//         tms->media->pause(current_system_time);
-//       } break;
-//       case false: {
-//         if (tms->audio_output != nullptr) tms->audio_output->start();
-//         tms->media->resume(current_system_time);
-//       } break;
-//     }
-//   };
-// }
-
-// TMediaCommand exit_command() {
-//   return [] (TMediaState* tms, double current_system_time) {
-//     tms->quit = true;
-//     tms->media->dispatch_exit();
-//   };
-// }
-
-// TMediaCommand toggle_shuffle_command() {
-
-// }
-
-// TMediaCommand toggle_mute_command();
-// TMediaCommand toggle_loop_command();
-// TMediaCommand skip_command();
-// TMediaCommand rewind_command();
-// TMediaCommand seek_command(double time);
-// TMediaCommand seek_offset_command(double offset_time);
-// TMediaCommand image_output_command(VideoOutputMode vom);
-
-
 void init_global_video_output_mode(VideoOutputMode mode) {
   switch (mode) {
     case VideoOutputMode::COLORED:

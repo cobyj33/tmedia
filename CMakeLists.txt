@@ -71,6 +71,8 @@ set(COMMON_SOURCE_FILES
 ./src/boiler.cpp
 ./src/canvas.cpp
 ./src/color.cpp
+./src/cli_iter.cpp
+./src/tmedia_cli.cpp
 ./src/decode.cpp
 ./src/duration_checking.cpp
 ./src/ffmpeg_error.cpp
@@ -98,6 +100,7 @@ set(COMMON_SOURCE_FILES
 
 set(TEST_SOURCE_FILES
 ./src/tests/test_color.cpp
+./src/tests/test_cli_iter.cpp
 ./src/tests/test_formatting.cpp
 ./src/tests/test_mediaclock.cpp
 ./src/tests/test_pixeldata.cpp
