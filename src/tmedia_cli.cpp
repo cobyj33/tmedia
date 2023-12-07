@@ -124,7 +124,7 @@ extern "C" {
     }
 
     std::vector<tmedia::CLIArg> parsed_cli = tmedia::cli_parse(argc, argv, "l",
-    {"loop-type", "scaling-algo", "volume", "loop", "loop-type", "scaling-algo", "chars"});
+    {"scaling-algo", "volume", "loop-type", "chars", "refresh-rate"});
 
     TMediaCliArgParseMap exiting_opt_map{
       {"h", tmedia_cli_arg_help},
@@ -262,7 +262,19 @@ extern "C" {
   }
 
   void tmedia_cli_arg_refresh_rate(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
-    ps.tmss.refresh_rate_fps = strtoi32(arg.param);
+    int res = 0;
+    
+    try {
+      res = strtoi32(arg.param);
+    } catch (const std::runtime_error& err) {
+      throw std::runtime_error("[tmedia_cli_arg_refresh_rate] Could not parse param " + arg.param + " as integer: " + err.what());
+    }
+
+    if (res <= 0) {
+      throw std::runtime_error("[tmedia_cli_arg_refresh_rate] refresh rate must be greater than 0. (got " + std::to_string(res) + ")");
+    }
+
+    ps.tmss.refresh_rate_fps = res;
   }
 
   void tmedia_cli_arg_shuffle(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
