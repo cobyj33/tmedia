@@ -155,13 +155,30 @@ int playlist_get_rewind(int current, int size, LoopType loop_type) {
   throw std::runtime_error("[playlist_get_rewind] could not find rewind rule for " + loop_type_str(loop_type));
 }
 
+const std::pair<std::string_view, LoopType> loop_type_strs[] = {
+  {"no-loop", LoopType::NO_LOOP},
+  {"repeat", LoopType::REPEAT},
+  {"repeat-one", LoopType::REPEAT_ONE},
+};
+
 std::string loop_type_str(LoopType loop_type) {
-  switch (loop_type) {
-    case LoopType::NO_LOOP: return "no loop";
-    case LoopType::REPEAT: return "repeat";
-    case LoopType::REPEAT_ONE: return "repeat one";
+  for (const std::pair<std::string_view, LoopType>& pair : loop_type_strs) {
+    if (pair.second == loop_type) {
+      return std::string(pair.first);
+    }
   }
+
   throw std::runtime_error("[loop_type_str] cannot find string repr of loop_type");
+}
+
+LoopType loop_type_from_str(std::string_view loop_type_str) {
+  for (const std::pair<std::string_view, LoopType>& pair : loop_type_strs) {
+    if (pair.first == loop_type_str) {
+      return pair.second;
+    }
+  }
+
+  throw std::runtime_error("[loop_type_from_str] cannot find repr of loop type string: " + std::string(loop_type_str));
 }
 
 std::string playlist_move_cmd_str(PlaylistMoveCommand move_cmd) {
@@ -171,4 +188,13 @@ std::string playlist_move_cmd_str(PlaylistMoveCommand move_cmd) {
     case PlaylistMoveCommand::REWIND: return "rewind";
   }
   throw std::runtime_error("[playlist_move_cmd_str] cannot find string repr of move_cmd");
+}
+
+bool loop_type_str_is_valid(std::string_view loop_type_str) {
+  for (const std::pair<std::string_view, LoopType>& pair : loop_type_strs) {
+    if (pair.first == loop_type_str) {
+      return true;
+    }
+  }
+  return false;
 }

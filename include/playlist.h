@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <string>
+#include <string_view>
 #include <filesystem>
 
 enum class PlaylistMoveCommand {
@@ -22,6 +23,8 @@ enum class LoopType {
 };
 
 std::string loop_type_str(LoopType loop_type);
+LoopType loop_type_from_str(std::string_view loop_type);
+bool loop_type_str_is_valid(std::string_view loop_type);
 
 /**
  * Currently, the files passed in at construction are immutable, as files cannot

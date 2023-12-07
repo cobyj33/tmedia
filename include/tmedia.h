@@ -7,6 +7,7 @@
 #include "metadata.h"
 #include "boiler.h"
 #include "scale.h"
+#include "ascii.h"
 
 #include "audioout.h"
 #include "mediafetcher.h"
@@ -19,31 +20,40 @@ extern const std::string TMEDIA_CONTROLS_USAGE;
 
 
 struct TMediaStartupState {
-  Playlist playlist;
-  double volume;
-  bool muted;
-  int refresh_rate_fps;
-  VideoOutputMode vom;
-  ScalingAlgo scaling_algorithm;
-  bool fullscreen;
-  std::string ascii_display_chars;
+  std::vector<std::string> media_files;
+  LoopType loop_type = LoopType::NO_LOOP;
+  bool shuffled = false;
+  double volume = 1.0;
+  bool muted = false;
+  int refresh_rate_fps = 24;
+  VideoOutputMode vom = VideoOutputMode::TEXT_ONLY;
+  ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+  bool fullscreen = false;
+  std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
 };
 
-int tmedia(TMediaStartupState tmpd);
+int tmedia_run(TMediaStartupState tmpd);
+
+
+struct TMediaCLIParseRes {
+  TMediaStartupState tmss;
+  bool exited;
+  TMediaCLIParseRes(TMediaStartupState tmss, bool exited) : tmss(tmss), exited(exited) {}
+};
 
 //currently unimplemented
-TMediaStartupState tmedia_parse_cli(int argc, char** argv);
+TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv);
 
 struct TMediaProgramState {
   Playlist playlist;
-  double volume;
-  bool muted;
-  bool quit;
-  bool fullscreen;
-  int refresh_rate_fps;
-  ScalingAlgo scaling_algorithm;
-  VideoOutputMode vom;
-  std::string ascii_display_chars;
+  double volume = 1.0;
+  bool muted = false;
+  bool quit = false;
+  bool fullscreen = false;
+  int refresh_rate_fps = 24;
+  ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
+  VideoOutputMode vom = VideoOutputMode::TEXT_ONLY;
+  std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
 };
 
 struct TMediaProgramSnapshot {

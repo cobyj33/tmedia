@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <cctype>
 #include <stdexcept>
+#include <algorithm>
 #include <mutex>
 #include <atomic>
 
@@ -44,8 +45,6 @@ static constexpr int MIN_RENDER_LINES = 2;
 
 void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next);
 void init_global_video_output_mode(VideoOutputMode mode);
-
-const char* loop_type_str_short(LoopType loop_type);
 
 const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "Video and Audio Controls\n"
@@ -72,7 +71,8 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState tmss) {
   tmps.ascii_display_chars = tmss.ascii_display_chars;
   tmps.fullscreen = tmss.fullscreen;
   tmps.muted = false;
-  tmps.playlist = tmss.playlist;
+  tmps.playlist = Playlist(tmss.media_files, tmss.loop_type);
+  if (tmss.shuffled) tmps.playlist.shuffle(false);
   tmps.refresh_rate_fps = tmss.refresh_rate_fps;
   tmps.scaling_algorithm = tmss.scaling_algorithm;
   tmps.volume = tmss.volume;
@@ -83,7 +83,7 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState tmss) {
 
 int tmedia_main_loop(TMediaProgramState tmps);
 
-int tmedia(TMediaStartupState tmss) {
+int tmedia_run(TMediaStartupState tmss) {
   ncurses_init();
   erase();
   TMediaProgramState tmps = tmss_to_tmps(tmss);

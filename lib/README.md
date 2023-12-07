@@ -1,13 +1,6 @@
 
 # Libraries and their Uses
 
-## argparse | [Github](https://github.com/p-ranav/argparse)
-
-### A Modern C++ 17+ Command-Line Argument Parser
-
-Parsing Command-Line arguments is **a lot harder** than it initially seemed, so argparse allows me to easily follow standard CLI conventions
-without the hassle of testing if my own implementation of reading CLI arguments meets the standard expectation.
-
 ## miniaudio | [Website](https://miniaud.io/) [Github](https://github.com/mackron/miniaudio)
 
 ### Audio playback and capture library written in C, in a single source file

@@ -28,6 +28,8 @@ enum class ScalingAlgo {
   NEAREST_NEIGHBOR
 };
 
+
+
 typedef RGBColor FillFunction(int row, int col);
 
 /**

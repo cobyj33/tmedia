@@ -242,12 +242,6 @@ endif()
 add_library(miniaudio OBJECT ./lib/miniaudio/miniaudio.c)
 target_include_directories(miniaudio PRIVATE ./lib/miniaudio)
 
-FetchContent_Declare(
-    argparse
-    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
-)
-FetchContent_MakeAvailable(argparse)
-
 add_library(NaturalSort INTERFACE)
 target_include_directories(NaturalSort INTERFACE ./lib/NaturalSort)
 
@@ -279,7 +273,7 @@ endif()
 
 target_compile_features(tmedia PRIVATE cxx_std_17)
 target_include_directories(tmedia PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
-target_link_libraries(tmedia PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> argparse NaturalSort readerwriterqueue random ${CMAKE_DL_LIBS})
+target_link_libraries(tmedia PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> NaturalSort readerwriterqueue random ${CMAKE_DL_LIBS})
 target_compile_options(tmedia PRIVATE ${TMEDIA_COMPILE_OPTIONS})
 if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
   add_dependencies(tmedia ${TARGET_DEPENDENCIES})
@@ -298,9 +292,9 @@ if (TMEDIA_BUILD_TESTS)
 
   add_executable(tmedia_tests ${COMMON_SOURCE_FILES} ${TEST_SOURCE_FILES})
   target_compile_options(tmedia_tests PRIVATE ${TMEDIA_COMPILE_OPTIONS})
-  target_include_directories(tmedia_tests PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS} ./include ./lib/miniaudio)
+  target_include_directories(tmedia_tests PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include)
   target_compile_features(tmedia_tests PRIVATE cxx_std_17)
-  target_link_libraries(tmedia_tests PRIVATE Catch2::Catch2WithMain ${FFMPEG_LIBS} ${CURSES_LIBRARIES} PkgConfig::LIBAV $<TARGET_OBJECTS:miniaudio> readerwriterqueue random ${CMAKE_DL_LIBS})
+  target_link_libraries(tmedia_tests PRIVATE Catch2::Catch2WithMain ${FFMPEG_LIBS} ${CURSES_LIBRARIES} PkgConfig::LIBAV $<TARGET_OBJECTS:miniaudio> NaturalSort readerwriterqueue random ${CMAKE_DL_LIBS})
 
   if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
     add_dependencies(tmedia_tests ${TARGET_DEPENDENCIES})

@@ -6,17 +6,20 @@
 #include <cstddef>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <stdexcept>
 #include <iomanip> // std::setprecision
 #include <sstream>
 #include <filesystem>
 #include <cctype>
+#include <climits>
+#include <cfloat>
 #include <cstdlib>
 
 
 std::string double_to_fixed_string(double num, int decimal_places) {
   if (decimal_places < 0) {
-    throw std::runtime_error("Cannot produce double string with negative decimal places");
+    throw std::runtime_error("[double_to_fixed_string] Cannot produce double string with negative decimal places");
   } else if (decimal_places == 0) {
     return std::to_string((long)num);
   }
@@ -28,9 +31,9 @@ std::string double_to_fixed_string(double num, int decimal_places) {
 }
 
 
-std::string str_trim(std::string src, std::string trimchars) {
+std::string str_trim(std::string_view src, std::string_view trimchars) {
   if (src.empty()) return "";
-  if (trimchars.empty()) return src;
+  if (trimchars.empty()) return std::string(src);
 
   std::size_t start_index = 0;
   std::size_t end_index = src.length() - 1;
@@ -46,38 +49,44 @@ std::string str_trim(std::string src, std::string trimchars) {
   }
 
   if (end_index < start_index) return "";
-  return src.substr(start_index, end_index - start_index + 1);
+  return std::string(src.substr(start_index, end_index - start_index + 1));
 }
 
-std::string get_formatted_string(std::string format, ...) {
+std::string sprintf_str(const char* format, ...) {
   va_list args;
   va_start(args, format);
-  std::string string = vget_formatted_string(format, args);
+  std::string string = vsprintf_str(format, args);
   va_end(args);
   return string;
 }
 
-std::string vget_formatted_string(std::string& format, va_list args) {
+std::string vsprintf_str(const char* format, va_list args) {
   va_list writing_args, reading_args;
   va_copy(reading_args, args);
   va_copy(writing_args, reading_args);
 
-  size_t alloc_size = vsnprintf(NULL, 0, format.c_str(), reading_args);
+  int alloc_size = vsnprintf(NULL, 0, format, reading_args);
   va_end(reading_args);
+  if (alloc_size < 0) {
+    va_end(writing_args);
+    throw std::runtime_error("[vsprintf_str] vsnprintf error: " + std::to_string(alloc_size));
+  }
+
   char* chararr = new char[alloc_size + 1];
 
-  vsnprintf(chararr, alloc_size + 1, format.c_str(), writing_args);
+  int success = vsnprintf(chararr, alloc_size + 1, format, writing_args);
   va_end(writing_args);
+  if (success < 0) {
+    throw std::runtime_error("[vsprintf_str] vsnprintf error: " + std::to_string(alloc_size));
+  }
+
   std::string output(chararr);
   delete[] chararr;
   return output;
 }
 
 std::string format_duration_time_digit(int time_value) { // not in formatting.h
-  if (time_value < 10) {
-    return "0" + std::to_string(time_value);
-  }
-  return std::to_string(time_value);
+  return (time_value < 10 ? "0" : "") + std::to_string(time_value);
 }
 
 std::string format_duration(double time_in_seconds) {
@@ -211,7 +220,7 @@ bool is_m_ss_duration(std::string formatted_duration) {
   return seconds < 60;
 }
 
-bool is_int_str(std::string str) {
+bool is_int_str(std::string_view str) {
   if (str.length() == 0) {
     return false;
   }
@@ -235,7 +244,7 @@ bool is_int_str(std::string str) {
   return true;
 }
 
-std::string format_list(std::vector<std::string> items, std::string conjunction) {
+std::string format_list(std::vector<std::string> items, std::string_view conjunction) {
   if (items.size() == 0) {
     return "";
   }
@@ -258,55 +267,120 @@ std::string format_list(std::vector<std::string> items, std::string conjunction)
   return sstream.str();
 }
 
-std::string to_filename(const std::string& path_str) {
+std::string to_filename(std::string_view path_str) {
   return std::filesystem::path(path_str).filename().string();
 }
 
-std::string sprintf_str(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    std::string str = vsprintf_str(format, args);
-    va_end(args);
-    return str;
-}
-
-std::string vsprintf_str(const char* format, va_list args) {
-    va_list writing_args, reading_args;
-    va_copy(reading_args, args);
-    va_copy(writing_args, args);
-
-    int alloc_size = vsnprintf(nullptr, 0, format, reading_args);
-    va_end(reading_args);
-    if (alloc_size < 0) {
-      va_end(writing_args);
-      throw std::runtime_error("[vsprintf_str] vsnprintf error return value: " + std::to_string(alloc_size));
-    }
-
-    char* cstr = (char*)malloc(sizeof(char) * (alloc_size + 1));
-    if (cstr == nullptr) {
-        va_end(writing_args);
-        throw std::bad_alloc();
-    }
-
-    vsnprintf(cstr, alloc_size + 1, format, writing_args);
-    va_end(writing_args);
-
-    std::string string(cstr);
-    free(cstr);
-    return string;
-}
-
-std::string str_bound(const std::string& str, std::size_t max_size) {
+std::string str_bound(std::string_view str, std::size_t max_size) {
   if (str.length() > max_size) {
-    return str.substr(0, max_size);
+    return std::string(str.substr(0, max_size));
   }
-  return str;
+  return std::string(str);
 }
 
-std::string str_capslock(const std::string& str) {
+std::string str_capslock(std::string_view str) {
   std::string out;
   for (std::size_t i = 0; i < str.length(); i++) {
     out += std::toupper(str.at(i));
   }
   return out;
+}
+
+bool strisi32(std::string_view str) noexcept {
+  try {
+    (void)strtoi32(str);
+    return true;
+  } catch (const std::runtime_error& err) {
+    return false;
+  }
+}
+
+int strtoi32(std::string_view str) {
+  double out = 0;
+  if (str.empty())
+    throw std::runtime_error("[strtoi32] Attempted to parse empty string as i32");
+  if (str == "-" || str == "+")
+    throw std::runtime_error("[strtoi32] Attempted to parse string with only a sign as i32: " + std::string(str));
+
+  int sign = str[0] == '-' ? -1 : 1;
+
+  for (int i = str[0] == '-' || str[0] == '+' ? 1 : 0; i < static_cast<int>(str.length()); i++) {
+    if (!std::isdigit(str[i]))
+      throw std::runtime_error("[strtoi32] Attempted to parse string with invalid "
+      "non-digit character: " + std::string(str));
+    if (out >= (INT_MAX - 9) / 10)
+      throw std::runtime_error("[strtoi32] i32 integer overflow: " + std::string(str) + 
+      ", Must be in the range [" + std::to_string(INT_MIN) + " - " + std::to_string(INT_MAX) + "]");
+
+    out *= 10;
+    out += str[i] - '0';
+  }
+
+  return out * sign;
+}
+
+bool strisdouble(std::string_view str) noexcept {
+  try {
+    (void)strtodouble(str);
+    return true;
+  } catch (const std::runtime_error& err) {
+    return false;
+  }
+}
+
+double strtodouble(std::string_view str) {
+  double out = 0.0;
+
+  if (str.empty())
+    throw std::runtime_error("[strtodouble] Attempted to parse empty string as double");
+  if (str == "-." || str == "+." || str == "+" || str == "-")
+    throw std::runtime_error("[strtodouble] Attempted to parse invalid signed string: " + std::string(str));
+
+  int foundDecimal = 0;
+  double decimalMultiplier = 0.1;
+  double sign = str[0] == '-' ? -1.0 : 1.0;
+
+  for (int i = str[0] == '-' || str[0] == '+' ? 1 : 0; i < static_cast<int>(str.length()); i++) {
+    if (str[i] == '.') {
+      if (foundDecimal)
+        throw std::runtime_error("[strtodouble] Attempted to parse string with multiple decimal points: " + std::string(str));
+      foundDecimal = 1;
+    } else if (std::isdigit(str[i])) {
+      if (out >= (DBL_MAX - 9) / 10)
+        throw std::runtime_error("[strtodouble] double overflow: " + std::string(str));
+      
+      if (foundDecimal) {
+        out = out + (str[i] - '0') * decimalMultiplier;
+        decimalMultiplier /= 10.0;
+      }
+      else {
+        out = out * 10.0 + (str[i] - '0'); 
+      }
+
+    } else {
+      throw std::runtime_error("[strtodouble] Attempted to parse string with invalid "
+      "non-digit character: " + std::string(str));
+    }
+  }
+
+  return out * sign;
+}
+
+bool is_percentage(std::string_view str) {
+  try {
+    (void)parse_percentage(str);
+    return true;
+  } catch (const std::runtime_error& err) {
+    return false;
+  }
+}
+
+/**
+ * either a float or a float ending with %
+*/
+double parse_percentage(std::string_view str) {
+  if (str[str.length() - 1] == '%') {
+    return strtodouble(str.substr(0, str.length() - 1)) / 100.0;
+  }
+  return strtodouble(str);
 }
