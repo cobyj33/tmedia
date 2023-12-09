@@ -72,7 +72,11 @@ double get_file_duration(const std::string& file_path) {
 }
 
 struct AVProbeFileRet {
+  #ifdef AVFORMAT_CONST_AVIOFORMAT
+  const AVInputFormat* avif;
+  #else
   AVInputFormat* avif;
+  #endif
   int score = 0;
 };
 
@@ -85,7 +89,7 @@ AVProbeFileRet av_probe_file(const std::string& path_str) {
     throw ffmpeg_error("[av_probe_file] avio_open failure", ret);
   }
 
-  #ifndef AVFORMAT_CONST_AVIOFORMAT
+  #ifdef AVFORMAT_CONST_AVIOFORMAT
   const AVInputFormat* avif;
   #else
   AVInputFormat* avif;
