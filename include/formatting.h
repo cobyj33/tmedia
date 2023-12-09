@@ -42,6 +42,7 @@ std::string double_to_fixed_string(double num, int decimal_places);
 bool is_int_str(std::string_view str);
 
 std::string to_filename(std::string_view path);
+std::string to_file_ext(std::string_view path);
 
 std::string format_list(std::vector<std::string> items, std::string_view conjunction);
 
@@ -51,5 +52,7 @@ bool is_percentage(std::string_view percentage);
 std::string str_bound(std::string_view str, std::size_t max_size);
 std::string str_capslock(std::string_view str);
 std::string str_trim(std::string_view src, std::string_view trimchars);
+std::vector<std::string_view> strvsplit(std::string_view s, char delim);
+std::vector<std::string> strsplit(std::string_view s, char delim);
 
 #endif

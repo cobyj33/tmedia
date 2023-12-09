@@ -271,6 +271,10 @@ std::string to_filename(std::string_view path_str) {
   return std::filesystem::path(path_str).filename().string();
 }
 
+std::string to_file_ext(std::string_view path_str) {
+  return std::filesystem::path(path_str).extension();
+}
+
 std::string str_bound(std::string_view str, std::size_t max_size) {
   if (str.length() > max_size) {
     return std::string(str.substr(0, max_size));
@@ -284,6 +288,41 @@ std::string str_capslock(std::string_view str) {
     out += std::toupper(str.at(i));
   }
   return out;
+}
+
+std::vector<std::string_view> strvsplit(std::string_view s, char delim) {
+  std::vector<std::string_view> result;
+  std::size_t ssstart = 0;
+
+  for (std::size_t ssend = 0; ssend < s.length(); ssend++) {
+    if (s[ssend] == delim) {
+      if (ssend > ssstart)
+      ssstart = ssend;
+    }
+  }
+
+  if (ssstart < s.length() - 1) 
+    result.push_back(s.substr(ssstart, s.length()));
+
+  return result;
+}
+
+std::vector<std::string> strsplit(std::string_view s, char delim) {
+  std::vector<std::string> result;
+  std::size_t ssstart = 0;
+
+  for (std::size_t ssend = 0; ssend < s.length(); ssend++) {
+    if (s[ssend] == delim) {
+      if (ssend > ssstart)
+        result.push_back(std::string(s.substr(ssstart, ssend)));
+      ssstart = ssend;
+    }
+  }
+
+  if (ssstart < s.length() - 1) 
+    result.push_back(std::string(s.substr(ssstart, s.length())));
+
+  return result;
 }
 
 bool strisi32(std::string_view str) noexcept {

@@ -13,6 +13,7 @@
 
 #include <string>
 #include <map>
+#include <optional>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -25,6 +26,7 @@ enum class MediaType {
 };
 
 std::string media_type_to_string(MediaType media_type);
+std::optional<MediaType> media_type_guess(const std::string& path_str);
 MediaType media_type_from_avformat_context(AVFormatContext* format_context);
 
 bool probably_valid_media_file_path(const std::string& path_str);

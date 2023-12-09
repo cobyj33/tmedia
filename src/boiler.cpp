@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <string_view>
 
 #include <filesystem>
 
@@ -69,6 +70,33 @@ double get_file_duration(const std::string& file_path) {
   return duration_seconds;
 }
 
+struct AVProbeFileRet {
+  AVInputFormat* avif;
+  int score = 0;
+};
+
+AVProbeFileRet av_probe_file(const std::string& path_str) {
+  AVProbeFileRet res;
+
+  AVIOContext* avio_ctx;
+  int ret = avio_open(&avio_ctx, path_str.c_str(), AVIO_FLAG_READ);
+  if (ret < 0) {
+    throw ffmpeg_error("[av_probe_file] avio_open failure", ret);
+  }
+
+  AVInputFormat* avif;
+  res.score = av_probe_input_buffer2(avio_ctx, &avif, path_str.c_str(), NULL, 0, 0);
+  avio_close(avio_ctx);
+  res.avif = avif;
+ 
+  if (res.score < 0) {
+    throw ffmpeg_error("[av_probe_file] av_probe_input_buffer2 failure", res.score);
+  }
+
+  return res;
+}
+
+
 bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVMediaType media_type) {
   for (unsigned int i = 0; i < format_context->nb_streams; i++) {
     if (format_context->streams[i]->codecpar->codec_type == media_type) {
@@ -78,11 +106,53 @@ bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVM
   return false;
 }
 
+// MediaType media_type_from_avinput_format(AVInputFormat* input_fmt) {
+//   input_fmt->
+  
+// }
+
 bool probably_valid_media_file_path(const std::string& path_str) {
   std::string filename = to_filename(path_str);
   const AVOutputFormat* fmt = av_guess_format(NULL, filename.c_str(), NULL);
   if (fmt != NULL) return true;
+  // AVProbeFileRet pfret = av_probe_file(path_str);
+  // if (pfret.score > AVPROBE_SCORE_RETRY) return true;
   return is_valid_media_file_path(path_str);
+}
+
+std::optional<MediaType> media_type_guess(const std::string& path_str) {
+  std::string ext = to_file_ext(path_str);
+
+  static std::pair<std::string_view, MediaType> extensions[] = {
+    {"flv", MediaType::VIDEO},
+    {"mp3", MediaType::AUDIO},
+    {"flac", MediaType::AUDIO},
+    {"wav", MediaType::AUDIO},
+    {"ogg", MediaType::AUDIO},
+    {"jpg", MediaType::IMAGE},
+    {"jpeg", MediaType::IMAGE},
+    {"png", MediaType::IMAGE},
+    {"webp", MediaType::IMAGE},
+  };
+
+  for (std::pair<std::string_view, MediaType>& pair : extensions) {
+    if (pair.first == ext) return pair.second;
+  }
+
+  // AVProbeFileRet pfret = av_probe_file(path_str);
+  // if (pfret.score > AVPROBE_SCORE_RETRY) {
+  // }
+
+  try {
+    AVFormatContext* fmt_ctx = open_format_context(path_str);
+    MediaType media_type = media_type_from_avformat_context(fmt_ctx);
+    avformat_close_input(&fmt_ctx);
+    return media_type;
+  } catch (const std::runtime_error& e) {
+    // no-op
+  }
+
+  return std::nullopt;
 }
 
 bool is_valid_media_file_path(const std::string& path_str) {
