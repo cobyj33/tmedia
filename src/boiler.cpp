@@ -4,6 +4,7 @@
 #include "decode.h"
 #include "ffmpeg_error.h"
 #include "formatting.h"
+#include "avguard.h"
 
 #include <cstring>
 #include <stdexcept>
@@ -84,7 +85,12 @@ AVProbeFileRet av_probe_file(const std::string& path_str) {
     throw ffmpeg_error("[av_probe_file] avio_open failure", ret);
   }
 
+  #ifndef AVFORMAT_CONST_AVIOFORMAT
+  const AVInputFormat* avif;
+  #else
   AVInputFormat* avif;
+  #endif
+
   res.score = av_probe_input_buffer2(avio_ctx, &avif, path_str.c_str(), NULL, 0, 0);
   avio_close(avio_ctx);
   res.avif = avif;
