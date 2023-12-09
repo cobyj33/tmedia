@@ -127,39 +127,39 @@ extern "C" {
     {"scaling-algo", "volume", "loop-type", "chars", "refresh-rate"});
 
     TMediaCliArgParseMap exiting_opt_map{
-      {"h", tmedia_cli_arg_help},
-      {"v", tmedia_cli_arg_version},
-      {"help", tmedia_cli_arg_help},
-      {"version", tmedia_cli_arg_version},
-      {"ffmpeg-version", tmedia_cli_arg_ffmpeg_version},
-      {"curses-version", tmedia_cli_arg_curses_version},
+      {"-h", tmedia_cli_arg_help},
+      {"-v", tmedia_cli_arg_version},
+      {"--help", tmedia_cli_arg_help},
+      {"--version", tmedia_cli_arg_version},
+      {"--ffmpeg-version", tmedia_cli_arg_ffmpeg_version},
+      {"--curses-version", tmedia_cli_arg_curses_version},
     };
 
     TMediaCliArgParseMap argparse_map{
-      {"c", tmedia_cli_arg_color},
-      {"b", tmedia_cli_arg_background},
-      {"g", tmedia_cli_arg_grayscale},
-      {"m", tmedia_cli_arg_mute},
-      {"f", tmedia_cli_arg_fullscreen},
-      {"s", tmedia_cli_arg_shuffle},
-      {"r", tmedia_cli_arg_recursive},
-      {"loop-type", tmedia_cli_arg_loop_type},
-      {"volume", tmedia_cli_arg_volume},
-      {"shuffle", tmedia_cli_arg_shuffle},
-      {"shuffled", tmedia_cli_arg_shuffle},
-      {"refresh-rate", tmedia_cli_arg_refresh_rate},
-      {"chars", tmedia_cli_arg_chars},
-      {"color", tmedia_cli_arg_color},
-      {"colored", tmedia_cli_arg_color},
-      {"gray", tmedia_cli_arg_grayscale},
-      {"grey", tmedia_cli_arg_grayscale},
-      {"greyscale", tmedia_cli_arg_grayscale},
-      {"grayscale", tmedia_cli_arg_grayscale},
-      {"background", tmedia_cli_arg_background},
-      {"mute", tmedia_cli_arg_mute},
-      {"muted", tmedia_cli_arg_mute},
-      {"recursive", tmedia_cli_arg_recursive},
-      {"fullscreen", tmedia_cli_arg_fullscreen},
+      {"-c", tmedia_cli_arg_color},
+      {"-b", tmedia_cli_arg_background},
+      {"-g", tmedia_cli_arg_grayscale},
+      {"-m", tmedia_cli_arg_mute},
+      {"-f", tmedia_cli_arg_fullscreen},
+      {"-s", tmedia_cli_arg_shuffle},
+      {"-r", tmedia_cli_arg_recursive},
+      {"--loop-type", tmedia_cli_arg_loop_type},
+      {"--volume", tmedia_cli_arg_volume},
+      {"--shuffle", tmedia_cli_arg_shuffle},
+      {"--shuffled", tmedia_cli_arg_shuffle},
+      {"--refresh-rate", tmedia_cli_arg_refresh_rate},
+      {"--chars", tmedia_cli_arg_chars},
+      {"--color", tmedia_cli_arg_color},
+      {"--colored", tmedia_cli_arg_color},
+      {"--gray", tmedia_cli_arg_grayscale},
+      {"--grey", tmedia_cli_arg_grayscale},
+      {"--greyscale", tmedia_cli_arg_grayscale},
+      {"--grayscale", tmedia_cli_arg_grayscale},
+      {"--background", tmedia_cli_arg_background},
+      {"--mute", tmedia_cli_arg_mute},
+      {"--muted", tmedia_cli_arg_mute},
+      {"--recursive", tmedia_cli_arg_recursive},
+      {"--fullscreen", tmedia_cli_arg_fullscreen},
     };
 
     for (std::size_t i = 0; i < parsed_cli.size(); i++) {
@@ -168,14 +168,14 @@ extern "C" {
           ps.paths.push_back(parsed_cli[i].value);
         } break;
         case tmedia::CLIArgType::OPTION: {
-          if (exiting_opt_map.count(parsed_cli[i].value) == 1) {
-            exiting_opt_map[parsed_cli[i].value](ps, parsed_cli[i]);
+          const std::string fullopt = parsed_cli[i].prefix + parsed_cli[i].value;
+          if (exiting_opt_map.count(fullopt) == 1) {
+            exiting_opt_map[fullopt](ps, parsed_cli[i]);
             return { ps.tmss, true };
-          } else if (argparse_map.count(parsed_cli[i].value) == 1) {
-            argparse_map[parsed_cli[i].value](ps, parsed_cli[i]);
+          } else if (argparse_map.count(fullopt) == 1) {
+            argparse_map[fullopt](ps, parsed_cli[i]);
           } else {
-            throw std::runtime_error("[tmedia_parse_cli] Unrecognized option: " +
-            parsed_cli[i].value);
+            throw std::runtime_error("[tmedia_parse_cli] Unrecognized option: " + fullopt);
           }
         } break;
       }
