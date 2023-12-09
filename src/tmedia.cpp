@@ -286,7 +286,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
         TMediaProgramSnapshot snapshot;
         snapshot.frame = frame;
-        snapshot.playing = fetcher.is_playing();
+        snapshot.playing = fetcher.media_type != MediaType::IMAGE ? fetcher.is_playing() : false;
         snapshot.has_audio_output = audio_output ? true : false;
         snapshot.media_time_secs = current_media_time;
         snapshot.media_duration_secs = fetcher.get_duration();
