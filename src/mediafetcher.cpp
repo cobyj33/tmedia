@@ -19,12 +19,12 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-MediaFetcher::MediaFetcher(const std::string& file_path) {
-  this->file_path = file_path;
+MediaFetcher::MediaFetcher(std::filesystem::path path) {
+  this->path = path;
   this->in_use = false;
 
   std::set<enum AVMediaType> requested_stream_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-  this->media_decoder = std::move(std::make_unique<MediaDecoder>(file_path, requested_stream_types));
+  this->media_decoder = std::move(std::make_unique<MediaDecoder>(path, requested_stream_types));
   this->media_type = this->media_decoder->get_media_type();
   this->audio_visualizer = std::move(std::make_unique<AmplitudeAbs>());
 

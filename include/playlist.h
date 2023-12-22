@@ -135,9 +135,10 @@ class IPlaylist {
 
 // };
 
+template <typename T>
 class Playlist {
   private:
-    std::vector<std::string> m_files;
+    std::vector<T> m_entries;
 
     std::vector<int> m_queue_indexes;
     int m_queue_index;
@@ -147,7 +148,7 @@ class Playlist {
   public:
 
     Playlist();
-    Playlist(std::vector<std::string> media_files, LoopType loop_type);
+    Playlist(std::vector<T> entries, LoopType loop_type);
 
     bool shuffled() const;
     void shuffle(bool keep_current_file_first);
@@ -158,10 +159,10 @@ class Playlist {
     LoopType loop_type() const noexcept;
 
     int index() const;
-    std::string current() const;
+    T current() const;
 
     void move(PlaylistMoveCommand move_cmd);
-    std::string peek_move(PlaylistMoveCommand move_cmd) const;
+    T peek_move(PlaylistMoveCommand move_cmd) const;
     bool can_move(PlaylistMoveCommand move_cmd) const noexcept;
 };
 

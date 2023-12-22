@@ -16,6 +16,7 @@
 #include <thread>
 #include <optional>
 #include <condition_variable>
+#include <filesystem>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -56,7 +57,7 @@ class MediaFetcher {
 
     void audio_fetching_thread_func();
 
-    std::string file_path;
+    std::filesystem::path path;
     MediaClock clock;
     std::atomic<bool> in_use;
     std::optional<std::string> error;
@@ -78,7 +79,7 @@ class MediaFetcher {
     std::mutex alter_mutex;
     std::optional<VideoDimensions> requested_frame_dims;
 
-    MediaFetcher(const std::string& file_path);
+    MediaFetcher(std::filesystem::path path);
 
     void begin(double current_system_time); // Only to be called by owning thread
     void join(double current_system_time); // Only to be called by owning thread after in_use is set to false

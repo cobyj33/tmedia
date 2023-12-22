@@ -80,11 +80,13 @@ set(COMMON_SOURCE_FILES
 ./src/mediaclock.cpp
 ./src/mediadecoder.cpp
 ./src/mediafetcher.cpp
+./src/mediaformat.cpp
 ./src/metadata.cpp
 ./src/palette.cpp
 ./src/palette_io.cpp
 ./src/pixeldata.cpp
 ./src/playlist.cpp
+./src/probe.cpp
 ./src/scale.cpp
 ./src/sleep.cpp
 ./src/streamdecoder.cpp

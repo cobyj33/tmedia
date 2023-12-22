@@ -71,7 +71,7 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState tmss) {
   tmps.ascii_display_chars = tmss.ascii_display_chars;
   tmps.fullscreen = tmss.fullscreen;
   tmps.muted = false;
-  tmps.playlist = Playlist(tmss.media_files, tmss.loop_type);
+  tmps.playlist = Playlist<std::filesystem::path>(tmss.media_files, tmss.loop_type);
   if (tmss.shuffled) tmps.playlist.shuffle(false);
   tmps.refresh_rate_fps = tmss.refresh_rate_fps;
   tmps.scaling_algorithm = tmss.scaling_algorithm;

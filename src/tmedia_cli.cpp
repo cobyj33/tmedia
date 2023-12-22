@@ -5,6 +5,8 @@
 #include "formatting.h"
 #include "version.h"
 #include "ascii.h"
+#include "probe.h"
+#include "boiler.h"
 
 #include <natural_sort.hpp>
 
@@ -122,9 +124,9 @@ extern "C" {
   MediaPathSearchOptions resolve_path_search_options(MediaPathSearchOptions global, MediaPathLocalSearchOptions local);
 
   struct MediaPath {
-    std::string path;
+    std::filesystem::path path;
     MediaPathLocalSearchOptions search_options;
-    MediaPath(std::string path) : path(path) {} 
+    MediaPath(std::filesystem::path path) : path(path) {} 
   };
 
   struct TMediaCLIParseState {
@@ -138,7 +140,7 @@ extern "C" {
     bool background = false;
   };
 
-  std::vector<std::string> resolve_cli_paths(const std::vector<MediaPath>& paths, MediaPathSearchOptions global_search_opts);
+  std::vector<std::filesystem::path> resolve_cli_paths(const std::vector<MediaPath>& paths, MediaPathSearchOptions global_search_opts);
 
   typedef std::function<void(TMediaCLIParseState&, tmedia::CLIArg& arg)> TMediaCLIArgParseFunc;
   typedef std::map<std::string, TMediaCLIArgParseFunc> TMediaCliArgParseMap;
@@ -248,7 +250,8 @@ extern "C" {
     for (std::size_t i = 0; i < parsed_cli.size(); i++) {
       switch (parsed_cli[i].arg_type) {
         case tmedia::CLIArgType::POSITIONAL: {
-          ps.paths.push_back(MediaPath(parsed_cli[i].value));
+          std::filesystem::path file_path(parsed_cli[i].value);
+          ps.paths.push_back(MediaPath(file_path));
         } break;
         case tmedia::CLIArgType::OPTION: {
           const std::string fullopt = parsed_cli[i].prefix + parsed_cli[i].value;
@@ -437,7 +440,7 @@ extern "C" {
   }
 
   bool test_media_file(std::filesystem::path path, MediaPathSearchOptions search_opts) {
-    std::optional<MediaType> media_type = media_type_guess(path.string());
+    std::optional<MediaType> media_type = media_type_probe(path.string());
     if (!media_type.has_value()) return false;
     std::pair<MediaType, bool> allowed_media_types[] = {
       {MediaType::VIDEO, !search_opts.ignore_video},
@@ -453,28 +456,24 @@ extern "C" {
   }
 
 
-  std::vector<std::string> resolve_cli_path(std::string path_str, MediaPathSearchOptions search_options) {
-    std::vector<std::string> resolved_paths;
-
-    if (path_str.length() == 0) {
-      throw std::runtime_error("[resolve_cli_path] Cannot open empty path");
-    }
+  std::vector<std::filesystem::path> resolve_cli_path(std::filesystem::path path, MediaPathSearchOptions search_options) {
+    std::vector<std::filesystem::path> resolved_paths;
 
     std::stack<std::filesystem::path> to_search;
-    to_search.push(std::filesystem::path(path_str));
+    to_search.push(path);
     std::error_code ec;
 
     while (!to_search.empty()) {
-      const std::filesystem::path path = to_search.top();
+      const std::filesystem::path curr = to_search.top();
       to_search.pop();
 
-      if (!std::filesystem::exists(path, ec)) {
-        throw std::runtime_error("[resolve_cli_path] Cannot open nonexistent path: " + path_str);
+      if (!std::filesystem::exists(curr, ec)) {
+        throw std::runtime_error("[resolve_cli_path] Cannot open nonexistent path: " + path.string());
       }
 
-      if (std::filesystem::is_directory(path, ec)) {
+      if (std::filesystem::is_directory(curr, ec)) {
         std::vector<std::string> media_file_paths;
-        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(path)) {
+        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(curr)) {
           if (std::filesystem::is_directory(entry.path(), ec) && search_options.recurse) {
             to_search.push(entry.path());
           } else if (std::filesystem::is_regular_file(entry.path()) && test_media_file(entry.path(), search_options)) {
@@ -487,19 +486,19 @@ extern "C" {
         for (const std::string& media_file_path : media_file_paths) {
           resolved_paths.push_back(media_file_path);
         }
-      } else if (std::filesystem::is_regular_file(path) && test_media_file(path, search_options)) {
-        resolved_paths.push_back(path_str);
+      } else if (std::filesystem::is_regular_file(curr) && test_media_file(curr, search_options)) {
+        resolved_paths.push_back(curr);
       }
     }
 
     return resolved_paths;
   }
 
-  std::vector<std::string> resolve_cli_paths(const std::vector<MediaPath>& paths, MediaPathSearchOptions search_opts) {
-    std::vector<std::string> valid_paths;
+  std::vector<std::filesystem::path> resolve_cli_paths(const std::vector<MediaPath>& paths, MediaPathSearchOptions search_opts) {
+    std::vector<std::filesystem::path> valid_paths;
 
     for (std::size_t i = 0; i < paths.size(); i++) {
-      std::vector<std::string> resolved = resolve_cli_path(paths[i].path, resolve_path_search_options(search_opts, paths[i].search_options));
+      std::vector<std::filesystem::path> resolved = resolve_cli_path(paths[i].path, resolve_path_search_options(search_opts, paths[i].search_options));
       for (std::size_t i = 0; i < resolved.size(); i++) {
         valid_paths.push_back(resolved[i]);
       }

@@ -9,49 +9,60 @@
 #include <stdexcept>
 #include <algorithm>
 
+#include <filesystem>
+
+
 int playlist_get_move(int current, int size, LoopType loop_type, PlaylistMoveCommand move_cmd);
 
-Playlist::Playlist() {
+template <typename T>
+Playlist<T>::Playlist() {
   this->m_loop_type = LoopType::NO_LOOP;
   this->m_queue_index = -1;
   this->m_shuffled = false;
 }
 
-Playlist::Playlist(std::vector<std::string> media_files, LoopType loop_type) {
-  this->m_files = media_files;
+template <typename T>
+Playlist<T>::Playlist(std::vector<T> entries, LoopType loop_type) {
+  this->m_entries = entries;
   this->m_queue_index = 0;
   this->m_loop_type = loop_type;
   this->m_shuffled = false;
 
-  for (int i = 0; (std::size_t)i < media_files.size(); i++) {
+  for (int i = 0; (std::size_t)i < entries.size(); i++) {
     this->m_queue_indexes.push_back(i);
   }
 }
 
-int Playlist::index() const {
+template <typename T>
+int Playlist<T>::index() const {
   return this->m_queue_indexes[this->m_queue_index];
 }
 
-std::size_t Playlist::size() const noexcept {
-  return this->m_files.size();
+template <typename T>
+std::size_t Playlist<T>::size() const noexcept {
+  return this->m_entries.size();
 }
 
-std::string Playlist::current() const {
-  if (this->m_files.size() == 0) {
+template <typename T>
+T Playlist<T>::current() const {
+  if (this->m_entries.size() == 0) {
     throw std::runtime_error("[Playlist::current] Cannot access current file of empty playlist");
   }
-  return this->m_files[this->index()];
+  return this->m_entries[this->index()];
 }
 
-LoopType Playlist::loop_type() const noexcept {
+template <typename T>
+LoopType Playlist<T>::loop_type() const noexcept {
   return this->m_loop_type;
 }
 
-void Playlist::set_loop_type(LoopType loop_type) noexcept {
+template <typename T>
+void Playlist<T>::set_loop_type(LoopType loop_type) noexcept {
   this->m_loop_type = loop_type;
 }
 
-void Playlist::move(PlaylistMoveCommand move_cmd) {
+template <typename T>
+void Playlist<T>::move(PlaylistMoveCommand move_cmd) {
   int next = playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd);
   if (next < 0) {
     throw std::runtime_error("[Playlist::move] can not commit move" + playlist_move_cmd_str(move_cmd)); 
@@ -74,24 +85,28 @@ void Playlist::move(PlaylistMoveCommand move_cmd) {
   }
 }
 
-std::string Playlist::peek_move(PlaylistMoveCommand move_cmd) const {
+template <typename T>
+T Playlist<T>::peek_move(PlaylistMoveCommand move_cmd) const {
   int next = playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd);
   if (next < 0) {
     throw std::runtime_error("[Playlist::peek_move] can not commit move" + playlist_move_cmd_str(move_cmd)); 
   }
 
-  return this->m_files[this->m_queue_indexes[next]];
+  return this->m_entries[this->m_queue_indexes[next]];
 }
 
-bool Playlist::can_move(PlaylistMoveCommand move_cmd) const noexcept {
+template <typename T>
+bool Playlist<T>::can_move(PlaylistMoveCommand move_cmd) const noexcept {
   return playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd) >= 0;
 }
 
-bool Playlist::shuffled() const {
+template <typename T>
+bool Playlist<T>::shuffled() const {
   return this->m_shuffled;
 }
 
-void Playlist::shuffle(bool keep_current_file_first) {
+template <typename T>
+void Playlist<T>::shuffle(bool keep_current_file_first) {
   if (this->m_queue_indexes.size() > 1) {
     if (keep_current_file_first) {
       int tmp = this->m_queue_indexes[0];
@@ -107,13 +122,12 @@ void Playlist::shuffle(bool keep_current_file_first) {
   this->m_shuffled = true;
 }
 
-void Playlist::unshuffle() {
+template <typename T>
+void Playlist<T>::unshuffle() {
   this->m_queue_index = this->m_queue_indexes[this->m_queue_index];
   std::sort(this->m_queue_indexes.begin(), this->m_queue_indexes.end());
   this->m_shuffled = false;
 }
-
-
 
 int playlist_get_rewind(int current, int size, LoopType loop_type);
 int playlist_get_next(int current, int size, LoopType loop_type);
@@ -198,3 +212,6 @@ bool loop_type_str_is_valid(std::string_view loop_type_str) {
   }
   return false;
 }
+
+
+template class Playlist<std::filesystem::path>;

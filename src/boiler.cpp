@@ -5,6 +5,7 @@
 #include "ffmpeg_error.h"
 #include "formatting.h"
 #include "avguard.h"
+#include "mediaformat.h"
 
 #include <cstring>
 #include <stdexcept>
@@ -21,16 +22,6 @@ extern "C" {
 #include <libavutil/avstring.h>
 }
 
-const char* banned_iformat_names = "tty";
-
-const char* image_iformat_names = "image2,png_pipe,webp_pipe";
-const char* audio_iformat_names = "wav,ogg,mp3,flac";
-const char* video_iformat_names = "flv";
-
-const char* image_iformat_exts= "jpg,jpeg,png,webp";
-const char* audio_iformat_exts= "mp3,flac,wav,ogg";
-const char* video_iformat_exts= "flv";
-
 bool av_match_lists(const char* first, char fsep, const char* sec, char ssep) {
   std::vector<std::string> to_check = strsplit(first, fsep);
 
@@ -41,14 +32,14 @@ bool av_match_lists(const char* first, char fsep, const char* sec, char ssep) {
   return false;
 }
 
-AVFormatContext* open_format_context(const std::string& file_path) {
+AVFormatContext* open_format_context(std::filesystem::path path) {
   AVFormatContext* format_context = nullptr;
-  int result = avformat_open_input(&format_context, file_path.c_str(), nullptr, nullptr);
+  int result = avformat_open_input(&format_context, path.c_str(), nullptr, nullptr);
   if (result < 0) {
     if (format_context != nullptr) {
       avformat_close_input(&format_context);
     }
-    throw ffmpeg_error("[open_format_context] Failed to open format context input for " + file_path, result);
+    throw ffmpeg_error("[open_format_context] Failed to open format context input for " + path.string(), result);
   }
 
   if (av_match_lists(format_context->iformat->name, ',', banned_iformat_names, ',')) {
@@ -60,7 +51,7 @@ AVFormatContext* open_format_context(const std::string& file_path) {
     if (format_context != nullptr) {
       avformat_close_input(&format_context);
     }
-    throw ffmpeg_error("[open_format_context] Failed to find stream info for " + file_path, result);
+    throw ffmpeg_error("[open_format_context] Failed to find stream info for " + path.string(), result);
   }
 
   if (format_context != nullptr) {
@@ -69,8 +60,8 @@ AVFormatContext* open_format_context(const std::string& file_path) {
   throw std::runtime_error("[open_format_context] Failed to open format context input, unknown error occured");
 }
 
-void dump_file_info(const std::string& file_path) {
-  AVFormatContext* format_context = open_format_context(file_path);
+void dump_file_info(std::filesystem::path path) {
+  AVFormatContext* format_context = open_format_context(path);
   dump_format_context(format_context);
   avformat_close_input(&format_context);
 }
@@ -82,47 +73,12 @@ void dump_format_context(AVFormatContext* format_context) {
   av_log_set_level(saved_avlog_level);
 }
 
-double get_file_duration(const std::string& file_path) {
-  AVFormatContext* format_context = open_format_context(file_path);
+double get_file_duration(std::filesystem::path path) {
+  AVFormatContext* format_context = open_format_context(path);
   int64_t duration = format_context->duration;
   double duration_seconds = (double)duration / AV_TIME_BASE;
   avformat_close_input(&format_context);
   return duration_seconds;
-}
-
-struct AVProbeFileRet {
-  #if AVFORMAT_CONST_AVIOFORMAT
-  const AVInputFormat* avif;
-  #else
-  AVInputFormat* avif;
-  #endif
-  int score = 0;
-};
-
-AVProbeFileRet av_probe_file(const std::string& path_str) {
-  AVProbeFileRet res;
-
-  AVIOContext* avio_ctx;
-  int ret = avio_open(&avio_ctx, path_str.c_str(), AVIO_FLAG_READ);
-  if (ret < 0) {
-    throw ffmpeg_error("[av_probe_file] avio_open failure", ret);
-  }
-
-  #if AVFORMAT_CONST_AVIOFORMAT
-  const AVInputFormat* avif = NULL;
-  #else
-  AVInputFormat* avif = NULL;
-  #endif
-
-  res.score = av_probe_input_buffer2(avio_ctx, &avif, path_str.c_str(), NULL, 0, 0);
-  avio_close(avio_ctx);
-  res.avif = avif;
- 
-  if (res.score < 0) {
-    throw ffmpeg_error("[av_probe_file] av_probe_input_buffer2 failure", res.score);
-  }
-
-  return res;
 }
 
 
@@ -146,6 +102,15 @@ std::optional<MediaType> media_type_from_mime_type(std::string_view mime_type) {
     return MediaType::VIDEO;
   }
   return std::nullopt;
+}
+
+std::string media_type_to_string(MediaType media_type) {
+  switch (media_type) {
+    case MediaType::VIDEO: return "video";
+    case MediaType::AUDIO: return "audio";
+    case MediaType::IMAGE: return "image";
+  }
+  throw std::runtime_error("[media_type_to_string] attempted to get media type string from unimplemented media type.");
 }
 
 std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat) {
@@ -183,72 +148,6 @@ std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat) {
   }
 
   return std::nullopt;
-}
-
-bool probably_valid_media_file_path(const std::string& path_str) {
-  std::string filename = to_filename(path_str);
-  const AVOutputFormat* fmt = av_guess_format(NULL, filename.c_str(), NULL);
-  if (fmt != NULL) return true;
-  
-  try {
-    AVProbeFileRet pfret = av_probe_file(path_str);
-    if (pfret.score > AVPROBE_SCORE_RETRY) return true;
-  } catch (const std::runtime_error& e) {
-    // no-op
-  }
-
-  return is_valid_media_file_path(path_str);
-}
-
-std::optional<MediaType> media_type_guess(const std::string& path_str) {
-  try {
-    AVProbeFileRet pfret = av_probe_file(path_str);
-    if (pfret.score > AVPROBE_SCORE_RETRY) {
-      if (std::optional<MediaType> from_iformat = media_type_from_iformat(pfret.avif)) {
-        return from_iformat;
-      }
-    }
-  } catch (const std::runtime_error& e) {
-    // no-op
-  }
-
-  try {
-    AVFormatContext* fmt_ctx = open_format_context(path_str);
-    MediaType media_type = media_type_from_avformat_context(fmt_ctx);
-    avformat_close_input(&fmt_ctx);
-    return media_type;
-  } catch (const std::runtime_error& e) {
-    // no-op
-  }
-
-  return std::nullopt;
-}
-
-bool is_valid_media_file_path(const std::string& path_str) {
-  std::filesystem::path path(path_str);
-  std::error_code ec;
-  if (!std::filesystem::is_regular_file(path, ec)) return false;
-
-  try {
-    bool valid = true;
-    AVFormatContext* fmt_ctx = open_format_context(path_str);
-    valid = valid && !av_match_list(fmt_ctx->iformat->name, banned_iformat_names, ',');
-    avformat_close_input(&fmt_ctx);
-    return valid;
-  } catch (const std::runtime_error& e) {
-    return false;
-  }
-
-  return false;
-}
-
-std::string media_type_to_string(MediaType media_type) {
-  switch (media_type) {
-    case MediaType::VIDEO: return "video";
-    case MediaType::AUDIO: return "audio";
-    case MediaType::IMAGE: return "image";
-  }
-  throw std::runtime_error("[media_type_to_string] attempted to get media type string from unimplemented media type.");
 }
 
 /**

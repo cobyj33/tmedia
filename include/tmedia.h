@@ -15,12 +15,13 @@
 #include <optional>
 #include <vector>
 #include <string>
+#include <filesystem>
 
 extern const std::string TMEDIA_CONTROLS_USAGE;
 
 
 struct TMediaStartupState {
-  std::vector<std::string> media_files;
+  std::vector<std::filesystem::path> media_files;
   LoopType loop_type = LoopType::NO_LOOP;
   bool shuffled = false;
   double volume = 1.0;
@@ -45,7 +46,7 @@ struct TMediaCLIParseRes {
 TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv);
 
 struct TMediaProgramState {
-  Playlist playlist;
+  Playlist<std::filesystem::path> playlist;
   double volume = 1.0;
   bool muted = false;
   bool quit = false;

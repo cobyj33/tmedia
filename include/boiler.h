@@ -15,6 +15,8 @@
 #include <map>
 #include <optional>
 
+#include <filesystem>
+
 extern "C" {
 #include <libavformat/avformat.h>
 }
@@ -26,11 +28,9 @@ enum class MediaType {
 };
 
 std::string media_type_to_string(MediaType media_type);
-std::optional<MediaType> media_type_guess(const std::string& path_str);
 MediaType media_type_from_avformat_context(AVFormatContext* format_context);
-
-bool probably_valid_media_file_path(const std::string& path_str);
-bool is_valid_media_file_path(const std::string& path_str);
+std::optional<MediaType> media_type_from_mime_type(std::string_view mime_type);
+std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat);
 
 /**
  * @brief Opens and returns an AVFormat Context
@@ -40,27 +40,27 @@ bool is_valid_media_file_path(const std::string& path_str);
  * @throws std::runtime_error if the format context could not be opened for the corresponding file name
  * @throws std::runtime_error if the stream information for the format context could not be found
  * 
- * @param file_path The path of the file to open from the current working directory
+ * @param path The path of the file to open from the current working directory
  * @return An AVFormatContext pointer representing the opened media file
  */
-AVFormatContext* open_format_context(const std::string& file_path);
+AVFormatContext* open_format_context(std::filesystem::path path);
 
 /**
  * @brief Dump a media file's metadata into standard output.
- * @param file_path The path of the file to open from the current working directory
+ * @param path The path of the file to open from the current working directory
  */
-void dump_file_info(const std::string& file_path);
+void dump_file_info(std::filesystem::path path);
 void dump_format_context(AVFormatContext* format_context);
 
 /**
  * @brief Return the duration of the media file in seconds
- * @param file_path The path of the file to open from the current working directory
+ * @param path The path of the file to open from the current working directory
  * 
  * @throws std::runtime_error if a format context could not be opened for the corresponding file name
  * @throws std::runtime_error if the stream information for the format context could not be found
  * @return The duration of the media file at the selected path in seconds
  */
-double get_file_duration(const std::string& file_path);
+double get_file_duration(std::filesystem::path path);
 
 
 bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVMediaType media_type);

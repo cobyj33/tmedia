@@ -53,8 +53,8 @@ std::string get_media_file_display_name(std::string abs_path, MetadataCache& met
   return to_filename(abs_path);
 }
 
-std::map<std::string, std::string> get_file_metadata(const std::string& file) {
-  AVFormatContext* fmt_ctx = open_format_context(file);
+std::map<std::string, std::string> get_file_metadata(std::filesystem::path path) {
+  AVFormatContext* fmt_ctx = open_format_context(path);
   std::map<std::string, std::string> metadata = get_format_context_metadata(fmt_ctx);
   avformat_close_input(&fmt_ctx);
   return metadata;

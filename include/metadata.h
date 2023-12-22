@@ -3,15 +3,16 @@
 
 #include <map>
 #include <string>
+#include <filesystem>
 
 extern "C" {
   #include <libavformat/avformat.h>
 }
 
-typedef std::map<std::string, std::map<std::string, std::string>> MetadataCache;
-
-std::map<std::string, std::string> get_file_metadata(const std::string& file);
+std::map<std::string, std::string> get_file_metadata(std::filesystem::path path);
 std::map<std::string, std::string> get_format_context_metadata(AVFormatContext* fmt_ctx);
+
+typedef std::map<std::string, std::map<std::string, std::string>> MetadataCache;
 
 void metadata_cache_cache(std::string file, MetadataCache& cache);
 bool metadata_cache_has_file(std::string file, MetadataCache& cache);
