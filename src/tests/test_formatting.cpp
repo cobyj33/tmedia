@@ -2,11 +2,24 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <vector>
+
 constexpr int SECOND = 1;
 constexpr int HALF_MINUTE = 30;
 constexpr int ONE_MINUTE = 60;
 constexpr int HALF_HOUR = 1800;
 constexpr int ONE_HOUR = 3600;
+
+template <typename T>
+bool are_vectors_equal(std::vector<T> first, std::vector<T> second) {
+  if (first.size() != second.size()) return false;
+
+  for (std::size_t i = 0; i < first.size(); i++) {
+    if (first[i] != second[i]) return false;
+  }
+
+  return true;
+}
 
 
 TEST_CASE("Formatting", "[functions]") {
@@ -216,5 +229,14 @@ TEST_CASE("Formatting", "[functions]") {
     REQUIRE(str_trim(" www  w Trimmed ww String       wwwwww", " w") == "Trimmed ww String");
     REQUIRE(str_trim("    Trimmed   String       \r\n", " \r\n") == "Trimmed   String");
     REQUIRE(str_trim(" _ !! w !Trimmed !__w_!  String_w   __w    ", " w_!") == "Trimmed !__w_!  String");
+  }
+
+  SECTION("strsplit") {
+    REQUIRE(are_vectors_equal(strsplit("this,is,split", ','), {"this", "is", "split"}));
+    REQUIRE(are_vectors_equal(strsplit("this,,is,,,split,,,", ','), {"this", "is", "split"}));
+    REQUIRE(are_vectors_equal(strsplit(",this,is,,,split", ','), {"this", "is", "split"}));
+    REQUIRE(are_vectors_equal(strsplit(",,,,,", ','), {}));
+    REQUIRE(are_vectors_equal(strsplit("", ','), {}));
+    REQUIRE(are_vectors_equal(strsplit("  ", ','), {"  "}));
   }
 }

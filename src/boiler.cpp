@@ -21,10 +21,25 @@ extern "C" {
 #include <libavutil/avstring.h>
 }
 
+const char* banned_iformat_names = "tty";
+
 const char* image_iformat_names = "image2,png_pipe,webp_pipe";
 const char* audio_iformat_names = "wav,ogg,mp3,flac";
 const char* video_iformat_names = "flv";
-const char* banned_iformat_names = "tty";
+
+const char* image_iformat_exts= "jpg,jpeg,png,webp";
+const char* audio_iformat_exts= "mp3,flac,wav,ogg";
+const char* video_iformat_exts= "flv";
+
+bool av_match_lists(const char* first, char fsep, const char* sec, char ssep) {
+  std::vector<std::string> to_check = strsplit(first, fsep);
+
+  for (const std::string& str : to_check) {
+    if (av_match_list(str.c_str(), sec, ssep)) return true;
+  }
+
+  return false;
+}
 
 AVFormatContext* open_format_context(const std::string& file_path) {
   AVFormatContext* format_context = nullptr;
@@ -34,6 +49,10 @@ AVFormatContext* open_format_context(const std::string& file_path) {
       avformat_close_input(&format_context);
     }
     throw ffmpeg_error("[open_format_context] Failed to open format context input for " + file_path, result);
+  }
+
+  if (av_match_lists(format_context->iformat->name, ',', banned_iformat_names, ',')) {
+    throw std::runtime_error("[open_format_context] Cannot open banned format type: " + std::string(format_context->iformat->name));
   }
 
   result = avformat_find_stream_info(format_context, NULL);
@@ -90,9 +109,9 @@ AVProbeFileRet av_probe_file(const std::string& path_str) {
   }
 
   #if AVFORMAT_CONST_AVIOFORMAT
-  const AVInputFormat* avif;
+  const AVInputFormat* avif = NULL;
   #else
-  AVInputFormat* avif;
+  AVInputFormat* avif = NULL;
   #endif
 
   res.score = av_probe_input_buffer2(avio_ctx, &avif, path_str.c_str(), NULL, 0, 0);
@@ -116,42 +135,82 @@ bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVM
   return false;
 }
 
-// MediaType media_type_from_avinput_format(AVInputFormat* input_fmt) {
-//   input_fmt->
-  
-// }
+std::optional<MediaType> media_type_from_mime_type(std::string_view mime_type) {
+  std::string_view gen_type = str_until(mime_type, '/'); 
+
+  if (gen_type == "image") { 
+    return MediaType::IMAGE;
+  } else if (gen_type == "audio") {
+    return MediaType::AUDIO;
+  } else if (gen_type == "video") {
+    return MediaType::VIDEO;
+  }
+  return std::nullopt;
+}
+
+std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat) {
+  if (av_match_lists(iformat->name, ',', banned_iformat_names, ',')) {
+    return std::nullopt;
+  }
+
+  if (av_match_lists(iformat->name, ',', image_iformat_names, ',')) {
+    return MediaType::IMAGE;
+  }
+
+  if (av_match_lists(iformat->name, ',', audio_iformat_names, ',')) {
+    return MediaType::AUDIO;
+  }
+
+  if (av_match_lists(iformat->name, ',', video_iformat_names, ',')) {
+    return MediaType::VIDEO;
+  }
+
+  if (iformat->mime_type != nullptr) {
+    std::vector<std::string> mime_types = strsplit(iformat->mime_type, ',');
+    std::optional<MediaType> resolved_media_type = std::nullopt;
+
+    for (const std::string& str : mime_types) {
+      std::optional<MediaType> current_media_type = media_type_from_mime_type(str);
+      if (current_media_type.has_value() && resolved_media_type.has_value() && resolved_media_type != current_media_type) {
+        resolved_media_type = std::nullopt;
+        break;
+      } else {
+        resolved_media_type = current_media_type;
+      }
+    }
+
+    if (resolved_media_type != std::nullopt) return resolved_media_type;
+  }
+
+  return std::nullopt;
+}
 
 bool probably_valid_media_file_path(const std::string& path_str) {
   std::string filename = to_filename(path_str);
   const AVOutputFormat* fmt = av_guess_format(NULL, filename.c_str(), NULL);
   if (fmt != NULL) return true;
-  // AVProbeFileRet pfret = av_probe_file(path_str);
-  // if (pfret.score > AVPROBE_SCORE_RETRY) return true;
+  
+  try {
+    AVProbeFileRet pfret = av_probe_file(path_str);
+    if (pfret.score > AVPROBE_SCORE_RETRY) return true;
+  } catch (const std::runtime_error& e) {
+    // no-op
+  }
+
   return is_valid_media_file_path(path_str);
 }
 
 std::optional<MediaType> media_type_guess(const std::string& path_str) {
-  std::string ext = to_file_ext(path_str);
-
-  static std::pair<std::string_view, MediaType> extensions[] = {
-    {"flv", MediaType::VIDEO},
-    {"mp3", MediaType::AUDIO},
-    {"flac", MediaType::AUDIO},
-    {"wav", MediaType::AUDIO},
-    {"ogg", MediaType::AUDIO},
-    {"jpg", MediaType::IMAGE},
-    {"jpeg", MediaType::IMAGE},
-    {"png", MediaType::IMAGE},
-    {"webp", MediaType::IMAGE},
-  };
-
-  for (std::pair<std::string_view, MediaType>& pair : extensions) {
-    if (pair.first == ext) return pair.second;
+  try {
+    AVProbeFileRet pfret = av_probe_file(path_str);
+    if (pfret.score > AVPROBE_SCORE_RETRY) {
+      if (std::optional<MediaType> from_iformat = media_type_from_iformat(pfret.avif)) {
+        return from_iformat;
+      }
+    }
+  } catch (const std::runtime_error& e) {
+    // no-op
   }
-
-  // AVProbeFileRet pfret = av_probe_file(path_str);
-  // if (pfret.score > AVPROBE_SCORE_RETRY) {
-  // }
 
   try {
     AVFormatContext* fmt_ctx = open_format_context(path_str);
@@ -171,16 +230,12 @@ bool is_valid_media_file_path(const std::string& path_str) {
   if (!std::filesystem::is_regular_file(path, ec)) return false;
 
   try {
+    bool valid = true;
     AVFormatContext* fmt_ctx = open_format_context(path_str);
-
-    if (av_match_list(fmt_ctx->iformat->name, banned_iformat_names, ',')) {
-      avformat_close_input(&fmt_ctx);
-      return false;
-    }
-
+    valid = valid && !av_match_list(fmt_ctx->iformat->name, banned_iformat_names, ',');
     avformat_close_input(&fmt_ctx);
-    return true;
-  } catch (const ffmpeg_error& e) {
+    return valid;
+  } catch (const std::runtime_error& e) {
     return false;
   }
 
@@ -209,20 +264,8 @@ std::string media_type_to_string(MediaType media_type) {
 */
 
 MediaType media_type_from_avformat_context(AVFormatContext* format_context) {
-  if (av_match_list(format_context->iformat->name, banned_iformat_names, ',')) {
-    throw std::runtime_error("[media_type_from_avformat_context] Could not find media type for banned media type: " + std::string(format_context->iformat->name));
-  }
-
-  if (av_match_list(format_context->iformat->name, image_iformat_names, ',')) {
-    return MediaType::IMAGE;
-  } 
-
-  if (av_match_list(format_context->iformat->name, audio_iformat_names, ',')) {
-    return MediaType::AUDIO;
-  }
-
-  if (av_match_list(format_context->iformat->name, video_iformat_names, ',')) {
-    return MediaType::VIDEO;
+  if (std::optional<MediaType> from_iformat = media_type_from_iformat(format_context->iformat)) {
+    return from_iformat.value();
   }
 
   if (avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_VIDEO)) {
@@ -232,8 +275,20 @@ MediaType media_type_from_avformat_context(AVFormatContext* format_context) {
       return MediaType::IMAGE;
     }
 
+    bool video_is_attached_pic = true;
+    for (std::size_t i = 0; i < format_context->nb_streams; i++) {
+      if (format_context->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+        video_is_attached_pic = video_is_attached_pic && format_context->streams[i]->disposition & AV_DISPOSITION_ATTACHED_PIC;
+      }
+    }
+
+    if (video_is_attached_pic) {
+      return avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO) ? MediaType::AUDIO : MediaType::IMAGE;
+    }
     return MediaType::VIDEO;
-  } else if (avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO)) {
+  }
+  
+  if (avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO)) {
     return MediaType::AUDIO;
   }
 

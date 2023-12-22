@@ -55,4 +55,6 @@ std::string str_trim(std::string_view src, std::string_view trimchars);
 std::vector<std::string_view> strvsplit(std::string_view s, char delim);
 std::vector<std::string> strsplit(std::string_view s, char delim);
 
+std::string_view str_until(std::string_view s, char ch);
+
 #endif

@@ -314,15 +314,29 @@ std::vector<std::string> strsplit(std::string_view s, char delim) {
   for (std::size_t ssend = 0; ssend < s.length(); ssend++) {
     if (s[ssend] == delim) {
       if (ssend > ssstart)
-        result.push_back(std::string(s.substr(ssstart, ssend)));
-      ssstart = ssend;
+        result.push_back(std::string(s.substr(ssstart, ssend - ssstart)));
+      ssstart = ssend + 1;
     }
   }
 
-  if (ssstart < s.length() - 1) 
-    result.push_back(std::string(s.substr(ssstart, s.length())));
+  if (s.length() > 0 && ssstart < s.length() - 1) {
+    result.push_back(std::string(s.substr(ssstart, s.length() - ssstart)));
+  }
 
   return result;
+}
+
+std::string_view str_until(std::string_view s, char ch) {
+  std::size_t end = s.length();
+
+  for (std::size_t i = 0; i < s.length(); i++) {
+    if (s[i] == ch) {
+      end = i;
+      break;
+    }
+  }
+
+  return s.substr(0, end);
 }
 
 bool strisi32(std::string_view str) noexcept {
