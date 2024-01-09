@@ -86,8 +86,9 @@ extern "C" {
   "    -m, --mute, --muted    Mute the audio playback \n"
 
   "  Playlist Controls: \n"
-  "    --loop-type            Set the loop type of the player\n"
-  "                           ('no-loop', 'repeat', or 'repeat-one') \n"
+  "    --no-repeat            Do not repeat the playlist upon end\n"
+  "    --repeat, --loop       Repeat the playlist upon playlist end\n"
+  "    --repeat-one           Start the playlist looping the first media\n"
   "    -s, --shuffle          Shuffle the given playlist \n"
   "\n"
   "  File Searching: \n"
@@ -155,7 +156,9 @@ extern "C" {
   void tmedia_cli_arg_color(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
   void tmedia_cli_arg_fullscreen(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
   void tmedia_cli_arg_grayscale(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_loop_type(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
+  void tmedia_cli_arg_no_repeat(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
+  void tmedia_cli_arg_repeat(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
+  void tmedia_cli_arg_repeat_one(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
   void tmedia_cli_arg_mute(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
   void tmedia_cli_arg_refresh_rate(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
   void tmedia_cli_arg_shuffle(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
@@ -189,8 +192,8 @@ extern "C" {
       return { ps.tmss, true };
     }
 
-    std::vector<tmedia::CLIArg> parsed_cli = tmedia::cli_parse(argc, argv, "l",
-    {"scaling-algo", "volume", "loop-type", "chars", "refresh-rate"});
+    std::vector<tmedia::CLIArg> parsed_cli = tmedia::cli_parse(argc, argv, "",
+    {"volume", "chars", "refresh-rate"});
 
     TMediaCliArgParseMap exiting_opt_map{
       {"-h", tmedia_cli_arg_help},
@@ -209,7 +212,12 @@ extern "C" {
       {"-f", tmedia_cli_arg_fullscreen},
       {"-s", tmedia_cli_arg_shuffle},
       {"-r", tmedia_cli_arg_recurse_global},
-      {"--loop-type", tmedia_cli_arg_loop_type},
+      {"--no-repeat", tmedia_cli_arg_no_repeat},
+      {"--no-loop", tmedia_cli_arg_no_repeat},
+      {"--repeat", tmedia_cli_arg_repeat},
+      {"--loop", tmedia_cli_arg_repeat},
+      {"--repeat-one", tmedia_cli_arg_repeat_one},
+      {"--loop-one", tmedia_cli_arg_repeat_one},
       {"--volume", tmedia_cli_arg_volume},
       {"--shuffle", tmedia_cli_arg_shuffle},
       {"--shuffled", tmedia_cli_arg_shuffle},
@@ -333,8 +341,19 @@ extern "C" {
     (void)arg;
   }
 
-  void tmedia_cli_arg_loop_type(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
-    ps.tmss.loop_type = loop_type_from_str(arg.param);
+  void tmedia_cli_arg_no_repeat(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+    ps.tmss.loop_type = LoopType::NO_LOOP;
+    (void)arg;
+  }
+
+  void tmedia_cli_arg_repeat(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+    ps.tmss.loop_type = LoopType::REPEAT;
+    (void)arg;
+  }
+
+  void tmedia_cli_arg_repeat_one(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+    ps.tmss.loop_type = LoopType::REPEAT_ONE;
+    (void)arg;
   }
 
   void tmedia_cli_arg_mute(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
