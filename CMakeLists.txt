@@ -51,11 +51,16 @@ option(TMEDIA_BUILD_TESTS "Build Testing Executable for tmedia" OFF)
 option(FIND_FFMPEG "Find FFmpeg Libraries on system rather than build FFmpeg alongside tmedia" ON)
 option(FIND_CURSES "Find Curses Libraries on system rather than build NCurses alongside tmedia" ON)
 
+set(TMEDIA_DEP_JOBS "4" CACHE STRING "Set the number of jobs used when building dependencies")
+
 message("Options: TMEDIA_BUILD_TESTS: " ${TMEDIA_BUILD_TESTS})
 message("Options: FIND_FFMPEG: " ${FIND_FFMPEG})
 message("Options: FIND_CURSES: " ${FIND_CURSES})
+message("Options: TMEDIA_DEP_JOBS: " ${TMEDIA_DEP_JOBS})
 message("Options: NCURSES_EXTRA_CONFIGURE_FLAGS: " ${NCURSES_EXTRA_CONFIGURE_FLAGS})
 message("Options: FFMPEG_EXTRA_CONFIGURE_FLAGS: " ${FFMPEG_EXTRA_CONFIGURE_FLAGS})
+message("Options: FFMPEG_EXTRA_CONFIGURE_FLAGS: " ${FFMPEG_EXTRA_CONFIGURE_FLAGS})
+
 
 set(TARGET_DEPENDENCIES "")
 
@@ -181,7 +186,7 @@ elseif(NOT FIND_CURSES AND (UNIX OR APPLE OR MINGW OR CYGWIN))
     PREFIX      ${CMAKE_BINARY_DIR}
     INSTALL_DIR     ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ${LOCAL_NCURSES_LIB}/src/configure ${NCURSES_CONFIGURE_OPTIONS}
-    BUILD_COMMAND   make
+    BUILD_COMMAND   make -j${TMEDIA_DEP_JOBS}
     INSTALL_COMMAND   make install
     BUILD_IN_SOURCE   OFF
     URL         https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.4.tar.gz
@@ -226,7 +231,7 @@ else()
     CONFIGURE_COMMAND     ${LOCAL_FFMPEG_LIB}/src/configure ${FFMPEG_BUILD_OPTIONS}
     PREFIX          ${CMAKE_BINARY_DIR}
     INSTALL_DIR       ${CMAKE_BINARY_DIR}
-    BUILD_COMMAND       make
+    BUILD_COMMAND       make -j${TMEDIA_DEP_JOBS}
     BUILD_IN_SOURCE     OFF
     INSTALL_COMMAND     make install
   )
@@ -277,7 +282,7 @@ target_compile_features(tmedia PRIVATE cxx_std_17)
 target_include_directories(tmedia PRIVATE ${FFMPEG_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS} ./include ./lib/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/include )
 target_link_libraries(tmedia PRIVATE ${FFMPEG_LIBS} ${CURSES_LIBRARIES} $<TARGET_OBJECTS:miniaudio> NaturalSort readerwriterqueue random ${CMAKE_DL_LIBS})
 target_compile_options(tmedia PRIVATE ${TMEDIA_COMPILE_OPTIONS})
-if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
+if (NOT TARGET_DEPENDENCIES STREQUAL "")
   add_dependencies(tmedia ${TARGET_DEPENDENCIES})
 endif()
 
@@ -298,7 +303,7 @@ if (TMEDIA_BUILD_TESTS)
   target_compile_features(tmedia_tests PRIVATE cxx_std_17)
   target_link_libraries(tmedia_tests PRIVATE Catch2::Catch2WithMain ${FFMPEG_LIBS} ${CURSES_LIBRARIES} PkgConfig::LIBAV $<TARGET_OBJECTS:miniaudio> NaturalSort readerwriterqueue random ${CMAKE_DL_LIBS})
 
-  if (NOT ${TARGET_DEPENDENCIES} STREQUAL "")
+  if (NOT TARGET_DEPENDENCIES STREQUAL "")
     add_dependencies(tmedia_tests ${TARGET_DEPENDENCIES})
   endif()
 else()
