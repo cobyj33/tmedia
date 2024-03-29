@@ -15,9 +15,9 @@ else()
     list(APPEND NCURSES_CONFIGURE_OPTIONS --with-build-cflags=-g)
   endif()
 
-  list(APPEND NCURSES_CONFIGURE_OPTIONS ${NCURSES_EXTRA_CONFIGURE_FLAGS})
+  list(APPEND NCURSES_CONFIGURE_OPTIONS ${NCURSES_EXTRA_CONFIGURE_OPTIONS})
 
-  message("\nNCurses configure options:")
+  message("\nNCurses Configure Options:")
   printlist("${NCURSES_CONFIGURE_OPTIONS}")
 
   ExternalProject_Add(

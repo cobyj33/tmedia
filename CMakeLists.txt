@@ -17,6 +17,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+list(APPEND CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
+
+set(CMAKE_SKIP_BUILD_RPATH  FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+list(APPEND CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
+list(APPEND CMAKE_INSTALL_RPATH "$\{ORIGIN\}/lib")
 
 #Used in configuring version file
 set(TMEDIA_VERSION_MAJOR 0)
@@ -31,6 +37,7 @@ set(TMEDIA_DEPS_INCLUDE_DIRS "")
 set(TMEDIA_TARGET_DEPENDENCIES "")
 
 set(TMEDIA_COMPILE_OPTIONS -Wall -Wextra -Wpedantic)
+# set(TMEDIA_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -Wl,-rpath,'$ORIGIN'/lib)
 if (MSVC)
   set(TMEDIA_COMPILE_OPTIONS /std:c++17 /W4 /WX)
 endif()
@@ -60,61 +67,61 @@ message("Options: TMEDIA_BUILD_TESTS: " ${TMEDIA_BUILD_TESTS})
 message("Options: FIND_FFMPEG: " ${FIND_FFMPEG})
 message("Options: FIND_CURSES: " ${FIND_CURSES})
 message("Options: TMEDIA_DEP_JOBS: " ${TMEDIA_DEP_JOBS})
-message("Options: NCURSES_EXTRA_CONFIGURE_FLAGS: " ${NCURSES_EXTRA_CONFIGURE_FLAGS})
-message("Options: FFMPEG_EXTRA_CONFIGURE_FLAGS: " ${FFMPEG_EXTRA_CONFIGURE_FLAGS})
+message("Options: NCURSES_EXTRA_CONFIGURE_OPTIONS: " ${NCURSES_EXTRA_CONFIGURE_OPTIONS})
+message("Options: FFMPEG_EXTRA_CONFIGURE_OPTIONS: " ${FFMPEG_EXTRA_CONFIGURE_OPTIONS})
 
 
 set(COMMON_SOURCE_FILES 
-./src/ascii.cpp
-./src/audio_thread.cpp
-./src/audio_visualizer.cpp
-./src/audio.cpp
-./src/maaudioout.cpp
-./src/audioresampler.cpp
-./src/audioringbuffer.cpp
-./src/blocking_audioringbuffer.cpp
-./src/boiler.cpp
-./src/canvas.cpp
-./src/color.cpp
-./src/cli_iter.cpp
-./src/tmedia_cli.cpp
-./src/decode.cpp
-./src/duration_checking.cpp
-./src/ffmpeg_error.cpp
-./src/formatting.cpp
-./src/mediaclock.cpp
-./src/mediadecoder.cpp
-./src/mediafetcher.cpp
-./src/mediaformat.cpp
-./src/metadata.cpp
-./src/palette.cpp
-./src/palette_io.cpp
-./src/pixeldata.cpp
-./src/playlist.cpp
-./src/probe.cpp
-./src/scale.cpp
-./src/sleep.cpp
-./src/streamdecoder.cpp
-./src/tmcurses_print.cpp
-./src/tmcurses.cpp
-./src/tmedia_tui.cpp
-./src/tmedia_tui_elems.cpp
-./src/video_thread.cpp
-./src/videoconverter.cpp
-./src/wmath.cpp
-./src/wminiaudio.cpp
-./src/wtime.cpp)
+${CMAKE_SOURCE_DIR}/src/ascii.cpp
+${CMAKE_SOURCE_DIR}/src/audio_thread.cpp
+${CMAKE_SOURCE_DIR}/src/audio_visualizer.cpp
+${CMAKE_SOURCE_DIR}/src/audio.cpp
+${CMAKE_SOURCE_DIR}/src/maaudioout.cpp
+${CMAKE_SOURCE_DIR}/src/audioresampler.cpp
+${CMAKE_SOURCE_DIR}/src/audioringbuffer.cpp
+${CMAKE_SOURCE_DIR}/src/blocking_audioringbuffer.cpp
+${CMAKE_SOURCE_DIR}/src/boiler.cpp
+${CMAKE_SOURCE_DIR}/src/canvas.cpp
+${CMAKE_SOURCE_DIR}/src/color.cpp
+${CMAKE_SOURCE_DIR}/src/cli_iter.cpp
+${CMAKE_SOURCE_DIR}/src/tmedia_cli.cpp
+${CMAKE_SOURCE_DIR}/src/decode.cpp
+${CMAKE_SOURCE_DIR}/src/duration_checking.cpp
+${CMAKE_SOURCE_DIR}/src/ffmpeg_error.cpp
+${CMAKE_SOURCE_DIR}/src/formatting.cpp
+${CMAKE_SOURCE_DIR}/src/mediaclock.cpp
+${CMAKE_SOURCE_DIR}/src/mediadecoder.cpp
+${CMAKE_SOURCE_DIR}/src/mediafetcher.cpp
+${CMAKE_SOURCE_DIR}/src/mediaformat.cpp
+${CMAKE_SOURCE_DIR}/src/metadata.cpp
+${CMAKE_SOURCE_DIR}/src/palette.cpp
+${CMAKE_SOURCE_DIR}/src/palette_io.cpp
+${CMAKE_SOURCE_DIR}/src/pixeldata.cpp
+${CMAKE_SOURCE_DIR}/src/playlist.cpp
+${CMAKE_SOURCE_DIR}/src/probe.cpp
+${CMAKE_SOURCE_DIR}/src/scale.cpp
+${CMAKE_SOURCE_DIR}/src/sleep.cpp
+${CMAKE_SOURCE_DIR}/src/streamdecoder.cpp
+${CMAKE_SOURCE_DIR}/src/tmcurses_print.cpp
+${CMAKE_SOURCE_DIR}/src/tmcurses.cpp
+${CMAKE_SOURCE_DIR}/src/tmedia_tui.cpp
+${CMAKE_SOURCE_DIR}/src/tmedia_tui_elems.cpp
+${CMAKE_SOURCE_DIR}/src/video_thread.cpp
+${CMAKE_SOURCE_DIR}/src/videoconverter.cpp
+${CMAKE_SOURCE_DIR}/src/wmath.cpp
+${CMAKE_SOURCE_DIR}/src/wminiaudio.cpp
+${CMAKE_SOURCE_DIR}/src/wtime.cpp)
 
 set(TEST_SOURCE_FILES
-./src/tests/test_color.cpp
-./src/tests/test_cli_iter.cpp
-./src/tests/test_formatting.cpp
-./src/tests/test_mediaclock.cpp
-./src/tests/test_pixeldata.cpp
-./src/tests/test_scale.cpp
-./src/tests/test_unitconvert.cpp
-./src/tests/test_palette_io_gpl.cpp
-./src/tests/test_wmath.cpp
+${CMAKE_SOURCE_DIR}/src/tests/test_color.cpp
+${CMAKE_SOURCE_DIR}/src/tests/test_cli_iter.cpp
+${CMAKE_SOURCE_DIR}/src/tests/test_formatting.cpp
+${CMAKE_SOURCE_DIR}/src/tests/test_mediaclock.cpp
+${CMAKE_SOURCE_DIR}/src/tests/test_pixeldata.cpp
+${CMAKE_SOURCE_DIR}/src/tests/test_scale.cpp
+${CMAKE_SOURCE_DIR}/src/tests/test_unitconvert.cpp
+${CMAKE_SOURCE_DIR}/src/tests/test_palette_io_gpl.cpp
+${CMAKE_SOURCE_DIR}/src/tests/test_wmath.cpp
 )
 
 set(NCURSES_CONFIGURE_OPTIONS --prefix=${CMAKE_BINARY_DIR}
@@ -126,7 +133,7 @@ set(NCURSES_CONFIGURE_OPTIONS --prefix=${CMAKE_BINARY_DIR}
 --with-shared
 --without-normal)
 
-set(FFMPEG_BUILD_OPTIONS --prefix=${CMAKE_BINARY_DIR}
+set(FFMPEG_CONFIGURE_OPTIONS --prefix=${CMAKE_BINARY_DIR}
 --pkg-config-flags=--static
 --extra-cflags=-I${CMAKE_BINARY_DIR}/include
 --extra-ldflags=-L${CMAKE_BINARY_DIR}/lib
@@ -156,9 +163,9 @@ VERSION ${TMEDIA_VERSION}
 LANGUAGES ${TMEDIA_SUPPORTED_LANGUAGES}
 DESCRIPTION "Terminal video media player")
 
-add_executable(tmedia ${COMMON_SOURCE_FILES} ./src/main.cpp ./src/tmedia.cpp)
+add_executable(tmedia ${COMMON_SOURCE_FILES} ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/src/tmedia.cpp)
 configure_file(${CMAKE_SOURCE_DIR}/include/version.h.in ${CMAKE_BINARY_DIR}/include/version.h @ONLY)
-include(./lib/deps.cmake)
+include(${CMAKE_SOURCE_DIR}/lib/deps.cmake)
 
 message("\nThird Party Libs:")
 printlist("${TMEDIA_DEPS_LIBRARIES}")
@@ -168,7 +175,7 @@ message("\nTarget Dependencies:")
 printlist("${TMEDIA_TARGET_DEPENDENCIES}")
 
 target_compile_features(tmedia PRIVATE cxx_std_17)
-target_include_directories(tmedia PRIVATE ${TMEDIA_DEPS_INCLUDE_DIRS} ./include ${CMAKE_CURRENT_BINARY_DIR}/include )
+target_include_directories(tmedia PRIVATE ${TMEDIA_DEPS_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include )
 target_link_libraries(tmedia PRIVATE ${TMEDIA_DEPS_LIBRARIES} miniaudio NaturalSort readerwriterqueue random ${CMAKE_DL_LIBS})
 target_compile_options(tmedia PRIVATE ${TMEDIA_COMPILE_OPTIONS})
 if (NOT TMEDIA_TARGET_DEPENDENCIES STREQUAL "")
@@ -188,13 +195,11 @@ if (TMEDIA_BUILD_TESTS)
 
   add_executable(tmedia_tests ${COMMON_SOURCE_FILES} ${TEST_SOURCE_FILES})
   target_compile_options(tmedia_tests PRIVATE ${TMEDIA_COMPILE_OPTIONS})
-  target_include_directories(tmedia_tests PRIVATE ${TMEDIA_DEPS_INCLUDE_DIRS} ./include ${CMAKE_CURRENT_BINARY_DIR}/include)
+  target_include_directories(tmedia_tests PRIVATE ${TMEDIA_DEPS_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include)
   target_compile_features(tmedia_tests PRIVATE cxx_std_17)
   target_link_libraries(tmedia_tests PRIVATE Catch2::Catch2WithMain ${TMEDIA_DEPS_LIBRARIES} miniaudio NaturalSort readerwriterqueue random ${CMAKE_DL_LIBS})
 
   if (NOT TMEDIA_TARGET_DEPENDENCIES STREQUAL "")
     add_dependencies(tmedia_tests ${TMEDIA_TARGET_DEPENDENCIES})
   endif()
-else()
-  message("Configured to NOT build testing executable")
 endif()
