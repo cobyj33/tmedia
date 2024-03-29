@@ -10,7 +10,7 @@ if(FIND_FFMPEG)
   list(APPEND TMEDIA_DEPS_LIBRARIES PkgConfig::LIBAV)
 else()
   if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU"))
-    list(APPEND FFMPEG_BUILD_OPTIONS --extra-cflags=-g)
+    list(APPEND FFMPEG_CONFIGURE_OPTIONS --extra-cflags=-g)
   endif()
 
   ExternalProject_Add(
@@ -42,11 +42,11 @@ else()
     GIT_TAG v1.3.1
     CMAKE_ARGS ${TMEDIA_DEPS_CMAKE_PROFILE} -DOPUS_STACK_PROTECTOR=OFF
     UPDATE_COMMAND ""
-)
+  )
 
-  list(APPEND FFMPEG_BUILD_OPTIONS ${FFMPEG_EXTRA_CONFIGURE_FLAGS})
-  message("\nFFMPEG Build Options:")
-  printlist("${FFMPEG_BUILD_OPTIONS}")
+  list(APPEND FFMPEG_CONFIGURE_OPTIONS ${FFMPEG_EXTRA_CONFIGURE_OPTIONS})
+  message("\nFFMPEG Configure Options:")
+  printlist("${FFMPEG_CONFIGURE_OPTIONS}")
 
   ExternalProject_Add(
     FFmpeg
@@ -56,7 +56,7 @@ else()
     GIT_SHALLOW       ON
     UPDATE_DISCONNECTED   ON
     STEP_TARGETS      update
-    CONFIGURE_COMMAND     ${TMEDIA_DEPS_DOWNLOAD_DIR}/ffmpeg/src/configure --enable-libvorbis --enable-libopus ${FFMPEG_BUILD_OPTIONS}
+    CONFIGURE_COMMAND     ${TMEDIA_DEPS_DOWNLOAD_DIR}/ffmpeg/src/configure --enable-libvorbis --enable-libopus ${FFMPEG_CONFIGURE_OPTIONS}
     PREFIX          ${CMAKE_BINARY_DIR}
     INSTALL_DIR       ${CMAKE_BINARY_DIR}
     BUILD_COMMAND       make -j${TMEDIA_DEP_JOBS}
