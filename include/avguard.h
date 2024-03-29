@@ -9,7 +9,7 @@ extern "C" {
 
 /**
  * Various macros to define when various FFmpeg features were added and 
- * deprecated
+ * deprecated. Used to help backward compatibility with older versions of FFmpeg
 */
 
 #define HAS_AVFRAME_DURATION LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 30, 100)
