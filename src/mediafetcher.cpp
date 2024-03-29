@@ -157,9 +157,14 @@ void MediaFetcher::begin(double current_system_time) {
 
 void MediaFetcher::join(double current_system_time) {
   this->in_use = false; // the user can set this as well if they want, but this is to make sure that the threads WILL end regardless
-  if (this->media_type != MediaType::IMAGE && this->is_playing()) this->pause(current_system_time);
-  this->video_thread.join();
-  this->duration_checking_thread.join();
-  this->audio_thread.join();
+  
+  if (this->media_type != MediaType::IMAGE && this->is_playing())
+    this->pause(current_system_time);
+  if (this->video_thread.joinable())
+    this->video_thread.join();
+  if (this->duration_checking_thread.joinable())
+    this->duration_checking_thread.join();
+  if (this->audio_thread.joinable())
+    this->audio_thread.join();
 }
 
