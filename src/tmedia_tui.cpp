@@ -16,6 +16,7 @@ static constexpr int MIN_RENDER_COLS = 2;
 static constexpr int MIN_RENDER_LINES = 2;
 
 const char* loop_type_str_short(LoopType loop_type);
+std::string get_media_file_display_name(std::string abs_path, MetadataCache& metadata_cache);
 
 void TMediaCursesRenderer::render(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
   if (snapshot.frame.get_width() != this->last_frame_dims.width || snapshot.frame.get_height() != this->last_frame_dims.height) {
@@ -144,4 +145,17 @@ const char* loop_type_str_short(LoopType loop_type) {
     case LoopType::REPEAT_ONE: return "RO";
   }
   throw std::runtime_error("[loop_type_str_short] Could not identify loop_type");
+}
+
+std::string get_media_file_display_name(std::string abs_path, MetadataCache& metadata_cache) {
+  metadata_cache_cache(abs_path, metadata_cache);
+  bool has_artist = metadata_cache_has(abs_path, "artist", metadata_cache);
+  bool has_title = metadata_cache_has(abs_path, "title", metadata_cache);
+
+  if (has_artist && has_title) {
+    return metadata_cache_get(abs_path, "artist", metadata_cache) + " - " + metadata_cache_get(abs_path, "title", metadata_cache);
+  } else if (has_title) {
+    return metadata_cache_get(abs_path, "title", metadata_cache);
+  }
+  return to_filename(abs_path);
 }

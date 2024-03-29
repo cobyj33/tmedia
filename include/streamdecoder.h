@@ -38,7 +38,7 @@ class StreamDecoder {
     std::deque<AVPacket*> packet_queue;
 
   public:
-    StreamDecoder(AVFormatContext* format_context, enum AVMediaType media_type);
+    StreamDecoder(AVFormatContext* fmt_ctx, enum AVMediaType media_type);
 
     double get_time_base() const;
     double get_average_frame_rate_sec() const;

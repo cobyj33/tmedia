@@ -40,18 +40,7 @@ std::string metadata_cache_get(std::string file, std::string key, MetadataCache&
   return cache[file][key];
 }
 
-std::string get_media_file_display_name(std::string abs_path, MetadataCache& metadata_cache) {
-  metadata_cache_cache(abs_path, metadata_cache);
-  bool has_artist = metadata_cache_has(abs_path, "artist", metadata_cache);
-  bool has_title = metadata_cache_has(abs_path, "title", metadata_cache);
 
-  if (has_artist && has_title) {
-    return metadata_cache_get(abs_path, "artist", metadata_cache) + " - " + metadata_cache_get(abs_path, "title", metadata_cache);
-  } else if (has_title) {
-    return metadata_cache_get(abs_path, "title", metadata_cache);
-  }
-  return to_filename(abs_path);
-}
 
 std::map<std::string, std::string> get_file_metadata(std::filesystem::path path) {
   AVFormatContext* fmt_ctx = open_format_context(path);

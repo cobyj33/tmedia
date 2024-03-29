@@ -16,7 +16,6 @@ extern "C" {
 }
 
 /**
- * 
  * Acts as a high level interface between a media file and that file's media streams
  * Encapsulates data about the file format and 
  * 
@@ -24,7 +23,7 @@ extern "C" {
 */
 class MediaDecoder {
   private:
-    AVFormatContext* format_context;
+    AVFormatContext* fmt_ctx;
     std::map<enum AVMediaType, std::unique_ptr<StreamDecoder>> stream_decoders;
     MediaType media_type;
     std::map<std::string, std::string> metadata;

@@ -11,7 +11,7 @@ extern "C" {
 const std::string ASCII_STANDARD_CHAR_MAP = "@%#*+=-:_.";
 
 char get_char_from_value(const std::string& characters, uint8_t value) {
-  return characters[ (std::size_t)value * (characters.length() - 1) / 255 ];
+  return characters[ (std::size_t)value * (characters.length() - 1) / 255UL ];
 }
 
 RGBColor get_rgb_from_char(const std::string& characters, char ch) {

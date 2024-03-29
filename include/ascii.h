@@ -18,10 +18,25 @@
  * @copyright Copyright (c) 2023
  */
 
+/**
+ * A character map for ASCII values is a simple linear ramp from black to white
+ * of what each grayscale value will be mapped to. For example, the string
+ * "@#-_" will have "_" as representing the lightest and "@" as representing the darkest,
+ * with "#" and "-" representing gray values in between.
+ * 
+*/
+
 extern const std::string ASCII_STANDARD_CHAR_MAP;
 
+/**
+ * Returns a character from a character
+*/
 char get_char_from_value(const std::string& characters, uint8_t value);
 char get_char_from_rgb(const std::string& characters, const RGBColor& color);
+
+/**
+ * 
+*/
 RGBColor get_rgb_from_char(const std::string& characters, char ch);
 
 #endif

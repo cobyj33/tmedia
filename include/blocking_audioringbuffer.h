@@ -9,7 +9,15 @@
 
 /**
  * Blocking wrapper of the AudioRingBuffer class.
- * For multithreaded access handled through locks and conditional variables 
+ * For multithreaded access handled through locks and conditional variables.
+ * 
+ * Note that this should not be used in real-time threads such as audio output 
+ * callback threads, but rather for general audio buffers that communicate
+ * between threads.
+ * 
+ * Generally, there should only be one producer and one consumer
+ * for each BlockingAudioRingBuffer, but there being more threads doesn't cause
+ * data races, it would probably just serve to be useless.
 */
 class BlockingAudioRingBuffer {
   private:

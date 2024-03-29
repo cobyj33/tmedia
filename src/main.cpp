@@ -1,47 +1,19 @@
 #include "signalstate.h"
 
 #include "wtime.h"
-#include "mediafetcher.h"
-#include "formatting.h"
-#include "version.h"
 #include "avguard.h"
 #include "tmcurses.h"
-#include "playlist.h"
-#include "tmcurses.h"
-#include "ascii.h"
-#include "wminiaudio.h"
-#include "sleep.h"
-#include "wmath.h"
-#include "boiler.h"
-#include "miscutil.h"
 #include "tmedia.h"
-#include "tmedia_vom.h"
 
 #include <cstdlib>
-#include <cctype>
 #include <iostream>
 #include <stdexcept>
-#include <filesystem>
-#include <memory>
 #include <csignal>
-#include <map>
-#include <algorithm>
 
 extern "C" {
-#include "curses.h"
-#include "miniaudio.h"
 #include <libavutil/log.h>
-#include <libavformat/version.h>
-#include <libavutil/version.h>
-#include <libavcodec/version.h>
-#include <libswresample/version.h>
-#include <libswscale/version.h>
 }
 
-int program_print_ffmpeg_version();
-int program_print_curses_version();
-int program_dump_metadata(const std::vector<std::string>& files);
-std::vector<std::string> resolve_cli_paths(const std::vector<std::string>& paths, bool recursive);
 
 bool INTERRUPT_RECEIVED = false; //defined as extern in signalstate.h
 void interrupt_handler(int) {
@@ -62,11 +34,6 @@ void on_terminate() {
   }
 
   std::abort();
-}
-
-template <typename T>
-std::string format_arg_map(std::map<std::string, T> map, std::string conjunction) {
-  return format_list(transform_vec(get_strmap_keys(map), [](std::string str) { return "'" + str + "'"; }), conjunction);
 }
 
 

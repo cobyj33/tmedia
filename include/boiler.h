@@ -28,7 +28,7 @@ enum class MediaType {
 };
 
 std::string media_type_to_string(MediaType media_type);
-MediaType media_type_from_avformat_context(AVFormatContext* format_context);
+MediaType media_type_from_avformat_context(AVFormatContext* fmt_ctx);
 std::optional<MediaType> media_type_from_mime_type(std::string_view mime_type);
 std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat);
 
@@ -50,7 +50,7 @@ AVFormatContext* open_format_context(std::filesystem::path path);
  * @param path The path of the file to open from the current working directory
  */
 void dump_file_info(std::filesystem::path path);
-void dump_format_context(AVFormatContext* format_context);
+void dump_format_context(AVFormatContext* fmt_ctx);
 
 /**
  * @brief Return the duration of the media file in seconds
@@ -63,6 +63,6 @@ void dump_format_context(AVFormatContext* format_context);
 double get_file_duration(std::filesystem::path path);
 
 
-bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVMediaType media_type);
+bool avformat_context_has_media_stream(AVFormatContext* fmt_ctx, enum AVMediaType media_type);
 
 #endif

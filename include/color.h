@@ -45,14 +45,16 @@ class RGBColorHashFunction {
 public:
     // Ripped from http://www.beosil.com/download/CollisionDetectionHashing_VMV03.pdf pg 666 sec 4.1 paragraph 2
     std::size_t operator()(const RGBColor& rgb) const {
-      return (73856093UL * (std::size_t)rgb.red) ^ (19349663UL * (std::size_t)rgb.green) ^ (83492791UL * (std::size_t)rgb.blue);
+      return (73856093UL * static_cast<std::size_t>(rgb.red)) ^
+            (19349663UL * static_cast<std::size_t>(rgb.green)) ^
+            (83492791UL * static_cast<std::size_t>(rgb.blue));
     }
 };
 
 /**
  * @brief Get the grayscale value of 3 channels of rgb data.
  * 
- * @note This function should work no matter the bounds of the channels, whether that be 0-255 or 0-1000
+ * @note This function should work for r >= 0, g >= 0, b >= 0, no matter the bounds of the channels, whether that be 0-255 or 0-1000
  * 
  * @param r The red channel of the rgb value
  * @param g The green channel of the rgb value

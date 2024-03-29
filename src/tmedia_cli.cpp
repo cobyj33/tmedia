@@ -101,6 +101,12 @@ extern "C" {
   "    :ignore-video          Ignore video files when searching last listed path\n"
   "    :ignore-audio          Ignore audio files when searching last listed path\n";
 
+  /**
+   * The idea of inheritable boolean is that each media item will either have
+   * global or local values assigned to it (such as configuring to ignore images
+   * or videos). Therefore, when the inheritable boolean is INHERIT, we signal
+   * to read the global value rather than any local value.
+  */
   enum class InheritableBoolean {
     FALSE = 0,
     TRUE = 1,

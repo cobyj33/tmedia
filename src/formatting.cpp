@@ -77,6 +77,7 @@ std::string vsprintf_str(const char* format, va_list args) {
   int success = vsnprintf(chararr, alloc_size + 1, format, writing_args);
   va_end(writing_args);
   if (success < 0) {
+    delete[] chararr;
     throw std::runtime_error("[vsprintf_str] vsnprintf error: " + std::to_string(alloc_size));
   }
 

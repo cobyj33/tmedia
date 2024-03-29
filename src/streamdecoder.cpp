@@ -16,7 +16,7 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
-StreamDecoder::StreamDecoder(AVFormatContext* format_context, enum AVMediaType media_type) {
+StreamDecoder::StreamDecoder(AVFormatContext* fmt_ctx, enum AVMediaType media_type) {
   #if AV_FIND_BEST_STREAM_CONST_DECODER
   const AVCodec* decoder;
   #else
@@ -24,13 +24,13 @@ StreamDecoder::StreamDecoder(AVFormatContext* format_context, enum AVMediaType m
   #endif
   
   int stream_index = -1;
-  stream_index = av_find_best_stream(format_context, media_type, -1, -1, &decoder, 0);
+  stream_index = av_find_best_stream(fmt_ctx, media_type, -1, -1, &decoder, 0);
   if (stream_index < 0) {
     throw std::runtime_error("[StreamDecoder::StreamDecoder] Cannot find media type for type " + std::string(av_get_media_type_string(media_type)));
   }
 
   this->decoder = decoder;
-  this->stream = format_context->streams[stream_index];
+  this->stream = fmt_ctx->streams[stream_index];
   this->codec_context = avcodec_alloc_context3(this->decoder);
 
   if (this->codec_context == nullptr) {

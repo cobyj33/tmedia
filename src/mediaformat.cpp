@@ -1,5 +1,12 @@
 #include "mediaformat.h"
 
+// Chcek mediaformat.h for more details about why these formats were chosen
+// to be explicitly listed.
+
+/**
+ * For some reason, ffmpeg can play text files back like videos with this
+ * teletype format? We don't want that, that's weird
+*/
 const char* banned_iformat_names = "tty";
 
 const char* image_iformat_names = "image2,png_pipe,webp_pipe";

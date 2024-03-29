@@ -33,58 +33,58 @@ bool av_match_lists(const char* first, char fsep, const char* sec, char ssep) {
 }
 
 AVFormatContext* open_format_context(std::filesystem::path path) {
-  AVFormatContext* format_context = nullptr;
-  int result = avformat_open_input(&format_context, path.c_str(), nullptr, nullptr);
+  AVFormatContext* fmt_ctx = nullptr;
+  int result = avformat_open_input(&fmt_ctx, path.c_str(), nullptr, nullptr);
   if (result < 0) {
-    if (format_context != nullptr) {
-      avformat_close_input(&format_context);
+    if (fmt_ctx != nullptr) {
+      avformat_close_input(&fmt_ctx);
     }
     throw ffmpeg_error("[open_format_context] Failed to open format context input for " + path.string(), result);
   }
 
-  if (av_match_lists(format_context->iformat->name, ',', banned_iformat_names, ',')) {
-    throw std::runtime_error("[open_format_context] Cannot open banned format type: " + std::string(format_context->iformat->name));
+  if (av_match_lists(fmt_ctx->iformat->name, ',', banned_iformat_names, ',')) {
+    throw std::runtime_error("[open_format_context] Cannot open banned format type: " + std::string(fmt_ctx->iformat->name));
   }
 
-  result = avformat_find_stream_info(format_context, NULL);
+  result = avformat_find_stream_info(fmt_ctx, NULL);
   if (result < 0) {
-    if (format_context != nullptr) {
-      avformat_close_input(&format_context);
+    if (fmt_ctx != nullptr) {
+      avformat_close_input(&fmt_ctx);
     }
     throw ffmpeg_error("[open_format_context] Failed to find stream info for " + path.string(), result);
   }
 
-  if (format_context != nullptr) {
-    return format_context;
+  if (fmt_ctx != nullptr) {
+    return fmt_ctx;
   }
   throw std::runtime_error("[open_format_context] Failed to open format context input, unknown error occured");
 }
 
 void dump_file_info(std::filesystem::path path) {
-  AVFormatContext* format_context = open_format_context(path);
-  dump_format_context(format_context);
-  avformat_close_input(&format_context);
+  AVFormatContext* fmt_ctx = open_format_context(path);
+  dump_format_context(fmt_ctx);
+  avformat_close_input(&fmt_ctx);
 }
 
-void dump_format_context(AVFormatContext* format_context) {
+void dump_format_context(AVFormatContext* fmt_ctx) {
   const int saved_avlog_level = av_log_get_level();
   av_log_set_level(AV_LOG_INFO);
-  av_dump_format(format_context, 0, format_context->url, 0);
+  av_dump_format(fmt_ctx, 0, fmt_ctx->url, 0);
   av_log_set_level(saved_avlog_level);
 }
 
 double get_file_duration(std::filesystem::path path) {
-  AVFormatContext* format_context = open_format_context(path);
-  int64_t duration = format_context->duration;
+  AVFormatContext* fmt_ctx = open_format_context(path);
+  int64_t duration = fmt_ctx->duration;
   double duration_seconds = (double)duration / AV_TIME_BASE;
-  avformat_close_input(&format_context);
+  avformat_close_input(&fmt_ctx);
   return duration_seconds;
 }
 
 
-bool avformat_context_has_media_stream(AVFormatContext* format_context, enum AVMediaType media_type) {
-  for (unsigned int i = 0; i < format_context->nb_streams; i++) {
-    if (format_context->streams[i]->codecpar->codec_type == media_type) {
+bool avformat_context_has_media_stream(AVFormatContext* fmt_ctx, enum AVMediaType media_type) {
+  for (unsigned int i = 0; i < fmt_ctx->nb_streams; i++) {
+    if (fmt_ctx->streams[i]->codecpar->codec_type == media_type) {
       return true;
     }
   }
@@ -162,34 +162,34 @@ std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat) {
  * to implement new file formats.
 */
 
-MediaType media_type_from_avformat_context(AVFormatContext* format_context) {
-  if (std::optional<MediaType> from_iformat = media_type_from_iformat(format_context->iformat)) {
+MediaType media_type_from_avformat_context(AVFormatContext* fmt_ctx) {
+  if (std::optional<MediaType> from_iformat = media_type_from_iformat(fmt_ctx->iformat)) {
     return from_iformat.value();
   }
 
-  if (avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_VIDEO)) {
-    if (!avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO) &&
-    (format_context->duration == AV_NOPTS_VALUE || format_context->duration == 0) &&
-    (format_context->start_time == AV_NOPTS_VALUE || format_context->start_time == 0)) {
+  if (avformat_context_has_media_stream(fmt_ctx, AVMEDIA_TYPE_VIDEO)) {
+    if (!avformat_context_has_media_stream(fmt_ctx, AVMEDIA_TYPE_AUDIO) &&
+    (fmt_ctx->duration == AV_NOPTS_VALUE || fmt_ctx->duration == 0) &&
+    (fmt_ctx->start_time == AV_NOPTS_VALUE || fmt_ctx->start_time == 0)) {
       return MediaType::IMAGE;
     }
 
     bool video_is_attached_pic = true;
-    for (std::size_t i = 0; i < format_context->nb_streams; i++) {
-      if (format_context->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-        video_is_attached_pic = video_is_attached_pic && format_context->streams[i]->disposition & AV_DISPOSITION_ATTACHED_PIC;
+    for (std::size_t i = 0; i < fmt_ctx->nb_streams; i++) {
+      if (fmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+        video_is_attached_pic = video_is_attached_pic && fmt_ctx->streams[i]->disposition & AV_DISPOSITION_ATTACHED_PIC;
       }
     }
 
     if (video_is_attached_pic) {
-      return avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO) ? MediaType::AUDIO : MediaType::IMAGE;
+      return avformat_context_has_media_stream(fmt_ctx, AVMEDIA_TYPE_AUDIO) ? MediaType::AUDIO : MediaType::IMAGE;
     }
     return MediaType::VIDEO;
   }
   
-  if (avformat_context_has_media_stream(format_context, AVMEDIA_TYPE_AUDIO)) {
+  if (avformat_context_has_media_stream(fmt_ctx, AVMEDIA_TYPE_AUDIO)) {
     return MediaType::AUDIO;
   }
 
-  throw std::runtime_error("[media_type_from_avformat_context] Could not find media type for file " + std::string(format_context->url));
+  throw std::runtime_error("[media_type_from_avformat_context] Could not find media type for file " + std::string(fmt_ctx->url));
 }

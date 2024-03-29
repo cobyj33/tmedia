@@ -4,7 +4,12 @@
 #include <atomic>
 
 /**
- *  
+ * Timestamp driven media clock which calculates elapsed time based on changes
+ * in timestamps. 
+ * 
+ * When using a system clock, a monotonic clock should be used to track media
+ * playblack, as constant forward clock motion will best model the movement of
+ * media playback
 */
 class MediaClock {
   private:
@@ -22,6 +27,7 @@ class MediaClock {
 
     /**
      * @brief Get the current time (in seconds) of the clock. This time takes into account total time paused, skipped, and played
+     * @param current_system_time The current system time
      * @return double
      */
     double get_time(double current_system_time) const;

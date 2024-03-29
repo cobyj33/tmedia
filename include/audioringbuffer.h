@@ -5,9 +5,9 @@
 #include <cstddef>
 
 /**
- * Constant-Sized Non-Self Overwriting Ring Buffer for audio
- * 
- * 
+ * Constant-Sized Non-Self Overwriting Ring Buffer for audio. It throws errors 
+ * if you try to read too much data at once, which may be atrocious. As of right
+ * now, its only used through the BlockingAudioRingBuffer wrapper though.
 */
 class AudioRingBuffer {
   private: 

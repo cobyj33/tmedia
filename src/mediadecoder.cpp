@@ -22,17 +22,17 @@ extern "C" {
 
 MediaDecoder::MediaDecoder(std::filesystem::path path, std::set<enum AVMediaType>& requested_streams) {
   try {
-    this->format_context = open_format_context(path);
+    this->fmt_ctx = open_format_context(path);
   } catch (std::runtime_error const& e) {
     throw std::runtime_error("[MediaDecoder::MediaDecoder] Could not allocate Media Decoder of " + path.string() +  " because of error while fetching file format data: " + e.what());
   }
 
-  this->media_type = media_type_from_avformat_context(this->format_context);
-  this->metadata = get_format_context_metadata(this->format_context);
+  this->media_type = media_type_from_avformat_context(this->fmt_ctx);
+  this->metadata = get_format_context_metadata(this->fmt_ctx);
 
   for (const enum AVMediaType& stream_type : requested_streams) {
     try {
-      this->stream_decoders[stream_type] = std::move(std::make_unique<StreamDecoder>(format_context, stream_type));
+      this->stream_decoders[stream_type] = std::move(std::make_unique<StreamDecoder>(fmt_ctx, stream_type));
     } catch (std::runtime_error const& e) {
       continue;
     }
@@ -40,11 +40,11 @@ MediaDecoder::MediaDecoder(std::filesystem::path path, std::set<enum AVMediaType
 }
 
 MediaDecoder::~MediaDecoder() {
-  avformat_close_input(&(this->format_context));
+  avformat_close_input(&(this->fmt_ctx));
 }
 
 double MediaDecoder::get_duration() const {
-  return this->format_context->duration / AV_TIME_BASE;
+  return this->fmt_ctx->duration / AV_TIME_BASE;
 }
 
 bool MediaDecoder::has_stream_decoder(enum AVMediaType media_type) const {
@@ -79,7 +79,7 @@ int MediaDecoder::fetch_next(int requested_packet_count) {
   AVPacket* reading_packet = av_packet_alloc();
   int packets_read = 0;
 
-  while (av_read_frame(this->format_context, reading_packet) == 0) {
+  while (av_read_frame(this->fmt_ctx, reading_packet) == 0) {
      
     for (auto decoder_pair = this->stream_decoders.begin(); decoder_pair != this->stream_decoders.end(); decoder_pair++) {
       if (decoder_pair->second->get_stream_index() == reading_packet->stream_index) {
@@ -111,7 +111,7 @@ int MediaDecoder::jump_to_time(double target_time) {
     ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(this->get_duration()) + " seconds )");
   }
 
-  int ret = avformat_seek_file(this->format_context, -1, 0.0, target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
+  int ret = avformat_seek_file(this->fmt_ctx, -1, 0.0, target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
 
   if (ret < 0) {
     return ret;
