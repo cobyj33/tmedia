@@ -6,6 +6,7 @@
 #include "formatting.h"
 #include "avguard.h"
 #include "mediaformat.h"
+#include "funcmac.h"
 
 #include <cstring>
 #include <stdexcept>
@@ -14,6 +15,8 @@
 #include <string_view>
 
 #include <filesystem>
+
+#include <fmt/format.h>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -39,11 +42,13 @@ AVFormatContext* open_format_context(std::filesystem::path path) {
     if (fmt_ctx != nullptr) {
       avformat_close_input(&fmt_ctx);
     }
-    throw ffmpeg_error("[open_format_context] Failed to open format context input for " + path.string(), result);
+    throw ffmpeg_error(fmt::format("[{}] Failed to open format context input "
+    "for {}", FUNCDINFO, path.string()), result);
   }
 
   if (av_match_lists(fmt_ctx->iformat->name, ',', banned_iformat_names, ',')) {
-    throw std::runtime_error("[open_format_context] Cannot open banned format type: " + std::string(fmt_ctx->iformat->name));
+    throw std::runtime_error(fmt::format("[{}] Cannot open banned format type: "
+    "{}", FUNCDINFO, fmt_ctx->iformat->name));
   }
 
   result = avformat_find_stream_info(fmt_ctx, NULL);
@@ -51,13 +56,16 @@ AVFormatContext* open_format_context(std::filesystem::path path) {
     if (fmt_ctx != nullptr) {
       avformat_close_input(&fmt_ctx);
     }
-    throw ffmpeg_error("[open_format_context] Failed to find stream info for " + path.string(), result);
+    throw ffmpeg_error(fmt::format("[{}] Failed to find stream info for {}.",
+    FUNCDINFO, path.string()), result);
   }
 
   if (fmt_ctx != nullptr) {
     return fmt_ctx;
   }
-  throw std::runtime_error("[open_format_context] Failed to open format context input, unknown error occured");
+
+  throw std::runtime_error(fmt::format("[{}] Failed to open format context "
+  "input, unknown error occured", FUNCDINFO));
 }
 
 void dump_file_info(std::filesystem::path path) {
@@ -110,7 +118,9 @@ std::string media_type_to_string(MediaType media_type) {
     case MediaType::AUDIO: return "audio";
     case MediaType::IMAGE: return "image";
   }
-  throw std::runtime_error("[media_type_to_string] attempted to get media type string from unimplemented media type.");
+
+  throw std::runtime_error(fmt::format("[{}] attempted to get media type "
+  "string from unimplemented media type.", FUNCDINFO));
 }
 
 std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat) {
@@ -191,5 +201,6 @@ MediaType media_type_from_avformat_context(AVFormatContext* fmt_ctx) {
     return MediaType::AUDIO;
   }
 
-  throw std::runtime_error("[media_type_from_avformat_context] Could not find media type for file " + std::string(fmt_ctx->url));
+  throw std::runtime_error(fmt::format("[{}] Could not find media type for "
+  "file {}.", FUNCDINFO, std::string(fmt_ctx->url)));
 }

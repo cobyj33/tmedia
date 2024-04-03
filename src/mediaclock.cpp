@@ -1,5 +1,8 @@
 #include "mediaclock.h"
 
+#include "funcmac.h"
+#include <fmt/format.h>
+
 #include <stdexcept>
 
 MediaClock::MediaClock() {
@@ -23,7 +26,8 @@ void MediaClock::skip(double seconds_to_skip) {
 
 void MediaClock::init(double current_system_time) {
   if (this->is_playing()) {
-    throw std::runtime_error("[MediaClock::start] Cannot start while playback is already playing");
+    throw std::runtime_error(fmt::format("[{}] Cannot start while playback is "
+    "already playing.", FUNCDINFO));
   }
 
   this->m_playing = true;
@@ -34,7 +38,8 @@ void MediaClock::init(double current_system_time) {
 
 void MediaClock::resume(double current_system_time) {
   if (this->is_playing()) {
-    throw std::runtime_error("[MediaClock::resume] Cannot resume while playback is already playing");
+    throw std::runtime_error(fmt::format("[{}] Cannot resume while playback "
+    "is already playing", FUNCDINFO));
   }
 
   this->m_playing = true;
@@ -44,7 +49,8 @@ void MediaClock::resume(double current_system_time) {
 
 void MediaClock::stop(double current_system_time) {
   if (!this->is_playing()) {
-    throw std::runtime_error("[MediaClock::stop] Attempted to stop playback although playback is already stopped");
+    throw std::runtime_error(fmt::format("[{}] Attempted to stop playback "
+    "although playback is already stopped", FUNCDINFO));
   }
 
   this->m_playing = false;

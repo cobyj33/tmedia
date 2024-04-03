@@ -1,6 +1,9 @@
 #include "formatting.h"
  
 #include "unitconvert.h"
+#include "funcmac.h"
+
+#include <fmt/format.h>
 
 #include <cstdarg>
 #include <cstddef>
@@ -16,10 +19,14 @@
 #include <cfloat>
 #include <cstdlib>
 
+/**
+ * With the fmt library, this might all be irrelevant now. We'll see
+*/
 
 std::string double_to_fixed_string(double num, int decimal_places) {
   if (decimal_places < 0) {
-    throw std::runtime_error("[double_to_fixed_string] Cannot produce double string with negative decimal places");
+    throw std::runtime_error(fmt::format("[{}] Cannot produce double string "
+    "with negative decimal places", FUNCDINFO));
   } else if (decimal_places == 0) {
     return std::to_string((long)num);
   }
@@ -69,7 +76,8 @@ std::string vsprintf_str(const char* format, va_list args) {
   va_end(reading_args);
   if (alloc_size < 0) {
     va_end(writing_args);
-    throw std::runtime_error("[vsprintf_str] vsnprintf error: " + std::to_string(alloc_size));
+    throw std::runtime_error(fmt::format("[{}] vsnprintf error: {}.",
+    FUNCDINFO, alloc_size));
   }
 
   char* chararr = new char[alloc_size + 1];
@@ -78,7 +86,8 @@ std::string vsprintf_str(const char* format, va_list args) {
   va_end(writing_args);
   if (success < 0) {
     delete[] chararr;
-    throw std::runtime_error("[vsprintf_str] vsnprintf error: " + std::to_string(alloc_size));
+    throw std::runtime_error(fmt::format("[{}] vsnprintf error: {}.",
+    FUNCDINFO, alloc_size));
   }
 
   std::string output(chararr);
@@ -104,7 +113,9 @@ int parse_duration(std::string duration) {
   } else if (is_m_ss_duration(duration)) {
     return parse_m_ss_duration(duration);
   }
-  throw std::runtime_error("Cannot parse duration " + duration + " as duration format could not be found in implemented format types");
+  throw std::runtime_error(fmt::format("[{}] Cannot parse duration {} as "
+  "duration format could not be found in implemented format types",
+  FUNCDINFO, duration));
 }
 
 bool is_duration(std::string duration) {
@@ -123,7 +134,9 @@ std::string format_time_hh_mm_ss(double time_in_seconds) {
 
 int parse_h_mm_ss_duration(std::string formatted_duration) {
   if (!is_h_mm_ss_duration(formatted_duration)) {
-    throw std::runtime_error("Cannot parse H:MM:SS duration of " + formatted_duration + ", this duration is not formatted correctly as H:MM:SS");
+    throw std::runtime_error(fmt::format("[{}] Cannot parse H:MM:SS duration "
+    "of {}, this duration is not formatted correctly as H:MM:SS",
+    FUNCDINFO, formatted_duration));
   }
 
   const int END = formatted_duration.length() - 1;
@@ -179,7 +192,9 @@ std::string format_time_mm_ss(double time_in_seconds) {
 
 int parse_m_ss_duration(std::string formatted_duration) {
   if (!is_m_ss_duration(formatted_duration)) {
-    throw std::runtime_error("Cannot parse MM:SS duration of " + formatted_duration + ", this duration is not formatted correctly as MM:SS");
+    throw std::runtime_error(fmt::format("[{}] Cannot parse M:SS duration "
+    "of {}, this duration is not formatted correctly as M:SS",
+    FUNCDINFO, formatted_duration));
   }
 
   const int END = formatted_duration.length() - 1;
@@ -352,19 +367,21 @@ bool strisi32(std::string_view str) noexcept {
 int strtoi32(std::string_view str) {
   double out = 0;
   if (str.empty())
-    throw std::runtime_error("[strtoi32] Attempted to parse empty string as i32");
+    throw std::runtime_error(fmt::format("[{}] Attempted to parse empty "
+    "string as i32", FUNCDINFO));
   if (str == "-" || str == "+")
-    throw std::runtime_error("[strtoi32] Attempted to parse string with only a sign as i32: " + std::string(str));
+    throw std::runtime_error(fmt::format("[{}] Attempted to parse string with "
+    "only a sign as i32: {}.", FUNCDINFO, str));
 
   int sign = str[0] == '-' ? -1 : 1;
 
   for (std::size_t i = str[0] == '-' || str[0] == '+' ? 1 : 0; i < str.length(); i++) {
     if (!std::isdigit(str[i]))
-      throw std::runtime_error("[strtoi32] Attempted to parse string with invalid "
-      "non-digit character: " + std::string(str));
+      throw std::runtime_error(fmt::format("[{}] Attempted to parse string "
+      "with invalid non-digit character: ", FUNCDINFO, str));
     if (out >= (INT_MAX - 9) / 10)
-      throw std::runtime_error("[strtoi32] i32 integer overflow: " + std::string(str) + 
-      ", Must be in the range [" + std::to_string(INT_MIN) + " - " + std::to_string(INT_MAX) + "]");
+      throw std::runtime_error(fmt::format("[{}] i32 integer overflow: {}, "
+      "Must be in the range [ {} -> {} ]", FUNCDINFO, str, INT_MIN, INT_MAX));
 
     out *= 10;
     out += str[i] - '0';
@@ -386,9 +403,11 @@ double strtodouble(std::string_view str) {
   double out = 0.0;
 
   if (str.empty())
-    throw std::runtime_error("[strtodouble] Attempted to parse empty string as double");
+    throw std::runtime_error(fmt::format("[{}] Attempted to parse empty string "
+    "as double", FUNCDINFO));
   if (str == "-." || str == "+." || str == "+" || str == "-")
-    throw std::runtime_error("[strtodouble] Attempted to parse invalid signed string: " + std::string(str));
+    throw std::runtime_error(fmt::format("[{}] Attempted to parse invalid "
+    "signed string: {}.", FUNCDINFO, str));
 
   int foundDecimal = 0;
   double decimalMultiplier = 0.1;
@@ -397,11 +416,13 @@ double strtodouble(std::string_view str) {
   for (std::size_t i = str[0] == '-' || str[0] == '+' ? 1 : 0; i < str.length(); i++) {
     if (str[i] == '.') {
       if (foundDecimal)
-        throw std::runtime_error("[strtodouble] Attempted to parse string with multiple decimal points: " + std::string(str));
+        throw std::runtime_error(fmt::format("[{}] Attempted to parse string "
+        "with multiple decimal points: {}.", FUNCDINFO, str));
       foundDecimal = 1;
     } else if (std::isdigit(str[i])) {
       if (out >= (DBL_MAX - 9) / 10)
-        throw std::runtime_error("[strtodouble] double overflow: " + std::string(str));
+        throw std::runtime_error(fmt::format("[{}] double overflow: {}.",
+        FUNCDINFO, str));
       
       if (foundDecimal) {
         out = out + (str[i] - '0') * decimalMultiplier;
@@ -412,8 +433,8 @@ double strtodouble(std::string_view str) {
       }
 
     } else {
-      throw std::runtime_error("[strtodouble] Attempted to parse string with invalid "
-      "non-digit character: " + std::string(str));
+      throw std::runtime_error(fmt::format("[{}] Attempted to parse string "
+      "with invalid non-digit character: {}.", FUNCDINFO, str));
     }
   }
 

@@ -1,11 +1,15 @@
 #include "cli_iter.h"
 
+#include "funcmac.h"
+
 #include <vector>
 #include <string>
 #include <cstring>
 #include <stdexcept>
 #include <algorithm>
 #include <cctype>
+
+#include <fmt/format.h>
 
 namespace tmedia {
 
@@ -37,7 +41,8 @@ namespace tmedia {
       res.prefix = ":";
       res.nextIndex = 1;
     } else {
-      throw std::runtime_error("[cli_longopt_prefix_consume] Could not parse cli longopt prefix for arg: " + std::string(arg));
+      throw std::runtime_error(fmt::format("[{}] Could not parse cli longopt "
+      "prefix for arg: {}", FUNCDINFO, arg));
     }
 
     return res;
@@ -58,7 +63,8 @@ namespace tmedia {
       res.arg.prefix = ":";
       i = 1;
     } else {
-      throw std::runtime_error("[cli_longopt_prefix_consume] Could not parse cli longopt prefix for arg: " + std::string(argv[index]));
+      throw std::runtime_error(fmt::format("[{}] Could not parse cli longopt "
+      "prefix for arg: {}", FUNCDINFO, argv[index]));
     }
 
     for (; argv[index][i] != '\0' && argv[index][i] != '='; i++) {
@@ -70,7 +76,8 @@ namespace tmedia {
       
       if (defer_param) { // read next arg as param
         if (res.nextIndex >= argc) {
-          throw std::runtime_error("[cli_longopt_parse] param not found for long option " + res.arg.value);
+          throw std::runtime_error(fmt::format("[{}] param not found for long "
+          "option {}.", FUNCDINFO, res.arg.value));
         }
 
         res.arg.param = argv[res.nextIndex++];
@@ -81,14 +88,16 @@ namespace tmedia {
         }
 
         if (res.arg.param.length() == 0) {
-          throw std::runtime_error("[cli_longopt_parse] param not found for long option after '=' " + std::string(argv[index]));
+          throw std::runtime_error(fmt::format("[{}] param not found for long "
+          "option after '=' {}.", FUNCDINFO, argv[index]));
         }
 
       }
 
     } else {
       if (argv[index][i] == '=') {
-        throw std::runtime_error("[cli_longopt_parse] Attempted to add param to non-param option: " + std::string(argv[index]));
+        throw std::runtime_error(fmt::format("[{}] Attempted to add param to "
+        "non-param option: {}.", FUNCDINFO, argv[index]));
       }
     }
 
@@ -108,7 +117,8 @@ namespace tmedia {
     for (int j = 1; argv[index][j] != '\0'; j++) {
       char shortopt = argv[index][j];
       if (!std::isalpha(shortopt)) {
-        throw std::runtime_error(std::string("[cli_shortopt_parse] shortopt must be an alphabetical character: ") + shortopt + " (" + std::string(argv[index]) + ")");
+        throw std::runtime_error(fmt::format("[{}] shortopt must be an "
+        "alphabetical character: {} ({})", FUNCDINFO, shortopt, argv[index]));
       }
 
       CLIArg arg;
@@ -119,13 +129,15 @@ namespace tmedia {
       res.args.push_back(arg);
       if (shortopts_with_args.find(shortopt) != std::string::npos) {
         defer_param = argv[index][j + 1] == '\0';
-        if (!defer_param) throw std::runtime_error("[cli_shortopt_parse] Could not parse short option requiring argument: " + shortopt);
+        if (!defer_param) throw std::runtime_error(fmt::format("[{}] Could not "
+        "parse short option requiring argument: {}.", FUNCDINFO, shortopt));
       }
     }
 
     if (defer_param) {
       if (res.nextIndex >= argc) {
-        throw std::runtime_error("[cli_longopt_parse] param not found for short option " + res.args[res.args.size() - 1].value);
+        throw std::runtime_error(fmt::format("[{}] param not found for short "
+        "option {}.", FUNCDINFO, res.args[res.args.size() - 1].value));
       }
       res.args[res.args.size() - 1].param = argv[res.nextIndex++];
     }

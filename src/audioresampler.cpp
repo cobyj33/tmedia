@@ -64,12 +64,14 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
 
   result = av_channel_layout_copy(&this->m_src_ch_layout, src_ch_layout);
   if (result < 0) {
-    throw ffmpeg_error("[AudioResampler::AudioResampler] Failed to copy source AVChannelLayout data into internal field", result);
+    throw ffmpeg_error(fmt::format("[{}] Failed to copy source "
+    "AVChannelLayout data into internal field", FUNCDINFO), result);
   }
 
   result = av_channel_layout_copy(&this->m_dst_ch_layout, dst_ch_layout);
   if (result < 0) {
-    throw ffmpeg_error("[AudioResampler::AudioResampler] Failed to copy destination AVChannelLayout data into internal field", result);
+    throw ffmpeg_error(fmt::format("[{}] Failed to copy "
+    "destination AVChannelLayout data into internal field", FUNCDINFO), result);
   }
   #else
   this->m_dst_ch_layout = dst_ch_layout;
@@ -103,7 +105,8 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
     int result;
     AVFrame* resampled_frame = av_frame_alloc();
     if (resampled_frame == NULL) {
-      throw std::runtime_error("Could not create AVFrame audio frame for resampling");
+      throw std::runtime_error(fmt::format("[{}] Could not create AVFrame "
+      "audio frame for resampling", FUNCDINFO));
     }
 
     resampled_frame->sample_rate = this->m_dst_sample_rate;
@@ -111,7 +114,8 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
     #if HAS_AVCHANNEL_LAYOUT
     result = av_channel_layout_copy(&resampled_frame->ch_layout, &this->m_dst_ch_layout);
     if (result < 0) {
-      throw ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to copy destination audio channel layout", result);
+      throw ffmpeg_error(fmt::format("[{}] Unable to copy destination audio "
+      "channel layout", FUNCDINFO), result);
     }
     #else 
     resampled_frame->channel_layout = this->m_dst_ch_layout;
@@ -130,7 +134,8 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
       case AVERROR_INPUT_CHANGED: {
         result = swr_config_frame(this->m_context, resampled_frame, original);
         if (result != 0) {
-          throw ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to reconfigure resampling context", result);
+          throw ffmpeg_error(fmt::format("[{}] Unable to reconfigure "
+          "resampling context", FUNCDINFO), result);
         }
 
         result = swr_convert_frame(this->m_context, resampled_frame, original);

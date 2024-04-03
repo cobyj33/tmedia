@@ -1,11 +1,15 @@
 #include "audioringbuffer.h"
 
 #include "formatting.h"
+#include "funcmac.h"
+
+#include <fmt/format.h>
 
 #include <vector>
 #include <stdexcept>
 #include <system_error>
 #include <cstddef>
+
 
 /**
  * Implementation details:
@@ -60,10 +64,10 @@ bool AudioRingBuffer::is_time_in_bounds(double playback_time) {
 
 void AudioRingBuffer::set_time_in_bounds(double playback_time) {
   if (!is_time_in_bounds(playback_time)) {
-    throw std::runtime_error("Attempted to set audio ring buffer to out of "
-    "bounds time " + double_to_fixed_string(playback_time, 3) + " ( start: " +
-    double_to_fixed_string(this->get_buffer_current_time(), 3) + ", end: " +
-    double_to_fixed_string(this->get_buffer_end_time(), 3) + " ).");
+    throw std::runtime_error(fmt::format("[{}] Attempted to set audio ring "
+    "buffer to out of bounds time {} ( start: {}, end: {} ).", FUNCDINFO, 
+    playback_time, this->get_buffer_current_time(),
+    this->get_buffer_end_time()));
   }
 
   const double time_offset = playback_time - this->get_buffer_current_time();
@@ -85,8 +89,9 @@ int AudioRingBuffer::get_frames_can_write() {
 
 void AudioRingBuffer::read_into(int nb_frames, float* out) {
   if (this->get_frames_can_read() < nb_frames) {
-    throw std::runtime_error("[AudioRingBuffer::read_into] Cannot read " + 
-    std::to_string(nb_frames) + " frames ( size: " + std::to_string(this->m_size_frames) + " can read: " + std::to_string(this->get_frames_can_read()) + ")"); 
+    throw std::runtime_error(fmt::format("[{}] Cannot read {} frames ( size: "
+    "{}, can read: {})", FUNCDINFO, nb_frames, this->m_size_frames, 
+    this->get_frames_can_read()));
   }
 
   for (int i = 0; i < nb_frames * this->m_nb_channels; i++) {
@@ -99,8 +104,9 @@ void AudioRingBuffer::read_into(int nb_frames, float* out) {
 
 void AudioRingBuffer::peek_into(int nb_frames, float* out) {
   if (this->get_frames_can_read() < nb_frames) {
-    throw std::runtime_error("[AudioRingBuffer::peek_into] Cannot read " + 
-    std::to_string(nb_frames) + " frames ( size: " + std::to_string(this->m_size_frames) + " can read: " + std::to_string(this->get_frames_can_read()) + ")"); 
+    throw std::runtime_error(fmt::format("[{}] Cannot read {} frames ( size: "
+    "{}, can read: {})", FUNCDINFO, nb_frames, this->m_size_frames, 
+    this->get_frames_can_read()));
   }
 
   int original_head = this->m_head;
@@ -122,8 +128,9 @@ std::vector<float> AudioRingBuffer::peek_into(int nb_frames) {
 
 void AudioRingBuffer::write_into(int nb_frames, float* in) {
   if (this->get_frames_can_write() < nb_frames) {
-    throw std::runtime_error("[AudioRingBuffer::write_into] Cannot write " + 
-    std::to_string(nb_frames) + " frames ( size: " + std::to_string(this->m_size_frames) + " can write: " + std::to_string(this->get_frames_can_write()) + ")"); 
+    throw std::runtime_error(fmt::format("[{}] Cannot write {} frames ( size: "
+    "{}, can write: {})", FUNCDINFO, nb_frames, this->m_size_frames, 
+    this->get_frames_can_write()));
   }
 
   for (int i = 0; i < nb_frames * this->m_nb_channels; i++) {
