@@ -26,3 +26,5 @@ list(APPEND TMEDIA_DEPS_LIBRARIES random)
 
 include(${CMAKE_SOURCE_DIR}/lib/cmake/ffmpeg.cmake)
 include(${CMAKE_SOURCE_DIR}/lib/cmake/ncurses.cmake)
+include(${CMAKE_SOURCE_DIR}/lib/cmake/fmt.cmake)
+

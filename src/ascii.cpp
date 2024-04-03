@@ -3,6 +3,8 @@
 #include "pixeldata.h"
 
 #include <stdexcept>
+#include "funcmac.h"
+#include <fmt/format.h>
 
 extern "C" {
 #include <libavutil/avutil.h>
@@ -22,9 +24,8 @@ RGBColor get_rgb_from_char(const std::string& characters, char ch) {
     }
   }
   
-  throw std::runtime_error("[get_rgb_from_char] Cannot get color value from char " +
-  std::to_string(ch) + ", character \"" + std::to_string(ch) +
-  "\" not found in string: " + characters);
+  throw std::runtime_error(fmt::format("[{}] Cannot get color value from char {}"
+  ", character \"{}\" not found in string {} ", FUNCDINFO, ch, ch, characters));
 }
 
 char get_char_from_rgb(const std::string& characters, const RGBColor& color) {
