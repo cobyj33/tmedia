@@ -14,7 +14,7 @@ extern "C" {
 }
 
 void clear_av_frame_list(std::vector<AVFrame*>& frame_list) {
-  for (int i = 0; i < (int)frame_list.size(); i++) {
+  for (std::size_t i = 0; i < frame_list.size(); i++) {
     av_frame_free(&(frame_list[i]));
   }
   frame_list.clear();

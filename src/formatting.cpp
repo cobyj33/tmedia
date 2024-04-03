@@ -140,15 +140,15 @@ bool is_h_mm_ss_duration(std::string formatted_duration) {
     return false;
   }
 
-  const int END = formatted_duration.length() - 1;
-  const int MM_SS_COLON_POSITION = END - 2;
-  const int HH_MM_COLON_POSITION = END - 5;
+  const std::size_t END = formatted_duration.length() - 1;
+  const std::size_t MM_SS_COLON_POSITION = END - 2;
+  const std::size_t HH_MM_COLON_POSITION = END - 5;
 
   if (formatted_duration[MM_SS_COLON_POSITION] != ':' || formatted_duration[HH_MM_COLON_POSITION] != ':') {
     return false;
   }
 
-  for (int i = 0; i < (int)formatted_duration.length(); i++) {
+  for (std::size_t i = 0; i < formatted_duration.length(); i++) {
     if (!std::isdigit(formatted_duration[i]) && !(i == MM_SS_COLON_POSITION || i == HH_MM_COLON_POSITION )) {
       return false;
     }
@@ -195,13 +195,13 @@ bool is_m_ss_duration(std::string formatted_duration) {
     return false;
   }
 
-  const int END = formatted_duration.length() - 1;
-  const int COLON_POSITION = END - 2;
+  const std::size_t END = formatted_duration.length() - 1;
+  const std::size_t COLON_POSITION = END - 2;
   if (formatted_duration[COLON_POSITION] != ':') {
     return false;
   }
 
-  for (int i = 0; i < (int)formatted_duration.length(); i++) {
+  for (std::size_t i = 0; i < formatted_duration.length(); i++) {
     if (!std::isdigit(formatted_duration[i]) && i != COLON_POSITION) {
       return false;
     }
@@ -358,7 +358,7 @@ int strtoi32(std::string_view str) {
 
   int sign = str[0] == '-' ? -1 : 1;
 
-  for (int i = str[0] == '-' || str[0] == '+' ? 1 : 0; i < static_cast<int>(str.length()); i++) {
+  for (std::size_t i = str[0] == '-' || str[0] == '+' ? 1 : 0; i < str.length(); i++) {
     if (!std::isdigit(str[i]))
       throw std::runtime_error("[strtoi32] Attempted to parse string with invalid "
       "non-digit character: " + std::string(str));
@@ -394,7 +394,7 @@ double strtodouble(std::string_view str) {
   double decimalMultiplier = 0.1;
   double sign = str[0] == '-' ? -1.0 : 1.0;
 
-  for (int i = str[0] == '-' || str[0] == '+' ? 1 : 0; i < static_cast<int>(str.length()); i++) {
+  for (std::size_t i = str[0] == '-' || str[0] == '+' ? 1 : 0; i < str.length(); i++) {
     if (str[i] == '.') {
       if (foundDecimal)
         throw std::runtime_error("[strtodouble] Attempted to parse string with multiple decimal points: " + std::string(str));

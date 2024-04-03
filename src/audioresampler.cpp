@@ -85,7 +85,7 @@ AudioResampler::~AudioResampler() {
 
 std::vector<AVFrame*> AudioResampler::resample_audio_frames(std::vector<AVFrame*>& originals) {
   std::vector<AVFrame*> resampled_frames;
-  for (int i = 0; i < (int)originals.size(); i++) {
+  for (std::size_t i = 0; i < originals.size(); i++) {
     AVFrame* resampled_frame = this->resample_audio_frame(originals[i]);
     resampled_frames.push_back(resampled_frame);
   }

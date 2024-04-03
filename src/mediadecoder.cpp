@@ -128,7 +128,7 @@ int MediaDecoder::jump_to_time(double target_time) {
     do {
       clear_av_frame_list(frames);
       frames = this->next_frames(decoder_pair->first);
-      for (int i = 0; i < (int)frames.size(); i++) {
+      for (std::size_t i = 0; i < frames.size(); i++) {
         if (frames[i]->pts * decoder_pair->second->get_time_base() >= target_time) {
           passed_target_time = true;
           break;
@@ -140,7 +140,6 @@ int MediaDecoder::jump_to_time(double target_time) {
   }
 
   return ret;
-
 }
 
 MediaType MediaDecoder::get_media_type() {

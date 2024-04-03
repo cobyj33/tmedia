@@ -15,7 +15,7 @@ char get_char_from_value(const std::string& characters, uint8_t value) {
 }
 
 RGBColor get_rgb_from_char(const std::string& characters, char ch) {
-  for (int i = 0; i < (int)characters.size(); i++) {
+  for (std::string::size_type i = 0; i < characters.size(); i++) {
     if (ch == characters[i]) {
       int val = i * 255 / (characters.size() - 1); 
       return RGBColor(val);
