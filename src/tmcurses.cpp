@@ -2,6 +2,7 @@
 
 #include "color.h"
 #include "wmath.h"
+#include "palette.h"
 #define TMEDIA_TMCURSES_INTERNAL_IMPLEMENTATION
 #include "internal/tmcurses_internal.h"
 #undef TMEDIA_TMCURSES_INTERNAL_IMPLEMENTATION
@@ -145,7 +146,7 @@ void ncurses_set_color_palette(TMNCursesColorPalette colorPalette) {
   ncurses_init_color_maps();
 }
 
-void ncurses_set_color_palette_custom(Palette colorPalette) {
+void ncurses_set_color_palette_custom(const Palette& colorPalette) {
   if (!curses_colors_initialized) return;
   const short MAX_COLORS = std::min(COLORS, MAX_TERMINAL_COLORS);
   const short CHANGEABLE_COLORS = MAX_COLORS - COLOR_PALETTE_START;

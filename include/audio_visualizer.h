@@ -1,8 +1,10 @@
 #ifndef TMEDIA_AUDIO_IMAGE_H
 #define TMEDIA_AUDIO_IMAGE_H
 
-#include "pixeldata.h"
+#include <vector>
 #include <memory>
+
+class PixelData;
 
 /**
  * General strategy class for generating audio data from any inputted audio frames

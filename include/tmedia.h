@@ -1,16 +1,14 @@
 #ifndef TMEDIA_TMEDIA_H
 #define TMEDIA_TMEDIA_H
 
-#include "playlist.h"
-#include "pixeldata.h"
-#include "tmedia_vom.h"
-#include "metadata.h"
-#include "boiler.h"
-#include "scale.h"
-#include "ascii.h"
 
-#include "audioout.h"
-#include "mediafetcher.h"
+#include "tmedia_vom.h" // for VideoOutputMode
+#include "playlist.h" // for LoopType 
+#include "metadata.h" // for MetadataCache
+#include "scale.h" // for VideoDimensions
+#include "boiler.h" // for MediaType
+#include "pixeldata.h" // for PixelData and ScalingAlgo
+#include "ascii.h" // for ASCII_STANDARD_CHAR_MAP
 
 #include <optional>
 #include <vector>

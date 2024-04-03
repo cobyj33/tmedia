@@ -5,9 +5,8 @@
 #include "pixeldata.h"
 #include "mediadecoder.h"
 #include "blocking_audioringbuffer.h"
-#include "audioresampler.h"
-#include "audio_visualizer.h"
 #include "scale.h"
+#include "audio_visualizer.h"
 
 #include <memory>
 #include <string>

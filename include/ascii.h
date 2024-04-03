@@ -1,8 +1,7 @@
 #ifndef TMEDIA_ASCII_H
 #define TMEDIA_ASCII_H
 
-#include "color.h"
-#include "pixeldata.h"
+class RGBColor;
 
 #include <cstdint>
 #include <vector>

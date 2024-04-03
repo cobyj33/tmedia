@@ -5,6 +5,7 @@
 #include "wtime.h"
 #include "wmath.h"
 #include "decode.h"
+#include "audioresampler.h"
 
 #include <mutex>
 #include <chrono>

@@ -6,10 +6,9 @@
 #include "ffmpeg_error.h"
 #include "avguard.h"
 
-#include <map>
 #include <vector>
-#include <memory>
 #include <stdexcept>
+#include <string>
 
 extern "C" {
   #include <libavcodec/avcodec.h>

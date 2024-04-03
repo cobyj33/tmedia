@@ -1,11 +1,7 @@
 #ifndef TMEDIA_STREAM_DECODER_H
 #define TMEDIA_STREAM_DECODER_H
 
-#include <stdexcept>
-#include <string>
-#include <map>
 #include <vector>
-#include <memory>
 #include <deque>
 
 extern "C" {

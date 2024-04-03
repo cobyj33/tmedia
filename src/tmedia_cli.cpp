@@ -5,8 +5,10 @@
 #include "formatting.h"
 #include "version.h"
 #include "ascii.h"
+#include "scale.h"
 #include "probe.h"
 #include "boiler.h"
+#include "pixeldata.h"
 
 #include <natural_sort.hpp>
 

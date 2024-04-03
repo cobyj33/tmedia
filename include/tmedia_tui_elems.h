@@ -1,8 +1,9 @@
 #ifndef TMEDIA_TMEDIA_TUI_ELEMS_H
 #define TMEDIA_TMEDIA_TUI_ELEMS_H
 
-#include "pixeldata.h"
-#include "tmedia_vom.h"
+class PixelData;
+enum class ScalingAlgo;
+enum class VideoOutputMode;
 
 #include <string>
 #include <vector>

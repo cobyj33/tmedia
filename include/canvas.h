@@ -4,7 +4,8 @@
 #include <vector>
 #include <memory>
 
-#include "pixeldata.h"
+class PixelData;
+
 #include "color.h"
 
 
