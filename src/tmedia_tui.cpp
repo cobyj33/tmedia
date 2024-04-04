@@ -48,7 +48,7 @@ void TMediaCursesRenderer::render_tui_compact(const TMediaProgramState tmps, con
 
   wfill_box(stdscr, 1, 0, COLS, 1, '~');
   werasebox(stdscr, 0, 0, COLS, 1);
-  const std::string current_playlist_index_str = "(" + std::to_string(tmps.playlist.index() + 1) + "/" + std::to_string(tmps.playlist.size()) + ")";
+  const std::string current_playlist_index_str = fmt::format("({}/{})", tmps.playlist.index() + 1, tmps.playlist.size());
   const std::string current_playlist_media_str = get_media_file_display_name(tmps.playlist.current(), this->metadata_cache);
   const std::string current_playlist_file_display = (tmps.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + current_playlist_media_str;
   TMLabelStyle current_playlist_display_style(0, 0, COLS, TMAlign::CENTER, CURRENT_FILE_NAME_MARGIN, CURRENT_FILE_NAME_MARGIN);
@@ -73,7 +73,7 @@ void TMediaCursesRenderer::render_tui_compact(const TMediaProgramState tmps, con
     std::vector<std::string> bottom_labels;
     const std::string playing_str = snapshot.playing ? ">" : "||";
     const std::string loop_str = loop_type_str_short(tmps.playlist.loop_type()); 
-    const std::string volume_str = tmps.muted ? "M" : (std::to_string((int)(tmps.volume * 100)) + "%");
+    const std::string volume_str = tmps.muted ? "M" : (fmt::format("{}%", static_cast<int>(tmps.volume * 100)));
     const std::string shuffled_str = tmps.playlist.shuffled() ? "S" : "NS";
 
     bottom_labels.push_back(playing_str);
@@ -91,7 +91,7 @@ void TMediaCursesRenderer::render_tui_large(const TMediaProgramState tmps, const
   render_pixel_data(snapshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
 
   werasebox(stdscr, 0, 0, COLS, 2);
-  const std::string current_playlist_index_str = "(" + std::to_string(tmps.playlist.index() + 1) + "/" + std::to_string(tmps.playlist.size()) + ")";
+  const std::string current_playlist_index_str = fmt::format("({}/{})", tmps.playlist.index() + 1, tmps.playlist.size());
   const std::string current_playlist_media_str = get_media_file_display_name(tmps.playlist.current(), this->metadata_cache);
   const std::string current_playlist_file_display = (tmps.playlist.size() > 1 ? (current_playlist_index_str + " ") : "") + current_playlist_media_str;
   TMLabelStyle current_playlist_display_style(0, 0, COLS, TMAlign::CENTER, CURRENT_FILE_NAME_MARGIN, CURRENT_FILE_NAME_MARGIN);
@@ -105,7 +105,7 @@ void TMediaCursesRenderer::render_tui_large(const TMediaProgramState tmps, const
     if (tmps.playlist.can_move(PlaylistMoveCommand::REWIND)) {
       werasebox(stdscr, 1, 0, COLS / 2, 1);
       const std::string rewind_media_file_display_string = get_media_file_display_name(tmps.playlist.peek_move(PlaylistMoveCommand::REWIND), this->metadata_cache);
-      const std::string rewind_display_string = "< " + rewind_media_file_display_string;
+      const std::string rewind_display_string = fmt::format("< {}", rewind_media_file_display_string);
       TMLabelStyle rewind_display_style(1, 0, COLS / 2, TMAlign::LEFT, 0, MOVE_FILE_NAME_MIDDLE_MARGIN);
       tm_mvwaddstr_label(stdscr, rewind_display_style, rewind_display_string);
     }
@@ -128,7 +128,7 @@ void TMediaCursesRenderer::render_tui_large(const TMediaProgramState tmps, const
     std::vector<std::string> bottom_labels;
     const std::string playing_str = snapshot.playing ? "PLAYING" : "PAUSED";
     const std::string loop_str = str_capslock(loop_type_str(tmps.playlist.loop_type())); 
-    const std::string volume_str = "VOLUME: " + (tmps.muted ? "MUTED" : (std::to_string((int)(tmps.volume * 100)) + "%"));
+    const std::string volume_str = fmt::format("VOLUME: {}", tmps.muted ? "MUTED" : fmt::format("{}%", static_cast<int>(tmps.volume * 100)));
     const std::string shuffled_str = tmps.playlist.shuffled() ? "SHUFFLED" : "NOT SHUFFLED";
 
     bottom_labels.push_back(playing_str);
@@ -155,7 +155,7 @@ std::string get_media_file_display_name(std::string abs_path, MetadataCache& met
   bool has_title = metadata_cache_has(abs_path, "title", metadata_cache);
 
   if (has_artist && has_title) {
-    return metadata_cache_get(abs_path, "artist", metadata_cache) + " - " + metadata_cache_get(abs_path, "title", metadata_cache);
+    return fmt::format("{} - {}", metadata_cache_get(abs_path, "artist", metadata_cache), metadata_cache_get(abs_path, "title", metadata_cache));
   } else if (has_title) {
     return metadata_cache_get(abs_path, "title", metadata_cache);
   }
