@@ -5,6 +5,9 @@
 #include "formatting.h"
 #include "tmcurses.h"
 #include "tmedia_vom.h"
+#include "funcmac.h"
+
+#include <fmt/format.h>
 
 
 #include <stdexcept>
@@ -40,7 +43,8 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in
 
 void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode, const ScalingAlgo scaling_algorithm, const std::string& ascii_char_map) {
   if (output_mode != VideoOutputMode::TEXT_ONLY && !has_colors()) {
-    throw std::runtime_error("Attempted to print colored text in terminal that does not support color");
+    throw std::runtime_error(fmt::format("[{}] Attempted to print colored text "
+    "in terminal that does not support color", FUNCDINFO));
   }
 
   PixelData bounded = pixel_data.bound(bounds_width, bounds_height, scaling_algorithm);
@@ -65,7 +69,7 @@ void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_c
 
 void wprint_labels(WINDOW* window, std::vector<std::string>& labels, int y, int x, int width) {
   if (width < 0)
-    throw std::runtime_error("[wprint_labels] attempted to print to negative width space");
+    throw std::runtime_error(fmt::format("[{}] attempted to print to negative width space", FUNCDINFO));
   if (width == 0)
     return;
 

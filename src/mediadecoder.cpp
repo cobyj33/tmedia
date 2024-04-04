@@ -5,6 +5,7 @@
 #include "metadata.h"
 #include "decode.h"
 #include "formatting.h"
+#include "funcmac.h"
 
 #include <string>
 #include <vector>
@@ -14,6 +15,7 @@
 #include <utility>
 #include <filesystem>
 
+#include <fmt/format.h>
 
 extern "C" {
   #include <libavutil/avutil.h>
@@ -24,7 +26,9 @@ MediaDecoder::MediaDecoder(std::filesystem::path path, std::set<enum AVMediaType
   try {
     this->fmt_ctx = open_format_context(path);
   } catch (std::runtime_error const& e) {
-    throw std::runtime_error("[MediaDecoder::MediaDecoder] Could not allocate Media Decoder of " + path.string() +  " because of error while fetching file format data: " + e.what());
+    throw std::runtime_error(fmt::format("[{}] Could not allocate Media "
+    "Decoder of {} because of error while fetching file format data: {}",
+    FUNCDINFO, path.c_str(), + e.what()));
   }
 
   this->media_type = media_type_from_avformat_context(this->fmt_ctx);
@@ -53,10 +57,9 @@ bool MediaDecoder::has_stream_decoder(enum AVMediaType media_type) const {
 
 std::vector<AVFrame*> MediaDecoder::next_frames(enum AVMediaType media_type) {
   if (!this->has_stream_decoder(media_type)) {
-    throw std::runtime_error("[MediaDecoder::next_frames] Cannot get next " +
-    std::string(av_get_media_type_string(media_type)) + " frames, as no " + 
-    std::string(av_get_media_type_string(media_type)) + " stream is " 
-    "available to decode from");
+    throw std::runtime_error(fmt::format("[{0}] Cannot get next {1} frames, "
+    "as no {1} stream is available to decode from",
+    FUNCDINFO, av_get_media_type_string(media_type)));
   }
 
   StreamDecoder& stream_decoder = *(this->stream_decoders[media_type]);
@@ -107,29 +110,32 @@ int MediaDecoder::fetch_next(int requested_packet_count) {
 
 int MediaDecoder::jump_to_time(double target_time) {
   if (target_time < 0.0 || target_time > this->get_duration()) {
-    throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(target_time) + " seconds ) "
-    ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(this->get_duration()) + " seconds )");
+    throw std::runtime_error(fmt::format("[{}]Could not jump to time {} ({} "
+    "seconds), time is out of the bounds of duration {} ({} seconds)",
+    FUNCDINFO, format_time_hh_mm_ss(target_time), target_time,
+    format_time_hh_mm_ss(this->get_duration()), this->get_duration()));
   }
 
-  int ret = avformat_seek_file(this->fmt_ctx, -1, 0.0, target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
+  int ret = avformat_seek_file(this->fmt_ctx, -1, 0.0,
+    target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
 
   if (ret < 0) {
     return ret;
   }
 
-  for (auto decoder_pair = this->stream_decoders.begin(); decoder_pair != this->stream_decoders.end(); decoder_pair++) {
-    decoder_pair->second->reset();
+  for (auto& decoder_pair : this->stream_decoders) {
+    decoder_pair.second->reset();
   }
 
-  for (auto decoder_pair = this->stream_decoders.begin(); decoder_pair != this->stream_decoders.end(); decoder_pair++) {
+  for (auto& decoder_pair : this->stream_decoders) {
     std::vector<AVFrame*> frames;
     bool passed_target_time = false;
 
     do {
       clear_av_frame_list(frames);
-      frames = this->next_frames(decoder_pair->first);
+      frames = this->next_frames(decoder_pair.first);
       for (std::size_t i = 0; i < frames.size(); i++) {
-        if (frames[i]->pts * decoder_pair->second->get_time_base() >= target_time) {
+        if (frames[i]->pts * decoder_pair.second->get_time_base() >= target_time) {
           passed_target_time = true;
           break;
         }
@@ -154,8 +160,9 @@ MediaType MediaDecoder::get_media_type() {
 
 int MediaDecoder::get_nb_channels() {
   if (!this->has_stream_decoder(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error("[MediaDecoder::get_nb_channels] Cannot get number "
-    "of audio channels from this media decoder: No audio stream decoder is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get number of audio "
+    "channels from this media decoder: No available audio stream decoder.",
+    FUNCDINFO));
   }
 
   #if HAS_AVCHANNEL_LAYOUT
@@ -167,8 +174,9 @@ int MediaDecoder::get_nb_channels() {
 
 int MediaDecoder::get_sample_rate() {
   if (!this->has_stream_decoder(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error("[MediaDecoder::get_sample_rate] Cannot get sample "
-    "rate from this media decoder: No audio stream decoder is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get sample "
+    "rate from this media decoder: No audio stream decoder is available",
+    FUNCDINFO));
   }
 
   return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->sample_rate;
@@ -176,8 +184,9 @@ int MediaDecoder::get_sample_rate() {
 
 AVSampleFormat MediaDecoder::get_sample_fmt() {
   if (!this->has_stream_decoder(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error("[MediaDecoder::get_sample_fmt] Cannot get sample "
-    "format from this media decoder: No audio stream decoder is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get sample "
+    "format from this media decoder: No audio stream decoder is available",
+    FUNCDINFO));
   }
 
   return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->sample_fmt;
@@ -186,8 +195,9 @@ AVSampleFormat MediaDecoder::get_sample_fmt() {
 #if HAS_AVCHANNEL_LAYOUT
 AVChannelLayout* MediaDecoder::get_ch_layout() {
   if (!this->has_stream_decoder(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error("[MediaDecoder::get_ch_layout] Cannot get channel "
-    "layout from this media decoder: No audio stream decoder is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get channel "
+    "layout from this media decoder: No audio stream decoder is available",
+    FUNCDINFO));
   }
 
   return &(this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->ch_layout);
@@ -195,8 +205,9 @@ AVChannelLayout* MediaDecoder::get_ch_layout() {
 #else
 int64_t MediaDecoder::get_ch_layout() {
   if (!this->has_stream_decoder(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error("[MediaDecoder::get_ch_layout] Cannot get channel "
-    "layout from this media decoder: No audio stream decoder is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get channel "
+    "layout from this media decoder: No audio stream decoder is available",
+    FUNCDINFO));
   }
 
   int64_t channel_layout = this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channel_layout;
@@ -217,8 +228,9 @@ int64_t MediaDecoder::get_ch_layout() {
 
 int MediaDecoder::get_width() {
   if (!this->has_stream_decoder(AVMEDIA_TYPE_VIDEO)) {
-    throw std::runtime_error("[MediaDecoder::get_width] Cannot get width "
-    "from this media decoder: No video stream decoder is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get width "
+    "layout from this media decoder: No video stream decoder is available",
+    FUNCDINFO));
   }
 
   return this->stream_decoders[AVMEDIA_TYPE_VIDEO]->get_codec_context()->width;
@@ -226,8 +238,9 @@ int MediaDecoder::get_width() {
 
 int MediaDecoder::get_height() {
   if (!this->has_stream_decoder(AVMEDIA_TYPE_VIDEO)) {
-    throw std::runtime_error("[MediaDecoder::get_height] Cannot get height "
-    "from this media decoder: No video stream decoder is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get height "
+    "layout from this media decoder: No video stream decoder is available",
+    FUNCDINFO));
   }
 
   return this->stream_decoders[AVMEDIA_TYPE_VIDEO]->get_codec_context()->height;
@@ -235,8 +248,9 @@ int MediaDecoder::get_height() {
 
 AVPixelFormat MediaDecoder::get_pix_fmt() {
   if (!this->has_stream_decoder(AVMEDIA_TYPE_VIDEO)) {
-    throw std::runtime_error("[MediaDecoder::get_pix_fmt] Cannot get pixel "
-    "format from this media decoder: No video stream decoder is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get pixel "
+    "format from this media decoder: No video stream decoder is available",
+    FUNCDINFO));
   }
 
   return this->stream_decoders[AVMEDIA_TYPE_VIDEO]->get_codec_context()->pix_fmt;
@@ -250,8 +264,9 @@ AVPixelFormat MediaDecoder::get_pix_fmt() {
 
 double MediaDecoder::get_start_time(enum AVMediaType media_type) {
   if (!this->has_stream_decoder(media_type)) {
-    throw std::runtime_error("[MediaDecoder::get_start_time] Cannot get start "
-    "time from this media decoder: No " + std::string(av_get_media_type_string(media_type)) + " stream decoder is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get start "
+    "time from this media decoder: No {} stream decoder is available",
+    FUNCDINFO, av_get_media_type_string(media_type)));
   }
 
   return this->stream_decoders[media_type]->get_start_time();
@@ -259,8 +274,9 @@ double MediaDecoder::get_start_time(enum AVMediaType media_type) {
 
 double MediaDecoder::get_time_base(enum AVMediaType media_type) {
   if (!this->has_stream_decoder(media_type)) {
-    throw std::runtime_error("[MediaDecoder::get_start_time] Cannot get start "
-    "time from this media decoder: No " + std::string(av_get_media_type_string(media_type)) + " stream decoder is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get time "
+    "base from this media decoder: No {} stream decoder is available",
+    FUNCDINFO, av_get_media_type_string(media_type)));
   }
 
   return this->stream_decoders[media_type]->get_time_base();
@@ -269,8 +285,9 @@ double MediaDecoder::get_time_base(enum AVMediaType media_type) {
 
 double MediaDecoder::get_average_frame_time_sec(enum AVMediaType media_type) {
   if (!this->has_stream_decoder(media_type)) {
-    throw std::runtime_error("[MediaDecoder::get_start_time] Cannot get start "
-    "time from this media decoder: No " + std::string(av_get_media_type_string(media_type)) + " stream decoder is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get average "
+    "frame time sec from this media decoder: No {} stream decoder is available",
+    FUNCDINFO, av_get_media_type_string(media_type)));
   }
 
   return this->stream_decoders[media_type]->get_average_frame_time_sec();

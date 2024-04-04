@@ -2,8 +2,10 @@
 
 #include "ffmpeg_error.h"
 #include "avguard.h"
+#include "funcmac.h"
 
 #include <stdexcept>
+#include <fmt/format.h>
 
 extern "C" {
   #include <libavutil/frame.h>
@@ -13,21 +15,25 @@ extern "C" {
 
 VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat dst_pix_fmt, int src_width, int src_height, enum AVPixelFormat src_pix_fmt) {
   if (dst_width <= 0 || dst_height <= 0) {
-    throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have non-zero destination dimensions: "
-    " (got width of " + std::to_string(dst_width) + " and height of " + std::to_string(dst_height) + " )");
+    throw std::runtime_error(fmt::format("[{}] Video Converter must have "
+    "non-zero destination dimensions: (got width of {} and height of {} )",
+    FUNCDINFO, dst_width, dst_height));
   }
 
   if (src_width <= 0 || src_height <= 0) {
-    throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have non-zero source dimensions: "
-    " (got width of " + std::to_string(src_width) + " and height of " + std::to_string(src_height) + " )");
+    throw std::runtime_error(fmt::format("[{}] Video Converter must have "
+    "non-zero source dimensions: (got width of {} and height of {})",
+    FUNCDINFO, src_width, src_height));
   }
 
   if (src_pix_fmt == AV_PIX_FMT_NONE) {
-    throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have defined source pixel format: got AV_PIX_FMT_NONE");
+    throw std::runtime_error(fmt::format("[{}] Video Converter must have "
+    "a defined source pixel format: got AV_PIX_FMT_NONE", FUNCDINFO));
   }
 
   if (dst_pix_fmt == AV_PIX_FMT_NONE) {
-    throw std::runtime_error("[VideoConverter::VideoConverter] Video Converter must have defined dest pixel format: got AV_PIX_FMT_NONE");
+    throw std::runtime_error(fmt::format("[{}] Video Converter must have a "
+    "defined dest pixel format: got AV_PIX_FMT_NONE", FUNCDINFO));
   }
 
   this->m_context = sws_getContext(
@@ -36,7 +42,8 @@ VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat
       SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
 
   if (this->m_context == nullptr) {
-    throw std::runtime_error("[VideoConverter::VideoConverter] Allocation of internal SwsContext of Video Converter failed");
+    throw std::runtime_error(fmt::format("[{}] Allocation of internal "
+    "SwsContext of Video Converter failed", FUNCDINFO));
   }
   
   this->m_dst_width = dst_width;
@@ -57,7 +64,8 @@ void VideoConverter::reset_dst_size(int dst_width, int dst_height) {
       dst_width, dst_height, this->m_dst_pix_fmt, 
       SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
   if (this->m_context == nullptr) {
-    throw std::runtime_error("[VideoConverter::reset_dst_size] Allocation of internal SwsContext of Video Converter failed");
+    throw std::runtime_error(fmt::format("[{}] Allocation of internal "
+    "SwsContext of Video Converter failed", FUNCDINFO));
   }
 
   this->m_dst_width = dst_width;
@@ -71,7 +79,8 @@ VideoConverter::~VideoConverter() {
 AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
   AVFrame* resized_video_frame = av_frame_alloc();
   if (resized_video_frame == nullptr) {
-    throw std::runtime_error("[VideoConverter::convert_video_frame] Could not allocate resized frame for VideoConverter");
+    throw std::runtime_error(fmt::format("[{}] Could not allocate resized "
+    "frame for VideoConverter", FUNCDINFO));
   }
 
   resized_video_frame->format = this->m_dst_pix_fmt;
@@ -85,11 +94,14 @@ AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
   
   int err = av_frame_get_buffer(resized_video_frame, 1); //watch this alignment
   if (err) {
-    throw ffmpeg_error("[VideoConverter::convert_video_frame] Failure on "
-    "allocating buffers for resized video frame", err);
+    throw ffmpeg_error(fmt::format("[{}] Failure on "
+    "allocating buffers for resized video frame", FUNCDINFO), err);
   }
 
-  (void)sws_scale(this->m_context, (uint8_t const * const *)original->data, original->linesize, 0, original->height, resized_video_frame->data, resized_video_frame->linesize);
+  (void)sws_scale(this->m_context,
+    (uint8_t const * const *)original->data, original->linesize, 0,
+    original->height, resized_video_frame->data, resized_video_frame->linesize);
+
   return resized_video_frame;
 }
 

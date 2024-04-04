@@ -9,6 +9,8 @@
 #include "ffmpeg_error.h"
 #include "streamdecoder.h"
 
+#include "funcmac.h"
+
 #include <stdexcept>
 #include <cstdio>
 #include <cstdint>
@@ -18,6 +20,8 @@
 #include <functional>
 #include <utility>
 #include <memory>
+
+#include <fmt/format.h>
 
 extern "C" {
   #include <libavutil/frame.h>
@@ -59,15 +63,17 @@ void PixelData::init_from_avframe(AVFrame* video_frame) {
       case AV_PIX_FMT_RGB24: return RGBColor( video_frame->data[0][row * video_frame->width * 3 + col * 3],
       video_frame->data[0][row * video_frame->width * 3 + col * 3 + 1],
       video_frame->data[0][row * video_frame->width * 3 + col * 3 + 2] );
-      default: throw std::runtime_error("Passed in AVFrame with unimplemeted format, "
-      "only supported formats for initializing from AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24");
+      default: throw std::runtime_error(fmt::format("[{}] Passed in AVFrame "
+      "with unimplemeted format, only supported formats for initializing from "
+      "AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24", FUNCDINFO));
     }
   });
 }
 
 PixelData::PixelData(const std::vector<std::vector<RGBColor>>& raw_rgb_data) {
   if (!is_rectangular_vector_matrix(raw_rgb_data)) {
-    throw std::runtime_error("Cannot initialize pixel data with non-rectangular matrix");
+    throw std::runtime_error(fmt::format("[{}] Cannot initialize pixel data "
+                                    "with non-rectangular matrix", FUNCDINFO));
   }
 
   this->pixels = std::make_shared<std::vector<RGBColor>>();
@@ -80,7 +86,8 @@ PixelData::PixelData(const std::vector<std::vector<RGBColor>>& raw_rgb_data) {
 
 PixelData::PixelData(const std::vector<std::vector<uint8_t> >& raw_grayscale_data) {
   if (!is_rectangular_vector_matrix(raw_grayscale_data)) {
-    throw std::runtime_error("Cannot initialize pixel data with non-rectangular matrix");
+    throw std::runtime_error(fmt::format("[{}]Cannot initialize pixel data "
+                                    "with non-rectangular matrix", FUNCDINFO));
   }
   this->pixels = std::make_shared<std::vector<RGBColor>>();
   this->m_height = raw_grayscale_data.size();
@@ -92,14 +99,20 @@ PixelData::PixelData(const std::vector<std::vector<uint8_t> >& raw_grayscale_dat
 
 PixelData::PixelData(const std::vector<RGBColor>& flat_rgb, int width, int height) {
   if (std::size_t(width * height) != flat_rgb.size()) 
-    throw std::runtime_error("[PixelData::PixelData] Cannot initialize PixelData with innacurate flattened rgb vector: size = " + std::to_string(flat_rgb.size()) + ", given width: " + std::to_string(width) + ", given height: " + std::to_string(height) );
+    throw std::runtime_error(fmt::format("[{}] Cannot initialize PixelData "
+    "with innacurate flattened rgb vector: size = {}, given width: {}, "
+    "given height: {}", FUNCDINFO, flat_rgb.size(), width, height));
+
   this->pixels = std::make_shared<std::vector<RGBColor>>();
   this->init_from_source(width, height, [flat_rgb, width](int row, int col) { return flat_rgb[row * width + col]; } );
 }
 
 PixelData::PixelData(std::shared_ptr<std::vector<RGBColor>> colors, int width, int height) {
-   if (std::size_t(width * height) != colors->size()) 
-    throw std::runtime_error("[PixelData::PixelData] Cannot initialize PixelData with innacurate flattened rgb vector: size = " + std::to_string(colors->size()) + ", given width: " + std::to_string(width) + ", given height: " + std::to_string(height) );
+  if (std::size_t(width * height) != colors->size()) 
+    throw std::runtime_error(fmt::format("[{}] Cannot initialize PixelData "
+    "with innacurate flattened rgb vector: size = {}, given width: {}, "
+    "given height: {}", FUNCDINFO, colors->size(), width, height));
+
   this->pixels = colors;
   this->m_width = width;
   this->m_height = height;
@@ -154,7 +167,8 @@ PixelData PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
   if (amount == 0) {
     return PixelData();
   } else if (amount < 0) {
-    throw std::runtime_error("[PixelData::scale] Scaling Pixel data by negative amount is currently not supported");
+    throw std::runtime_error(fmt::format("[{}] Scaling Pixel data by negative "
+    "amount is currently not supported", FUNCDINFO));
   }
 
   const int new_width = this->get_width() * amount;
@@ -180,7 +194,8 @@ PixelData PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
         }
       }
     } break;
-    default: throw std::runtime_error("[PixelData::scaele] unrecognized scaling function");
+    default: throw std::runtime_error(fmt::format("[{}] unrecognized scaling "
+    "function", FUNCDINFO));
   }
 
   return PixelData(new_pixels, new_width, new_height);
@@ -221,8 +236,9 @@ RGBColor get_avg_color_from_area(const PixelData& pixel_data, double row, double
 
 RGBColor get_avg_color_from_area(const PixelData& pixel_data, int row, int col, int width, int height) {
   if (width * height <= 0) {
-    throw std::runtime_error("Cannot get average color from an area with dimensions: " + 
-    std::to_string(width) + " x " + std::to_string(height) + " Dimensions must be positive");
+    throw std::runtime_error(fmt::format("[{}] Cannot get average color from "
+    "an area with dimensions: ( width: {} height: {} ). Dimensions must be "
+    "positive", FUNCDINFO, width, height));
   }
 
   std::vector<RGBColor> colors;

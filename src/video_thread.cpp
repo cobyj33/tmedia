@@ -7,11 +7,14 @@
 #include "scale.h"
 #include "wtime.h"
 #include "videoconverter.h"
+#include "funcmac.h"
 
 #include <mutex>
 #include <memory>
 #include <stdexcept>
 #include <chrono>
+
+#include <fmt/format.h>
 
 extern "C" {
 #include <libavutil/version.h>
@@ -61,7 +64,8 @@ void MediaFetcher::video_fetching_thread_func() {
       case MediaType::IMAGE: this->frame_image_fetching_func(); break;
       case MediaType::VIDEO: this->frame_video_fetching_func(); break;
       case MediaType::AUDIO: this->frame_audio_fetching_func(); break;
-      default: throw std::runtime_error("[MediaFetcher::video_fetching_thread] Could not identify media type");
+      default: throw std::runtime_error(fmt::format("[{}] Could not identify "
+                                                    "media type", FUNCDINFO));
     }
   } catch (std::exception const& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);

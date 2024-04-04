@@ -5,8 +5,10 @@
 #include "tmcurses.h"
 #include "formatting.h"
 #include "metadata.h"
+#include "funcmac.h"
 
 #include <stdexcept>
+#include <fmt/format.h>
 
 extern "C" {
   #include <curses.h>
@@ -144,7 +146,7 @@ const char* loop_type_str_short(LoopType loop_type) {
     case LoopType::REPEAT: return "R";
     case LoopType::REPEAT_ONE: return "RO";
   }
-  throw std::runtime_error("[loop_type_str_short] Could not identify loop_type");
+  throw std::runtime_error(fmt::format("[{}] Could not identify loop_type", FUNCDINFO));
 }
 
 std::string get_media_file_display_name(std::string abs_path, MetadataCache& metadata_cache) {

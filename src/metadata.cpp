@@ -2,6 +2,9 @@
 
 #include "formatting.h"
 #include "boiler.h"
+#include "funcmac.h"
+
+#include <fmt/format.h>
 
 #include <stdexcept>
 #include <map>
@@ -33,9 +36,11 @@ bool metadata_cache_has(std::string file, std::string key, MetadataCache& cache)
 std::string metadata_cache_get(std::string file, std::string key, MetadataCache& cache) {
   if (!metadata_cache_has(file, key, cache)) {
     if (metadata_cache_has_file(file, cache)) {
-      throw std::runtime_error("[metadata_cache_get] could not find key " + key + " in file " + file + " in metadata cache");
+      throw std::runtime_error(fmt::format("[{}] could not find key (\"{}\") "
+      "in file (\"{}\") in metadata cache", FUNCDINFO, key, file));
     }
-    throw std::runtime_error("[metadata_cache_get] could not find file " + file + " in metadata cache");
+    throw std::runtime_error(fmt::format("[{}] could not find file (\"{}\") in "
+    "metadata cache", FUNCDINFO, file));
   }
   return cache[file][key];
 }

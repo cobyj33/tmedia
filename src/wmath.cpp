@@ -1,9 +1,12 @@
 #include "wmath.h"
 
+#include "funcmac.h"
+
 #include <cmath>
 #include <stdexcept>
 #include <string>
 
+#include <fmt/format.h>
 
 int signum(int num) {
   if (num < 0) return -1;
@@ -69,5 +72,6 @@ int digit_char_to_int(char num_char) {
   if (num_char >= '0' && num_char <= '9') {
     return (int)num_char - 48;
   }
-  throw std::runtime_error("Attempted to convert non-digit ascii character to number, " + std::to_string(num_char));
+  throw std::runtime_error(fmt::format("[{}] Attempted to convert non-digit "
+  "character to number: {}", FUNCDINFO, num_char));
 }

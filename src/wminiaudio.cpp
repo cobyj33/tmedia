@@ -1,8 +1,11 @@
 #include "wminiaudio.h"
 
 #include "wmath.h"
+#include "funcmac.h"
 
 #include <stdexcept>
+
+#include <fmt/format.h>
 
 extern "C" {
 #include <miniaudio.h>
@@ -21,13 +24,16 @@ extern "C" {
 
 ma_device_w::ma_device_w(const ma_device_config *pConfig) {
   if (pConfig == nullptr) {
-    throw std::invalid_argument("[ma_device_w::ma_device_w] config must not be null");
+    throw std::invalid_argument(fmt::format("[{}] config must not be null", 
+    FUNCDINFO));
   }
 
   ma_result log = ma_device_init(nullptr, pConfig, &this->device);
   if (log != MA_SUCCESS) {
-    throw std::runtime_error("[ma_device_w::ma_device_w] Failed to initialize audio device: " + std::string(ma_result_description(log)));
+    throw std::runtime_error(fmt::format("[{}] Failed to initialize audio "
+    "device: {}.", FUNCDINFO, ma_result_description(log)));
   }
+
   this->config_cache = *pConfig;
   this->volume_cache = 1.0;
   this->m_playing = false;
@@ -38,14 +44,16 @@ void ma_device_w::start() {
   if (device_state == ma_device_state_uninitialized) {
     ma_result log = ma_device_init(nullptr, &this->config_cache, &this->device);
     if (log != MA_SUCCESS) {
-      throw std::runtime_error("[ma_device_w::start] Failed to reinitialize audio device: " + std::string(ma_result_description(log)));
+      throw std::runtime_error(fmt::format("[{}] Failed to reinitialize audio "
+      "device: {}", FUNCDINFO, ma_result_description(log)));
     }
     this->set_volume(this->volume_cache);
   }
 
   ma_result log = ma_device_start(&this->device);
   if (log != MA_SUCCESS) {
-    throw std::runtime_error("[ma_device_w::start] Failed to start playback: Miniaudio Error: " + std::string(ma_result_description(log)));
+    throw std::runtime_error(fmt::format("[{}] Failed to start playback: "
+    "Miniaudio Error: {}", FUNCDINFO, ma_result_description(log)));
   }
 
   this->m_playing = true;
@@ -70,7 +78,8 @@ double ma_device_w::get_volume() const {
   float res;
   ma_result err = ma_device_get_master_volume((ma_device*)&this->device, &res);
   if (err != MA_SUCCESS) {
-    throw std::runtime_error("[ma_device_w::get_volume] Failed to get miniaudio volume: Miniaudio Error: " + std::string(ma_result_description(err)));
+    throw std::runtime_error(fmt::format("[{}] Failed to get miniaudio volume: "
+    "Miniaudio Error: {}.", FUNCDINFO, ma_result_description(err)));
   }
 
   return res;

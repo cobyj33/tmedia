@@ -1,10 +1,11 @@
 #include "ascii.h" 
 
 #include "pixeldata.h"
+#include "funcmac.h"
+
+#include <fmt/format.h>
 
 #include <stdexcept>
-#include "funcmac.h"
-#include <fmt/format.h>
 
 extern "C" {
 #include <libavutil/avutil.h>

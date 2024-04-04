@@ -1,7 +1,9 @@
 #include "decode.h"
 
 #include "ffmpeg_error.h"
+#include "funcmac.h"
 
+#include <fmt/format.h>
 #include <vector>
 #include <deque>
 #include <stdexcept>
@@ -114,7 +116,9 @@ std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::de
       switch (packet_type) {
         case AVMEDIA_TYPE_AUDIO: decoded_frames = decode_audio_packet(codec_context, packet); break;
         case AVMEDIA_TYPE_VIDEO: decoded_frames = decode_video_packet(codec_context, packet); break;
-        default: throw std::runtime_error("[decode_packet_queue] Could not decode packet queue of unimplemented AVMediaType " + std::string(av_get_media_type_string(packet_type)));
+        default: throw std::runtime_error(fmt::format("[{}] Could not decode "
+          "packet queue of unimplemented AVMediaType {}.",
+          FUNCDINFO, av_get_media_type_string(packet_type)));
       }
     } catch (ffmpeg_error const& e) {
       if (e.get_averror() != AVERROR(EAGAIN)) { // if error is fatal, or the packet list is empty

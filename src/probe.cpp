@@ -3,10 +3,13 @@
 #include "ffmpeg_error.h"
 #include "boiler.h"
 #include "formatting.h"
+#include <funcmac.h>
 
 #include <string>
 #include <stdexcept>
 #include <filesystem>
+
+#include <fmt/format.h>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -20,7 +23,7 @@ AVProbeFileRet av_probe_file(std::filesystem::path path) {
   AVIOContext* avio_ctx;
   int ret = avio_open(&avio_ctx, path.c_str(), AVIO_FLAG_READ);
   if (ret < 0) {
-    throw ffmpeg_error("[av_probe_file] avio_open failure", ret);
+    throw ffmpeg_error(fmt::format("[{}] avio_open failure", FUNCDINFO), ret);
   }
 
   #if AVFORMAT_CONST_AVIOFORMAT
@@ -34,7 +37,8 @@ AVProbeFileRet av_probe_file(std::filesystem::path path) {
   res.avif = avif;
  
   if (res.score < 0) {
-    throw ffmpeg_error("[av_probe_file] av_probe_input_buffer2 failure", res.score);
+    throw ffmpeg_error(fmt::format("[{}] av_probe_input_buffer2 failure",
+    FUNCDINFO), res.score);
   }
 
   return res;

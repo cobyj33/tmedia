@@ -5,6 +5,9 @@
 #include "boiler.h"
 #include "ffmpeg_error.h"
 #include "avguard.h"
+#include "funcmac.h"
+
+#include <fmt/format.h>
 
 #include <vector>
 #include <stdexcept>
@@ -25,7 +28,8 @@ StreamDecoder::StreamDecoder(AVFormatContext* fmt_ctx, enum AVMediaType media_ty
   int stream_index = -1;
   stream_index = av_find_best_stream(fmt_ctx, media_type, -1, -1, &decoder, 0);
   if (stream_index < 0) {
-    throw std::runtime_error("[StreamDecoder::StreamDecoder] Cannot find media type for type " + std::string(av_get_media_type_string(media_type)));
+    throw std::runtime_error(fmt::format("[{}] Cannot find media type for "
+    "type: {}", FUNCDINFO, av_get_media_type_string(media_type)));
   }
 
   this->decoder = decoder;
@@ -33,19 +37,24 @@ StreamDecoder::StreamDecoder(AVFormatContext* fmt_ctx, enum AVMediaType media_ty
   this->codec_context = avcodec_alloc_context3(this->decoder);
 
   if (this->codec_context == nullptr) {
-    throw std::runtime_error("[StreamDecoder::StreamDecoder] Could not create codec context from decoder: " + std::string(decoder->long_name));
+    throw std::runtime_error(fmt::format("[{}] Could not create codec context "
+    "from decoder: {}", FUNCDINFO, decoder->long_name));
   }
 
   this->media_type = media_type;
 
   int result = avcodec_parameters_to_context(this->codec_context, this->stream->codecpar);
   if (result < 0) {
-    throw std::runtime_error("[StreamDecoder::StreamDecoder] Could not move AVCodec parameters into context: AVERROR error code " + av_strerror_string(result));
+    throw std::runtime_error(fmt::format("[{}] Could not move AVCodec "
+    "parameters into context: AVERROR error code {}",
+    FUNCDINFO, av_strerror_string(result)));
   }
 
   result = avcodec_open2(this->codec_context, this->decoder, NULL);
   if (result < 0) {
-    throw std::runtime_error("[StreamDecoder::StreamDecoder] Could not initialize AVCodecContext with AVCodec decoder: AVERROR error code " + av_strerror_string(result));
+    throw std::runtime_error(fmt::format("[{}] Could not initialize "
+    "AVCodecContext with AVCodec decoder: AVERROR error code {}",
+    FUNCDINFO, av_strerror_string(result)));
   }
 };
 
@@ -103,8 +112,9 @@ std::vector<AVFrame*> StreamDecoder::decode_next() {
     } catch (ffmpeg_error const& e) {
       decoding_error_thrown = true;
       if (i >= ALLOWED_FAILURES) {
-        throw std::runtime_error("[StreamDecoder::decode_next] Could not decode next " + 
-        std::string(av_get_media_type_string(this->media_type)) + " packet: " + std::string(e.what()));
+        throw std::runtime_error(fmt::format("[{}] Could not decode next {} "
+        "packet: {}", FUNCDINFO, av_get_media_type_string(this->media_type),
+        e.what()));
       }
     }
 

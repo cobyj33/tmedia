@@ -7,12 +7,15 @@
 #include "formatting.h"
 #include "audioresampler.h"
 #include "audio_visualizer.h"
+#include "funcmac.h"
 
 #include <string>
 #include <memory>
 #include <thread>
 #include <mutex>
 #include <set>
+
+#include <fmt/format.h>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -40,7 +43,8 @@ MediaFetcher::MediaFetcher(std::filesystem::path path) {
 
 void MediaFetcher::dispatch_exit(std::string err) {
   if (err.length() == 0)
-    throw std::runtime_error("[MediaFetcher::set_error] Cannot set error with empty string");
+    throw std::runtime_error(fmt::format("[{}] Cannot set error "
+    "with empty string", FUNCDINFO));
   this->error = err;
   this->dispatch_exit();
 }
@@ -58,19 +62,22 @@ bool MediaFetcher::should_exit() {
 
 bool MediaFetcher::is_playing() {
   if (this->media_type == MediaType::IMAGE)
-    throw std::runtime_error("[MediaFetcher::is_playing] Cannot check playing state of Image media file");
+    throw std::runtime_error(fmt::format("[{}] Cannot check playing state of "
+    "Image media file", FUNCDINFO));
   return this->clock.is_playing();
 }
 
 void MediaFetcher::pause(double current_system_time) {
   if (this->media_type == MediaType::IMAGE)
-    throw std::runtime_error("[MediaFetcher::pause] Cannot pause image media file");
+    throw std::runtime_error(fmt::format("[{}] Cannot pause image media file",
+    FUNCDINFO));
   this->clock.stop(current_system_time);
 }
 
 void MediaFetcher::resume(double current_system_time) {
   if (this->media_type == MediaType::IMAGE)
-    throw std::runtime_error("[MediaFetcher::pause] Cannot resume image media file");
+    throw std::runtime_error(fmt::format("[{}] Cannot resume image media file",
+    FUNCDINFO));
   this->clock.resume(current_system_time);
   std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
   this->resume_cond.notify_all();
@@ -82,7 +89,8 @@ bool MediaFetcher::has_error() const noexcept {
 
 std::string MediaFetcher::get_error() {
   if (!this->error.has_value())
-    throw std::runtime_error("[MediaFetcher::get_error] Cannot get error when no error is available");
+    throw std::runtime_error(fmt::format("[{}] Cannot get error when no error "
+    "is available", FUNCDINFO));
   return *this->error;
 }
 
@@ -123,10 +131,11 @@ double MediaFetcher::get_desync_time(double current_system_time) const {
  * For threadsafety, both alter_mutex must be locked
 */
 int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
-  
   if (target_time < 0.0 || target_time > this->get_duration()) {
-    throw std::runtime_error("Could not jump to time " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(target_time) + " seconds ) "
-    ", time is out of the bounds of duration " + format_time_hh_mm_ss(target_time) + " ( " + std::to_string(this->get_duration()) + " seconds )");
+    throw std::runtime_error(fmt::format("[{}] Could not jump to time {} ({} "
+    "seconds). Time is out of the bounds of duration {} ( {} seconds )",
+    FUNCDINFO, format_time_hh_mm_ss(target_time), target_time,
+    format_time_hh_mm_ss(this->get_duration()), this->get_duration()));
   }
 
   const double original_time = this->get_time(current_system_time);

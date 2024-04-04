@@ -15,8 +15,10 @@
 #include "tmedia_tui_elems.h"
 #include "maaudioout.h"
 #include "palette.h"
+#include "funcmac.h"
 
 #include "readerwritercircularbuffer.h"
+#include <fmt/format.h>
 
 #include <memory>
 #include <vector>
@@ -31,6 +33,7 @@
 #include <algorithm>
 #include <mutex>
 #include <atomic>
+
 
 extern "C" {
   #include <curses.h>
@@ -304,7 +307,8 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
     fetcher.join(system_clock_sec());
     if (fetcher.has_error()) {
-      throw std::runtime_error("[tmedia]: Media Fetcher Error: " + fetcher.get_error());
+      throw std::runtime_error(fmt::format("[{}]: Media Fetcher Error: {}",
+      FUNCDINFO, fetcher.get_error()));
     }
 
     //flush getch

@@ -12,6 +12,9 @@
 #include <stdexcept>
 #include <string>
 
+#include <fmt/format.h>
+#include "funcmac.h"
+
 extern "C" {
 #include <curses.h>
 }
@@ -20,7 +23,8 @@ bool ncurses_initialized = false;
 
 void ncurses_init() {
   if (ncurses_initialized) {
-    throw std::runtime_error("ncurses attempted to be initialized although it has already been initialized");
+    throw std::runtime_error(fmt::format("[{}] ncurses attempted to be "
+    "initialized although it has already been initialized", FUNCDINFO));
   }
   ncurses_initialized = true;
   initscr();
@@ -46,7 +50,8 @@ bool ncurses_is_initialized() {
 
 void ncurses_uninit() {
   if (!ncurses_initialized) {
-    throw std::runtime_error("ncurses attempted to be uninitialized although it has never been initialized");
+    throw std::runtime_error(fmt::format("[{}] ncurses attempted to be "
+    "uninitialized although it has never been initialized", FUNCDINFO));
   }
   ncurses_initialized = false;
   erase();

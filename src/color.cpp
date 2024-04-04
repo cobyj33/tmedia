@@ -1,6 +1,10 @@
 #include "color.h"
 
 #include "wmath.h"
+#include "funcmac.h"
+
+#include <fmt/format.h>
+
 
 #include <cmath>
 #include <vector>
@@ -27,7 +31,8 @@ double RGBColor::distance(const RGBColor& other) const {
 
 RGBColor get_average_color(std::vector<RGBColor>& colors) {
   if (colors.size() == 0) {
-    throw std::runtime_error("Cannot find average color value of empty vector");
+    throw std::runtime_error(fmt::format("[{}] Cannot find average color value "
+    "of empty vector", FUNCDINFO));
   }
 
   int sums[3] = {0, 0, 0};
@@ -80,7 +85,8 @@ RGBColor find_closest_color(RGBColor& input, std::vector<RGBColor>& colors) {
 
 int find_closest_color_index(RGBColor& input, std::vector<RGBColor>& colors) {
   if (colors.size() == 0) {
-    throw std::runtime_error("Cannot find closest color index, colors list is empty ");
+    throw std::runtime_error(fmt::format("[{}] Cannot find closest color "
+    "index, colors list is empty", FUNCDINFO));
   }
 
   int best_color = 0;

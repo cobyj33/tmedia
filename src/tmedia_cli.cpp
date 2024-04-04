@@ -9,6 +9,7 @@
 #include "probe.h"
 #include "boiler.h"
 #include "pixeldata.h"
+#include "funcmac.h"
 
 #include <natural_sort.hpp>
 
@@ -20,6 +21,8 @@
 #include <iostream>
 #include <charconv>
 #include <stack>
+
+#include <fmt/format.h>
 
 extern "C" {
   #include <curses.h>
@@ -277,19 +280,20 @@ extern "C" {
           } else if (argparse_map.count(fullopt) == 1) {
             argparse_map[fullopt](ps, parsed_cli[i]);
           } else {
-            throw std::runtime_error("[tmedia_parse_cli] Unrecognized option: " + fullopt);
+            throw std::runtime_error(fmt::format("[{}] Unrecognized option: ",
+            FUNCDINFO, fullopt));
           }
         } break;
       }
     }
 
     if (ps.paths.size() == 0UL) {
-      throw std::runtime_error("[tmedia_parse_cli] No paths entered");
+      throw std::runtime_error(fmt::format("[{}] No paths entered", FUNCDINFO));
     }
 
     ps.tmss.media_files = resolve_cli_paths(ps.paths, ps.search_options);
     if (ps.tmss.media_files.size() == 0UL) {
-      throw std::runtime_error("[tmedia_parse_cli] No media files found.");
+      throw std::runtime_error(fmt::format("[{}] No media files found.", FUNCDINFO));
     }
 
     if (ps.colored)
@@ -375,11 +379,13 @@ extern "C" {
     try {
       res = strtoi32(arg.param);
     } catch (const std::runtime_error& err) {
-      throw std::runtime_error("[tmedia_cli_arg_refresh_rate] Could not parse param " + arg.param + " as integer: " + err.what());
+      throw std::runtime_error(fmt::format("[{}] Could not parse param {} as "
+      "integer: {}", FUNCDINFO, arg.param, err.what()));
     }
 
     if (res <= 0) {
-      throw std::runtime_error("[tmedia_cli_arg_refresh_rate] refresh rate must be greater than 0. (got " + std::to_string(res) + ")");
+      throw std::runtime_error(fmt::format("[{}] refresh rate must be greater "
+      "than 0. (got {})", FUNCDINFO, res));
     }
 
     ps.tmss.refresh_rate_fps = res;
@@ -395,11 +401,13 @@ extern "C" {
     try {
       volume = parse_percentage(arg.param);
     } catch (const std::runtime_error& err) {
-      throw std::runtime_error("[tmedia_cli_arg_volume] Could not parse parameter " + arg.param + " as a percentage value: " + err.what());
+      throw std::runtime_error(fmt::format("[{}] Could not parse parameter {} "
+      "as a percentage value: {}", FUNCDINFO, arg.param, err.what()));
     }
 
     if (volume < 0.0 || volume > 1.0) {
-      throw std::runtime_error("[tmedia_cli_arg_volume] Volume out of bounds 0.0 to 1.0");
+      throw std::runtime_error(fmt::format("[{}] Volume out of bounds "
+      " [0.0, 1.0] (got {})", FUNCDINFO, volume));
     }
 
     ps.tmss.volume = volume;
@@ -495,7 +503,8 @@ extern "C" {
       to_search.pop();
 
       if (!std::filesystem::exists(curr, ec)) {
-        throw std::runtime_error("[resolve_cli_path] Cannot open nonexistent path: " + path.string());
+        throw std::runtime_error(fmt::format("[{}] Cannot open nonexistent "
+        "path: {}", FUNCDINFO, path.string()));
       }
 
       if (std::filesystem::is_directory(curr, ec)) {
