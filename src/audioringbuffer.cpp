@@ -23,7 +23,7 @@ AudioRingBuffer::AudioRingBuffer(int frame_capacity, int nb_channels, int sample
   this->m_tail = 1;
   this->m_size_frames = frame_capacity;
   this->m_size_samples = frame_capacity * nb_channels;
-  this->m_ring_buffer.reserve(this->m_size_samples);
+  this->rb.reserve(this->m_size_samples);
 
   this->m_start_time = playback_start_time;
   this->m_sample_rate = sample_rate;
@@ -95,7 +95,7 @@ void AudioRingBuffer::read_into(int nb_frames, float* out) {
   }
 
   for (int i = 0; i < nb_frames * this->m_nb_channels; i++) {
-    out[i] = this->m_ring_buffer[this->m_head];
+    out[i] = this->rb[this->m_head];
     this->m_head++;
     if (this->m_head >= this->m_size_samples) this->m_head = 0;
   }
@@ -134,7 +134,7 @@ void AudioRingBuffer::write_into(int nb_frames, float* in) {
   }
 
   for (int i = 0; i < nb_frames * this->m_nb_channels; i++) {
-    this->m_ring_buffer[this->m_tail] = in[i];
+    this->rb[this->m_tail] = in[i];
     this->m_tail++;
     if (this->m_tail >= this->m_size_samples) this->m_tail = 0;
   }

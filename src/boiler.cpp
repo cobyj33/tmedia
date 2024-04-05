@@ -141,10 +141,10 @@ std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat) {
   }
 
   if (iformat->mime_type != nullptr) {
-    std::vector<std::string> mime_types = strsplit(iformat->mime_type, ',');
+    std::vector<std::string_view> mime_types = strvsplit(iformat->mime_type, ',');
     std::optional<MediaType> resolved_media_type = std::nullopt;
 
-    for (const std::string& str : mime_types) {
+    for (const std::string_view str : mime_types) {
       std::optional<MediaType> current_media_type = media_type_from_mime_type(str);
       if (current_media_type.has_value() && resolved_media_type.has_value() && resolved_media_type != current_media_type) {
         resolved_media_type = std::nullopt;

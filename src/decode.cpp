@@ -15,7 +15,7 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-void clear_av_frame_list(std::vector<AVFrame*>& frame_list) {
+void clear_avframe_list(std::vector<AVFrame*>& frame_list) {
   for (std::size_t i = 0; i < frame_list.size(); i++) {
     av_frame_free(&(frame_list[i]));
   }
@@ -45,7 +45,7 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
       if (result == AVERROR(EAGAIN) && !video_frames.empty()) break;
 
       av_frame_free(&video_frame);
-      clear_av_frame_list(video_frames);
+      clear_avframe_list(video_frames);
       throw ffmpeg_error(fmt::format("[{}] error while receiving video "
       "frames during decoding: ", FUNCDINFO), result);
     }
@@ -53,7 +53,7 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
     AVFrame* saved_frame = av_frame_alloc();
     if (saved_frame == nullptr) {
       av_frame_free(&video_frame);
-      clear_av_frame_list(video_frames);
+      clear_avframe_list(video_frames);
       throw ffmpeg_error("[decode_video_packet] Could not allocate saved_frame, no memory", AVERROR(ENOMEM));
     }
 
@@ -61,7 +61,7 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
     if (result < 0) {
       av_frame_free(&saved_frame);
       av_frame_free(&video_frame);
-      clear_av_frame_list(video_frames);
+      clear_avframe_list(video_frames);
       throw ffmpeg_error(fmt::format("[{}] error while referencing video "
       "frames during decoding: ", FUNCDINFO), result);
     }
@@ -99,7 +99,7 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
       if (result == AVERROR(EAGAIN) && !audio_frames.empty()) break;
 
       av_frame_free(&audio_frame);
-      clear_av_frame_list(audio_frames);
+      clear_avframe_list(audio_frames);
       throw ffmpeg_error(fmt::format("[{}] error while receiving audio "
       "frames during decoding: ", FUNCDINFO), result);
     }
@@ -107,14 +107,14 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
     AVFrame* saved_frame = av_frame_alloc();
     if (saved_frame == nullptr) {
       av_frame_free(&audio_frame);
-      clear_av_frame_list(audio_frames);
+      clear_avframe_list(audio_frames);
       throw ffmpeg_error("[decode_audio_packet] Could not allocate "
       "saved_frame, no memory", AVERROR(ENOMEM));
     } 
 
     result = av_frame_ref(saved_frame, audio_frame); 
     if (result < 0) {
-      clear_av_frame_list(audio_frames);
+      clear_avframe_list(audio_frames);
       av_frame_free(&saved_frame);
       av_frame_free(&audio_frame);
       throw ffmpeg_error(fmt::format("[{}] error while referencing audio "
@@ -130,7 +130,7 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
 }
 
 std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::deque<AVPacket*>& packet_queue, enum AVMediaType packet_type) {
-  std::vector<AVFrame*> decoded_frames;
+  std::vector<AVFrame*> dec_frames;
 
   while (!packet_queue.empty()) {
     AVPacket* packet = packet_queue.front();
@@ -138,8 +138,8 @@ std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::de
 
     try {
       switch (packet_type) {
-        case AVMEDIA_TYPE_AUDIO: decoded_frames = decode_audio_packet(codec_context, packet); break;
-        case AVMEDIA_TYPE_VIDEO: decoded_frames = decode_video_packet(codec_context, packet); break;
+        case AVMEDIA_TYPE_AUDIO: dec_frames = decode_audio_packet(codec_context, packet); break;
+        case AVMEDIA_TYPE_VIDEO: dec_frames = decode_video_packet(codec_context, packet); break;
         default: throw std::runtime_error(fmt::format("[{}] Could not decode "
           "packet queue of unimplemented AVMediaType {}.",
           FUNCDINFO, av_get_media_type_string(packet_type)));
@@ -152,10 +152,10 @@ std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::de
     }
     
     av_packet_free(&packet);
-    if (decoded_frames.size() > 0) {
-      return decoded_frames;
+    if (dec_frames.size() > 0) {
+      return dec_frames;
     }
   }
 
-  return decoded_frames;
+  return dec_frames;
 }

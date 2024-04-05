@@ -26,33 +26,10 @@ namespace tmedia {
     int nextIndex;
   };
 
-  struct LongOptPrefixConsumeRes {
-    int nextIndex;
-    std::string prefix;
-  };
-
-  LongOptPrefixConsumeRes cli_longopt_prefix_consume(char* arg) {
-    LongOptPrefixConsumeRes res;
-    if (arg[0] == '-' && arg[1] == '-') {
-      res.prefix = "--";
-      res.nextIndex = 2;
-    }
-    else if (arg[0] == ':') {
-      res.prefix = ":";
-      res.nextIndex = 1;
-    } else {
-      throw std::runtime_error(fmt::format("[{}] Could not parse cli longopt "
-      "prefix for arg: {}", FUNCDINFO, arg));
-    }
-
-    return res;
-  }
-
-  LongOptParseRes cli_longopt_parse(int argc, char** argv, int index, std::vector<std::string> longopts_with_args) {
+  LongOptParseRes cli_longopt_parse(int argc, char** argv, int index, const std::vector<std::string>& longopts_with_args) {
     LongOptParseRes res;
     res.nextIndex = index + 1;
     res.arg.arg_type = CLIArgType::OPTION;
-    bool defer_param = true;
 
     int i = 0;
 
@@ -72,7 +49,7 @@ namespace tmedia {
     }
 
     if (std::find(longopts_with_args.begin(), longopts_with_args.end(), res.arg.value) != longopts_with_args.end()) {
-      defer_param = argv[index][i] != '=';
+      bool defer_param = argv[index][i] != '=';
       
       if (defer_param) { // read next arg as param
         if (res.nextIndex >= argc) {
@@ -91,9 +68,7 @@ namespace tmedia {
           throw std::runtime_error(fmt::format("[{}] param not found for long "
           "option after '=' {}.", FUNCDINFO, argv[index]));
         }
-
       }
-
     } else {
       if (argv[index][i] == '=') {
         throw std::runtime_error(fmt::format("[{}] Attempted to add param to "
@@ -109,7 +84,7 @@ namespace tmedia {
     int nextIndex;  
   };
 
-  ShortOptParseRes cli_shortopt_parse(int argc, char** argv, int index, std::string shortopts_with_args) {
+  ShortOptParseRes cli_shortopt_parse(int argc, char** argv, int index, std::string_view shortopts_with_args) {
     ShortOptParseRes res;
     res.nextIndex = index + 1;
     bool defer_param = false;
@@ -120,11 +95,8 @@ namespace tmedia {
         throw std::runtime_error(fmt::format("[{}] shortopt must be an "
         "alphabetical character: {} ({})", FUNCDINFO, shortopt, argv[index]));
       }
-
-      CLIArg arg;
-      arg.value = shortopt;
-      arg.arg_type = CLIArgType::OPTION;
-      arg.prefix = "-";
+      
+      CLIArg arg(std::string(1, shortopt), CLIArgType::OPTION, "-", "");
 
       res.args.push_back(arg);
       if (shortopts_with_args.find(shortopt) != std::string::npos) {
@@ -152,7 +124,7 @@ namespace tmedia {
     return posarg;
   }
 
-  std::vector<CLIArg> cli_parse(int argc, char** argv, std::string shortopts_with_args, std::vector<std::string> longopts_with_args) {
+  std::vector<CLIArg> cli_parse(int argc, char** argv, std::string_view shortopts_with_args, const std::vector<std::string>& longopts_with_args) {
     std::vector<CLIArg> args;
     int since_opt_stopper = -1;
     

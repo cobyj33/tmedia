@@ -1,12 +1,12 @@
 #ifndef TMEDIA_VOM_H
 #define TMEDIA_VOM_H
 
-enum class VideoOutputMode {
-  COLORED,
-  GRAYSCALE,
-  COLORED_BACKGROUND_ONLY,
-  GRAYSCALE_BACKGROUND_ONLY,
-  TEXT_ONLY,
+enum class VidOutMode {
+  PLAIN,
+  COLOR,
+  GRAY,
+  COLOR_BG,
+  GRAY_BG
 };
 
 

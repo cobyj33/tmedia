@@ -20,34 +20,34 @@ int signum(double num) {
   return 0;
 }
 
-int clamp(int value, int bounds_1, int bounds_2) {
-  int lower = std::min(bounds_1, bounds_2);
-  int upper = std::max(bounds_1, bounds_2);
-  return std::max(lower, std::min(upper, value));
+int clamp(int val, int b1, int b2) {
+  int lower = std::min(b1, b2);
+  int upper = std::max(b1, b2);
+  return std::max(lower, std::min(upper, val));
 }
 
-double clamp(double value, double bounds_1, double bounds_2) {
-  double lower = std::min(bounds_1, bounds_2);
-  double upper = std::max(bounds_1, bounds_2);
-  return std::max(lower, std::min(upper, value));
+double clamp(double val, double b1, double b2) {
+  double lower = std::min(b1, b2);
+  double upper = std::max(b1, b2);
+  return std::max(lower, std::min(upper, val));
 }
 
-long clamp(long value, long bounds_1, long bounds_2) {
-  long lower = std::min(bounds_1, bounds_2);
-  long upper = std::max(bounds_1, bounds_2);
-  return std::max(lower, std::min(upper, value));
+long clamp(long val, long b1, long b2) {
+  long lower = std::min(b1, b2);
+  long upper = std::max(b1, b2);
+  return std::max(lower, std::min(upper, val));
 }
 
-bool in_range(int value, int bounds_1, int bounds_2) {
-  return std::min(bounds_1, bounds_2) <= value && std::max(bounds_1, bounds_2) >= value;
+bool in_range(int val, int b1, int b2) {
+  return std::min(b1, b2) <= val && std::max(b1, b2) >= val;
 }
 
-bool in_range(double value, double bounds_1, double bounds_2) {
-  return std::min(bounds_1, bounds_2) <= value && std::max(bounds_1, bounds_2) >= value;
+bool in_range(double val, double b1, double b2) {
+  return std::min(b1, b2) <= val && std::max(b1, b2) >= val;
 }
 
-bool in_range(long value, long bounds_1, long bounds_2) {
-  return std::min(bounds_1, bounds_2) <= value && std::max(bounds_1, bounds_2) >= value;
+bool in_range(long val, long b1, long b2) {
+  return std::min(b1, b2) <= val && std::max(b1, b2) >= val;
 }
 
 int get_next_nearest_perfect_square(double num) {

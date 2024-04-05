@@ -40,8 +40,22 @@ enum class TMNCursesColorPalette {
   GRAYSCALE
 };
 
+/**
+ * This should be called before ncurses is used at all within tmedia
+*/
 void ncurses_init();
+
+/**
+ * Way to check if ncurses_init() has been called and succeeded.
+ * (assuming ncurses_uninit() hasn't been called ofc)
+*/
 bool ncurses_is_initialized();
+
+/**
+ * This should be called
+ * 
+ * No-ops if tmcurses was not initalized with ncurses_init previously
+*/
 void ncurses_uninit();
 
 enum class TMAlign {

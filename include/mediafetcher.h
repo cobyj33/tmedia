@@ -28,7 +28,7 @@ extern "C" {
    * 
    * alter_mutex - General mutations to the MediaFetcher
    * 
-   * exit_notify_mutex - Mutex specifically for the exit_cond to notify sleeping threads
+   * ex_noti_mtx - Mutex specifically for the exit_cond to notify sleeping threads
    * that the MediaFetcher has been sent an exit dispatch 
    * 
    * resume_notify_mutex - Mutex specifically for the resume_cond to tell sleeping
@@ -62,7 +62,7 @@ class MediaFetcher {
     std::optional<std::string> error;
     std::unique_ptr<Visualizer> audio_visualizer;
 
-    std::mutex exit_notify_mutex;
+    std::mutex ex_noti_mtx;
     std::condition_variable exit_cond;
 
     std::mutex resume_notify_mutex;
@@ -71,12 +71,12 @@ class MediaFetcher {
   public:
 
     MediaType media_type;
-    std::unique_ptr<MediaDecoder> media_decoder;
+    std::unique_ptr<MediaDecoder> mdec;
     std::unique_ptr<BlockingAudioRingBuffer> audio_buffer;
     PixelData frame;
 
     std::mutex alter_mutex;
-    std::optional<VideoDimensions> requested_frame_dims;
+    std::optional<Dim2> req_dims;
 
     MediaFetcher(std::filesystem::path path);
 

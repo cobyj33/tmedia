@@ -44,7 +44,7 @@ class MediaDecoder {
     double get_start_time(enum AVMediaType media_type); // Thread-Safe
     int get_avg_frame_time(enum AVMediaType media_type); // Thread-Safe
     double get_time_base(enum AVMediaType media_type); // Thread-Safe
-    double get_average_frame_time_sec(enum AVMediaType media_type); // Thread-Safe
+    double get_avgfts(enum AVMediaType media_type); // Thread-Safe
 
     // video getters
     int get_width(); // Thread-Safe

@@ -87,8 +87,8 @@ extern "C" {
   "    --chars [STRING]       The displayed characters from darkest to lightest\n"
   "\n"
   "  Audio Output: \n"
-  "    --volume               Set initial volume (must be between 0.0 and 1.0) \n"
-  "    -m, --mute, --muted    Mute the audio playback \n"
+  "    --volume [FLOAT] || [INT%] Set initial volume [0.0, 1.0] or [0%, 100%] \n"
+  "    -m, --mute, --muted        Mute the audio playback \n"
 
   "  Playlist Controls: \n"
   "    --no-repeat            Do not repeat the playlist upon end\n"
@@ -192,7 +192,7 @@ extern "C" {
     ps.tmss.refresh_rate_fps = 24;
     ps.tmss.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
     ps.tmss.loop_type = LoopType::NO_LOOP;
-    ps.tmss.vom = VideoOutputMode::TEXT_ONLY;
+    ps.tmss.vom = VidOutMode::PLAIN;
     ps.tmss.volume = 1.0;
     ps.tmss.fullscreen = false;
     ps.tmss.ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
@@ -297,9 +297,9 @@ extern "C" {
     }
 
     if (ps.colored)
-      ps.tmss.vom = ps.background ? VideoOutputMode::COLORED_BACKGROUND_ONLY : VideoOutputMode::COLORED;
+      ps.tmss.vom = ps.background ? VidOutMode::COLOR_BG : VidOutMode::COLOR;
     else if (ps.grayscale)
-      ps.tmss.vom = ps.background ? VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY : VideoOutputMode::GRAYSCALE;
+      ps.tmss.vom = ps.background ? VidOutMode::GRAY_BG : VidOutMode::GRAY;
 
     return TMediaCLIParseRes(ps.tmss, false);
   }
@@ -530,11 +530,11 @@ extern "C" {
     return resolved_paths;
   }
 
-  std::vector<std::filesystem::path> resolve_cli_paths(const std::vector<MediaPath>& paths, MediaPathSearchOptions search_opts) {
+  std::vector<std::filesystem::path> resolve_cli_paths(const std::vector<MediaPath>& paths, MediaPathSearchOptions global_search_opts) {
     std::vector<std::filesystem::path> valid_paths;
 
     for (std::size_t i = 0; i < paths.size(); i++) {
-      std::vector<std::filesystem::path> resolved = resolve_cli_path(paths[i].path, resolve_path_search_options(search_opts, paths[i].search_options));
+      std::vector<std::filesystem::path> resolved = resolve_cli_path(paths[i].path, resolve_path_search_options(global_search_opts, paths[i].search_options));
       for (std::size_t i = 0; i < resolved.size(); i++) {
         valid_paths.push_back(resolved[i]);
       }

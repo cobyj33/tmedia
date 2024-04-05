@@ -21,9 +21,7 @@ void interrupt_handler(int) {
 }
 
 void on_terminate() {
-  if (ncurses_is_initialized()) {
-    ncurses_uninit();
-  }
+  ncurses_uninit();
 
   std::exception_ptr exptr = std::current_exception();
   try {

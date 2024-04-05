@@ -11,7 +11,7 @@
 */
 class AudioRingBuffer {
   private: 
-    std::vector<float> m_ring_buffer;
+    std::vector<float> rb;
     int m_size_frames;
     int m_size_samples;
     int m_nb_channels;

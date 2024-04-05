@@ -35,7 +35,7 @@ void TMediaCursesRenderer::render(const TMediaProgramState tmps, const TMediaPro
     this->render_tui_large(tmps, snapshot);
   }
 
-  this->last_frame_dims = VideoDimensions(snapshot.frame.get_width(), snapshot.frame.get_height());
+  this->last_frame_dims = Dim2(snapshot.frame.get_width(), snapshot.frame.get_height());
 }
 
 void TMediaCursesRenderer::render_tui_fullscreen(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
@@ -55,12 +55,12 @@ void TMediaCursesRenderer::render_tui_compact(const TMediaProgramState tmps, con
   tm_mvwaddstr_label(stdscr, current_playlist_display_style, current_playlist_file_display);
 
   if (tmps.playlist.size() > 1) {
-    if (tmps.playlist.can_move(PlaylistMoveCommand::REWIND)) {
+    if (tmps.playlist.can_move(PlaylistMvCmd::REWIND)) {
       TMLabelStyle style(0, 0, COLS, TMAlign::LEFT, 0, 0);
       tm_mvwaddstr_label(stdscr, style, "<");
     }
 
-    if (tmps.playlist.can_move(PlaylistMoveCommand::SKIP)) {
+    if (tmps.playlist.can_move(PlaylistMvCmd::SKIP)) {
       TMLabelStyle style(0, 0, COLS, TMAlign::RIGHT, 0, 0);
       tm_mvwaddstr_label(stdscr, style, ">");
     }
@@ -102,18 +102,18 @@ void TMediaCursesRenderer::render_tui_large(const TMediaProgramState tmps, const
   } else {
     static constexpr int MOVE_FILE_NAME_MIDDLE_MARGIN = 5;
     wfill_box(stdscr, 2, 0, COLS, 1, '~');
-    if (tmps.playlist.can_move(PlaylistMoveCommand::REWIND)) {
+    if (tmps.playlist.can_move(PlaylistMvCmd::REWIND)) {
       werasebox(stdscr, 1, 0, COLS / 2, 1);
-      const std::string rewind_media_file_display_string = get_media_file_display_name(tmps.playlist.peek_move(PlaylistMoveCommand::REWIND), this->metadata_cache);
+      const std::string rewind_media_file_display_string = get_media_file_display_name(tmps.playlist.peek_move(PlaylistMvCmd::REWIND), this->metadata_cache);
       const std::string rewind_display_string = fmt::format("< {}", rewind_media_file_display_string);
       TMLabelStyle rewind_display_style(1, 0, COLS / 2, TMAlign::LEFT, 0, MOVE_FILE_NAME_MIDDLE_MARGIN);
       tm_mvwaddstr_label(stdscr, rewind_display_style, rewind_display_string);
     }
 
-    if (tmps.playlist.can_move(PlaylistMoveCommand::SKIP)) {
+    if (tmps.playlist.can_move(PlaylistMvCmd::SKIP)) {
       static constexpr int RIGHT_ARROW_MARGIN = 3;
       werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-      const std::string skip_display_string = get_media_file_display_name(tmps.playlist.peek_move(PlaylistMoveCommand::SKIP), this->metadata_cache);
+      const std::string skip_display_string = get_media_file_display_name(tmps.playlist.peek_move(PlaylistMvCmd::SKIP), this->metadata_cache);
       TMLabelStyle skip_display_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, MOVE_FILE_NAME_MIDDLE_MARGIN, RIGHT_ARROW_MARGIN);
       TMLabelStyle right_arrow_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, 0, 0);
       tm_mvwaddstr_label(stdscr, skip_display_string_style, skip_display_string);

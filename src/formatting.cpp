@@ -37,9 +37,8 @@ std::string double_to_fixed_string(double num, int decimal_places) {
   return s;
 }
 
-
-std::string str_trim(std::string_view src, std::string_view trimchars) {
-  if (src.empty()) return "";
+std::string_view strv_trim(std::string_view src, std::string_view trimchars) {
+  if (src.empty()) return ""; // needed to guard against src.length() - 1 flowing from 0 to SIZE_MAX
   if (trimchars.empty()) return std::string(src);
 
   std::size_t start_index = 0;
@@ -56,7 +55,11 @@ std::string str_trim(std::string_view src, std::string_view trimchars) {
   }
 
   if (end_index < start_index) return "";
-  return std::string(src.substr(start_index, end_index - start_index + 1));
+  return src.substr(start_index, end_index - start_index + 1);
+}
+
+std::string str_trim(std::string_view src, std::string_view trimchars) {
+  return std::string(strv_trim(src, trimchars));
 }
 
 std::string sprintf_str(const char* format, ...) {

@@ -27,15 +27,15 @@ MediaFetcher::MediaFetcher(std::filesystem::path path) {
   this->in_use = false;
 
   std::set<enum AVMediaType> requested_stream_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-  this->media_decoder = std::move(std::make_unique<MediaDecoder>(path, requested_stream_types));
-  this->media_type = this->media_decoder->get_media_type();
+  this->mdec = std::move(std::make_unique<MediaDecoder>(path, requested_stream_types));
+  this->media_type = this->mdec->get_media_type();
   this->audio_visualizer = std::move(std::make_unique<AmplitudeAbs>());
 
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     static constexpr int INTERNAL_AUDIO_BUFFER_LENGTH_SECONDS = 5;
-    const int sample_rate = this->media_decoder->get_sample_rate();
-    const int nb_channels = this->media_decoder->get_nb_channels();
+    const int sample_rate = this->mdec->get_sample_rate();
+    const int nb_channels = this->mdec->get_nb_channels();
     const int frame_capacity = sample_rate * INTERNAL_AUDIO_BUFFER_LENGTH_SECONDS;
     this->audio_buffer = std::move(std::make_unique<BlockingAudioRingBuffer>(frame_capacity, nb_channels, sample_rate, 0.0));
   }
@@ -50,7 +50,7 @@ void MediaFetcher::dispatch_exit(std::string err) {
 }
 
 void MediaFetcher::dispatch_exit() {
-  std::scoped_lock<std::mutex, std::mutex> notification_locks(this->exit_notify_mutex, this->resume_notify_mutex);
+  std::scoped_lock<std::mutex, std::mutex> notification_locks(this->ex_noti_mtx, this->resume_notify_mutex);
   this->in_use = false;
   this->exit_cond.notify_all();
   this->resume_cond.notify_all();
@@ -98,14 +98,14 @@ std::string MediaFetcher::get_error() {
  * Thread-Safe
 */
 bool MediaFetcher::has_media_stream(enum AVMediaType media_type) const {
-  return this->media_decoder->has_stream_decoder(media_type);
+  return this->mdec->has_stream_decoder(media_type);
 }
 
 /**
  * Thread-Safe
 */
 double MediaFetcher::get_duration() const {
-  return this->media_decoder->get_duration();
+  return this->mdec->get_duration();
 }
 
 /**
@@ -139,7 +139,7 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   }
 
   const double original_time = this->get_time(current_system_time);
-  int ret = this->media_decoder->jump_to_time(target_time);
+  int ret = this->mdec->jump_to_time(target_time);
 
   if (ret < 0)
     return ret;

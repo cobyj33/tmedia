@@ -87,8 +87,18 @@ bool is_percentage(std::string_view percentage);
 
 std::string str_bound(std::string_view str, std::size_t max_size);
 std::string str_capslock(std::string_view str);
+std::string_view strv_trim(std::string_view src, std::string_view trimchars);
 std::string str_trim(std::string_view src, std::string_view trimchars);
+
+/**
+ * Note that the string_views returned will be substringed from the original
+ * string_view. This means they will NOT be NULL-terminated and you should
+ * NOT use them as c-strings when passing the data around. However, if 
+ * strvsplit is used with other functions or methods that expect
+ * std::string_view objects, it should be fine
+*/
 std::vector<std::string_view> strvsplit(std::string_view s, char delim);
+
 std::vector<std::string> strsplit(std::string_view s, char delim);
 
 /**

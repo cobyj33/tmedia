@@ -15,7 +15,7 @@
 #include <filesystem>
 
 
-int playlist_get_move(int current, int size, LoopType loop_type, PlaylistMoveCommand move_cmd);
+int playlist_get_move(int current, int size, LoopType loop_type, PlaylistMvCmd move_cmd);
 
 template <typename T>
 Playlist<T>::Playlist() {
@@ -66,7 +66,7 @@ void Playlist<T>::set_loop_type(LoopType loop_type) noexcept {
 }
 
 template <typename T>
-void Playlist<T>::move(PlaylistMoveCommand move_cmd) {
+void Playlist<T>::move(PlaylistMvCmd move_cmd) {
   int next = playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd);
   if (next < 0) {
     throw std::runtime_error(fmt::format("[{}] can not commit move {}.",
@@ -74,7 +74,7 @@ void Playlist<T>::move(PlaylistMoveCommand move_cmd) {
   }
 
   // if skipping or rewinding, kick out of repeat_one mode
-  if (move_cmd == PlaylistMoveCommand::REWIND || move_cmd == PlaylistMoveCommand::SKIP) {
+  if (move_cmd == PlaylistMvCmd::REWIND || move_cmd == PlaylistMvCmd::SKIP) {
     if (this->m_loop_type == LoopType::REPEAT_ONE) {
       this->m_loop_type = LoopType::REPEAT;
     }
@@ -84,14 +84,14 @@ void Playlist<T>::move(PlaylistMoveCommand move_cmd) {
 
   // reshuffle our index queue so that the next song is not at the end and our shuffle remains fresh
   // unfortunate edge case, if we are going to the next file, and we are shuffled, and we are at the second to last song, we need to 
-  if ((move_cmd == PlaylistMoveCommand::NEXT || move_cmd == PlaylistMoveCommand::SKIP) &&
+  if ((move_cmd == PlaylistMvCmd::NEXT || move_cmd == PlaylistMvCmd::SKIP) &&
   this->m_shuffled && (std::size_t)this->m_queue_index == this->m_queue_indexes.size() - 2) {
     this->shuffle(true);
   }
 }
 
 template <typename T>
-T Playlist<T>::peek_move(PlaylistMoveCommand move_cmd) const {
+T Playlist<T>::peek_move(PlaylistMvCmd move_cmd) const {
   int next = playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd);
   if (next < 0) {
     throw std::runtime_error(fmt::format("[{}] can not commit move {}",
@@ -102,7 +102,7 @@ T Playlist<T>::peek_move(PlaylistMoveCommand move_cmd) const {
 }
 
 template <typename T>
-bool Playlist<T>::can_move(PlaylistMoveCommand move_cmd) const noexcept {
+bool Playlist<T>::can_move(PlaylistMvCmd move_cmd) const noexcept {
   return playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd) >= 0;
 }
 
@@ -113,18 +113,17 @@ bool Playlist<T>::shuffled() const {
 
 template <typename T>
 void Playlist<T>::shuffle(bool keep_current_file_first) {
-  if (this->m_queue_indexes.size() > 1) {
-    if (keep_current_file_first) {
-      int tmp = this->m_queue_indexes[0];
-      this->m_queue_indexes[0] = this->m_queue_indexes[this->m_queue_index];
-      this->m_queue_indexes[this->m_queue_index] = tmp;
-      effolkronium::random_thread_local::shuffle(this->m_queue_indexes.begin() + 1, this->m_queue_indexes.end());
-    } else {
-      effolkronium::random_thread_local::shuffle(this->m_queue_indexes);
-    }
-    this->m_queue_index = 0;
-  }
+  if (this->m_queue_indexes.size() == 0) return;
 
+  if (keep_current_file_first) {
+    int tmp = this->m_queue_indexes[0];
+    this->m_queue_indexes[0] = this->m_queue_indexes[this->m_queue_index];
+    this->m_queue_indexes[this->m_queue_index] = tmp;
+    effolkronium::random_thread_local::shuffle(this->m_queue_indexes.begin() + 1, this->m_queue_indexes.end());
+  } else {
+    effolkronium::random_thread_local::shuffle(this->m_queue_indexes);
+  }
+  this->m_queue_index = 0;
   this->m_shuffled = true;
 }
 
@@ -139,11 +138,11 @@ int playlist_get_rewind(int current, int size, LoopType loop_type);
 int playlist_get_next(int current, int size, LoopType loop_type);
 int playlist_get_skip(int current, int size, LoopType loop_type);
 
-int playlist_get_move(int current, int size, LoopType loop_type, PlaylistMoveCommand move_cmd) {
+int playlist_get_move(int current, int size, LoopType loop_type, PlaylistMvCmd move_cmd) {
   switch (move_cmd) {
-    case PlaylistMoveCommand::NEXT: return playlist_get_next(current, size, loop_type);
-    case PlaylistMoveCommand::SKIP: return playlist_get_skip(current, size, loop_type);
-    case PlaylistMoveCommand::REWIND: return playlist_get_rewind(current, size, loop_type);
+    case PlaylistMvCmd::NEXT: return playlist_get_next(current, size, loop_type);
+    case PlaylistMvCmd::SKIP: return playlist_get_skip(current, size, loop_type);
+    case PlaylistMvCmd::REWIND: return playlist_get_rewind(current, size, loop_type);
   }
   throw std::runtime_error(fmt::format("[{}] could not find move rule for {}", 
                                   FUNCDINFO, playlist_move_cmd_str(move_cmd)));
@@ -207,24 +206,14 @@ LoopType loop_type_from_str(std::string_view loop_type_str) {
                                   "type string: {}", FUNCDINFO, loop_type_str));
 }
 
-std::string playlist_move_cmd_str(PlaylistMoveCommand move_cmd) {
+std::string playlist_move_cmd_str(PlaylistMvCmd move_cmd) {
   switch (move_cmd) {
-    case PlaylistMoveCommand::NEXT: return "next";
-    case PlaylistMoveCommand::SKIP: return "skip";
-    case PlaylistMoveCommand::REWIND: return "rewind";
+    case PlaylistMvCmd::NEXT: return "next";
+    case PlaylistMvCmd::SKIP: return "skip";
+    case PlaylistMvCmd::REWIND: return "rewind";
   }
   throw std::runtime_error(fmt::format("[{}] cannot find string repr "
                                         "of move_cmd", FUNCDINFO));
 }
-
-bool loop_type_str_is_valid(std::string_view loop_type_str) {
-  for (const std::pair<std::string_view, LoopType>& pair : loop_type_strs) {
-    if (pair.first == loop_type_str) {
-      return true;
-    }
-  }
-  return false;
-}
-
 
 template class Playlist<std::filesystem::path>;

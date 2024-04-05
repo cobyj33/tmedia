@@ -79,7 +79,7 @@ lib/build/ncurses-6.4 for ncurses and lib/build/ffmpeg-6.0 for ffmpeg.
 - Currently only tested install.sh building on my personal machine in Ubuntu 22.04 and a Docker container running Ubuntu 22.04
 - Definitely does not work outside of Debian Linux, as apt-get is used to install some dependencies for the ffmpeg build
 
-Added docstring for definitions of VideoOutputMode transitions in renderer.cpp
+Added docstring for definitions of VidOutMode transitions in renderer.cpp
 
 Changed AudioStream object to be named AudioBuffer
 

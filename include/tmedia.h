@@ -2,10 +2,10 @@
 #define TMEDIA_TMEDIA_H
 
 
-#include "tmedia_vom.h" // for VideoOutputMode
+#include "tmedia_vom.h" // for VidOutMode
 #include "playlist.h" // for LoopType 
 #include "metadata.h" // for MetadataCache
-#include "scale.h" // for VideoDimensions
+#include "scale.h" // for Dim2
 #include "boiler.h" // for MediaType
 #include "pixeldata.h" // for PixelData and ScalingAlgo
 #include "ascii.h" // for ASCII_STANDARD_CHAR_MAP
@@ -25,7 +25,7 @@ struct TMediaStartupState {
   double volume = 1.0;
   bool muted = false;
   int refresh_rate_fps = 24;
-  VideoOutputMode vom = VideoOutputMode::TEXT_ONLY;
+  VidOutMode vom = VidOutMode::PLAIN;
   ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
   bool fullscreen = false;
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
@@ -51,7 +51,7 @@ struct TMediaProgramState {
   bool fullscreen = false;
   int refresh_rate_fps = 24;
   ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
-  VideoOutputMode vom = VideoOutputMode::TEXT_ONLY;
+  VidOutMode vom = VidOutMode::PLAIN;
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
 };
 
@@ -112,7 +112,7 @@ class TMediaRenderer {
 class TMediaCursesRenderer : public TMediaRenderer {
   private:
     MetadataCache metadata_cache;
-    VideoDimensions last_frame_dims;
+    Dim2 last_frame_dims;
     void render_tui_fullscreen(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);
     void render_tui_compact(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);
     void render_tui_large(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);

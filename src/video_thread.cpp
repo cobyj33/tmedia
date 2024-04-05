@@ -42,11 +42,11 @@ extern "C" {
  *    processed. 
 */
 
-const int PIXEL_ASPECT_RATIO_WIDTH = 2; // account for non-square shape of terminal characters
-const int PIXEL_ASPECT_RATIO_HEIGHT = 5;
+const int PAR_WIDTH = 2; // account for non-square shape of terminal characters
+const int PAR_HEIGHT = 5;
 
-const int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PIXEL_ASPECT_RATIO_HEIGHT;
-const int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PIXEL_ASPECT_RATIO_WIDTH;
+const int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PAR_HEIGHT;
+const int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PAR_WIDTH;
 const double MAX_FRAME_ASPECT_RATIO = (double)MAX_FRAME_ASPECT_RATIO_WIDTH / (double)MAX_FRAME_ASPECT_RATIO_HEIGHT;
 
 // I found that past a width of 640 characters,
@@ -56,7 +56,7 @@ const double MAX_FRAME_ASPECT_RATIO = (double)MAX_FRAME_ASPECT_RATIO_WIDTH / (do
 const int MAX_FRAME_WIDTH = 640;
 const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH / MAX_FRAME_ASPECT_RATIO;
 const int PAUSED_SLEEP_TIME_MS = 100;
-const double DEFAULT_AVERAGE_FRAME_TIME_SEC = 1.0 / 24.0;
+const double DEFAULT_AVGFTS = 1.0 / 24.0;
 
 void MediaFetcher::video_fetching_thread_func() {
   try {
@@ -74,18 +74,18 @@ void MediaFetcher::video_fetching_thread_func() {
 }
 
 void MediaFetcher::frame_video_fetching_func() {
-  const VideoDimensions default_output_frame_dim = get_bounded_dimensions(this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT,
-  this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH,
+  const Dim2 def_outdim = bound_dims(this->mdec->get_width() * PAR_HEIGHT,
+  this->mdec->get_height() * PAR_WIDTH,
   MAX_FRAME_WIDTH,
   MAX_FRAME_HEIGHT);
 
-  const double avg_frame_time_sec = this->media_decoder->get_average_frame_time_sec(AVMEDIA_TYPE_VIDEO);
-  VideoConverter video_converter(default_output_frame_dim.width,
-  default_output_frame_dim.height,
+  const double avg_fts = this->mdec->get_avgfts(AVMEDIA_TYPE_VIDEO);
+  VideoConverter vconv(def_outdim.width,
+  def_outdim.height,
   AV_PIX_FMT_RGB24,
-  this->media_decoder->get_width(),
-  this->media_decoder->get_height(),
-  this->media_decoder->get_pix_fmt());
+  this->mdec->get_width(),
+  this->mdec->get_height(),
+  this->mdec->get_pix_fmt());
 
   while (!this->should_exit()) {
     {
@@ -97,40 +97,40 @@ void MediaFetcher::frame_video_fetching_func() {
 
     {
       std::lock_guard<std::mutex> alter_mutex_lock(this->alter_mutex);
-      if (this->requested_frame_dims) {
-        VideoDimensions bounded_requested_dims = get_bounded_dimensions(
-        this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT,
-        this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH,
-        this->requested_frame_dims->width,
-        this->requested_frame_dims->height);
+      if (this->req_dims) {
+        Dim2 req_dims_bounded = bound_dims(
+        this->mdec->get_width() * PAR_HEIGHT,
+        this->mdec->get_height() * PAR_WIDTH,
+        this->req_dims->width,
+        this->req_dims->height);
 
-        VideoDimensions output_frame_dim = get_bounded_dimensions(
-        bounded_requested_dims.width,
-        bounded_requested_dims.height,
+        Dim2 out_dim = bound_dims(
+        req_dims_bounded.width,
+        req_dims_bounded.height,
         MAX_FRAME_WIDTH,
         MAX_FRAME_HEIGHT);
         
-        video_converter.reset_dst_size(output_frame_dim.width, output_frame_dim.height);
+        vconv.reset_dst_size(out_dim.width, out_dim.height);
       }
     }
     
-    double wait_duration = avg_frame_time_sec;
-    std::vector<AVFrame*> decoded_frames;
+    double wait_duration = avg_fts;
+    std::vector<AVFrame*> dec_frames;
     double current_time = 0.0;
 
     {
       std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
-      current_time = this->get_time(system_clock_sec());
-      decoded_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_VIDEO);
+      current_time = this->get_time(sys_clk_sec());
+      dec_frames = this->mdec->next_frames(AVMEDIA_TYPE_VIDEO);
     }
 
-    if (decoded_frames.size() > 0 && decoded_frames[0] != nullptr) {
-      const double frame_pts_time_sec = (double)decoded_frames[0]->pts * this->media_decoder->get_time_base(AVMEDIA_TYPE_VIDEO);
-      const double extra_delay = (double)(decoded_frames[0]->repeat_pict) / (2 * avg_frame_time_sec);
+    if (dec_frames.size() > 0 && dec_frames[0] != nullptr) {
+      const double frame_pts_time_sec = (double)dec_frames[0]->pts * this->mdec->get_time_base(AVMEDIA_TYPE_VIDEO);
+      const double extra_delay = (double)(dec_frames[0]->repeat_pict) / (2 * avg_fts);
       wait_duration = frame_pts_time_sec - current_time + extra_delay;
 
       if (wait_duration > 0.0 || this->frame.get_width() * this->frame.get_height() == 0) {
-        AVFrame* frame_image = video_converter.convert_video_frame(decoded_frames[0]);
+        AVFrame* frame_image = vconv.convert_video_frame(dec_frames[0]);
         PixelData frame_pixel_data = PixelData(frame_image);
         {
           std::lock_guard<std::mutex> lock(this->alter_mutex);
@@ -138,15 +138,15 @@ void MediaFetcher::frame_video_fetching_func() {
         }
         av_frame_free(&frame_image);
       }
-      clear_av_frame_list(decoded_frames);
-      std::unique_lock<std::mutex> exit_lock(this->exit_notify_mutex);
+      clear_avframe_list(dec_frames);
+      std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
       if (wait_duration > 0.0 && !this->should_exit()) {
-        this->exit_cond.wait_for(exit_lock, seconds_to_chrono_nanoseconds(wait_duration)); 
+        this->exit_cond.wait_for(exit_lock, secs_to_chns(wait_duration)); 
       }
     } else { // no frame was found.
-      std::unique_lock<std::mutex> exit_lock(this->exit_notify_mutex);
+      std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
       if (!this->should_exit()) {
-        this->exit_cond.wait_for(exit_lock, seconds_to_chrono_nanoseconds(DEFAULT_AVERAGE_FRAME_TIME_SEC)); 
+        this->exit_cond.wait_for(exit_lock, secs_to_chns(DEFAULT_AVGFTS)); 
       }
     }
 
@@ -155,27 +155,27 @@ void MediaFetcher::frame_video_fetching_func() {
 }
 
 void MediaFetcher::frame_image_fetching_func() {
-  VideoDimensions output_frame_dim = get_bounded_dimensions(this->media_decoder->get_width() * PIXEL_ASPECT_RATIO_HEIGHT,
-  this->media_decoder->get_height() * PIXEL_ASPECT_RATIO_WIDTH,
+  Dim2 outdim = bound_dims(this->mdec->get_width() * PAR_HEIGHT,
+  this->mdec->get_height() * PAR_WIDTH,
   MAX_FRAME_WIDTH,
   MAX_FRAME_HEIGHT);
 
-  VideoConverter video_converter(output_frame_dim.width,
-  output_frame_dim.height,
+  VideoConverter vconv(outdim.width,
+  outdim.height,
   AV_PIX_FMT_RGB24,
-  this->media_decoder->get_width(),
-  this->media_decoder->get_height(),
-  this->media_decoder->get_pix_fmt());
+  this->mdec->get_width(),
+  this->mdec->get_height(),
+  this->mdec->get_pix_fmt());
 
-  std::vector<AVFrame*> decoded_frames;
+  std::vector<AVFrame*> dec_frames;
 
   {
     std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
-    decoded_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_VIDEO);
+    dec_frames = this->mdec->next_frames(AVMEDIA_TYPE_VIDEO);
   }
 
-  if (decoded_frames.size() > 0 && decoded_frames[0] != nullptr) {
-    AVFrame* frame_image = video_converter.convert_video_frame(decoded_frames[0]);
+  if (dec_frames.size() > 0 && dec_frames[0] != nullptr) {
+    AVFrame* frame_image = vconv.convert_video_frame(dec_frames[0]);
     PixelData frame_pixel_data = PixelData(frame_image);
     {
       std::lock_guard<std::mutex> lock(this->alter_mutex);
@@ -184,7 +184,7 @@ void MediaFetcher::frame_image_fetching_func() {
     av_frame_free(&frame_image);
   }
 
-  clear_av_frame_list(decoded_frames);
+  clear_avframe_list(dec_frames);
 }
 
 void MediaFetcher::frame_audio_fetching_func() {
@@ -199,10 +199,10 @@ void MediaFetcher::frame_audio_fetching_func() {
 
   static constexpr int AUDIO_PEEK_TRY_WAIT_MS = 100;
   static constexpr int AUDIO_PEEK_MAX_SAMPLE_SIZE = 2048;
-  float audio_peek_buffer[AUDIO_PEEK_MAX_SAMPLE_SIZE];
+  float audbuf[AUDIO_PEEK_MAX_SAMPLE_SIZE];
 
-  const int nb_channels = this->audio_buffer->get_nb_channels();
-  const int audio_peek_buffer_size_frames = AUDIO_PEEK_MAX_SAMPLE_SIZE / nb_channels;
+  const int nb_ch = this->audio_buffer->get_nb_channels();
+  const int aubduf_sz = AUDIO_PEEK_MAX_SAMPLE_SIZE / nb_ch;
 
   while (!this->should_exit()) {
     {
@@ -212,20 +212,20 @@ void MediaFetcher::frame_audio_fetching_func() {
       }
     }
 
-    VideoDimensions audio_frame_dims(MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+    Dim2 visdim(MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
 
     {
       std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
-      if (this->requested_frame_dims) {
-        audio_frame_dims = get_bounded_dimensions(
-        this->requested_frame_dims->width,
-        this->requested_frame_dims->height,
+      if (this->req_dims) {
+        visdim = bound_dims(
+        this->req_dims->width,
+        this->req_dims->height,
         MAX_FRAME_WIDTH,
         MAX_FRAME_HEIGHT);
       }
     }
 
-    if (this->audio_buffer->try_peek_into(audio_peek_buffer_size_frames, audio_peek_buffer, AUDIO_PEEK_TRY_WAIT_MS)) {
+    if (this->audio_buffer->try_peek_into(aubduf_sz, audbuf, AUDIO_PEEK_TRY_WAIT_MS)) {
       std::unique_ptr<Visualizer> visualizer;
       {
         std::scoped_lock<std::mutex> alter_lock(this->alter_mutex);
@@ -233,16 +233,16 @@ void MediaFetcher::frame_audio_fetching_func() {
       }
 
       if (visualizer) {
-        PixelData frame = visualizer->visualize(audio_peek_buffer, audio_peek_buffer_size_frames, nb_channels, audio_frame_dims.width, audio_frame_dims.height);
+        PixelData frame = visualizer->visualize(audbuf, aubduf_sz, nb_ch, visdim.width, visdim.height);
         std::scoped_lock<std::mutex> alter_lock(this->alter_mutex);
         this->frame = frame;
       }
     }
 
 
-    std::unique_lock<std::mutex> exit_lock(this->exit_notify_mutex);
+    std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
     if (!this->should_exit()) {
-      this->exit_cond.wait_for(exit_lock, seconds_to_chrono_nanoseconds(DEFAULT_AVERAGE_FRAME_TIME_SEC)); 
+      this->exit_cond.wait_for(exit_lock, secs_to_chns(DEFAULT_AVGFTS)); 
     }
   }
 }

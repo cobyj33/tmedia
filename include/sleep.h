@@ -7,9 +7,9 @@
 
 /**
  * @brief Sleep the current thread for the given number of nanoseconds
- * @param nanoseconds The number of nanoseconds to make the current thread sleep
+ * @param ns The number of nanoseconds to make the current thread sleep
  */
-void sleep_for_ns(long nanoseconds);
+void sleep_for_ns(long ns);
 
 /**
  * @brief Sleep the current thread for the given number of seconds

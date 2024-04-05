@@ -21,7 +21,7 @@
 */
 class BlockingAudioRingBuffer {
   private:
-    std::unique_ptr<AudioRingBuffer> m_ring_buffer;
+    std::unique_ptr<AudioRingBuffer> rb;
 
     std::mutex mutex;
     std::condition_variable cond;

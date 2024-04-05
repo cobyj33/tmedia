@@ -9,14 +9,16 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
-std::map<std::string, std::string> get_file_metadata(std::filesystem::path path);
-std::map<std::string, std::string> get_format_context_metadata(AVFormatContext* fmt_ctx);
+typedef std::map<std::string, std::string> Metadata;
+
+Metadata get_file_metadata(std::filesystem::path path);
+Metadata get_format_context_metadata(AVFormatContext* fmt_ctx);
 
 /**
  * A general cache-type map between filenames or some other media id strings
  * and metadata maps.
 */
-typedef std::map<std::string, std::map<std::string, std::string>> MetadataCache;
+typedef std::map<std::string, Metadata> MetadataCache;
 
 void metadata_cache_cache(std::string file, MetadataCache& cache);
 

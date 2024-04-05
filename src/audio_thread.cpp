@@ -27,9 +27,9 @@ void MediaFetcher::audio_dispatch_thread_func() {
 
   try { // super try block :)
     AudioResampler audio_resampler(
-    this->media_decoder->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->media_decoder->get_sample_rate(),
-    this->media_decoder->get_ch_layout(), this->media_decoder->get_sample_fmt(), this->media_decoder->get_sample_rate());
-    sleep_for_sec(this->media_decoder->get_start_time(AVMEDIA_TYPE_AUDIO));
+    this->mdec->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->mdec->get_sample_rate(),
+    this->mdec->get_ch_layout(), this->mdec->get_sample_fmt(), this->mdec->get_sample_rate());
+    sleep_for_sec(this->mdec->get_start_time(AVMEDIA_TYPE_AUDIO));
 
     while (!this->should_exit()) {
       {
@@ -43,7 +43,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
 
       {
         std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
-        next_raw_audio_frames = this->media_decoder->next_frames(AVMEDIA_TYPE_AUDIO);
+        next_raw_audio_frames = this->mdec->next_frames(AVMEDIA_TYPE_AUDIO);
       }
 
       if (next_raw_audio_frames.size() != 0) {
@@ -55,9 +55,9 @@ void MediaFetcher::audio_dispatch_thread_func() {
           }
         }
 
-        clear_av_frame_list(audio_frames);
+        clear_avframe_list(audio_frames);
       }
-      clear_av_frame_list(next_raw_audio_frames);
+      clear_avframe_list(next_raw_audio_frames);
     }
   } catch (std::exception const& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);

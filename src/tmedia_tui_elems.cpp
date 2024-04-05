@@ -41,8 +41,8 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in
     wprint_progress_bar(window, y, x + current_time_string.length() + PADDING_BETWEEN_ELEMENTS, progress_bar_width, 1,time_in_seconds / duration_in_seconds);
 }
 
-void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VideoOutputMode output_mode, const ScalingAlgo scaling_algorithm, const std::string& ascii_char_map) {
-  if (output_mode != VideoOutputMode::TEXT_ONLY && !has_colors()) {
+void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, const ScalingAlgo scaling_algorithm, const std::string& ascii_char_map) {
+  if (output_mode != VidOutMode::PLAIN && !has_colors()) {
     throw std::runtime_error(fmt::format("[{}] Attempted to print colored text "
     "in terminal that does not support color", FUNCDINFO));
   }
@@ -50,14 +50,14 @@ void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_c
   PixelData bounded = pixel_data.bound(bounds_width, bounds_height, scaling_algorithm);
   int image_start_row = bounds_row + std::abs(bounded.get_height() - bounds_height) / 2;
   int image_start_col = bounds_col + std::abs(bounded.get_width() - bounds_width) / 2; 
-  bool background_only = output_mode == VideoOutputMode::COLORED_BACKGROUND_ONLY || output_mode == VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY;
+  bool background_only = output_mode == VidOutMode::COLOR_BG || output_mode == VidOutMode::GRAY_BG;
 
   for (int row = 0; row < bounded.get_height(); row++) {
     for (int col = 0; col < bounded.get_width(); col++) {
       const RGBColor& target_color = bounded.at(row, col);
       const char target_char = background_only ? ' ' : get_char_from_rgb(ascii_char_map, target_color);
       
-      if (output_mode == VideoOutputMode::TEXT_ONLY) {
+      if (output_mode == VidOutMode::PLAIN) {
         mvaddch(image_start_row + row, image_start_col + col, target_char);
       } else {
         const int color_pair = get_closest_ncurses_color_pair(target_color);

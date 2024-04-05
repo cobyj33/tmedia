@@ -29,7 +29,7 @@ extern "C" {
  * @param frame_list 
  * @return void
  */
-void clear_av_frame_list(std::vector<AVFrame*>& frame_list);
+void clear_avframe_list(std::vector<AVFrame*>& frame_list);
 
 /**
  * Decode a single video packet given an AVCodecContext

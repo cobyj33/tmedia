@@ -22,10 +22,7 @@ extern "C" {
 bool ncurses_initialized = false;
 
 void ncurses_init() {
-  if (ncurses_initialized) {
-    throw std::runtime_error(fmt::format("[{}] ncurses attempted to be "
-    "initialized although it has already been initialized", FUNCDINFO));
-  }
+  if (ncurses_initialized) return;
   ncurses_initialized = true;
   initscr();
   savetty();
@@ -49,10 +46,7 @@ bool ncurses_is_initialized() {
 }
 
 void ncurses_uninit() {
-  if (!ncurses_initialized) {
-    throw std::runtime_error(fmt::format("[{}] ncurses attempted to be "
-    "uninitialized although it has never been initialized", FUNCDINFO));
-  }
+  if (!ncurses_initialized) return;
   ncurses_initialized = false;
   erase();
   refresh();
@@ -160,9 +154,9 @@ void ncurses_set_color_palette_custom(const Palette& colorPalette) {
   available_color_palette_colors = 0;
   for (RGBColor color : colorPalette) {
     init_color(available_color_palette_colors++ + COLOR_PALETTE_START, 
-    (short)(color.red * 1000 / 255),
-    (short)(color.green * 1000 / 255),
-    (short)(color.blue * 1000 / 255));
+    static_cast<short>(color.red * 1000 / 255),
+    static_cast<short>(color.green * 1000 / 255),
+    static_cast<short>(color.blue * 1000 / 255));
     if (available_color_palette_colors >= CHANGEABLE_COLORS) break;
   }
 

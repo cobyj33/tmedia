@@ -6,6 +6,7 @@
 #include "decode.h"
 #include "formatting.h"
 #include "funcmac.h"
+#include "ffmpeg_error.h"
 
 #include <string>
 #include <vector>
@@ -62,34 +63,44 @@ std::vector<AVFrame*> MediaDecoder::next_frames(enum AVMediaType media_type) {
     FUNCDINFO, av_get_media_type_string(media_type)));
   }
 
+  constexpr int NO_FETCH_MADE = -1;
+
   StreamDecoder& stream_decoder = *(this->stream_decoders[media_type]);
-  std::vector<AVFrame*> decoded_frames;
-  int fetch_count = -1; 
+  std::vector<AVFrame*> dec_frames;
+  int fetch_count = NO_FETCH_MADE; 
 
   do {
-    fetch_count = !stream_decoder.has_packets() ? this->fetch_next(10) : -1; // -1 means that no fetch request was made.
-    std::vector<AVFrame*> decoded_frames = stream_decoder.decode_next();
-    if (decoded_frames.size() > 0) {
-      return decoded_frames;
+    fetch_count = !stream_decoder.has_packets() ? this->fetch_next(10) : NO_FETCH_MADE;
+    dec_frames = stream_decoder.decode_next();
+    if (dec_frames.size() > 0) {
+      return dec_frames;
     }
-    // no need to clear decoded_frames, if the size of decoded frames is greater than 0, would have already returned
-  } while (fetch_count != 0);
+    // no need to clear dec_frames, if the size of decoded frames is greater than 0, would have already returned
+  } while (fetch_count > 0 || fetch_count == NO_FETCH_MADE);
 
-  return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
+  return dec_frames; // no video frames could sadly be found. This should only really ever happen once the file ends
 }
 
 int MediaDecoder::fetch_next(int requested_packet_count) {
-  AVPacket* reading_packet = av_packet_alloc();
   int packets_read = 0;
+  AVPacket* reading_packet = av_packet_alloc();
+  if (reading_packet == nullptr) {
+    throw ffmpeg_error(fmt::format("[{}] Failed to allocate AVPacket", FUNCDINFO), AVERROR(ENOMEM));
+  }
 
   while (av_read_frame(this->fmt_ctx, reading_packet) == 0) {
      
-    for (auto decoder_pair = this->stream_decoders.begin(); decoder_pair != this->stream_decoders.end(); decoder_pair++) {
-      if (decoder_pair->second->get_stream_index() == reading_packet->stream_index) {
+    for (auto &decoder_pair : this->stream_decoders) {
+      if (decoder_pair.second->get_stream_index() == reading_packet->stream_index) {
         AVPacket* saved_packet = av_packet_alloc();
+        if (saved_packet == nullptr) {
+          av_packet_free(&reading_packet);
+          throw ffmpeg_error(fmt::format("[{}] Failed to allocate AVPacket", FUNCDINFO), AVERROR(ENOMEM));
+        }
+
         av_packet_ref(saved_packet, reading_packet);
         
-        decoder_pair->second->push_back_packet(saved_packet);
+        decoder_pair.second->push_back(saved_packet);
         packets_read++;
         break;
       }
@@ -97,10 +108,7 @@ int MediaDecoder::fetch_next(int requested_packet_count) {
 
     av_packet_unref(reading_packet);
 
-     if (packets_read >= requested_packet_count) {
-      av_packet_free(&reading_packet);
-      return packets_read;
-    }
+     if (packets_read >= requested_packet_count) break;
   }
 
   //reached EOF
@@ -132,7 +140,7 @@ int MediaDecoder::jump_to_time(double target_time) {
     bool passed_target_time = false;
 
     do {
-      clear_av_frame_list(frames);
+      clear_avframe_list(frames);
       frames = this->next_frames(decoder_pair.first);
       for (std::size_t i = 0; i < frames.size(); i++) {
         if (frames[i]->pts * decoder_pair.second->get_time_base() >= target_time) {
@@ -142,7 +150,7 @@ int MediaDecoder::jump_to_time(double target_time) {
       }
     } while (!passed_target_time && frames.size() > 0);
     
-    clear_av_frame_list(frames);
+    clear_avframe_list(frames);
   }
 
   return ret;
@@ -283,12 +291,12 @@ double MediaDecoder::get_time_base(enum AVMediaType media_type) {
 
 }
 
-double MediaDecoder::get_average_frame_time_sec(enum AVMediaType media_type) {
+double MediaDecoder::get_avgfts(enum AVMediaType media_type) {
   if (!this->has_stream_decoder(media_type)) {
     throw std::runtime_error(fmt::format("[{}] Cannot get average "
     "frame time sec from this media decoder: No {} stream decoder is available",
     FUNCDINFO, av_get_media_type_string(media_type)));
   }
 
-  return this->stream_decoders[media_type]->get_average_frame_time_sec();
+  return this->stream_decoders[media_type]->get_avgfts();
 }

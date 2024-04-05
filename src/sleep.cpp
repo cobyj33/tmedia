@@ -4,8 +4,8 @@
 
 #include <thread>
 
-void sleep_for_ns(long nanoseconds) {
-  std::this_thread::sleep_for(std::chrono::nanoseconds(nanoseconds));
+void sleep_for_ns(long ns) {
+  std::this_thread::sleep_for(std::chrono::nanoseconds(ns));
 }
 
 void sleep_for_ms(long ms) {

@@ -13,8 +13,8 @@
  * Return the current system time in seconds from the system's
  * monotonic clock
  */
-double system_clock_sec();
+double sys_clk_sec();
 
-std::chrono::nanoseconds seconds_to_chrono_nanoseconds(double seconds);
+std::chrono::nanoseconds secs_to_chns(double seconds);
 
 #endif

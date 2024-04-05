@@ -8,13 +8,13 @@
 #include <string_view>
 #include <filesystem>
 
-enum class PlaylistMoveCommand {
+enum class PlaylistMvCmd {
   NEXT,
   SKIP,
   REWIND
 };
 
-std::string playlist_move_cmd_str(PlaylistMoveCommand move_cmd);
+std::string playlist_move_cmd_str(PlaylistMvCmd move_cmd);
 
 enum class LoopType {
   REPEAT_ONE,
@@ -24,7 +24,6 @@ enum class LoopType {
 
 std::string loop_type_str(LoopType loop_type);
 LoopType loop_type_from_str(std::string_view loop_type);
-bool loop_type_str_is_valid(std::string_view loop_type);
 
 /**
  * Currently, the files passed in at construction are immutable, as files cannot
@@ -35,7 +34,7 @@ bool loop_type_str_is_valid(std::string_view loop_type);
  * user must do this beforehand
  * 
  * The loop type is not guaranteed to stay constant in between set_loop_type commands.
- * For example, when skipping with move(PlaylistMoveCommand::SKIP) while loop_type() == LoopType::REPEAT_ONE,
+ * For example, when skipping with move(PlaylistMvCmd::SKIP) while loop_type() == LoopType::REPEAT_ONE,
  * loop_type() will then be turned to REPEAT
 */
 
@@ -114,9 +113,9 @@ bool loop_type_str_is_valid(std::string_view loop_type);
 //     int index() const;
 //     std::string current() const;
 
-//     void move(PlaylistMoveCommand move_cmd);
-//     std::string peek_move(PlaylistMoveCommand move_cmd) const;
-//     bool can_move(PlaylistMoveCommand move_cmd) const noexcept;
+//     void move(PlaylistMvCmd move_cmd);
+//     std::string peek_move(PlaylistMvCmd move_cmd) const;
+//     bool can_move(PlaylistMvCmd move_cmd) const noexcept;
 // };
 
 class IPlaylist {
@@ -126,9 +125,9 @@ class IPlaylist {
   virtual int index() const = 0;
   virtual std::filesystem::path current() const = 0;
 
-  virtual void move(PlaylistMoveCommand move_cmd) = 0;
-  virtual std::filesystem::path peek_move(PlaylistMoveCommand move_cmd) const = 0;
-  virtual bool can_move(PlaylistMoveCommand move_cmd) const noexcept = 0;
+  virtual void move(PlaylistMvCmd move_cmd) = 0;
+  virtual std::filesystem::path peek_move(PlaylistMvCmd move_cmd) const = 0;
+  virtual bool can_move(PlaylistMvCmd move_cmd) const noexcept = 0;
 };
 
 // class UnshuffledPlaylist {
@@ -161,9 +160,9 @@ class Playlist {
     int index() const;
     T current() const;
 
-    void move(PlaylistMoveCommand move_cmd);
-    T peek_move(PlaylistMoveCommand move_cmd) const;
-    bool can_move(PlaylistMoveCommand move_cmd) const noexcept;
+    void move(PlaylistMvCmd move_cmd);
+    T peek_move(PlaylistMvCmd move_cmd) const;
+    bool can_move(PlaylistMvCmd move_cmd) const noexcept;
 };
 
 

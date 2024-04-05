@@ -46,8 +46,8 @@ static constexpr int MIN_RENDER_COLS = 2;
 static constexpr int MIN_RENDER_LINES = 2; 
 
 
-void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next);
-void init_global_video_output_mode(VideoOutputMode mode);
+void set_global_vom(VidOutMode* current, VidOutMode next);
+void init_global_video_output_mode(VidOutMode mode);
 
 const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "Video and Audio Controls\n"
@@ -100,18 +100,18 @@ int tmedia_main_loop(TMediaProgramState tmps) {
   TMediaCursesRenderer renderer;
 
   while (!INTERRUPT_RECEIVED && !tmps.quit) {
-    PlaylistMoveCommand current_move_cmd = PlaylistMoveCommand::NEXT;
+    PlaylistMvCmd current_move_cmd = PlaylistMvCmd::NEXT;
     MediaFetcher fetcher(tmps.playlist.current());
-    fetcher.requested_frame_dims = VideoDimensions(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
+    fetcher.req_dims = Dim2(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
     std::unique_ptr<MAAudioOut> audio_output;
-    fetcher.begin(system_clock_sec());
+    fetcher.begin(sys_clk_sec());
 
     if (fetcher.has_media_stream(AVMEDIA_TYPE_AUDIO)) {
       static constexpr int AUDIO_BUFFER_TRY_READ_MS = 5;
-      audio_output = std::make_unique<MAAudioOut>(fetcher.media_decoder->get_nb_channels(), fetcher.media_decoder->get_sample_rate(), [&fetcher] (float* float_buffer, int nb_frames) {
+      audio_output = std::make_unique<MAAudioOut>(fetcher.mdec->get_nb_channels(), fetcher.mdec->get_sample_rate(), [&fetcher] (float* float_buffer, int nb_frames) {
         bool success = fetcher.audio_buffer->try_read_into(nb_frames, float_buffer, AUDIO_BUFFER_TRY_READ_MS);
         if (!success)
-          for (int i = 0; i < nb_frames * fetcher.media_decoder->get_nb_channels(); i++)
+          for (int i = 0; i < nb_frames * fetcher.mdec->get_nb_channels(); i++)
             float_buffer[i] = 0.0f;
       });
 
@@ -138,7 +138,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         {
           static constexpr double MAX_AUDIO_DESYNC_AMOUNT_SECONDS = 0.6;  
           std::lock_guard<std::mutex> _alter_lock(fetcher.alter_mutex);
-          current_system_time = system_clock_sec(); // set in here, since locking the mutex could take an undetermined amount of time
+          current_system_time = sys_clk_sec(); // set in here, since locking the mutex could take an undetermined amount of time
           current_media_time = fetcher.get_time(current_system_time);
           requested_jump_time = current_media_time;
           frame = fetcher.frame;
@@ -150,7 +150,8 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
         int input = ERR;
         while ((input = getch()) != ERR) { // Go through and process all the batched input
-          if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || input == '\b' || input == 'q' || input == 'Q') {
+          if (input == KEY_ESCAPE || input == KEY_BACKSPACE || input == 127 || 
+              input == '\b' || input == 'q' || input == 'Q') {
             fetcher.dispatch_exit();
             tmps.quit = true;
             break; // break out of input != ERR
@@ -159,7 +160,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           if (input == KEY_RESIZE) {
             if (COLS >= MIN_RENDER_COLS && LINES >= MIN_RENDER_LINES) {
               std::lock_guard<std::mutex> alter_lock(fetcher.alter_mutex);
-              fetcher.requested_frame_dims = VideoDimensions(COLS, LINES);
+              fetcher.req_dims = Dim2(COLS, LINES);
             }
             erase();
           }
@@ -174,41 +175,41 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
           if ((input == 'c' || input == 'C') && has_colors() && can_change_color()) { // Change from current video mode to colored version
             switch (tmps.vom) {
-              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmps.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmps.vom, VideoOutputMode::COLORED); break;
-              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::COLORED); break;
+              case VidOutMode::COLOR: set_global_vom(&tmps.vom, VidOutMode::PLAIN); break;
+              case VidOutMode::GRAY: set_global_vom(&tmps.vom, VidOutMode::COLOR); break;
+              case VidOutMode::COLOR_BG: set_global_vom(&tmps.vom, VidOutMode::PLAIN); break;
+              case VidOutMode::GRAY_BG: set_global_vom(&tmps.vom, VidOutMode::COLOR_BG); break;
+              case VidOutMode::PLAIN: set_global_vom(&tmps.vom, VidOutMode::COLOR); break;
             }
           }
 
           if ((input == 'g' || input == 'G') && has_colors() && can_change_color()) {
             switch (tmps.vom) {
-              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmps.vom, VideoOutputMode::GRAYSCALE); break;
-              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmps.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::TEXT_ONLY); break;
-              case VideoOutputMode::TEXT_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::GRAYSCALE); break;
+              case VidOutMode::COLOR: set_global_vom(&tmps.vom, VidOutMode::GRAY); break;
+              case VidOutMode::GRAY: set_global_vom(&tmps.vom, VidOutMode::PLAIN); break;
+              case VidOutMode::COLOR_BG: set_global_vom(&tmps.vom, VidOutMode::GRAY_BG); break;
+              case VidOutMode::GRAY_BG: set_global_vom(&tmps.vom, VidOutMode::PLAIN); break;
+              case VidOutMode::PLAIN: set_global_vom(&tmps.vom, VidOutMode::GRAY); break;
             }
           }
 
           if ((input == 'b' || input == 'B') && has_colors() && can_change_color()) {
             switch (tmps.vom) {
-              case VideoOutputMode::COLORED: set_global_video_output_mode(&tmps.vom, VideoOutputMode::COLORED_BACKGROUND_ONLY); break;
-              case VideoOutputMode::GRAYSCALE: set_global_video_output_mode(&tmps.vom, VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY); break;
-              case VideoOutputMode::COLORED_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::COLORED); break;
-              case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: set_global_video_output_mode(&tmps.vom, VideoOutputMode::GRAYSCALE); break;
-              case VideoOutputMode::TEXT_ONLY: break; //no-op
+              case VidOutMode::COLOR: set_global_vom(&tmps.vom, VidOutMode::COLOR_BG); break;
+              case VidOutMode::GRAY: set_global_vom(&tmps.vom, VidOutMode::GRAY_BG); break;
+              case VidOutMode::COLOR_BG: set_global_vom(&tmps.vom, VidOutMode::COLOR); break;
+              case VidOutMode::GRAY_BG: set_global_vom(&tmps.vom, VidOutMode::GRAY); break;
+              case VidOutMode::PLAIN: break; //no-op
             }
           }
 
           if (input == 'n' || input == 'N') {
-            current_move_cmd = PlaylistMoveCommand::SKIP;
+            current_move_cmd = PlaylistMvCmd::SKIP;
             fetcher.dispatch_exit();
           }
 
           if (input == 'p' || input == 'P') {
-            current_move_cmd = PlaylistMoveCommand::REWIND;
+            current_move_cmd = PlaylistMvCmd::REWIND;
             fetcher.dispatch_exit();
           }
 
@@ -282,7 +283,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           if (audio_output && fetcher.is_playing()) audio_output->stop();
           {
             std::scoped_lock<std::mutex> total_lock{fetcher.alter_mutex};
-            fetcher.jump_to_time(clamp(requested_jump_time, 0.0, fetcher.get_duration()), system_clock_sec());
+            fetcher.jump_to_time(clamp(requested_jump_time, 0.0, fetcher.get_duration()), sys_clk_sec());
           }
           if (audio_output && fetcher.is_playing()) audio_output->start();
         }
@@ -305,7 +306,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
       fetcher.dispatch_exit(err.what());
     }
 
-    fetcher.join(system_clock_sec());
+    fetcher.join(sys_clk_sec());
     if (fetcher.has_error()) {
       throw std::runtime_error(fmt::format("[{}]: Media Fetcher Error: {}",
       FUNCDINFO, fetcher.get_error()));
@@ -320,17 +321,17 @@ int tmedia_main_loop(TMediaProgramState tmps) {
   return EXIT_SUCCESS;
 }
 
-void init_global_video_output_mode(VideoOutputMode mode) {
+void init_global_video_output_mode(VidOutMode mode) {
   switch (mode) {
-    case VideoOutputMode::COLORED:
-    case VideoOutputMode::COLORED_BACKGROUND_ONLY: ncurses_set_color_palette(TMNCursesColorPalette::RGB); break;
-    case VideoOutputMode::GRAYSCALE:
-    case VideoOutputMode::GRAYSCALE_BACKGROUND_ONLY: ncurses_set_color_palette(TMNCursesColorPalette::GRAYSCALE); break;
-    case VideoOutputMode::TEXT_ONLY: break;
+    case VidOutMode::COLOR:
+    case VidOutMode::COLOR_BG: ncurses_set_color_palette(TMNCursesColorPalette::RGB); break;
+    case VidOutMode::GRAY:
+    case VidOutMode::GRAY_BG: ncurses_set_color_palette(TMNCursesColorPalette::GRAYSCALE); break;
+    case VidOutMode::PLAIN: break;
   }
 }
 
-void set_global_video_output_mode(VideoOutputMode* current, VideoOutputMode next) {
+void set_global_vom(VidOutMode* current, VidOutMode next) {
   init_global_video_output_mode(next);
   *current = next;
 }
