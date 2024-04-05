@@ -154,9 +154,9 @@ void ncurses_set_color_palette_custom(const Palette& colorPalette) {
   available_color_palette_colors = 0;
   for (RGBColor color : colorPalette) {
     init_color(available_color_palette_colors++ + COLOR_PALETTE_START, 
-    static_cast<short>(color.red * 1000 / 255),
-    static_cast<short>(color.green * 1000 / 255),
-    static_cast<short>(color.blue * 1000 / 255));
+    static_cast<short>(color.r) * 1000 / 255,
+    static_cast<short>(color.g) * 1000 / 255,
+    static_cast<short>(color.b) * 1000 / 255);
     if (available_color_palette_colors >= CHANGEABLE_COLORS) break;
   }
 
@@ -165,16 +165,22 @@ void ncurses_set_color_palette_custom(const Palette& colorPalette) {
 
 }
 
+
+
 curses_color_t get_closest_ncurses_color(const RGBColor& input) {
   if (!curses_colors_initialized) return 0; // just return a default 0 to no-op
 
-  return color_map[input.red * (COLOR_MAP_SIDE - 1) / 255][input.green * (COLOR_MAP_SIDE - 1) / 255][input.blue * (COLOR_MAP_SIDE - 1) / 255];
+  return color_map[static_cast<int>(input.r) * (COLOR_MAP_SIDE - 1) / 255]
+                  [static_cast<int>(input.g) * (COLOR_MAP_SIDE - 1) / 255]
+                  [static_cast<int>(input.b) * (COLOR_MAP_SIDE - 1) / 255];
 }
 
 curses_color_pair_t get_closest_ncurses_color_pair(const RGBColor& input) {
   if (!curses_colors_initialized) return 0; // just return a default 0 to no-op
 
-  return color_pairs_map[input.red * (COLOR_MAP_SIDE - 1) / 255][input.green * (COLOR_MAP_SIDE - 1) / 255][input.blue * (COLOR_MAP_SIDE - 1) / 255];
+  return color_pairs_map[static_cast<int>(input.r) * (COLOR_MAP_SIDE - 1) / 255]
+                      [static_cast<int>(input.g) * (COLOR_MAP_SIDE - 1) / 255]
+                      [static_cast<int>(input.b) * (COLOR_MAP_SIDE - 1) / 255];
 }
 
 // --------------------------------------------------------------
@@ -196,7 +202,7 @@ std::string ncurses_color_palette_string(TMNCursesColorPalette colorPalette) {
 RGBColor ncurses_get_color_number_content(curses_color_t color) {
   short r, g, b;
   color_content(color, &r, &g, &b);
-  return RGBColor((int)r * 255 / 1000, (int)g * 255 / 1000, (int)b * 255 / 1000);
+  return RGBColor(r * 255 / 1000, g * 255 / 1000, b * 255 / 1000);
 }
 
 ColorPair ncurses_get_pair_number_content(curses_color_pair_t pair) {
@@ -206,7 +212,7 @@ ColorPair ncurses_get_pair_number_content(curses_color_pair_t pair) {
 }
 
 int ncurses_init_rgb_color_palette() {
-  const short NCURSES_COLOR_COMPONENT_MAX = 1000;
+  const double NCURSES_COLOR_COMPONENT_MAX = 1000.;
   const short MAX_COLORS = std::min(COLORS, MAX_TERMINAL_COLORS);
   const short CHANGEABLE_COLORS = MAX_COLORS - COLOR_PALETTE_START;
   if (CHANGEABLE_COLORS <= 0) return 0;
@@ -214,10 +220,10 @@ int ncurses_init_rgb_color_palette() {
   const double BOX_SIZE = NCURSES_COLOR_COMPONENT_MAX / std::cbrt(CHANGEABLE_COLORS);
 
   int color_index = COLOR_PALETTE_START;
-  for (double r = 0; r < (double)NCURSES_COLOR_COMPONENT_MAX; r += BOX_SIZE)
-    for (double g = 0; g < (double)NCURSES_COLOR_COMPONENT_MAX; g += BOX_SIZE)
-      for (double b = 0; b < (double)NCURSES_COLOR_COMPONENT_MAX; b += BOX_SIZE)
-        init_color(color_index++, (short)r, (short)g, (short)b);
+  for (double r = 0; r < NCURSES_COLOR_COMPONENT_MAX; r += BOX_SIZE)
+    for (double g = 0; g < NCURSES_COLOR_COMPONENT_MAX; g += BOX_SIZE)
+      for (double b = 0; b < NCURSES_COLOR_COMPONENT_MAX; b += BOX_SIZE)
+        init_color(color_index++, static_cast<short>(r), static_cast<short>(g), static_cast<short>(b));
 
   return color_index;
 }
@@ -243,7 +249,7 @@ void ncurses_init_color_pairs() {
     curses_color_pair_t color_pair_index = i;
     curses_color_t color_index = i + COLOR_PALETTE_START;
     RGBColor color = ncurses_get_color_number_content(color_index);
-    RGBColor complementary = color.get_complementary();
+    RGBColor complementary = color.get_comp();
     init_pair(color_pair_index, ncurses_find_best_initialized_color_number(complementary), color_index);
   }
 
@@ -265,10 +271,10 @@ void ncurses_init_color_maps() {
 curses_color_t ncurses_find_best_initialized_color_number(RGBColor& input) {
   curses_color_t best_color_index = -1;
   double best_distance = (double)INT32_MAX;
-  for (curses_color_t i = 0; i < available_color_palette_colors; i++) {
+  for (int i = 0; i < available_color_palette_colors; i++) {
     curses_color_t color_index = i + COLOR_PALETTE_START;
     RGBColor current_color = ncurses_get_color_number_content(color_index);
-    double distance = current_color.distance_squared(input);
+    double distance = current_color.dis_sq(input);
     if (distance < best_distance) {
       best_color_index = color_index;
       best_distance = distance;
@@ -281,10 +287,10 @@ curses_color_t ncurses_find_best_initialized_color_number(RGBColor& input) {
 curses_color_pair_t ncurses_find_best_initialized_color_pair(RGBColor& input) {
   curses_color_pair_t best_pair_index = -1;
   double best_distance = (double)INT32_MAX;
-  for (curses_color_pair_t i = 0; i < available_color_palette_color_pairs; i++) {
+  for (int i = 0; i < available_color_palette_color_pairs; i++) {
     curses_color_pair_t color_pair_index = i;
     ColorPair color_pair = ncurses_get_pair_number_content(color_pair_index);
-    const double distance = color_pair.bg.distance_squared(input);
+    const double distance = color_pair.bg.dis_sq(input);
     if (distance < best_distance) {
       best_pair_index = color_pair_index;
       best_distance = distance;

@@ -24,7 +24,7 @@ class Canvas {
 
   public:
     Canvas(int rows, int cols);
-    void line(int row1, int col1, int row2, int col2, RGBColor color);
+    void line(int row1, int col1, int row2, int col2, const RGBColor color);
     PixelData get_image();
 };
 

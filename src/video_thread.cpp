@@ -62,7 +62,7 @@ constexpr double DEFAULT_AVGFTS = 1.0 / 24.0;
 void MediaFetcher::video_fetching_thread_func() {
   // note that frame_audio_fetching_func can run even if there is no video data
   // available. Therefore, we can't just guard from AVMEDIA_TYPE_VIDEO here.
-  
+
   try {
     switch (this->media_type) {
       case MediaType::IMAGE: this->frame_image_fetching_func(); break;
@@ -135,10 +135,10 @@ void MediaFetcher::frame_video_fetching_func() {
 
       if (wait_duration > 0.0 || this->frame.get_width() * this->frame.get_height() == 0) { // or the current frame has no valid dimensions
         AVFrame* frame_image = vconv.convert_video_frame(dec_frames[0]);
-        PixelData frame_pixel_data = PixelData(frame_image);
+        PixelData pix_data = PixelData(frame_image);
         {
           std::lock_guard<std::mutex> lock(this->alter_mutex);
-          this->frame = frame_pixel_data;
+          this->frame = pix_data;
         }
         av_frame_free(&frame_image);
       }

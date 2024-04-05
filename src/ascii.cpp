@@ -20,7 +20,7 @@ char get_char_from_value(const std::string& characters, uint8_t value) {
 RGBColor get_rgb_from_char(const std::string& characters, char ch) {
   for (std::string::size_type i = 0; i < characters.size(); i++) {
     if (ch == characters[i]) {
-      int val = i * 255 / (characters.size() - 1); 
+      std::uint8_t val = i * 255 / (characters.size() - 1); 
       return RGBColor(val);
     }
   }
@@ -30,7 +30,7 @@ RGBColor get_rgb_from_char(const std::string& characters, char ch) {
 }
 
 char get_char_from_rgb(const std::string& characters, const RGBColor& color) {
-  return get_char_from_value(characters, (uint8_t)get_grayscale(color.red, color.green, color.blue));
+  return get_char_from_value(characters, get_gray8(color.r, color.g, color.b));
 }
 
 

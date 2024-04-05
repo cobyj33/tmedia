@@ -14,18 +14,18 @@
 RGBColor RGBColor::BLACK = RGBColor(0, 0, 0);
 RGBColor RGBColor::WHITE = RGBColor(255, 255, 255);
 
-double RGBColor::distance_squared(const RGBColor& other) const {
+double RGBColor::dis_sq(const RGBColor& other) const {
   // credit to https://www.compuphase.com/cmetric.htm 
-  long rmean = ( (long)this->red + (long)other.red ) / 2;
-  long r = (long)this->red - (long)other.red;
-  long g = (long)this->green - (long)other.green;
-  long b = (long)this->blue - (long)other.blue;
-  return (((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8);
+  long rmean = ( static_cast<long>(this->r) + static_cast<long>(other.r) ) / 2L;
+  long r = static_cast<long>(this->r) - static_cast<long>(other.r);
+  long g = static_cast<long>(this->g) - static_cast<long>(other.g);
+  long b = static_cast<long>(this->b) - static_cast<long>(other.b);
+  return (((512L+rmean)*r*r)>>8) + 4*g*g + (((767L-rmean)*b*b)>>8);
 }
 
 double RGBColor::distance(const RGBColor& other) const {
   // credit to https://www.compuphase.com/cmetric.htm 
-  return std::sqrt(this->distance_squared(other));
+  return std::sqrt(this->dis_sq(other));
 }
 
 
@@ -37,46 +37,40 @@ RGBColor get_average_color(std::vector<RGBColor>& colors) {
 
   int sums[3] = {0, 0, 0};
   for (std::size_t i = 0; i < colors.size(); i++) {
-    sums[0] += colors[i].red;
-    sums[1] += colors[i].green;
-    sums[2] += colors[i].blue;
+    sums[0] += colors[i].r;
+    sums[1] += colors[i].g;
+    sums[2] += colors[i].b;
   }
 
-  return RGBColor((int)(sums[0]/colors.size()), (int)(sums[1]/colors.size()), (int)(sums[2]/colors.size()));
+  return RGBColor((sums[0]/colors.size()) & 0xFF, (sums[1]/colors.size()) & 0xFF, (sums[2]/colors.size()) & 0xFF);
 }
 
-int RGBColor::get_grayscale_value() const {
-  return get_grayscale(this->red, this->green, this->blue);
+std::uint8_t RGBColor::gray_val() const {
+  return get_gray8(this->r, this->g, this->b);
 }
 
 
-int get_grayscale(int r, int g, int b) {
+int get_grayint(int r, int g, int b) {
   return (int)(0.299 * r + 0.587 * g + 0.114 * b);
 }
 
-RGBColor RGBColor::get_complementary() const {
-  return RGBColor(255 - this->red, 255 - this->green, 255 - this->blue );
+std::uint8_t get_gray8(std::uint8_t r, std::uint8_t g, std::uint8_t b) {
+  return (std::uint8_t)(0.299 * r + 0.587 * g + 0.114 * b);
+}
+
+RGBColor RGBColor::get_comp() const {
+  return RGBColor(255 - this->r, 255 - this->g, 255 - this->b );
 } 
 
-bool RGBColor::is_grayscale() const {
-  return this->red == this->green && this->green == this->blue;
+bool RGBColor::is_gray() const {
+  return this->r == this->g && this->g == this->b;
 }
 
 
-RGBColor RGBColor::create_grayscale() const {
-  int value = get_grayscale(this->red, this->green, this->blue);
+RGBColor RGBColor::as_gray() const {
+  std::uint8_t value = get_gray8(this->r, this->g, this->b);
   return RGBColor(value);
 }
-
-bool RGBColor::equals(const RGBColor& other) const {
-  return this->red == other.red && this->green == other.green && this->blue == other.blue;
-}
-
-bool RGBColor::operator==(const RGBColor& other) const {
-  return this->red == other.red && this->green == other.green && this->blue == other.blue;
-}
-
-
 
 RGBColor find_closest_color(RGBColor& input, std::vector<RGBColor>& colors) {
   int index = find_closest_color_index(input, colors);
@@ -92,7 +86,7 @@ int find_closest_color_index(RGBColor& input, std::vector<RGBColor>& colors) {
   int best_color = 0;
   double best_distance = (double)INT32_MAX;
   for (std::size_t i = 0; i < colors.size(); i++) {
-    double distance = colors[i].distance_squared(input);
+    double distance = colors[i].dis_sq(input);
     if (distance < best_distance) {
       best_color = i;
       best_distance = distance;
@@ -103,7 +97,25 @@ int find_closest_color_index(RGBColor& input, std::vector<RGBColor>& colors) {
 }
 
 void RGBColor::operator=(const RGBColor& color) {
-  this->red = color.red;
-  this->green = color.green;
-  this->blue = color.blue;
+  this->r = color.r;
+  this->g = color.g;
+  this->b = color.b;
+}
+
+void RGBColor::operator=(RGBColor&& color) {
+  this->r = color.r;
+  this->g = color.g;
+  this->b = color.b;
+}
+
+bool RGBColor::equals(const RGBColor& other) const {
+  return this->r == other.r && this->g == other.g && this->b == other.b;
+}
+
+bool RGBColor::operator==(const RGBColor& other) const {
+  return this->r == other.r && this->g == other.g && this->b == other.b;
+}
+
+bool RGBColor::operator==(RGBColor&& other) const {
+  return this->r == other.r && this->g == other.g && this->b == other.b;
 }

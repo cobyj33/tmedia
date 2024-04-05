@@ -231,7 +231,8 @@ const RGBColor& PixelData::at(int row, int col) const {
 }
 
 RGBColor get_avg_color_from_area(const PixelData& pixel_data, double row, double col, double width, double height) {
-  return get_avg_color_from_area(pixel_data, (int)std::floor(row), (int)std::floor(col), (int)std::ceil(width), (int)std::ceil(height));
+  return get_avg_color_from_area(pixel_data, static_cast<int>(std::floor(row)),
+        static_cast<int>(std::floor(col)), static_cast<int>(std::ceil(width)), static_cast<int>(std::ceil(height)));
 }
 
 RGBColor get_avg_color_from_area(const PixelData& pixel_data, int row, int col, int width, int height) {

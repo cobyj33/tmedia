@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cstddef>
+#include <cstdint>
 
 /**
  * @brief A representation of an RGB Color with R, G, and B channels in the
@@ -16,28 +17,31 @@
  */
 class RGBColor {
   public:
-    int red;
-    int green;
-    int blue;
+    std::uint8_t r;
+    std::uint8_t g;
+    std::uint8_t b;
 
     static RGBColor BLACK;
     static RGBColor WHITE; 
 
-    RGBColor() : red(0), green(0), blue(0) {}
-    RGBColor(int gray) : red(gray), green(gray), blue(gray) {}
-    RGBColor(int red, int green, int blue) : red(red), green(green), blue(blue) {}
-    RGBColor(const RGBColor& color) : red(color.red), green(color.green), blue(color.blue) {}
+    RGBColor() : r(0), g(0), b(0) {}
+    RGBColor(std::uint8_t gray) : r(gray), g(gray), b(gray) {}
+    RGBColor(std::uint8_t r, std::uint8_t g, std::uint8_t b) : r(r), g(g), b(b) {}
+    RGBColor(const RGBColor& color) : r(color.r), g(color.g), b(color.b) {}
+    RGBColor(RGBColor&& color) : r(color.r), g(color.g), b(color.b) {}
 
     void operator=(const RGBColor& color);
+    void operator=(RGBColor&& color);
     bool operator==(const RGBColor& color) const;
+    bool operator==(RGBColor&& color) const;
 
     double distance(const RGBColor& other) const;
-    double distance_squared(const RGBColor& other) const;
-    RGBColor get_complementary() const;
+    double dis_sq(const RGBColor& other) const;
+    RGBColor get_comp() const;
     bool equals(const RGBColor& other) const;
-    bool is_grayscale() const;
-    RGBColor create_grayscale() const;
-    int get_grayscale_value() const;
+    bool is_gray() const;
+    RGBColor as_gray() const;
+    std::uint8_t gray_val() const;
 };
 
 
@@ -45,9 +49,9 @@ class RGBColorHashFunction {
 public:
     // Ripped from http://www.beosil.com/download/CollisionDetectionHashing_VMV03.pdf pg 666 sec 4.1 paragraph 2
     std::size_t operator()(const RGBColor& rgb) const {
-      return (73856093UL * static_cast<std::size_t>(rgb.red)) ^
-            (19349663UL * static_cast<std::size_t>(rgb.green)) ^
-            (83492791UL * static_cast<std::size_t>(rgb.blue));
+      return (73856093UL * static_cast<std::size_t>(rgb.r)) ^
+            (19349663UL * static_cast<std::size_t>(rgb.g)) ^
+            (83492791UL * static_cast<std::size_t>(rgb.b));
     }
 };
 
@@ -56,12 +60,13 @@ public:
  * 
  * @note This function should work for r >= 0, g >= 0, b >= 0, no matter the bounds of the channels, whether that be 0-255 or 0-1000
  * 
- * @param r The red channel of the rgb value
- * @param g The green channel of the rgb value
- * @param b The blue channel of the rgb value
+ * @param r The r channel of the rgb value
+ * @param g The g channel of the rgb value
+ * @param b The b channel of the rgb value
  * @return An integer representing the color channel value of all channels in the RGB grayscale representation of the inputted color
  */
-int get_grayscale(int r, int g, int b);
+int get_grayint(int r, int g, int b);
+std::uint8_t get_gray8(std::uint8_t r, std::uint8_t g, std::uint8_t b);
 
 /**
  * @brief Find the index of the closest color within a group of colors to the given input 

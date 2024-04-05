@@ -18,15 +18,15 @@ TEST_CASE("pixeldata", "[image manipulation]") {
   SECTION("grayscale") {
     
 
-    REQUIRE(grayscale.at(0, 0).is_grayscale());
-    REQUIRE(grayscale.at(0, 0).red == 255);
-    REQUIRE(grayscale.at(0, 0).green == 255);
-    REQUIRE(grayscale.at(0, 0).blue == 255);
-    REQUIRE(grayscale.at(0, 2).red == 120);
-    REQUIRE(grayscale.at(0, 2).green == 120);
-    REQUIRE(grayscale.at(0, 2).blue == 120);
-    REQUIRE(grayscale.at(0, 2).blue == 120);
-    REQUIRE(grayscale.at(0, 2).is_grayscale());
+    REQUIRE(grayscale.at(0, 0).is_gray());
+    REQUIRE(grayscale.at(0, 0).r == 255);
+    REQUIRE(grayscale.at(0, 0).g == 255);
+    REQUIRE(grayscale.at(0, 0).b == 255);
+    REQUIRE(grayscale.at(0, 2).r == 120);
+    REQUIRE(grayscale.at(0, 2).g == 120);
+    REQUIRE(grayscale.at(0, 2).b == 120);
+    REQUIRE(grayscale.at(0, 2).b == 120);
+    REQUIRE(grayscale.at(0, 2).is_gray());
 
     REQUIRE(grayscale.get_width() == 6);
     REQUIRE(grayscale.get_height() == 8);

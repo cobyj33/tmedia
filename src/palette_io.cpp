@@ -77,7 +77,7 @@ Palette read_gimp_gpl_palette(std::istream& stream) {
 
     RGBColor color;
     std::istringstream lineRead(line);
-    lineRead >> color.red >> color.green >> color.blue;
+    lineRead >> color.r >> color.g >> color.b;
     palette.insert(color); 
   }
 

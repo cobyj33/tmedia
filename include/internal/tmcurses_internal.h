@@ -16,8 +16,7 @@ struct ColorPair {
   RGBColor fg;
   RGBColor bg;
   ColorPair() : fg(RGBColor(0)), bg(RGBColor(0)) { } 
-  ColorPair(RGBColor fg, RGBColor bg) : fg(fg), bg(bg) {}
-  ColorPair(RGBColor& fg, RGBColor& bg) : fg(fg), bg(bg) {}
+  ColorPair(const RGBColor fg, const RGBColor bg) : fg(fg), bg(bg) {}
   ColorPair(const ColorPair& cp) : fg(cp.fg), bg(cp.bg) {}
 };
 

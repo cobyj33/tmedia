@@ -1,5 +1,7 @@
 #include "palette.h"
 
+#include <cstdint>
+
 bool palette_equals(Palette& first, Palette& second) {
   if (first.size() != second.size()) {
     return false;
@@ -21,7 +23,9 @@ Palette palette_color_cube(int side) {
   for (double r = 0; r < 255.0; r += BOX_SIZE)
     for (double g = 0; g < 255.0; g += BOX_SIZE)
       for (double b = 0; b < 255.0; b += BOX_SIZE)
-        palette.insert(RGBColor((int)r, (int)g, (int)b));
+        palette.insert(RGBColor(static_cast<std::uint8_t>(r),
+                                static_cast<std::uint8_t>(g),
+                                static_cast<std::uint8_t>(b)));
 
   return palette;
 }
@@ -29,9 +33,8 @@ Palette palette_color_cube(int side) {
 Palette palette_grayscale(int entry_count) {
   Palette palette;
 
-  for (short i = 0; i < entry_count; i++) {
-    const short grayscale_value = i * 255 / entry_count;
-    palette.insert(RGBColor(grayscale_value));
+  for (int i = 0; i < entry_count; i++) {
+    palette.insert(RGBColor(static_cast<uint8_t>(i * 255 / entry_count)));
   }
 
   return palette;

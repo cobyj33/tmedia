@@ -17,7 +17,7 @@ Canvas::Canvas(int nb_rows, int nb_cols) {
   }
 }
 
-void Canvas::line(int row1, int col1, int row2, int col2, RGBColor color) {
+void Canvas::line(int row1, int col1, int row2, int col2, const RGBColor color) {
   const int rowmin = std::min(row1, row2);
   const int rowmax = std::max(row1, row2);
   
