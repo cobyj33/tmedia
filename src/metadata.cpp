@@ -14,17 +14,17 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
-void metadata_cache_cache(std::string file, MetadataCache& cache) {
+void mchc_cache(std::string file, MetadataCache& cache) {
   if (cache.count(file) == 0) {
     cache[file] = get_file_metadata(file);
   }
 }
 
-bool metadata_cache_has_file(std::string file, MetadataCache& cache) {
+bool mchc_has_file(std::string file, MetadataCache& cache) {
   return cache.count(file) == 1;
 }
 
-bool metadata_cache_has(std::string file, std::string key, MetadataCache& cache) {
+bool mchc_has(std::string file, std::string key, MetadataCache& cache) {
   if (cache.count(file) == 1) {
     if (cache[file].count(key) == 1) {
       return true;
@@ -33,9 +33,9 @@ bool metadata_cache_has(std::string file, std::string key, MetadataCache& cache)
   return false;
 }
 
-std::string metadata_cache_get(std::string file, std::string key, MetadataCache& cache) {
-  if (!metadata_cache_has(file, key, cache)) {
-    if (metadata_cache_has_file(file, cache)) {
+std::string mchc_get(std::string file, std::string key, MetadataCache& cache) {
+  if (!mchc_has(file, key, cache)) {
+    if (mchc_has_file(file, cache)) {
       throw std::runtime_error(fmt::format("[{}] could not find key (\"{}\") "
       "in file (\"{}\") in metadata cache", FUNCDINFO, key, file));
     }
@@ -49,12 +49,12 @@ std::string metadata_cache_get(std::string file, std::string key, MetadataCache&
 
 std::map<std::string, std::string> get_file_metadata(std::filesystem::path path) {
   AVFormatContext* fmt_ctx = open_format_context(path);
-  std::map<std::string, std::string> metadata = get_format_context_metadata(fmt_ctx);
+  std::map<std::string, std::string> metadata = fmt_ctx_meta(fmt_ctx);
   avformat_close_input(&fmt_ctx);
   return metadata;
 }
 
-std::map<std::string, std::string> get_format_context_metadata(AVFormatContext* fmt_ctx) {
+std::map<std::string, std::string> fmt_ctx_meta(AVFormatContext* fmt_ctx) {
   std::map<std::string, std::string> dict;
 
   std::vector<AVDictionary*> metadata_dicts;

@@ -67,18 +67,18 @@ bool MediaFetcher::is_playing() {
   return this->clock.is_playing();
 }
 
-void MediaFetcher::pause(double current_system_time) {
+void MediaFetcher::pause(double currsystime) {
   if (this->media_type == MediaType::IMAGE)
     throw std::runtime_error(fmt::format("[{}] Cannot pause image media file",
     FUNCDINFO));
-  this->clock.stop(current_system_time);
+  this->clock.stop(currsystime);
 }
 
-void MediaFetcher::resume(double current_system_time) {
+void MediaFetcher::resume(double currsystime) {
   if (this->media_type == MediaType::IMAGE)
     throw std::runtime_error(fmt::format("[{}] Cannot resume image media file",
     FUNCDINFO));
-  this->clock.resume(current_system_time);
+  this->clock.resume(currsystime);
   std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
   this->resume_cond.notify_all();
 }
@@ -111,16 +111,16 @@ double MediaFetcher::get_duration() const {
 /**
  * For thread safety, alter_mutex must be locked
 */
-double MediaFetcher::get_time(double current_system_time) const {
-  return this->clock.get_time(current_system_time);
+double MediaFetcher::get_time(double currsystime) const {
+  return this->clock.get_time(currsystime);
 }
 
 /**
  * For threadsafety, alter_mutex must be locked
 */
-double MediaFetcher::get_desync_time(double current_system_time) const {
+double MediaFetcher::get_desync_time(double currsystime) const {
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    double playback_time = this->get_time(current_system_time);
+    double playback_time = this->get_time(currsystime);
     double audio_time = this->audio_buffer->get_buffer_current_time();
     return std::abs(audio_time - playback_time);
   }
@@ -130,7 +130,7 @@ double MediaFetcher::get_desync_time(double current_system_time) const {
 /**
  * For threadsafety, both alter_mutex must be locked
 */
-int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
+int MediaFetcher::jump_to_time(double target_time, double currsystime) {
   if (target_time < 0.0 || target_time > this->get_duration()) {
     throw std::runtime_error(fmt::format("[{}] Could not jump to time {} ({} "
     "seconds). Time is out of the bounds of duration {} ( {} seconds )",
@@ -138,7 +138,7 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
     format_time_hh_mm_ss(this->get_duration()), this->get_duration()));
   }
 
-  const double original_time = this->get_time(current_system_time);
+  const double original_time = this->get_time(currsystime);
   int ret = this->mdec->jump_to_time(target_time);
 
   if (ret < 0)
@@ -152,23 +152,23 @@ int MediaFetcher::jump_to_time(double target_time, double current_system_time) {
   return ret;
 }
 
-void MediaFetcher::begin(double current_system_time) {
+void MediaFetcher::begin(double currsystime) {
   this->in_use = true;
-  this->clock.init(current_system_time);
+  this->clock.init(currsystime);
 
-  std::thread initialized_duration_checking_thread(&MediaFetcher::duration_checking_thread_func, this);
-  duration_checking_thread.swap(initialized_duration_checking_thread);
-  std::thread initialized_video_thread(&MediaFetcher::video_fetching_thread_func, this);
-  video_thread.swap(initialized_video_thread);
-  std::thread initialized_audio_thread(&MediaFetcher::audio_dispatch_thread_func, this);
-  audio_thread.swap(initialized_audio_thread);
+  std::thread idct(&MediaFetcher::duration_checking_thread_func, this);
+  this->duration_checking_thread.swap(idct);
+  std::thread ivt(&MediaFetcher::video_fetching_thread_func, this);
+  this->video_thread.swap(ivt);
+  std::thread iat(&MediaFetcher::audio_dispatch_thread_func, this);
+  this->audio_thread.swap(iat);
 }
 
-void MediaFetcher::join(double current_system_time) {
+void MediaFetcher::join(double currsystime) {
   this->in_use = false; // the user can set this as well if they want, but this is to make sure that the threads WILL end regardless
   
   if (this->media_type != MediaType::IMAGE && this->is_playing())
-    this->pause(current_system_time);
+    this->pause(currsystime);
   if (this->video_thread.joinable())
     this->video_thread.join();
   if (this->duration_checking_thread.joinable())

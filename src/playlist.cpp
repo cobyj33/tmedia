@@ -38,6 +38,10 @@ Playlist<T>::Playlist(std::vector<T> entries, LoopType loop_type) {
 
 template <typename T>
 int Playlist<T>::index() const {
+  if (this->m_entries.size() == 0) {
+    throw std::runtime_error(fmt::format("[{}] Cannot access current "
+    "index of empty playlist", FUNCDINFO));
+  }
   return this->m_queue_indexes[this->m_queue_index];
 }
 

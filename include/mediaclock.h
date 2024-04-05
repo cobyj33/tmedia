@@ -27,31 +27,31 @@ class MediaClock {
 
     /**
      * @brief Get the current time (in seconds) of the clock. This time takes into account total time paused, skipped, and played
-     * @param current_system_time The current system time
+     * @param currsystime The current system time
      * @return double
      */
-    double get_time(double current_system_time) const;
+    double get_time(double currsystime) const;
 
     /**
      * @brief Toggle in between resume and stop
      */
-    void toggle(double current_system_time);
+    void toggle(double currsystime);
 
     /**
      * @note **Do not use the init function if you are simply trying to resume the clock stream, use the resume function instead**.
      * The init function assumes that the clock is beginning once again at the specified time
      * 
-     * @param current_system_time 
+     * @param currsystime 
      */
-    void init(double current_system_time);
-    void stop(double current_system_time);
+    void init(double currsystime);
+    void stop(double currsystime);
 
     /**
      * @brief 
      * 
-     * @param current_system_time 
+     * @param currsystime 
      */
-    void resume(double current_system_time);
+    void resume(double currsystime);
     void skip(double seconds_to_skip);
 
     bool is_playing() const;

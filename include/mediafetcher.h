@@ -80,8 +80,8 @@ class MediaFetcher {
 
     MediaFetcher(std::filesystem::path path);
 
-    void begin(double current_system_time); // Only to be called by owning thread
-    void join(double current_system_time); // Only to be called by owning thread after in_use is set to false
+    void begin(double currsystime); // Only to be called by owning thread
+    void join(double currsystime); // Only to be called by owning thread after in_use is set to false
 
     /**
      * @brief Returns the duration in seconds of the currently playing media
@@ -95,8 +95,8 @@ class MediaFetcher {
     bool should_exit();
 
     bool is_playing();
-    void pause(double current_system_time);
-    void resume(double current_system_time);
+    void pause(double currsystime);
+    void resume(double currsystime);
 
     bool has_error() const noexcept;
     std::string get_error();
@@ -107,8 +107,8 @@ class MediaFetcher {
      * 
      * @return The current time of playback since 0:00 in seconds
      */
-    double get_time(double current_system_time) const; // Not thread-safe, lock alter_mutex first
-    double get_desync_time(double current_system_time) const; // Not thread-safe, lock alter_mutex first
+    double get_time(double currsystime) const; // Not thread-safe, lock alter_mutex first
+    double get_desync_time(double currsystime) const; // Not thread-safe, lock alter_mutex first
 
     /**
      * @brief Moves the MediaFetcher's playback to a certain time (including video and audio streams)
@@ -116,10 +116,10 @@ class MediaFetcher {
      * The video's duration could be found with the MediaFetcher::get_duration() function
      * 
      * @param target_time The target time to jump the playback to (must be reachable)
-     * @param current_system_time The current system time
+     * @param currsystime The current system time
      * @throws If the target time is not in the boudns of the video's playtime
      */
-    int jump_to_time(double target_time, double current_system_time); // Not thread-safe, lock alter_mutex first
+    int jump_to_time(double target_time, double currsystime); // Not thread-safe, lock alter_mutex first
 };
 
 

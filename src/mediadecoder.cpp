@@ -33,7 +33,7 @@ MediaDecoder::MediaDecoder(std::filesystem::path path, std::set<enum AVMediaType
   }
 
   this->media_type = media_type_from_avformat_context(this->fmt_ctx);
-  this->metadata = get_format_context_metadata(this->fmt_ctx);
+  this->metadata = fmt_ctx_meta(this->fmt_ctx);
 
   for (const enum AVMediaType& stream_type : requested_streams) {
     try {

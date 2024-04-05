@@ -10,6 +10,8 @@
 #include <vector>
 
 
+void audio_float_buffer_to_normalized_monoip(float* frames, int nb_frames, int nb_channels);
+
 std::vector<float> audio_float_buffer_to_normalized_mono(float* frames, int nb_frames, int nb_channels);
 
 AmplitudeAbs::AmplitudeAbs() {}
@@ -97,8 +99,8 @@ std::unique_ptr<Visualizer> AmplitudeMax::clone() {
 } 
 
 std::vector<float> audio_float_buffer_to_normalized_mono(float* frames, int nb_frames, int nb_channels) {
-  std::vector<float> audio_buffer_view(frames, frames + nb_frames * nb_channels);
-  std::vector<float> mono = audio_to_mono(audio_buffer_view, nb_channels);
-  audio_bound_volume(mono, 1, 1.0);
-  return mono;
+  std::vector<float> buf(frames, frames + nb_frames * nb_channels);
+  audio_to_mono(buf, nb_channels);
+  audio_bound_volume(buf, 1, 1.0);
+  return buf;
 }

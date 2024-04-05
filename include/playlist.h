@@ -118,17 +118,6 @@ LoopType loop_type_from_str(std::string_view loop_type);
 //     bool can_move(PlaylistMvCmd move_cmd) const noexcept;
 // };
 
-class IPlaylist {
-  virtual void size() = 0;
-  virtual void loop_type() = 0;
-  virtual void set_loop_type() = 0;
-  virtual int index() const = 0;
-  virtual std::filesystem::path current() const = 0;
-
-  virtual void move(PlaylistMvCmd move_cmd) = 0;
-  virtual std::filesystem::path peek_move(PlaylistMvCmd move_cmd) const = 0;
-  virtual bool can_move(PlaylistMvCmd move_cmd) const noexcept = 0;
-};
 
 // class UnshuffledPlaylist {
 

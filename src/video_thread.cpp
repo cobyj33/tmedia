@@ -42,21 +42,22 @@ extern "C" {
  *    processed. 
 */
 
-const int PAR_WIDTH = 2; // account for non-square shape of terminal characters
-const int PAR_HEIGHT = 5;
+ // Pixel Aspect Ratio - account for tall rectangular shape of terminal characters
+constexpr int PAR_WIDTH = 2;
+constexpr int PAR_HEIGHT = 5;
 
-const int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PAR_HEIGHT;
-const int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PAR_WIDTH;
-const double MAX_FRAME_ASPECT_RATIO = (double)MAX_FRAME_ASPECT_RATIO_WIDTH / (double)MAX_FRAME_ASPECT_RATIO_HEIGHT;
+constexpr int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PAR_HEIGHT;
+constexpr int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PAR_WIDTH;
+constexpr double MAX_FRAME_ASPECT_RATIO = static_cast<double>(MAX_FRAME_ASPECT_RATIO_WIDTH) / static_cast<double>(MAX_FRAME_ASPECT_RATIO_HEIGHT);
 
 // I found that past a width of 640 characters,
 // the terminal starts to stutter terribly on most terminal emulators, so we just
 // bound the image to this amount
 
-const int MAX_FRAME_WIDTH = 640;
-const int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH / MAX_FRAME_ASPECT_RATIO;
-const int PAUSED_SLEEP_TIME_MS = 100;
-const double DEFAULT_AVGFTS = 1.0 / 24.0;
+constexpr int MAX_FRAME_WIDTH = 640;
+constexpr int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH / MAX_FRAME_ASPECT_RATIO;
+constexpr int PAUSED_SLEEP_TIME_MS = 100;
+constexpr double DEFAULT_AVGFTS = 1.0 / 24.0;
 
 void MediaFetcher::video_fetching_thread_func() {
   try {
@@ -124,12 +125,12 @@ void MediaFetcher::frame_video_fetching_func() {
       dec_frames = this->mdec->next_frames(AVMEDIA_TYPE_VIDEO);
     }
 
-    if (dec_frames.size() > 0 && dec_frames[0] != nullptr) {
+    if (dec_frames.size() > 0) {
       const double frame_pts_time_sec = (double)dec_frames[0]->pts * this->mdec->get_time_base(AVMEDIA_TYPE_VIDEO);
       const double extra_delay = (double)(dec_frames[0]->repeat_pict) / (2 * avg_fts);
       wait_duration = frame_pts_time_sec - current_time + extra_delay;
 
-      if (wait_duration > 0.0 || this->frame.get_width() * this->frame.get_height() == 0) {
+      if (wait_duration > 0.0 || this->frame.get_width() * this->frame.get_height() == 0) { // or the current frame has no valid dimensions
         AVFrame* frame_image = vconv.convert_video_frame(dec_frames[0]);
         PixelData frame_pixel_data = PixelData(frame_image);
         {

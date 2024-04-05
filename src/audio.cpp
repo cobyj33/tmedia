@@ -5,7 +5,8 @@
 
 std::vector<float> audio_to_mono(std::vector<float>& frames, int nb_channels) {
   std::vector<float> res;
-  for (std::size_t frame = 0; frame < frames.size() / (std::size_t)nb_channels; frame++) {
+  std::size_t nb_frames = frames.size() / nb_channels;
+  for (std::size_t frame = 0; frame < nb_frames; frame++) {
     float mono = 0.0;
     for (int c = 0; c < nb_channels; c++) {
       mono += frames[frame * nb_channels + c];
@@ -14,6 +15,19 @@ std::vector<float> audio_to_mono(std::vector<float>& frames, int nb_channels) {
   }
 
   return res;
+}
+
+void audio_to_mono_ip(std::vector<float>& frames, int nb_channels) {
+  std::size_t nb_frames = frames.size() / nb_channels;
+  for (std::size_t frame = 0; frame < nb_frames; frame++) {
+    float mono = 0.0;
+    std::size_t frame_offset = frame * nb_channels;
+    for (int c = 0; c < nb_channels; c++) {
+      mono += frames[frame_offset + c];
+    }
+    frames[frame] = (mono);
+  }
+  frames.resize(nb_frames);
 }
 
 void audio_bound_volume(std::vector<float>& frames, int nb_channels, float max) {
