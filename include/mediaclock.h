@@ -44,10 +44,16 @@ class MediaClock {
      * @param currsystime 
      */
     void init(double currsystime);
+    
+    /**
+     * No-op if the clock is currently stopped
+    */
     void stop(double currsystime);
 
     /**
      * @brief 
+     * 
+     * No-op if the clock is currently running
      * 
      * @param currsystime 
      */

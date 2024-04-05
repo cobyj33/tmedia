@@ -37,10 +37,7 @@ void MediaClock::init(double currsystime) {
 };
 
 void MediaClock::resume(double currsystime) {
-  if (this->is_playing()) {
-    throw std::runtime_error(fmt::format("[{}] Cannot resume while playback "
-    "is already playing", FUNCDINFO));
-  }
+  if (this->is_playing()) return;
 
   this->m_playing = true;
   this->m_paused_time += currsystime - this->m_last_pause_system_time;
@@ -48,10 +45,7 @@ void MediaClock::resume(double currsystime) {
 
 
 void MediaClock::stop(double currsystime) {
-  if (!this->is_playing()) {
-    throw std::runtime_error(fmt::format("[{}] Attempted to stop playback "
-    "although playback is already stopped", FUNCDINFO));
-  }
+  if (!this->is_playing()) return;
 
   this->m_playing = false;
   this->m_last_pause_system_time = currsystime;
