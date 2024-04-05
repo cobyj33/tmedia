@@ -17,11 +17,11 @@ char get_char_from_value(const std::string& characters, uint8_t value) {
   return characters[ (std::size_t)value * (characters.length() - 1) / 255UL ];
 }
 
-RGBColor get_rgb_from_char(const std::string& characters, char ch) {
+RGB24 get_rgb_from_char(const std::string& characters, char ch) {
   for (std::string::size_type i = 0; i < characters.size(); i++) {
     if (ch == characters[i]) {
       std::uint8_t val = i * 255 / (characters.size() - 1); 
-      return RGBColor(val);
+      return RGB24(val);
     }
   }
   
@@ -29,7 +29,7 @@ RGBColor get_rgb_from_char(const std::string& characters, char ch) {
   ", character \"{}\" not found in string {} ", FUNCDINFO, ch, ch, characters));
 }
 
-char get_char_from_rgb(const std::string& characters, const RGBColor& color) {
+char get_char_from_rgb(const std::string& characters, const RGB24& color) {
   return get_char_from_value(characters, get_gray8(color.r, color.g, color.b));
 }
 

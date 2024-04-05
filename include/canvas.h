@@ -18,13 +18,13 @@ class PixelData;
 */
 class Canvas {
   private:
-    std::shared_ptr<std::vector<RGBColor>> canvas;
+    std::shared_ptr<std::vector<RGB24>> canvas;
     int nb_rows;
     int nb_cols;
 
   public:
     Canvas(int rows, int cols);
-    void line(int row1, int col1, int row2, int col2, const RGBColor color);
+    void line(int row1, int col1, int row2, int col2, const RGB24 color);
     PixelData get_image();
 };
 

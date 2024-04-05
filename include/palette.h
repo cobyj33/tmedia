@@ -4,7 +4,7 @@
 #include "color.h"
 #include <unordered_set>
 
-typedef std::unordered_set<RGBColor, RGBColorHashFunction> Palette;
+typedef std::unordered_set<RGB24, RGBColorHashFunction> Palette;
 
 bool palette_equals(Palette& first, Palette& second);
 Palette palette_color_cube(int side);

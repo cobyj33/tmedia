@@ -54,7 +54,7 @@ void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_c
 
   for (int row = 0; row < bounded.get_height(); row++) {
     for (int col = 0; col < bounded.get_width(); col++) {
-      const RGBColor& target_color = bounded.at(row, col);
+      const RGB24& target_color = bounded.at(row, col);
       const char target_char = background_only ? ' ' : get_char_from_rgb(ascii_char_map, target_color);
       
       if (output_mode == VidOutMode::PLAIN) {

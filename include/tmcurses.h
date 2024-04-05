@@ -22,7 +22,7 @@
 #include <vector>
 #include <string>
 
-class RGBColor;
+class RGB24;
 
 extern "C" {
   #include <curses.h>
@@ -92,17 +92,17 @@ void ncurses_set_color_palette(TMNCursesColorPalette);
 void ncurses_set_color_palette_custom(const Palette&);
 
 /**
- * @brief Find the closest registered ncurses color pair integer to the inputted RGBColor.
+ * @brief Find the closest registered ncurses color pair integer to the inputted RGB24.
  * 
  * Color pairs are used to apply attributes to printed terminal colors
  * @returns The closest registered ncurses color pair attribute index
  */
-curses_color_pair_t get_closest_ncurses_color_pair(const RGBColor& input);
+curses_color_pair_t get_closest_ncurses_color_pair(const RGB24& input);
 
 /**
- * @brief Find the closest registered ncurses color integer to the inputted RGBColor.
+ * @brief Find the closest registered ncurses color integer to the inputted RGB24.
  * @returns The closest registered ncurses color pair attribute index
  */
-curses_color_t get_closest_ncurses_color(const RGBColor& input);
+curses_color_t get_closest_ncurses_color(const RGB24& input);
 
 #endif

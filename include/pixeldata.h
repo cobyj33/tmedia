@@ -30,7 +30,7 @@ enum class ScalingAlgo {
 
 
 
-typedef RGBColor FillFunction(int row, int col);
+typedef RGB24 FillFunction(int row, int col);
 
 /**
  * An immutable raw image bitmap class to handle transferring and storing image
@@ -44,7 +44,7 @@ typedef RGBColor FillFunction(int row, int col);
 */
 class PixelData {
   private:
-    std::shared_ptr<std::vector<RGBColor>> pixels;
+    std::shared_ptr<std::vector<RGB24>> pixels;
     int m_width;
     int m_height;
 
@@ -53,11 +53,11 @@ class PixelData {
     void init_from_avframe(AVFrame* video_frame);
   public:
 
-    PixelData() : pixels(std::make_shared<std::vector<RGBColor>>()), m_width(0), m_height(0) {}
-    PixelData(const std::vector< std::vector<RGBColor> >& raw_rgb_data);
+    PixelData() : pixels(std::make_shared<std::vector<RGB24>>()), m_width(0), m_height(0) {}
+    PixelData(const std::vector< std::vector<RGB24> >& raw_rgb_data);
     PixelData(const std::vector< std::vector<uint8_t> >& raw_grayscale_data);
-    PixelData(const std::vector<RGBColor>& colors, int width, int height);
-    PixelData(std::shared_ptr<std::vector<RGBColor>> colors, int width, int height);
+    PixelData(const std::vector<RGB24>& colors, int width, int height);
+    PixelData(std::shared_ptr<std::vector<RGB24>> colors, int width, int height);
     PixelData(int width, int height);
     PixelData(AVFrame* video_frame);
     PixelData(const PixelData& pix_data);
@@ -74,11 +74,11 @@ class PixelData {
     PixelData scale(double amount, ScalingAlgo scaling_algorithm) const;
     PixelData bound(int width, int height, ScalingAlgo scaling_algorithm) const;
 
-    const RGBColor& at(int row, int column) const;
+    const RGB24& at(int row, int column) const;
     bool in_bounds(int row, int column) const;
 };
 
-RGBColor get_avg_color_from_area(const PixelData& data, int row, int col, int width, int height);
-RGBColor get_avg_color_from_area(const PixelData& data, double row, double col, double width, double height);
+RGB24 get_avg_color_from_area(const PixelData& data, int row, int col, int width, int height);
+RGB24 get_avg_color_from_area(const PixelData& data, double row, double col, double width, double height);
 
 #endif

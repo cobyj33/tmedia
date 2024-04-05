@@ -36,7 +36,7 @@ PixelData AmplitudeAbs::visualize(float* frames, int nb_frames, int nb_channels,
       sample /= count;
 
     int line_size = rows * sample;
-    canvas.line(clamp(middle_row - (line_size / 2), 0, rows - 1), col, clamp(middle_row + (line_size / 2), 0, rows - 1), col, RGBColor::WHITE);
+    canvas.line(clamp(middle_row - (line_size / 2), 0, rows - 1), col, clamp(middle_row + (line_size / 2), 0, rows - 1), col, RGB24::WHITE);
   }
 
   return canvas.get_image();
@@ -58,7 +58,7 @@ PixelData AmplitudeSimple::visualize(float* frames, int nb_frames, int nb_channe
   for (int col = 0; col < cols; col++) {
     const float sample = std::abs(mono[mono.size() * ((double)col / cols)]);
     const int line_size = rows * sample;
-    canvas.line(clamp(middle_row - (line_size / 2), 0, rows - 1), col, clamp(middle_row + (line_size / 2), 0, rows - 1), col, RGBColor::WHITE);
+    canvas.line(clamp(middle_row - (line_size / 2), 0, rows - 1), col, clamp(middle_row + (line_size / 2), 0, rows - 1), col, RGB24::WHITE);
   }
 
   return canvas.get_image();
@@ -87,7 +87,7 @@ PixelData AmplitudeMax::visualize(float* frames, int nb_frames, int nb_channels,
     }
 
     int line_size = rows * sample;
-    canvas.line(clamp(middle_row - (line_size / 2), 0, rows - 1), col, clamp(middle_row + (line_size / 2), 0, rows - 1), col, RGBColor::WHITE);
+    canvas.line(clamp(middle_row - (line_size / 2), 0, rows - 1), col, clamp(middle_row + (line_size / 2), 0, rows - 1), col, RGB24::WHITE);
   }
 
   return canvas.get_image();

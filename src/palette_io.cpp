@@ -75,7 +75,7 @@ Palette read_gimp_gpl_palette(std::istream& stream) {
     if (line[0] == '#') continue; // commented lines
     if (!std::isdigit(line[0])) continue; // commented lines
 
-    RGBColor color;
+    RGB24 color;
     std::istringstream lineRead(line);
     lineRead >> color.r >> color.g >> color.b;
     palette.insert(color); 

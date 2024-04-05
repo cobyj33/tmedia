@@ -16,14 +16,14 @@ const char* test1 = "GIMP Palette\n"
 "165 165 167 255 Gray\n";
 
 Palette test1Palette{
-  RGBColor(0, 0, 0),
-  RGBColor(254, 91, 89),
-  RGBColor(247, 165, 71),
-  RGBColor(243, 206, 82),
-  RGBColor(106, 205, 91),
-  RGBColor(87, 185, 242),
-  RGBColor(209, 134, 223),
-  RGBColor(165, 165, 167),
+  RGB24(0, 0, 0),
+  RGB24(254, 91, 89),
+  RGB24(247, 165, 71),
+  RGB24(243, 206, 82),
+  RGB24(106, 205, 91),
+  RGB24(87, 185, 242),
+  RGB24(209, 134, 223),
+  RGB24(165, 165, 167),
 };
 
 

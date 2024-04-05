@@ -59,8 +59,8 @@ void PixelData::init_from_avframe(AVFrame* video_frame) {
   this->init_from_source(video_frame->width, video_frame->height,
   [video_frame](int row, int col) {
     switch ((AVPixelFormat)video_frame->format) {
-      case AV_PIX_FMT_GRAY8: return RGBColor(video_frame->data[0][row * video_frame->width + col]);
-      case AV_PIX_FMT_RGB24: return RGBColor( video_frame->data[0][row * video_frame->width * 3 + col * 3],
+      case AV_PIX_FMT_GRAY8: return RGB24(video_frame->data[0][row * video_frame->width + col]);
+      case AV_PIX_FMT_RGB24: return RGB24( video_frame->data[0][row * video_frame->width * 3 + col * 3],
       video_frame->data[0][row * video_frame->width * 3 + col * 3 + 1],
       video_frame->data[0][row * video_frame->width * 3 + col * 3 + 2] );
       default: throw std::runtime_error(fmt::format("[{}] Passed in AVFrame "
@@ -70,13 +70,13 @@ void PixelData::init_from_avframe(AVFrame* video_frame) {
   });
 }
 
-PixelData::PixelData(const std::vector<std::vector<RGBColor>>& raw_rgb_data) {
+PixelData::PixelData(const std::vector<std::vector<RGB24>>& raw_rgb_data) {
   if (!is_rectangular_vector_matrix(raw_rgb_data)) {
     throw std::runtime_error(fmt::format("[{}] Cannot initialize pixel data "
                                     "with non-rectangular matrix", FUNCDINFO));
   }
 
-  this->pixels = std::make_shared<std::vector<RGBColor>>();
+  this->pixels = std::make_shared<std::vector<RGB24>>();
   this->m_height = raw_rgb_data.size();
   this->m_width = 0;
   if (raw_rgb_data.size() > 0) {
@@ -89,25 +89,25 @@ PixelData::PixelData(const std::vector<std::vector<uint8_t> >& raw_grayscale_dat
     throw std::runtime_error(fmt::format("[{}]Cannot initialize pixel data "
                                     "with non-rectangular matrix", FUNCDINFO));
   }
-  this->pixels = std::make_shared<std::vector<RGBColor>>();
+  this->pixels = std::make_shared<std::vector<RGB24>>();
   this->m_height = raw_grayscale_data.size();
   this->m_width = 0;
   if (raw_grayscale_data.size() > 0) {
-    this->init_from_source(raw_grayscale_data[0].size(), raw_grayscale_data.size(), [raw_grayscale_data](int row, int col) { return RGBColor(raw_grayscale_data[row][col]);  });
+    this->init_from_source(raw_grayscale_data[0].size(), raw_grayscale_data.size(), [raw_grayscale_data](int row, int col) { return RGB24(raw_grayscale_data[row][col]);  });
   }
 }
 
-PixelData::PixelData(const std::vector<RGBColor>& flat_rgb, int width, int height) {
+PixelData::PixelData(const std::vector<RGB24>& flat_rgb, int width, int height) {
   if (std::size_t(width * height) != flat_rgb.size()) 
     throw std::runtime_error(fmt::format("[{}] Cannot initialize PixelData "
     "with innacurate flattened rgb vector: size = {}, given width: {}, "
     "given height: {}", FUNCDINFO, flat_rgb.size(), width, height));
 
-  this->pixels = std::make_shared<std::vector<RGBColor>>();
+  this->pixels = std::make_shared<std::vector<RGB24>>();
   this->init_from_source(width, height, [flat_rgb, width](int row, int col) { return flat_rgb[row * width + col]; } );
 }
 
-PixelData::PixelData(std::shared_ptr<std::vector<RGBColor>> colors, int width, int height) {
+PixelData::PixelData(std::shared_ptr<std::vector<RGB24>> colors, int width, int height) {
   if (std::size_t(width * height) != colors->size()) 
     throw std::runtime_error(fmt::format("[{}] Cannot initialize PixelData "
     "with innacurate flattened rgb vector: size = {}, given width: {}, "
@@ -119,7 +119,7 @@ PixelData::PixelData(std::shared_ptr<std::vector<RGBColor>> colors, int width, i
 }
 
 PixelData::PixelData(AVFrame* video_frame) {
-  this->pixels = std::make_shared<std::vector<RGBColor>>();
+  this->pixels = std::make_shared<std::vector<RGB24>>();
   this->init_from_avframe(video_frame);
 }
 
@@ -173,7 +173,7 @@ PixelData PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
 
   const int new_width = this->get_width() * amount;
   const int new_height = this->get_height() * amount;
-  std::shared_ptr<std::vector<RGBColor>> new_pixels = std::make_shared<std::vector<RGBColor>>();
+  std::shared_ptr<std::vector<RGB24>> new_pixels = std::make_shared<std::vector<RGB24>>();
   new_pixels->reserve(new_width * new_height);
 
   switch (scaling_algorithm) {
@@ -217,7 +217,7 @@ bool PixelData::equals(const PixelData& pix_data) const {
 
   for (int row = 0; row < this->get_height(); row++) {
     for (int col = 0; col < this->get_width(); col++) {
-      RGBColor pix_data_color = pix_data.at(row, col);
+      RGB24 pix_data_color = pix_data.at(row, col);
       if (!this->at(row, col).equals(pix_data_color)) {
         return false;
       }
@@ -226,23 +226,23 @@ bool PixelData::equals(const PixelData& pix_data) const {
   return true;
 }
 
-const RGBColor& PixelData::at(int row, int col) const {
+const RGB24& PixelData::at(int row, int col) const {
   return (*this->pixels)[row * this->m_width + col];
 }
 
-RGBColor get_avg_color_from_area(const PixelData& pixel_data, double row, double col, double width, double height) {
+RGB24 get_avg_color_from_area(const PixelData& pixel_data, double row, double col, double width, double height) {
   return get_avg_color_from_area(pixel_data, static_cast<int>(std::floor(row)),
         static_cast<int>(std::floor(col)), static_cast<int>(std::ceil(width)), static_cast<int>(std::ceil(height)));
 }
 
-RGBColor get_avg_color_from_area(const PixelData& pixel_data, int row, int col, int width, int height) {
+RGB24 get_avg_color_from_area(const PixelData& pixel_data, int row, int col, int width, int height) {
   if (width * height <= 0) {
     throw std::runtime_error(fmt::format("[{}] Cannot get average color from "
     "an area with dimensions: ( width: {} height: {} ). Dimensions must be "
     "positive", FUNCDINFO, width, height));
   }
 
-  std::vector<RGBColor> colors;
+  std::vector<RGB24> colors;
   for (int curr_row = row; curr_row < row + height; curr_row++) {
     for (int curr_col = col; curr_col < col + width; curr_col++) {
       if (pixel_data.in_bounds(curr_row, curr_col)) {
@@ -254,5 +254,5 @@ RGBColor get_avg_color_from_area(const PixelData& pixel_data, int row, int col, 
   if (colors.size() > 0) {
     return get_average_color(colors);
   }
-  return RGBColor::WHITE;
+  return RGB24::WHITE;
 }

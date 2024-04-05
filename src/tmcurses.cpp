@@ -152,7 +152,7 @@ void ncurses_set_color_palette_custom(const Palette& colorPalette) {
   if (CHANGEABLE_COLORS <= 0) return;
 
   available_color_palette_colors = 0;
-  for (RGBColor color : colorPalette) {
+  for (RGB24 color : colorPalette) {
     init_color(available_color_palette_colors++ + COLOR_PALETTE_START, 
     static_cast<short>(color.r) * 1000 / 255,
     static_cast<short>(color.g) * 1000 / 255,
@@ -167,7 +167,7 @@ void ncurses_set_color_palette_custom(const Palette& colorPalette) {
 
 
 
-curses_color_t get_closest_ncurses_color(const RGBColor& input) {
+curses_color_t get_closest_ncurses_color(const RGB24& input) {
   if (!curses_colors_initialized) return 0; // just return a default 0 to no-op
 
   return color_map[static_cast<int>(input.r) * (COLOR_MAP_SIDE - 1) / 255]
@@ -175,7 +175,7 @@ curses_color_t get_closest_ncurses_color(const RGBColor& input) {
                   [static_cast<int>(input.b) * (COLOR_MAP_SIDE - 1) / 255];
 }
 
-curses_color_pair_t get_closest_ncurses_color_pair(const RGBColor& input) {
+curses_color_pair_t get_closest_ncurses_color_pair(const RGB24& input) {
   if (!curses_colors_initialized) return 0; // just return a default 0 to no-op
 
   return color_pairs_map[static_cast<int>(input.r) * (COLOR_MAP_SIDE - 1) / 255]
@@ -199,10 +199,10 @@ std::string ncurses_color_palette_string(TMNCursesColorPalette colorPalette) {
   return "unknown";
 }
 
-RGBColor ncurses_get_color_number_content(curses_color_t color) {
+RGB24 ncurses_get_color_number_content(curses_color_t color) {
   short r, g, b;
   color_content(color, &r, &g, &b);
-  return RGBColor(r * 255 / 1000, g * 255 / 1000, b * 255 / 1000);
+  return RGB24(r * 255 / 1000, g * 255 / 1000, b * 255 / 1000);
 }
 
 ColorPair ncurses_get_pair_number_content(curses_color_pair_t pair) {
@@ -248,8 +248,8 @@ void ncurses_init_color_pairs() {
   for (int i = 0; i < COLOR_PAIRS_TO_INIT; i++) {
     curses_color_pair_t color_pair_index = i;
     curses_color_t color_index = i + COLOR_PALETTE_START;
-    RGBColor color = ncurses_get_color_number_content(color_index);
-    RGBColor complementary = color.get_comp();
+    RGB24 color = ncurses_get_color_number_content(color_index);
+    RGB24 complementary = color.get_comp();
     init_pair(color_pair_index, ncurses_find_best_initialized_color_number(complementary), color_index);
   }
 
@@ -260,7 +260,7 @@ void ncurses_init_color_maps() {
   for (int r = 0; r < COLOR_MAP_SIDE; r++) {
     for (int g = 0; g < COLOR_MAP_SIDE; g++) {
       for (int b = 0; b < COLOR_MAP_SIDE; b++) {
-        RGBColor color( r * 255 / (COLOR_MAP_SIDE - 1), g * 255 / (COLOR_MAP_SIDE - 1), b * 255 / (COLOR_MAP_SIDE - 1) );
+        RGB24 color( r * 255 / (COLOR_MAP_SIDE - 1), g * 255 / (COLOR_MAP_SIDE - 1), b * 255 / (COLOR_MAP_SIDE - 1) );
         color_map[r][g][b] = ncurses_find_best_initialized_color_number(color);
         color_pairs_map[r][g][b] = ncurses_find_best_initialized_color_pair(color);
       }
@@ -268,12 +268,12 @@ void ncurses_init_color_maps() {
   }
 }
 
-curses_color_t ncurses_find_best_initialized_color_number(RGBColor& input) {
+curses_color_t ncurses_find_best_initialized_color_number(RGB24& input) {
   curses_color_t best_color_index = -1;
   double best_distance = (double)INT32_MAX;
   for (int i = 0; i < available_color_palette_colors; i++) {
     curses_color_t color_index = i + COLOR_PALETTE_START;
-    RGBColor current_color = ncurses_get_color_number_content(color_index);
+    RGB24 current_color = ncurses_get_color_number_content(color_index);
     double distance = current_color.dis_sq(input);
     if (distance < best_distance) {
       best_color_index = color_index;
@@ -284,7 +284,7 @@ curses_color_t ncurses_find_best_initialized_color_number(RGBColor& input) {
   return best_color_index;
 }
 
-curses_color_pair_t ncurses_find_best_initialized_color_pair(RGBColor& input) {
+curses_color_pair_t ncurses_find_best_initialized_color_pair(RGB24& input) {
   curses_color_pair_t best_pair_index = -1;
   double best_distance = (double)INT32_MAX;
   for (int i = 0; i < available_color_palette_color_pairs; i++) {
