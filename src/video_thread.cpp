@@ -55,11 +55,14 @@ constexpr double MAX_FRAME_ASPECT_RATIO = static_cast<double>(MAX_FRAME_ASPECT_R
 // bound the image to this amount
 
 constexpr int MAX_FRAME_WIDTH = 640;
-constexpr int MAX_FRAME_HEIGHT = MAX_FRAME_WIDTH / MAX_FRAME_ASPECT_RATIO;
+constexpr int MAX_FRAME_HEIGHT = static_cast<int>(static_cast<double>(MAX_FRAME_WIDTH) / MAX_FRAME_ASPECT_RATIO);
 constexpr int PAUSED_SLEEP_TIME_MS = 100;
 constexpr double DEFAULT_AVGFTS = 1.0 / 24.0;
 
 void MediaFetcher::video_fetching_thread_func() {
+  // note that frame_audio_fetching_func can run even if there is no video data
+  // available. Therefore, we can't just guard from AVMEDIA_TYPE_VIDEO here.
+  
   try {
     switch (this->media_type) {
       case MediaType::IMAGE: this->frame_image_fetching_func(); break;

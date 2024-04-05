@@ -20,21 +20,21 @@ void MAAudioOut::audio_queue_fill_thread_func() {
   static constexpr int AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS = 10;
   static constexpr int DATA_GET_EXTEND_FACTOR = 2;
 
-  float intermediary[FETCHER_AUDIO_READING_BLOCK_SIZE];
-  const int intermediary_frames_size = FETCHER_AUDIO_READING_BLOCK_SIZE / this->m_nb_channels;
-  const int queue_capacity = static_cast<int>(this->m_audio_queue->max_capacity());
-  const int queue_capacity_frames = queue_capacity / this->m_nb_channels;
+  float stkbuf[FETCHER_AUDIO_READING_BLOCK_SIZE];
+  const int stkbuf_frames_size = FETCHER_AUDIO_READING_BLOCK_SIZE / this->m_nb_channels;
+  const int q_cap = static_cast<int>(this->m_audio_queue->max_capacity());
+  const int q_cap_frames = q_cap / this->m_nb_channels;
 
 
   while (this->playing()) {
     const int queue_size = static_cast<int>(this->m_audio_queue->size_approx());
     const int queue_size_frames = queue_size / this->m_nb_channels;
-    const int queue_frames_to_fill = queue_capacity_frames - queue_size_frames;
-    const int request_size_frames = std::min(queue_frames_to_fill * DATA_GET_EXTEND_FACTOR, intermediary_frames_size); // fetch a little extra
+    const int queue_frames_to_fill = q_cap_frames - queue_size_frames;
+    const int request_size_frames = std::min(queue_frames_to_fill * DATA_GET_EXTEND_FACTOR, stkbuf_frames_size); // fetch a little extra
 
-    this->m_on_data(intermediary, request_size_frames);
+    this->m_on_data(stkbuf, request_size_frames);
     for (int i = 0; i < request_size_frames * this->m_nb_channels; i++) {
-      while (this->playing() && !this->m_audio_queue->wait_enqueue_timed(intermediary[i], std::chrono::milliseconds(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
+      while (this->playing() && !this->m_audio_queue->wait_enqueue_timed(stkbuf[i], std::chrono::milliseconds(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
     }
   }
 }

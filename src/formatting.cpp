@@ -457,7 +457,7 @@ bool is_percentage(std::string_view str) {
  * either a float or a float ending with %
 */
 double parse_percentage(std::string_view str) {
-  if (str[str.length() - 1] == '%') {
+  if (str.length() > 0 && str[str.length() - 1] == '%') {
     return strtodouble(str.substr(0, str.length() - 1)) / 100.0;
   }
   return strtodouble(str);
