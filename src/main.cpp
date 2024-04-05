@@ -45,6 +45,10 @@ int main(int argc, char** argv)
   #if USE_AVCODEC_REGISTER_ALL
   avcodec_register_all();
   #endif
+
+  std::signal(SIGINT, interrupt_handler);
+	std::signal(SIGTERM, interrupt_handler);
+	std::signal(SIGABRT, interrupt_handler);
   
   srand(time(nullptr));
   av_log_set_level(AV_LOG_QUIET);
