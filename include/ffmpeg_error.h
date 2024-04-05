@@ -4,17 +4,25 @@
 #include <stdexcept>
 #include <string>
 
+#include <fmt/format.h>
+#include <funcmac.h>
+
 extern "C" {
   #include <libavutil/error.h>
 }
 
+/**
+ * I'm not sure how nicely ffmpeg_error will handle nomem errors tbh...
+*/
+
 std::string av_strerror_string(int errnum);
+
+#define FFMPEG_ERROR_STRING_SIZE 256
 
 class ffmpeg_error : public std::runtime_error {
   private:
     int averror;
-    std::string error_string;
-    std::string message;
+    char errstr[FFMPEG_ERROR_STRING_SIZE];
   
   public:
     /**
@@ -26,9 +34,16 @@ class ffmpeg_error : public std::runtime_error {
      */
     ffmpeg_error(const std::string message, int averror) : std::runtime_error::runtime_error("") {
       this->averror = averror;
-      this->error_string =  av_strerror_string(averror);
-      this->message = message;
-      static_cast<std::runtime_error&>(*this) = std::runtime_error(this->message + ": " + this->error_string + " (" + std::to_string(this->averror) + " ).");
+      if (averror == AVERROR(ENOMEM)) {
+        static_cast<std::runtime_error&>(*this) = std::runtime_error(message); // directly forward error message
+      } else {
+        int found_desc = av_strerror(averror, this->errstr, FFMPEG_ERROR_STRING_SIZE);
+        if (found_desc) {
+          static_cast<std::runtime_error&>(*this) = std::runtime_error(fmt::format("{}: ( {}: {} )", message, this->averror, this->errstr));
+        } else {
+          static_cast<std::runtime_error&>(*this) = std::runtime_error(fmt::format("{}: ({})", message, this->averror));
+        }
+      }
     }
 
     int get_averror() const {
@@ -36,7 +51,7 @@ class ffmpeg_error : public std::runtime_error {
     }
 
     std::string get_averror_string() const {
-      return this->error_string;
+      return std::string(this->errstr);
     }
 };
 
