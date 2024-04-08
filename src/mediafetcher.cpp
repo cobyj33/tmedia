@@ -41,11 +41,8 @@ MediaFetcher::MediaFetcher(std::filesystem::path path) {
   }
 }
 
-void MediaFetcher::dispatch_exit(std::string err) {
-  if (err.length() == 0)
-    throw std::runtime_error(fmt::format("[{}] Cannot set error "
-    "with empty string", FUNCDINFO));
-  this->error = err;
+void MediaFetcher::dispatch_exit(std::string_view err) {
+  this->error = std::move(std::string(err));
   this->dispatch_exit();
 }
 
@@ -54,10 +51,6 @@ void MediaFetcher::dispatch_exit() {
   this->in_use = false;
   this->exit_cond.notify_all();
   this->resume_cond.notify_all();
-}
-
-bool MediaFetcher::should_exit() {
-  return !this->in_use;
 }
 
 bool MediaFetcher::is_playing() {

@@ -112,8 +112,11 @@ class MediaFetcher {
     }
 
     void dispatch_exit();
-    void dispatch_exit(std::string err);
-    bool should_exit();
+    void dispatch_exit(std::string_view err);
+    
+    inline bool should_exit() {
+      return !this->in_use;
+    }
 
     bool is_playing();
     void pause(double currsystime);
