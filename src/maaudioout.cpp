@@ -30,7 +30,7 @@ void MAAudioOut::audio_queue_fill_thread_func() {
     const int queue_size = static_cast<int>(this->m_audio_queue->size_approx());
     const int queue_size_frames = queue_size / this->m_nb_channels;
     const int queue_frames_to_fill = q_cap_frames - queue_size_frames;
-    const int request_size_frames = std::min(queue_frames_to_fill * DATA_GET_EXTEND_FACTOR, stkbuf_frames_size); // fetch a little extra
+    const int request_size_frames = min(queue_frames_to_fill * DATA_GET_EXTEND_FACTOR, stkbuf_frames_size); // fetch a little extra
 
     this->m_on_data(stkbuf, request_size_frames);
     for (int i = 0; i < request_size_frames * this->m_nb_channels; i++) {

@@ -102,7 +102,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
   while (!INTERRUPT_RECEIVED && !tmps.quit) {
     PlaylistMvCmd current_move_cmd = PlaylistMvCmd::NEXT;
     MediaFetcher fetcher(tmps.playlist.current());
-    fetcher.req_dims = Dim2(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
+    fetcher.req_dims = Dim2(max(COLS, MIN_RENDER_COLS), max(LINES, MIN_RENDER_LINES));
     std::unique_ptr<MAAudioOut> audio_output;
     fetcher.begin(sys_clk_sec());
 

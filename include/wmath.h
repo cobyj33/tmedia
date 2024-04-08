@@ -1,6 +1,7 @@
 #ifndef TMEDIA_W_MATH_H
 #define TMEDIA_W_MATH_H
 
+// pretty sure these signums are wrong :(
 inline int signum(int num) {
   return (num > 0) * -(num < 0);
 }
