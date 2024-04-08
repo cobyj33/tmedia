@@ -32,7 +32,7 @@ void audio_to_mono_ipfb(float* frames, int nb_frames, int nb_channels) {
 }
 
 void audio_to_mono_ip(std::vector<float>& frames, int nb_channels) {
-  std::size_t nb_frames = frames.size() / nb_channels;
+  const std::size_t nb_frames = frames.size() / nb_channels;
   std::size_t frame_offset = 0;
   for (std::size_t frame = 0; frame < nb_frames; frame++) {
     float mono = 0.0;
@@ -50,7 +50,7 @@ void audio_bound_volume(std::vector<float>& frames, int nb_channels, float maxva
   for (int c = 0; c < nb_channels; c++) { // bound each channel individually
     float largest = 0.0;
     for (std::size_t s = c; s < frames.size(); s += nb_channels) {
-      largest = max(frames[s], largest);
+      largest = std::max(frames[s], largest);
     }
 
     if (largest < maxval)
@@ -63,11 +63,12 @@ void audio_bound_volume(std::vector<float>& frames, int nb_channels, float maxva
   #endif
   float largest = 0.0;
   for (std::size_t s = 0; s < frames.size(); s++) {
-    largest = max(frames[s], largest);
+    largest = std::max(frames[s], largest);
   }
 
+  const float convfac = maxval / largest;
   for (std::size_t s = 0; s < frames.size(); s++) {
-    frames[s] *= maxval / largest;
+    frames[s] *= convfac;
   }
 
   (void)nb_channels;
@@ -78,7 +79,7 @@ void audio_bound_volume_fb(float* frames, int nb_frames, int nb_channels, float 
   for (int c = 0; c < nb_channels; c++) { // bound each channel individually
     float largest = 0.0;
     for (int s = c; s < size; s += nb_channels) {
-      largest = max(frames[s], largest);
+      largest = std::max(frames[s], largest);
     }
 
     if (largest < maxval)
@@ -94,7 +95,7 @@ void audio_normalize(std::vector<float>& frames, int nb_channels) {
   for (int c = 0; c < nb_channels; c++) { // normalize each channel individually
     float largest = 0.0;
     for (std::size_t s = c; s < frames.size(); s += nb_channels) {
-      largest = max(frames[s], largest);
+      largest = std::max(frames[s], largest);
     }
 
     if (largest == 0.0)

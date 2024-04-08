@@ -10,7 +10,7 @@
  * @copyright Copyright (c) 2023
  */
 
-#include "wmath.h"
+#include <algorithm>
 
 struct Dim2 {
   int width;
@@ -41,7 +41,7 @@ struct Dim2 {
 inline double get_scale_factor(int src_width, int src_height, int target_width, int target_height) {
   double width_scaler = static_cast<double>(target_width) / src_width; // > 1 if growing, < 1 if shrinking, ==1 if same
   double height_scaler = static_cast<double>(target_height) / src_height; // > 1 if growing, < 1 if shrinking, ==1 if same
-  return min(width_scaler, height_scaler);
+  return std::min(width_scaler, height_scaler);
 }
 
 /**

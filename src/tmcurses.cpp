@@ -147,7 +147,7 @@ void ncurses_set_color_palette(TMNCursesColorPalette colorPalette) {
 
 void ncurses_set_color_palette_custom(const Palette& colorPalette) {
   if (!curses_colors_initialized) return;
-  const short MAX_COLORS = min(COLORS, MAX_TERMINAL_COLORS);
+  const short MAX_COLORS = std::min(COLORS, MAX_TERMINAL_COLORS);
   const short CHANGEABLE_COLORS = MAX_COLORS - COLOR_PALETTE_START;
   if (CHANGEABLE_COLORS <= 0) return;
 
@@ -213,7 +213,7 @@ ColorPair ncurses_get_pair_number_content(curses_color_pair_t pair) {
 
 int ncurses_init_rgb_color_palette() {
   const double NCURSES_COLOR_COMPONENT_MAX = 1000.;
-  const short MAX_COLORS = min(COLORS, MAX_TERMINAL_COLORS);
+  const short MAX_COLORS = std::min(COLORS, MAX_TERMINAL_COLORS);
   const short CHANGEABLE_COLORS = MAX_COLORS - COLOR_PALETTE_START;
   if (CHANGEABLE_COLORS <= 0) return 0;
 
@@ -231,7 +231,7 @@ int ncurses_init_rgb_color_palette() {
 
 int ncurses_init_grayscale_color_palette() {
   const short NCURSES_COLOR_COMPONENT_MAX = 1000;
-  const short MAX_COLORS = min(COLORS, MAX_TERMINAL_COLORS);
+  const short MAX_COLORS = std::min(COLORS, MAX_TERMINAL_COLORS);
   const short CHANGEABLE_COLORS = MAX_COLORS - COLOR_PALETTE_START;
   if (CHANGEABLE_COLORS <= 0) return 0;
 
@@ -244,7 +244,7 @@ int ncurses_init_grayscale_color_palette() {
 }
 
 void ncurses_init_color_pairs() {
-  const int COLOR_PAIRS_TO_INIT = min(COLOR_PAIRS, available_color_palette_colors);
+  const int COLOR_PAIRS_TO_INIT = std::min(COLOR_PAIRS, available_color_palette_colors);
   for (int i = 0; i < COLOR_PAIRS_TO_INIT; i++) {
     curses_color_pair_t color_pair_index = i;
     curses_color_t color_index = i + COLOR_PALETTE_START;

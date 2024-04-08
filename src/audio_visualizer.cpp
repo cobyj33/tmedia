@@ -21,7 +21,6 @@ PixelData AmplitudeAbs::visualize(float* frames, int nb_frames, int nb_channels,
 
   std::vector<float> buf = audio_float_buffer_to_normalized_mono(frames, nb_frames, nb_channels);
   const std::size_t size = nb_frames;
-
   const int middle_row = rows / 2;
   
   Canvas canvas(rows, cols);
@@ -29,14 +28,15 @@ PixelData AmplitudeAbs::visualize(float* frames, int nb_frames, int nb_channels,
   for (int col = 0; col < cols; col++) {
     std::size_t start = (std::size_t)((double)col * step_size);
     float sample = 0.0;
-    double count = 1E-4; // prevent divide by 0
+    double count = 0.0; // prevent divide by 0
     const std::size_t step_end = ((double)col + 1.0) * step_size;
     for (std::size_t i = start; i < step_end; i++) {
-      sample += ((buf[i] < 0) * -1.0) * buf[i];
+      sample += std::abs(buf[i]);
       count++;
     }
 
-    sample /= count;
+    if (count != 0)
+      sample /= count;
     const int line_size = rows * sample;
     canvas.line(clamp(middle_row - (line_size / 2), 0, rows - 1), col, clamp(middle_row + (line_size / 2), 0, rows - 1), col, RGB24::WHITE);
   }
