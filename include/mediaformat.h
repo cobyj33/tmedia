@@ -23,4 +23,6 @@ extern const char* image_iformat_exts;
 extern const char* audio_iformat_exts;
 extern const char* video_iformat_exts;
 
+extern const char* container_iformat_exts;
+
 #endif

@@ -16,3 +16,5 @@ const char* video_iformat_names = "flv";
 const char* image_iformat_exts= "jpg,jpeg,png,webp";
 const char* audio_iformat_exts= "mp3,flac,wav,ogg";
 const char* video_iformat_exts= "flv";
+
+const char* container_iformat_exts = "matroska,webm,mov,mp4,3gp,3g2,mj2";

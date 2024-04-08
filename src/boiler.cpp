@@ -39,23 +39,19 @@ AVFormatContext* open_format_context(std::filesystem::path path) {
   AVFormatContext* fmt_ctx = nullptr;
   int result = avformat_open_input(&fmt_ctx, path.c_str(), nullptr, nullptr);
   if (result < 0) {
-    if (fmt_ctx != nullptr) {
-      avformat_close_input(&fmt_ctx);
-    }
     throw ffmpeg_error(fmt::format("[{}] Failed to open format context input "
     "for {}", FUNCDINFO, path.string()), result);
   }
 
   if (av_match_lists(fmt_ctx->iformat->name, ',', banned_iformat_names, ',')) {
+    avformat_close_input(&fmt_ctx);
     throw std::runtime_error(fmt::format("[{}] Cannot open banned format type: "
     "{}", FUNCDINFO, fmt_ctx->iformat->name));
   }
 
   result = avformat_find_stream_info(fmt_ctx, NULL);
   if (result < 0) {
-    if (fmt_ctx != nullptr) {
-      avformat_close_input(&fmt_ctx);
-    }
+    avformat_close_input(&fmt_ctx);
     throw ffmpeg_error(fmt::format("[{}] Failed to find stream info for {}.",
     FUNCDINFO, path.string()), result);
   }
@@ -63,7 +59,7 @@ AVFormatContext* open_format_context(std::filesystem::path path) {
   if (fmt_ctx != nullptr) {
     return fmt_ctx;
   }
-
+  
   throw std::runtime_error(fmt::format("[{}] Failed to open format context "
   "input, unknown error occured", FUNCDINFO));
 }
