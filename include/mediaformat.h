@@ -3,7 +3,7 @@
 
 /**
  * mediaformat.h: externed string lists of the ffmpeg iformat names and extensions
- * recognized by tmedia.
+ * recognized by tmedia to be recognized with av_match_list.
  * 
  * Note that many formats, such as mpeg4 and webm, aren't listed as any type
  * of iformat name or extension. This is because these file formats are moreso

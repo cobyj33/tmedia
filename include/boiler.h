@@ -43,13 +43,13 @@ std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat);
  * @param path The path of the file to open from the current working directory
  * @return An AVFormatContext pointer representing the opened media file
  */
-AVFormatContext* open_format_context(std::filesystem::path path);
+AVFormatContext* open_format_context(const std::filesystem::path& path);
 
 /**
  * @brief Dump a media file's metadata into standard output.
  * @param path The path of the file to open from the current working directory
  */
-void dump_file_info(std::filesystem::path path);
+void dump_file_info(const std::filesystem::path& path);
 void dump_format_context(AVFormatContext* fmt_ctx);
 
 /**
@@ -60,7 +60,7 @@ void dump_format_context(AVFormatContext* fmt_ctx);
  * @throws std::runtime_error if the stream information for the format context could not be found
  * @return The duration of the media file at the selected path in seconds
  */
-double get_file_duration(std::filesystem::path path);
+double get_file_duration(const std::filesystem::path& path);
 
 
 bool avformat_context_has_media_stream(AVFormatContext* fmt_ctx, enum AVMediaType media_type);

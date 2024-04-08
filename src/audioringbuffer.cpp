@@ -30,13 +30,6 @@ AudioRingBuffer::AudioRingBuffer(int frame_capacity, int nb_channels, int sample
   this->m_frames_read = 0;
 }
 
-int AudioRingBuffer::get_nb_channels() {
-  return this->m_nb_channels;
-}
-
-int AudioRingBuffer::get_sample_rate() {
-  return this->m_sample_rate;
-}
 
 void AudioRingBuffer::clear(double new_start_time) {
   this->m_head = 0;

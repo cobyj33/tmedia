@@ -10,7 +10,7 @@
  * @copyright Copyright (c) 2023
  */
 
-#include <utility>
+#include "wmath.h"
 
 struct Dim2 {
   int width;
@@ -38,7 +38,11 @@ struct Dim2 {
  * @param max_height The height of the bounded box which the source will be fitted into
  * @return The size of the frame when it is bounded into the bounded dimensions. 
  */
-Dim2 bound_dims(int src_width, int src_height, int max_width, int max_height);
+inline double get_scale_factor(int src_width, int src_height, int target_width, int target_height) {
+  double width_scaler = static_cast<double>(target_width) / src_width; // > 1 if growing, < 1 if shrinking, ==1 if same
+  double height_scaler = static_cast<double>(target_height) / src_height; // > 1 if growing, < 1 if shrinking, ==1 if same
+  return min(width_scaler, height_scaler);
+}
 
 /**
  * Returns a Dim2 representing the source dimensions bounded into the bounded dimensions while preserving aspect ratio.
@@ -54,7 +58,13 @@ Dim2 bound_dims(int src_width, int src_height, int max_width, int max_height);
  * @param max_height The height of the bounded box which the source will be fitted into
  * @return The size of the frame when it is bounded into the bounded dimensions. 
  */
-Dim2 get_scale_size(int src_width, int src_height, int target_width, int target_height);
+inline Dim2 get_scale_size(int src_width, int src_height, int target_width, int target_height) { 
+  double scale_factor = get_scale_factor(src_width, src_height, target_width, target_height);
+  int width = static_cast<int>(src_width * scale_factor);
+  int height = static_cast<int>(src_height * scale_factor);
+  return Dim2(width, height);
+}
+
 
 /**
  * Returns a Dim2 representing the source dimensions bounded into the bounded dimensions while preserving aspect ratio.
@@ -70,5 +80,12 @@ Dim2 get_scale_size(int src_width, int src_height, int target_width, int target_
  * @param max_height The height of the bounded box which the source will be fitted into
  * @return The size of the frame when it is bounded into the bounded dimensions. 
  */
-double get_scale_factor(int src_width, int src_height, int target_width, int target_height);
+inline Dim2 bound_dims(int src_width, int src_height, int max_width, int max_height) {
+  if (src_width <= max_width && src_height <= max_height) {
+    return Dim2(src_width, src_height);
+  } else {
+    return get_scale_size(src_width, src_height, max_width, max_height);
+  }
+}
+
 #endif

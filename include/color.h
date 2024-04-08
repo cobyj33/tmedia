@@ -5,6 +5,17 @@
 #include <cstddef>
 #include <cstdint>
 
+inline std::uint8_t get_gray8(std::uint8_t r, std::uint8_t g, std::uint8_t b) {
+  return static_cast<std::uint8_t>(0.299 * r + 0.587 * g + 0.114 * b);
+}
+
+
+
+inline int get_grayint(int r, int g, int b) {
+  return static_cast<int>(0.299 * r + 0.587 * g + 0.114 * b);
+}
+
+
 /**
  * @brief A representation of an RGB Color with R, G, and B channels in the
  * range 0-255
@@ -30,19 +41,51 @@ class RGB24 {
     RGB24(const RGB24& color) : r(color.r), g(color.g), b(color.b) {}
     RGB24(RGB24&& color) : r(color.r), g(color.g), b(color.b) {}
 
-    void operator=(const RGB24& color);
-    void operator=(RGB24&& color);
-    bool operator==(const RGB24& color) const;
-    bool operator==(RGB24&& color) const;
+    inline void operator=(const RGB24& color) {
+      this->r = color.r;
+      this->g = color.g;
+      this->b = color.b;
+    }
+
+    inline void operator=(RGB24&& color) {
+      this->r = color.r;
+      this->g = color.g;
+      this->b = color.b;
+    }
+
+    inline bool equals(const RGB24& other) const {
+      return this->r == other.r && this->g == other.g && this->b == other.b;
+    }
+
+    inline bool operator==(const RGB24& other) const {
+      return this->r == other.r && this->g == other.g && this->b == other.b;
+    }
+
+    inline bool operator==(RGB24&& other) const {
+      return this->r == other.r && this->g == other.g && this->b == other.b;
+    }
 
     double distance(const RGB24& other) const;
     double dis_sq(const RGB24& other) const;
-    RGB24 get_comp() const;
-    bool equals(const RGB24& other) const;
-    bool is_gray() const;
-    RGB24 as_gray() const;
-    std::uint8_t gray_val() const;
+
+    inline RGB24 get_comp() const {
+      return RGB24(255 - this->r, 255 - this->g, 255 - this->b );
+    } 
+
+    inline bool is_gray() const {
+      return this->r == this->g && this->g == this->b;
+    }
+
+
+    inline RGB24 as_gray() const {
+      return RGB24(get_gray8(this->r, this->g, this->b));
+    }
+
+    inline std::uint8_t gray_val() const {
+      return get_gray8(this->r, this->g, this->b);
+    }
 };
+
 
 
 class RGBColorHashFunction {

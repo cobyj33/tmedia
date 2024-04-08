@@ -49,10 +49,10 @@ class AudioResampler {
             int src_sample_rate);
     #endif
 
-    int get_src_sample_rate();
-    int get_src_sample_fmt();
-    int get_dst_sample_rate();
-    int get_dst_sample_fmt();
+    inline int get_src_sample_rate() { return this->m_src_sample_rate; }
+    inline int get_src_sample_fmt() { return this->m_src_sample_fmt; }
+    inline int get_dst_sample_rate() { return this->m_dst_sample_rate; }
+    inline int get_dst_sample_fmt() { return this->m_dst_sample_fmt; } 
 
     /**
      * @brief Resample an audio frame according to the initialized AudioResampler's parameters

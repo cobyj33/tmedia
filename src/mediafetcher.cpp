@@ -83,30 +83,7 @@ void MediaFetcher::resume(double currsystime) {
   this->resume_cond.notify_all();
 }
 
-bool MediaFetcher::has_error() const noexcept {
-  return this->error.has_value();
-}
 
-std::string MediaFetcher::get_error() {
-  if (!this->error.has_value())
-    throw std::runtime_error(fmt::format("[{}] Cannot get error when no error "
-    "is available", FUNCDINFO));
-  return *this->error;
-}
-
-/**
- * Thread-Safe
-*/
-bool MediaFetcher::has_media_stream(enum AVMediaType media_type) const {
-  return this->mdec->has_stream_decoder(media_type);
-}
-
-/**
- * Thread-Safe
-*/
-double MediaFetcher::get_duration() const {
-  return this->mdec->get_duration();
-}
 
 /**
  * For thread safety, alter_mutex must be locked

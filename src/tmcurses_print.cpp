@@ -27,7 +27,7 @@ TMLabelStyle::TMLabelStyle(int row, int col, int width, TMAlign align, int margi
   this->margin_right = margin_right;
 }
 
-void tm_mvwaddstr_label(WINDOW* window, TMLabelStyle label_style, const std::string& str) {
+void tm_mvwaddstr_label(WINDOW* window, TMLabelStyle label_style, std::string_view str) {
   const int requested_text_area_col_start = label_style.col + label_style.margin_left;
   const int requested_text_area_col_end = label_style.col + label_style.width - label_style.margin_right; // not inclusive
   if (requested_text_area_col_end <= requested_text_area_col_start) return; // invalid or negative request

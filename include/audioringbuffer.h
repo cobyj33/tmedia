@@ -28,8 +28,13 @@ class AudioRingBuffer {
 
     AudioRingBuffer(int frame_capacity, int nb_channels, int sample_rate, double playback_start_time);
 
-    int get_nb_channels();
-    int get_sample_rate();
+    inline int get_nb_channels() {
+      return this->m_nb_channels;
+    }
+
+    inline int get_sample_rate() {
+      return this->m_sample_rate;
+    }
 
     void clear(double new_start_time);
 

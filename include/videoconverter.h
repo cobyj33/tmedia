@@ -33,12 +33,12 @@ class VideoConverter {
     */
     AVFrame* convert_video_frame(AVFrame* original);
 
-    int get_src_width();
-    int get_src_height();
-    enum AVPixelFormat get_src_pix_fmt();
-    int get_dst_width();
-    int get_dst_height();
-    enum AVPixelFormat get_dst_pix_fmt();
+    inline int get_src_width() { return this->m_src_width; }
+    inline int get_src_height() { return this->m_src_height; }
+    inline enum AVPixelFormat get_src_pix_fmt() { return this->m_src_pix_fmt; }
+    inline int get_dst_width() { return this->m_dst_width; }
+    inline int get_dst_height() { return this->m_dst_height; }
+    inline enum AVPixelFormat get_dst_pix_fmt() { return this->m_dst_pix_fmt; }
 
     void reset_dst_size(int dst_width, int dst_height);
 

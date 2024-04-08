@@ -104,27 +104,3 @@ AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
 
   return resized_video_frame;
 }
-
-int VideoConverter::get_src_width() {
-  return this->m_src_width;
-};
-
-int VideoConverter::get_src_height() {
-  return this->m_src_height;
-};
-
-int VideoConverter::get_dst_width() {
-  return this->m_dst_width;
-};
-
-int VideoConverter::get_dst_height() {
-  return this->m_dst_height;
-};
-
-enum AVPixelFormat VideoConverter::get_src_pix_fmt() {
-  return this->m_src_pix_fmt;
-}
-
-enum AVPixelFormat VideoConverter::get_dst_pix_fmt() {
-  return this->m_dst_pix_fmt;
-}

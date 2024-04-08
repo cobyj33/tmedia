@@ -101,29 +101,29 @@ struct TMediaCommandData {
 
 class TMediaCommandHandler {
   public:
-    virtual std::vector<TMediaCommandData> process_input(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) = 0;
+    virtual std::vector<TMediaCommandData> process_input(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) = 0;
 };
 
 class TMediaRenderer {
   public:
-    virtual void render(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) = 0;
+    virtual void render(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) = 0;
 };
 
 class TMediaCursesRenderer : public TMediaRenderer {
   private:
     MetadataCache metadata_cache;
     Dim2 last_frame_dims;
-    void render_tui_fullscreen(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);
-    void render_tui_compact(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);
-    void render_tui_large(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);
+    void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
+    void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
+    void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
   
   public:
-    void render(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);
+    void render(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
 };
 
 class TMediaCursesCommandHandler : public TMediaCommandHandler {
   public:
-    std::vector<TMediaCommandData> process_input(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot);
+    std::vector<TMediaCommandData> process_input(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
 };
 
 

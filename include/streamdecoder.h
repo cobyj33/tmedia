@@ -36,13 +36,33 @@ class StreamDecoder {
   public:
     StreamDecoder(AVFormatContext* fmt_ctx, enum AVMediaType media_type);
 
-    double get_time_base() const noexcept;
-    double get_average_frame_rate_sec() const noexcept;
-    double get_avgfts() const noexcept;
-    double get_start_time() const noexcept;
-    int get_stream_index() const noexcept;
-    enum AVMediaType get_media_type() const noexcept;
-    AVCodecContext* get_codec_context() const noexcept;
+    inline double get_average_frame_rate_sec() const noexcept {
+      return av_q2d(this->stream->avg_frame_rate);
+    }
+
+    inline double get_avgfts() const noexcept {
+      return 1 / av_q2d(this->stream->avg_frame_rate);
+    }
+
+    inline double get_start_time() const noexcept {
+      return (this->stream->start_time != AV_NOPTS_VALUE) * (this->stream->start_time * this->get_time_base());
+    }
+
+    inline int get_stream_index() const noexcept {
+      return this->stream->index;
+    }
+
+    inline enum AVMediaType get_media_type() const noexcept {
+      return this->media_type;
+    }
+
+    inline double get_time_base() const noexcept {
+      return av_q2d(this->stream->time_base);
+    }
+
+    inline AVCodecContext* get_codec_context() const noexcept {
+      return this->codec_context;
+    }
     
     void reset() noexcept;
 

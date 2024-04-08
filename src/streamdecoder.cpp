@@ -60,37 +60,6 @@ StreamDecoder::StreamDecoder(AVFormatContext* fmt_ctx, enum AVMediaType media_ty
   }
 };
 
-double StreamDecoder::get_average_frame_rate_sec() const noexcept {
-  return av_q2d(this->stream->avg_frame_rate);
-}
-
-double StreamDecoder::get_avgfts() const noexcept {
-  return 1 / av_q2d(this->stream->avg_frame_rate);
-}
-
-double StreamDecoder::get_start_time() const noexcept {
-  if (this->stream->start_time == AV_NOPTS_VALUE)
-    return 0.0;
-  
-  return this->stream->start_time * this->get_time_base();
-}
-
-int StreamDecoder::get_stream_index() const noexcept {
-  return this->stream->index;
-}
-
-enum AVMediaType StreamDecoder::get_media_type() const noexcept {
-  return this->media_type;
-}
-
-double StreamDecoder::get_time_base() const noexcept {
-  return av_q2d(this->stream->time_base);
-}
-
-AVCodecContext* StreamDecoder::get_codec_context() const noexcept {
-  return this->codec_context;
-}
-
 void StreamDecoder::reset() noexcept {
   avcodec_flush_buffers(this->codec_context);
 

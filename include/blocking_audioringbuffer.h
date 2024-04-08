@@ -28,9 +28,18 @@ class BlockingAudioRingBuffer {
 
   public:
     BlockingAudioRingBuffer(int frame_capcity, int nb_channels, int sample_rate, double playback_start_time);
+    
+    // Thread safe: nb_channels is read-only
+    inline int get_nb_channels() {
+      return this->rb->get_nb_channels();
+    }
+    
+    // Thread safe: nb_channels is read-only
+    inline int get_sample_rate() {
+      return this->rb->get_sample_rate();
+    }
 
-    int get_nb_channels();
-    int get_sample_rate();
+
     void clear(double current_playback_time);
 
     double get_buffer_current_time();

@@ -17,4 +17,8 @@ void audio_to_mono_ip(std::vector<float>& frames, int nb_channels);
 void audio_normalize(std::vector<float>& frames, int nb_channels);
 void audio_bound_volume(std::vector<float>& frames, int nb_channels, float max);
 
+
+void audio_to_mono_ipfb(float* frames, int nb_frames, int nb_channels);
+void audio_bound_volume_fb(float* frames, int nb_frames, int nb_channels, float max);
+
 #endif

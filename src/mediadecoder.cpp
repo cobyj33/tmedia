@@ -2,7 +2,6 @@
 
 #include "avguard.h"
 #include "boiler.h"
-#include "metadata.h"
 #include "decode.h"
 #include "formatting.h"
 #include "funcmac.h"
@@ -23,7 +22,7 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
-MediaDecoder::MediaDecoder(std::filesystem::path path, std::set<enum AVMediaType>& requested_streams) {
+MediaDecoder::MediaDecoder(const std::filesystem::path& path, std::set<enum AVMediaType>& requested_streams) {
   try {
     this->fmt_ctx = open_format_context(path);
   } catch (std::runtime_error const& e) {
@@ -33,7 +32,6 @@ MediaDecoder::MediaDecoder(std::filesystem::path path, std::set<enum AVMediaType
   }
 
   this->media_type = media_type_from_avformat_context(this->fmt_ctx);
-  this->metadata = fmt_ctx_meta(this->fmt_ctx);
 
   for (const enum AVMediaType& stream_type : requested_streams) {
     try {
@@ -48,13 +46,7 @@ MediaDecoder::~MediaDecoder() {
   avformat_close_input(&(this->fmt_ctx));
 }
 
-double MediaDecoder::get_duration() const {
-  return this->fmt_ctx->duration / AV_TIME_BASE;
-}
 
-bool MediaDecoder::has_stream_decoder(enum AVMediaType media_type) const {
-  return this->stream_decoders.count(media_type) == 1;
-}
 
 std::vector<AVFrame*> MediaDecoder::next_frames(enum AVMediaType media_type) {
   if (!this->has_stream_decoder(media_type)) {
@@ -154,149 +146,4 @@ int MediaDecoder::jump_to_time(double target_time) {
   }
 
   return ret;
-}
-
-MediaType MediaDecoder::get_media_type() {
-  return this->media_type;
-}
-
-/**
- * 
- * Audio Getters 
- * 
-*/
-
-int MediaDecoder::get_nb_channels() {
-  if (!this->has_stream_decoder(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get number of audio "
-    "channels from this media decoder: No available audio stream decoder.",
-    FUNCDINFO));
-  }
-
-  #if HAS_AVCHANNEL_LAYOUT
-  return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->ch_layout.nb_channels;
-  #else
-  return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channels;
-  #endif
-}
-
-int MediaDecoder::get_sample_rate() {
-  if (!this->has_stream_decoder(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get sample "
-    "rate from this media decoder: No audio stream decoder is available",
-    FUNCDINFO));
-  }
-
-  return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->sample_rate;
-}
-
-AVSampleFormat MediaDecoder::get_sample_fmt() {
-  if (!this->has_stream_decoder(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get sample "
-    "format from this media decoder: No audio stream decoder is available",
-    FUNCDINFO));
-  }
-
-  return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->sample_fmt;
-}
-
-#if HAS_AVCHANNEL_LAYOUT
-AVChannelLayout* MediaDecoder::get_ch_layout() {
-  if (!this->has_stream_decoder(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get channel "
-    "layout from this media decoder: No audio stream decoder is available",
-    FUNCDINFO));
-  }
-
-  return &(this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->ch_layout);
-}
-#else
-int64_t MediaDecoder::get_ch_layout() {
-  if (!this->has_stream_decoder(AVMEDIA_TYPE_AUDIO)) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get channel "
-    "layout from this media decoder: No audio stream decoder is available",
-    FUNCDINFO));
-  }
-
-  int64_t channel_layout = this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channel_layout;
-  if (channel_layout != 0) return channel_layout;
-
-  int channels = this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channels;
-  if (channels >= 0) return av_get_default_channel_layout(channels);
-  return AV_CH_LAYOUT_STEREO;
-}
-#endif
-
-
-/**
- * 
- * Video Getters 
- * 
-*/
-
-int MediaDecoder::get_width() {
-  if (!this->has_stream_decoder(AVMEDIA_TYPE_VIDEO)) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get width "
-    "layout from this media decoder: No video stream decoder is available",
-    FUNCDINFO));
-  }
-
-  return this->stream_decoders[AVMEDIA_TYPE_VIDEO]->get_codec_context()->width;
-}
-
-int MediaDecoder::get_height() {
-  if (!this->has_stream_decoder(AVMEDIA_TYPE_VIDEO)) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get height "
-    "layout from this media decoder: No video stream decoder is available",
-    FUNCDINFO));
-  }
-
-  return this->stream_decoders[AVMEDIA_TYPE_VIDEO]->get_codec_context()->height;
-}
-
-AVPixelFormat MediaDecoder::get_pix_fmt() {
-  if (!this->has_stream_decoder(AVMEDIA_TYPE_VIDEO)) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get pixel "
-    "format from this media decoder: No video stream decoder is available",
-    FUNCDINFO));
-  }
-
-  return this->stream_decoders[AVMEDIA_TYPE_VIDEO]->get_codec_context()->pix_fmt;
-}
-
-/**
- * 
- * Miscellaneous Getters 
- * 
-*/
-
-double MediaDecoder::get_start_time(enum AVMediaType media_type) {
-  if (!this->has_stream_decoder(media_type)) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get start "
-    "time from this media decoder: No {} stream decoder is available",
-    FUNCDINFO, av_get_media_type_string(media_type)));
-  }
-
-  return this->stream_decoders[media_type]->get_start_time();
-}
-
-double MediaDecoder::get_time_base(enum AVMediaType media_type) {
-  if (!this->has_stream_decoder(media_type)) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get time "
-    "base from this media decoder: No {} stream decoder is available",
-    FUNCDINFO, av_get_media_type_string(media_type)));
-  }
-
-  return this->stream_decoders[media_type]->get_time_base();
-
-}
-
-double MediaDecoder::get_avgfts(enum AVMediaType media_type) {
-  if (!this->has_stream_decoder(media_type)) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get average "
-    "frame time sec from this media decoder: No {} stream decoder is available",
-    FUNCDINFO, av_get_media_type_string(media_type)));
-  }
-
-  return this->stream_decoders[media_type]->get_avgfts();
 }

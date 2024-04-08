@@ -41,7 +41,7 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in
     wprint_progress_bar(window, y, x + current_time_string.length() + PADDING_BETWEEN_ELEMENTS, progress_bar_width, 1,time_in_seconds / duration_in_seconds);
 }
 
-void render_pixel_data_plain(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, const ScalingAlgo scaling_algorithm, const std::string& ascii_char_map) {
+void render_pixel_data_plain(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map) {
   PixelData bounded = pixel_data.bound(bounds_width, bounds_height, scaling_algorithm);
   int image_start_row = bounds_row + std::abs(bounded.get_height() - bounds_height) / 2;
   int image_start_col = bounds_col + std::abs(bounded.get_width() - bounds_width) / 2; 
@@ -49,7 +49,7 @@ void render_pixel_data_plain(const PixelData& pixel_data, int bounds_row, int bo
   for (int row = 0; row < bounded.get_height(); row++) {
     move(image_start_row + row, image_start_col);
     for (int col = 0; col < bounded.get_width(); col++) {
-      const RGB24& target_color = bounded.at(row, col);
+      RGB24 target_color = bounded.at(row, col);
       const char target_char = get_char_from_rgb(ascii_char_map, target_color);
       addch(target_char);
     }
@@ -64,14 +64,14 @@ void render_pixel_data_bg(const PixelData& pixel_data, int bounds_row, int bound
   for (int row = 0; row < bounded.get_height(); row++) {
     move(image_start_row + row, image_start_col);
     for (int col = 0; col < bounded.get_width(); col++) {
-      const RGB24& target_color = bounded.at(row, col);
+      RGB24 target_color = bounded.at(row, col);
       const int color_pair = get_closest_ncurses_color_pair(target_color);
       addch(' ' | COLOR_PAIR(color_pair));
     }
   }
 }
 
-void render_pixel_data_color(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, const ScalingAlgo scaling_algorithm, const std::string& ascii_char_map) {
+void render_pixel_data_color(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map) {
   PixelData bounded = pixel_data.bound(bounds_width, bounds_height, scaling_algorithm);
   int image_start_row = bounds_row + std::abs(bounded.get_height() - bounds_height) / 2;
   int image_start_col = bounds_col + std::abs(bounded.get_width() - bounds_width) / 2; 
@@ -79,7 +79,7 @@ void render_pixel_data_color(const PixelData& pixel_data, int bounds_row, int bo
   for (int row = 0; row < bounded.get_height(); row++) {
     move(image_start_row + row, image_start_col);
     for (int col = 0; col < bounded.get_width(); col++) {
-      const RGB24& target_color = bounded.at(row, col);
+      RGB24 target_color = bounded.at(row, col);
       const char target_char = get_char_from_rgb(ascii_char_map, target_color);
       const int color_pair = get_closest_ncurses_color_pair(target_color);
       addch(target_char | COLOR_PAIR(color_pair));
@@ -87,7 +87,7 @@ void render_pixel_data_color(const PixelData& pixel_data, int bounds_row, int bo
   }
 }
 
-void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, const ScalingAlgo scaling_algorithm, const std::string& ascii_char_map) {
+void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map) {
   if (!has_colors()) // if there are no colors, just don't print colors :)
     output_mode = VidOutMode::PLAIN;
 

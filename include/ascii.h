@@ -6,6 +6,7 @@ class RGB24;
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <string_view>
 
 /**
  * @file ascii.h
@@ -25,17 +26,17 @@ class RGB24;
  * 
 */
 
-extern const std::string ASCII_STANDARD_CHAR_MAP;
+extern const char* ASCII_STANDARD_CHAR_MAP;
 
 /**
  * Returns a character from a character
 */
-char get_char_from_value(const std::string& characters, uint8_t value);
-char get_char_from_rgb(const std::string& characters, const RGB24& color);
+char get_char_from_value(std::string_view characters, std::uint8_t value);
+char get_char_from_rgb(std::string_view characters, RGB24 color);
 
 /**
  * 
 */
-RGB24 get_rgb_from_char(const std::string& characters, char ch);
+RGB24 get_rgb_from_char(std::string_view characters, char ch);
 
 #endif

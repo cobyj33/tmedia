@@ -25,17 +25,7 @@ extern "C" {
 #include <libavutil/avstring.h>
 }
 
-bool av_match_lists(const char* first, char fsep, const char* sec, char ssep) {
-  std::vector<std::string> to_check = strsplit(first, fsep);
-
-  for (const std::string& str : to_check) {
-    if (av_match_list(str.c_str(), sec, ssep)) return true;
-  }
-
-  return false;
-}
-
-AVFormatContext* open_format_context(std::filesystem::path path) {
+AVFormatContext* open_format_context(const std::filesystem::path& path) {
   AVFormatContext* fmt_ctx = nullptr;
   int result = avformat_open_input(&fmt_ctx, path.c_str(), nullptr, nullptr);
   if (result < 0) {
@@ -43,7 +33,7 @@ AVFormatContext* open_format_context(std::filesystem::path path) {
     "for {}", FUNCDINFO, path.string()), result);
   }
 
-  if (av_match_lists(fmt_ctx->iformat->name, ',', banned_iformat_names, ',')) {
+  if (av_match_list(fmt_ctx->iformat->name, banned_iformat_names, ',')) {
     avformat_close_input(&fmt_ctx);
     throw std::runtime_error(fmt::format("[{}] Cannot open banned format type: "
     "{}", FUNCDINFO, fmt_ctx->iformat->name));
@@ -59,12 +49,12 @@ AVFormatContext* open_format_context(std::filesystem::path path) {
   if (fmt_ctx != nullptr) {
     return fmt_ctx;
   }
-  
+
   throw std::runtime_error(fmt::format("[{}] Failed to open format context "
   "input, unknown error occured", FUNCDINFO));
 }
 
-void dump_file_info(std::filesystem::path path) {
+void dump_file_info(const std::filesystem::path& path) {
   AVFormatContext* fmt_ctx = open_format_context(path);
   dump_format_context(fmt_ctx);
   avformat_close_input(&fmt_ctx);
@@ -77,7 +67,7 @@ void dump_format_context(AVFormatContext* fmt_ctx) {
   av_log_set_level(saved_avlog_level);
 }
 
-double get_file_duration(std::filesystem::path path) {
+double get_file_duration(const std::filesystem::path& path) {
   AVFormatContext* fmt_ctx = open_format_context(path);
   int64_t duration = fmt_ctx->duration;
   double duration_seconds = (double)duration / AV_TIME_BASE;
@@ -120,19 +110,19 @@ std::string media_type_to_string(MediaType media_type) {
 }
 
 std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat) {
-  if (av_match_lists(iformat->name, ',', banned_iformat_names, ',')) {
+  if (av_match_list(iformat->name, banned_iformat_names, ',')) {
     return std::nullopt;
   }
 
-  if (av_match_lists(iformat->name, ',', image_iformat_names, ',')) {
+  if (av_match_list(iformat->name, image_iformat_names, ',')) {
     return MediaType::IMAGE;
   }
 
-  if (av_match_lists(iformat->name, ',', audio_iformat_names, ',')) {
+  if (av_match_list(iformat->name, audio_iformat_names, ',')) {
     return MediaType::AUDIO;
   }
 
-  if (av_match_lists(iformat->name, ',', video_iformat_names, ',')) {
+  if (av_match_list(iformat->name, video_iformat_names, ',')) {
     return MediaType::VIDEO;
   }
 

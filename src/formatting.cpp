@@ -286,13 +286,7 @@ std::string format_list(std::vector<std::string> items, std::string_view conjunc
   return sstream.str();
 }
 
-std::string to_filename(std::string_view path_str) {
-  return std::filesystem::path(path_str).filename().string();
-}
 
-std::string to_file_ext(std::string_view path_str) {
-  return std::filesystem::path(path_str).extension();
-}
 
 std::string str_bound(std::string_view str, std::size_t max_size) {
   if (str.length() > max_size) {
@@ -304,7 +298,7 @@ std::string str_bound(std::string_view str, std::size_t max_size) {
 std::string str_capslock(std::string_view str) {
   std::string out;
   for (std::size_t i = 0; i < str.length(); i++) {
-    out += std::toupper(str.at(i));
+    out += std::toupper(str[i]);
   }
   return out;
 }

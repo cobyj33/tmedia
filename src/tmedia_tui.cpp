@@ -18,9 +18,9 @@ static constexpr int MIN_RENDER_COLS = 2;
 static constexpr int MIN_RENDER_LINES = 2;
 
 const char* loop_type_str_short(LoopType loop_type);
-std::string get_media_file_display_name(std::string abs_path, MetadataCache& mchc);
+std::string get_media_file_display_name(const std::string& abs_path, MetadataCache& mchc);
 
-void TMediaCursesRenderer::render(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
+void TMediaCursesRenderer::render(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
   if (snapshot.frame.get_width() != this->last_frame_dims.width || snapshot.frame.get_height() != this->last_frame_dims.height) {
     erase();
   }
@@ -38,11 +38,11 @@ void TMediaCursesRenderer::render(const TMediaProgramState tmps, const TMediaPro
   this->last_frame_dims = Dim2(snapshot.frame.get_width(), snapshot.frame.get_height());
 }
 
-void TMediaCursesRenderer::render_tui_fullscreen(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
+void TMediaCursesRenderer::render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
   render_pixel_data(snapshot.frame, 0, 0, COLS, LINES, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
 }
 
-void TMediaCursesRenderer::render_tui_compact(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
+void TMediaCursesRenderer::render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
   static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
   render_pixel_data(snapshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
 
@@ -86,7 +86,7 @@ void TMediaCursesRenderer::render_tui_compact(const TMediaProgramState tmps, con
 
 }
 
-void TMediaCursesRenderer::render_tui_large(const TMediaProgramState tmps, const TMediaProgramSnapshot snapshot) {
+void TMediaCursesRenderer::render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
   static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
   render_pixel_data(snapshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
 
@@ -149,7 +149,7 @@ const char* loop_type_str_short(LoopType loop_type) {
   throw std::runtime_error(fmt::format("[{}] Could not identify loop_type", FUNCDINFO));
 }
 
-std::string get_media_file_display_name(std::string abs_path, MetadataCache& mchc) {
+std::string get_media_file_display_name(const std::string& abs_path, MetadataCache& mchc) {
   mchc_cache(abs_path, mchc);
   bool has_artist = mchc_has(abs_path, "artist", mchc);
   bool has_title = mchc_has(abs_path, "title", mchc);
@@ -157,7 +157,7 @@ std::string get_media_file_display_name(std::string abs_path, MetadataCache& mch
   if (has_artist && has_title) {
     return fmt::format("{} - {}", mchc_get(abs_path, "artist", mchc), mchc_get(abs_path, "title", mchc));
   } else if (has_title) {
-    return mchc_get(abs_path, "title", mchc);
+    return std::string(mchc_get(abs_path, "title", mchc));
   }
   return to_filename(abs_path);
 }

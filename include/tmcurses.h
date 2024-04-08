@@ -21,6 +21,7 @@
 #include "palette.h"
 #include <vector>
 #include <string>
+#include <string_view>
 
 class RGB24;
 
@@ -79,7 +80,7 @@ struct TMLabelStyle {
   TMLabelStyle(int row, int col, int width, TMAlign align, int margin_left, int margin_right);
 };
 
-void tm_mvwaddstr_label(WINDOW* window, TMLabelStyle label_style, const std::string& str);
+void tm_mvwaddstr_label(WINDOW* window, TMLabelStyle label_style, std::string_view str);
 void tm_mvwprintw_label(WINDOW* window, TMLabelStyle label_style, const char* format, ...);
 
 void wfill_box(WINDOW* window, int y, int x, int width, int height, char ch);

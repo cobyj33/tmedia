@@ -134,7 +134,7 @@ PixelData::PixelData(const PixelData& pix_data) {
 }
 
 PixelData::PixelData(PixelData&& pix_data) {
-  this->pixels = pix_data.pixels;
+  this->pixels = std::move(pix_data.pixels);
   this->m_width = pix_data.m_width;
   this->m_height = pix_data.m_height;
 }
@@ -146,22 +146,12 @@ void PixelData::operator=(const PixelData& pix_data) {
 }
 
 void PixelData::operator=(PixelData&& pix_data) {
-  this->pixels = pix_data.pixels;
+  this->pixels = std::move(pix_data.pixels);
   this->m_width = pix_data.m_width;
   this->m_height = pix_data.m_height;
 }
 
-bool PixelData::in_bounds(int row, int col) const {
-  return row >= 0 && col >= 0 && row < this->m_height && col < this->m_width;
-}
 
-int PixelData::get_width() const {
-  return this->m_width;
-}
-
-int PixelData::get_height() const {
-  return this->m_height;
-}
 
 PixelData PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
   if (amount == 0) {
@@ -183,7 +173,7 @@ PixelData PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
 
       for (double new_row = 0; new_row < new_height; new_row++) {
         for (double new_col = 0; new_col < new_width; new_col++) {
-          new_pixels->push_back(std::move(get_avg_color_from_area(*this, new_row * box_height, new_col * box_width, box_width, box_height )));
+          new_pixels->push_back(get_avg_color_from_area(*this, new_row * box_height, new_col * box_width, box_width, box_height ));
         }
       }
     } break;
@@ -226,9 +216,7 @@ bool PixelData::equals(const PixelData& pix_data) const {
   return true;
 }
 
-const RGB24& PixelData::at(int row, int col) const {
-  return (*this->pixels)[row * this->m_width + col];
-}
+
 
 RGB24 get_avg_color_from_area(const PixelData& pixel_data, double row, double col, double width, double height) {
   return get_avg_color_from_area(pixel_data, static_cast<int>(std::floor(row)),
@@ -251,8 +239,5 @@ RGB24 get_avg_color_from_area(const PixelData& pixel_data, int row, int col, int
     }
   }
 
-  if (colors.size() > 0) {
-    return get_average_color(colors);
-  }
-  return RGB24::WHITE;
+  return get_average_color(colors);
 }

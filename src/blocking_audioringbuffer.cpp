@@ -12,13 +12,6 @@ BlockingAudioRingBuffer::BlockingAudioRingBuffer(int frame_capacity, int nb_chan
   this->rb = std::move(std::make_unique<AudioRingBuffer>(frame_capacity, nb_channels, sample_rate, playback_start_time));
 }
 
-int BlockingAudioRingBuffer::get_nb_channels() {
-  return this->rb->get_nb_channels();
-}
-
-int BlockingAudioRingBuffer::get_sample_rate() {
-  return this->rb->get_sample_rate();
-}
 
 double BlockingAudioRingBuffer::get_buffer_current_time() {
   std::unique_lock<std::mutex> lock(this->mutex);

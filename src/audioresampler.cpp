@@ -102,68 +102,49 @@ std::vector<AVFrame*> AudioResampler::resample_audio_frames(std::vector<AVFrame*
 
 
 AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
-    int result;
-    AVFrame* resampled_frame = av_frame_alloc();
-    if (resampled_frame == NULL) {
-      throw std::runtime_error(fmt::format("[{}] Could not create AVFrame "
-      "audio frame for resampling", FUNCDINFO));
-    }
+  int result;
+  AVFrame* resampled_frame = av_frame_alloc();
+  if (resampled_frame == NULL) {
+    throw std::runtime_error(fmt::format("[{}] Could not create AVFrame "
+    "audio frame for resampling", FUNCDINFO));
+  }
 
-    resampled_frame->sample_rate = this->m_dst_sample_rate;
-    resampled_frame->format = this->m_dst_sample_fmt;
-    #if HAS_AVCHANNEL_LAYOUT
-    result = av_channel_layout_copy(&resampled_frame->ch_layout, &this->m_dst_ch_layout);
-    if (result < 0) {
-      throw ffmpeg_error(fmt::format("[{}] Unable to copy destination audio "
-      "channel layout", FUNCDINFO), result);
-    }
-    #else 
-    resampled_frame->channel_layout = this->m_dst_ch_layout;
-    #endif
+  resampled_frame->sample_rate = this->m_dst_sample_rate;
+  resampled_frame->format = this->m_dst_sample_fmt;
+  #if HAS_AVCHANNEL_LAYOUT
+  result = av_channel_layout_copy(&resampled_frame->ch_layout, &this->m_dst_ch_layout);
+  if (result < 0) {
+    throw ffmpeg_error(fmt::format("[{}] Unable to copy destination audio "
+    "channel layout", FUNCDINFO), result);
+  }
+  #else 
+  resampled_frame->channel_layout = this->m_dst_ch_layout;
+  #endif
 
-    resampled_frame->pts = original->pts;
-    #if HAS_AVFRAME_DURATION
-    resampled_frame->duration = original->duration;
-    #endif
+  resampled_frame->pts = original->pts;
+  #if HAS_AVFRAME_DURATION
+  resampled_frame->duration = original->duration;
+  #endif
+
+  result = swr_convert_frame(this->m_context, resampled_frame, original);
+
+  // .wav files were having a weird glitch where swr_conver_frame returns AVERROR_INPUT_CHANGED
+  // on calling swr_convert_frame. This allows the SwrContext to "fix itself" (even though I think that's a bug)
+  // whenever this happens.
+  if (result == AVERROR_INPUT_CHANGED) {
+    result = swr_config_frame(this->m_context, resampled_frame, original);
+    if (result != 0) {
+      throw ffmpeg_error(fmt::format("[{}] Unable to reconfigure "
+      "resampling context", FUNCDINFO), result);
+    }
 
     result = swr_convert_frame(this->m_context, resampled_frame, original);
-    switch (result) {
-      // .wav files were having a weird glitch where swr_conver_frame returns AVERROR_INPUT_CHANGED
-      // on calling swr_convert_frame. This allows the SwrContext to "fix itself" (even though I think that's a bug)
-      // whenever this happens.
-      case AVERROR_INPUT_CHANGED: {
-        result = swr_config_frame(this->m_context, resampled_frame, original);
-        if (result != 0) {
-          throw ffmpeg_error(fmt::format("[{}] Unable to reconfigure "
-          "resampling context", FUNCDINFO), result);
-        }
+  }
 
-        result = swr_convert_frame(this->m_context, resampled_frame, original);
-      }
-    }
+  if (result == 0) {
+    return resampled_frame;
+  }
 
-    if (result == 0) {
-      return resampled_frame;
-    }
-
-    if (resampled_frame != nullptr) {
-      av_frame_free(&resampled_frame);
-    }
-    throw ffmpeg_error("[AudioResampler::resample_audio_frame] Unable to resample audio frame", result);
-}
-
-int AudioResampler::get_src_sample_rate() {
-  return this->m_src_sample_rate;
-}
-
-int AudioResampler::get_src_sample_fmt() {
-  return this->m_src_sample_fmt;
-}
-
-int AudioResampler::get_dst_sample_rate() {
-  return this->m_dst_sample_rate;
-}
-
-int AudioResampler::get_dst_sample_fmt() {
-  return this->m_dst_sample_fmt;
+  av_frame_free(&resampled_frame);
+  throw ffmpeg_error(fmt::format("[{}] Unable to resample audio frame", FUNCDINFO), result);
 }

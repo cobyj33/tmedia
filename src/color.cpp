@@ -30,11 +30,6 @@ double RGB24::distance(const RGB24& other) const {
 
 
 RGB24 get_average_color(std::vector<RGB24>& colors) {
-  if (colors.size() == 0) {
-    throw std::runtime_error(fmt::format("[{}] Cannot find average color value "
-    "of empty vector", FUNCDINFO));
-  }
-
   int sums[3] = {0, 0, 0};
   for (std::size_t i = 0; i < colors.size(); i++) {
     sums[0] += colors[i].r;
@@ -45,32 +40,6 @@ RGB24 get_average_color(std::vector<RGB24>& colors) {
   return RGB24((sums[0]/colors.size()) & 0xFF, (sums[1]/colors.size()) & 0xFF, (sums[2]/colors.size()) & 0xFF);
 }
 
-std::uint8_t RGB24::gray_val() const {
-  return get_gray8(this->r, this->g, this->b);
-}
-
-
-int get_grayint(int r, int g, int b) {
-  return (int)(0.299 * r + 0.587 * g + 0.114 * b);
-}
-
-std::uint8_t get_gray8(std::uint8_t r, std::uint8_t g, std::uint8_t b) {
-  return (std::uint8_t)(0.299 * r + 0.587 * g + 0.114 * b);
-}
-
-RGB24 RGB24::get_comp() const {
-  return RGB24(255 - this->r, 255 - this->g, 255 - this->b );
-} 
-
-bool RGB24::is_gray() const {
-  return this->r == this->g && this->g == this->b;
-}
-
-
-RGB24 RGB24::as_gray() const {
-  std::uint8_t value = get_gray8(this->r, this->g, this->b);
-  return RGB24(value);
-}
 
 RGB24 find_closest_color(RGB24& input, std::vector<RGB24>& colors) {
   int index = find_closest_color_index(input, colors);
@@ -96,26 +65,4 @@ int find_closest_color_index(RGB24& input, std::vector<RGB24>& colors) {
   return best_color;
 }
 
-void RGB24::operator=(const RGB24& color) {
-  this->r = color.r;
-  this->g = color.g;
-  this->b = color.b;
-}
 
-void RGB24::operator=(RGB24&& color) {
-  this->r = color.r;
-  this->g = color.g;
-  this->b = color.b;
-}
-
-bool RGB24::equals(const RGB24& other) const {
-  return this->r == other.r && this->g == other.g && this->b == other.b;
-}
-
-bool RGB24::operator==(const RGB24& other) const {
-  return this->r == other.r && this->g == other.g && this->b == other.b;
-}
-
-bool RGB24::operator==(RGB24&& other) const {
-  return this->r == other.r && this->g == other.g && this->b == other.b;
-}

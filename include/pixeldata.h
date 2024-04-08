@@ -62,20 +62,31 @@ class PixelData {
     PixelData(AVFrame* video_frame);
     PixelData(const PixelData& pix_data);
     PixelData(PixelData&& pix_data);
+
+    PixelData scale(double amount, ScalingAlgo scaling_algorithm) const;
+    PixelData bound(int width, int height, ScalingAlgo scaling_algorithm) const;
     
     void operator=(const PixelData& pix_data);
     void operator=(PixelData&& pix_data);
     void operator=(AVFrame* video_frame);
 
     bool equals(const PixelData& pix_data) const;
-    int get_width() const;
-    int get_height() const;
 
-    PixelData scale(double amount, ScalingAlgo scaling_algorithm) const;
-    PixelData bound(int width, int height, ScalingAlgo scaling_algorithm) const;
+    inline int get_width() const {
+      return this->m_width;
+    }
 
-    const RGB24& at(int row, int column) const;
-    bool in_bounds(int row, int column) const;
+    inline int get_height() const {
+      return this->m_height;
+    }
+
+    inline bool in_bounds(int row, int col) const {
+      return row >= 0 && col >= 0 && row < this->m_height && col < this->m_width;
+    }
+
+    inline RGB24 at(int row, int col) const {
+      return (*this->pixels)[row * this->m_width + col];
+    }
 };
 
 RGB24 get_avg_color_from_area(const PixelData& data, int row, int col, int width, int height);

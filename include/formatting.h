@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <filesystem>
 
 /**
  * tmedia general string formatting and manipulation routines.
@@ -77,8 +78,13 @@ std::string double_to_fixed_string(double num, int decimal_places);
 
 bool is_int_str(std::string_view str);
 
-std::string to_filename(std::string_view path);
-std::string to_file_ext(std::string_view path);
+inline std::string to_filename(std::string_view path_str) {
+  return std::filesystem::path(path_str).filename().string();
+}
+
+inline std::string to_file_ext(std::string_view path_str) {
+  return std::filesystem::path(path_str).extension();
+}
 
 std::string format_list(std::vector<std::string> items, std::string_view conjunction);
 

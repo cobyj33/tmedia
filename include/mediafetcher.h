@@ -82,13 +82,34 @@ class MediaFetcher {
 
     void begin(double currsystime); // Only to be called by owning thread
     void join(double currsystime); // Only to be called by owning thread after in_use is set to false
+    
+    /**
+     * Thread-Safe
+    */
+    inline bool has_media_stream(enum AVMediaType media_type) const {
+      return this->mdec->has_stream_decoder(media_type);
+    }
 
     /**
      * @brief Returns the duration in seconds of the currently playing media
      * @return double 
+     * Thread Safe
      */
-    double get_duration() const; // Thread-Safe
-    bool has_media_stream(enum AVMediaType media_type) const; // Thread-Safe
+    inline double get_duration() const {
+      return this->mdec->get_duration();
+    }
+
+
+    inline bool has_error() const noexcept {
+      return this->error.has_value();
+    }
+
+    /**
+     * Make sure to check with has_error first!
+    */
+    inline std::string get_error() const {
+      return *this->error;
+    }
 
     void dispatch_exit();
     void dispatch_exit(std::string err);
@@ -98,8 +119,6 @@ class MediaFetcher {
     void pause(double currsystime);
     void resume(double currsystime);
 
-    bool has_error() const noexcept;
-    std::string get_error();
 
     /**
      * @brief Returns the current timestamp of the video in seconds since the beginning of playback. This takes into account pausing, skipping, etc... and calculates the time according to the current system time given.
