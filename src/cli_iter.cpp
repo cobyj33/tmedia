@@ -13,146 +13,123 @@
 
 namespace tmedia {
 
-  bool is_shortopt(char* arg) {
+  inline bool is_shortopt(const char* arg) {
     return arg[0] == '-' && arg[1] != '-';
   }
 
-  bool is_longopt(char* arg) {
+  inline bool is_longopt(const char* arg) {
     return (arg[0] == '-' && arg[1] == '-') || arg[0] == ':';
   }
 
-  struct LongOptParseRes {
-    CLIArg arg;
-    int nextIndex;
+  struct CLIParseState {
+    std::vector<CLIArg> pargs;
+    const int argc;
+    const char* const * const argv;
+    int argi;
+    CLIParseState(int argc, char** argv) : argc(argc), argv(argv), argi(0) {}
   };
 
-  LongOptParseRes cli_longopt_parse(int argc, char** argv, int index, const std::vector<std::string>& longopts_with_args) {
-    LongOptParseRes res;
-    res.nextIndex = index + 1;
-    res.arg.arg_type = CLIArgType::OPTION;
-
+  void cli_longopt_parse(CLIParseState& ps, const std::vector<std::string>& lopts_w_args) {
     int i = 0;
+    const char * const longarg = ps.argv[ps.argi];
+    CLIArg parg;
+    parg.arg_type = CLIArgType::OPTION;
 
-    if (argv[index][0] == '-' && argv[index][1] == '-') {
-      res.arg.prefix = "--";
+    if (longarg[0] == '-' && longarg[1] == '-') {
+      parg.prefix = "--";
       i = 2;
-    } else if (argv[index][0] == ':') {
-      res.arg.prefix = ":";
+    } else if (longarg[0] == ':') {
+      parg.prefix = ":";
       i = 1;
     } else {
       throw std::runtime_error(fmt::format("[{}] Could not parse cli longopt "
-      "prefix for arg: {}", FUNCDINFO, argv[index]));
+      "prefix for arg: {}", FUNCDINFO, longarg));
     }
 
-    for (; argv[index][i] != '\0' && argv[index][i] != '='; i++) {
-      res.arg.value += argv[index][i];
-    }
+    for (; longarg[i] != '\0' && longarg[i] != '='; i++)
+      parg.value += longarg[i];
 
-    if (std::find(longopts_with_args.begin(), longopts_with_args.end(), res.arg.value) != longopts_with_args.end()) {
-      bool defer_param = argv[index][i] != '=';
+    if (std::find(lopts_w_args.begin(), lopts_w_args.end(), parg.value) != lopts_w_args.end()) {
+      bool defer_param = longarg[i] != '=';
       
       if (defer_param) { // read next arg as param
-        if (res.nextIndex >= argc) {
+        if (ps.argi + 1 >= ps.argc) {
           throw std::runtime_error(fmt::format("[{}] param not found for long "
-          "option {}.", FUNCDINFO, res.arg.value));
+          "option {}.", FUNCDINFO, parg.value));
         }
-
-        res.arg.param = argv[res.nextIndex++];
+        parg.param = ps.argv[ps.argi++];
       } else { // read param after equals sign
-        
-        for (i++; argv[index][i] != '\0'; i++) {
-          res.arg.param += argv[index][i];
-        }
+        i++; // consume equals
+        for (; longarg[i] != '\0'; i++) parg.param += longarg[i];
 
-        if (res.arg.param.length() == 0) {
+        if (parg.param.length() == 0) {
           throw std::runtime_error(fmt::format("[{}] param not found for long "
-          "option after '=' {}.", FUNCDINFO, argv[index]));
+          "option after '=' {}.", FUNCDINFO, longarg));
         }
       }
+
     } else {
-      if (argv[index][i] == '=') {
+      if (longarg[i] == '=') { 
         throw std::runtime_error(fmt::format("[{}] Attempted to add param to "
-        "non-param option: {}.", FUNCDINFO, argv[index]));
+        "non-param option: {}.", FUNCDINFO, longarg));
       }
     }
 
-    return res;
+    ps.argi++;
+    ps.pargs.push_back(parg);
   }
 
-  struct ShortOptParseRes {
-    std::vector<CLIArg> args;
-    int nextIndex;  
-  };
-
-  ShortOptParseRes cli_shortopt_parse(int argc, char** argv, int index, std::string_view shortopts_with_args) {
-    ShortOptParseRes res;
-    res.nextIndex = index + 1;
+  void cli_shortopt_parse(CLIParseState& ps, std::string_view shortopts_with_args) {
     bool defer_param = false;
+    const char * const shortarg = ps.argv[ps.argi];
 
-    for (int j = 1; argv[index][j] != '\0'; j++) {
-      char shortopt = argv[index][j];
+    for (int j = 1; shortarg[j] != '\0'; j++) {
+      char shortopt = shortarg[j];
       if (!std::isalpha(shortopt)) {
         throw std::runtime_error(fmt::format("[{}] shortopt must be an "
-        "alphabetical character: {} ({})", FUNCDINFO, shortopt, argv[index]));
+        "alphabetical character: {} ({})", FUNCDINFO, shortopt, shortarg));
       }
-      
-      CLIArg arg(std::string(1, shortopt), CLIArgType::OPTION, "-", "");
 
-      res.args.push_back(arg);
-      if (shortopts_with_args.find(shortopt) != std::string::npos) {
-        defer_param = argv[index][j + 1] == '\0';
-        if (!defer_param) throw std::runtime_error(fmt::format("[{}] Could not "
-        "parse short option requiring argument: {}.", FUNCDINFO, shortopt));
+      ps.pargs.push_back(CLIArg(std::string(1, shortopt), CLIArgType::OPTION, "-", ""));
+
+      if (shortopts_with_args.find(shortopt) != std::string::npos) { // is a shortopt that takes an argument
+        if (shortarg[j + 1] != '\0') // if it is not the last option in the option chain
+          throw std::runtime_error(fmt::format("[{}] Could not "
+          "parse short option requiring argument: {}.", FUNCDINFO, shortopt));
+        defer_param = true;
       }
     }
 
+    ps.argi++; // consume initial shortopt option string
     if (defer_param) {
-      if (res.nextIndex >= argc) {
+      if (ps.argi >= ps.argc) {
         throw std::runtime_error(fmt::format("[{}] param not found for short "
-        "option {}.", FUNCDINFO, res.args[res.args.size() - 1].value));
+        "option {}.", FUNCDINFO, ps.pargs[ps.pargs.size() - 1].value));
       }
-      res.args[res.args.size() - 1].param = argv[res.nextIndex++];
+      ps.pargs[ps.pargs.size() - 1].param = ps.argv[ps.argi++];
     }
-
-    return res;
   }
 
-  CLIArg cli_create_pos_arg(char* arg) {
-    CLIArg posarg;
-    posarg.value = arg;
-    posarg.arg_type = CLIArgType::POSITIONAL;
-    return posarg;
-  }
-
-  std::vector<CLIArg> cli_parse(int argc, char** argv, std::string_view shortopts_with_args, const std::vector<std::string>& longopts_with_args) {
-    std::vector<CLIArg> args;
+  std::vector<CLIArg> cli_parse(int argc, char** argv, std::string_view shortopts_with_args, const std::vector<std::string>& lopts_w_args) {
+    CLIParseState ps(argc, argv);
     int since_opt_stopper = -1;
     
-    int i = 1;
-    while (i < argc) {
-      since_opt_stopper += (since_opt_stopper >= 0) || (strcmp(argv[i], "--") == 0);
+    while (ps.argi < argc) {
+      since_opt_stopper += (since_opt_stopper >= 0) || (strcmp(argv[ps.argi], "--") == 0);
 
       if (since_opt_stopper >= 0) {
         if (since_opt_stopper > 0)
-          args.push_back(cli_create_pos_arg(argv[i]));
-        i++;
-      } else if (is_shortopt(argv[i])) {
-        ShortOptParseRes res = cli_shortopt_parse(argc, argv, i, shortopts_with_args);
-        for (const CLIArg& arg : res.args) {
-          args.push_back(arg);
-        }
-
-        i = res.nextIndex;
-      } else if (is_longopt(argv[i])) {
-        LongOptParseRes res = cli_longopt_parse(argc, argv, i, longopts_with_args);
-        args.push_back(res.arg);
-        i = res.nextIndex;
+          ps.pargs.push_back(CLIArg(ps.argv[ps.argi], CLIArgType::POSITIONAL));
+        ps.argi++;
+      } else if (is_shortopt(ps.argv[ps.argi])) {
+        cli_shortopt_parse(ps, shortopts_with_args);
+      } else if (is_longopt(ps.argv[ps.argi])) {
+        cli_longopt_parse(ps, lopts_w_args);
       } else {
-        args.push_back(cli_create_pos_arg(argv[i++]));
+        ps.pargs.push_back(CLIArg(ps.argv[ps.argi++], CLIArgType::POSITIONAL));
       }
     }
 
-    return args;
+    return ps.pargs;
   }
-
 }
