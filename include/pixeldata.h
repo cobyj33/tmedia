@@ -84,7 +84,7 @@ class PixelData {
       return row >= 0 && col >= 0 && row < this->m_height && col < this->m_width;
     }
 
-    inline RGB24 at(int row, int col) const {
+    inline const RGB24& at(int row, int col) const {
       return (*this->pixels)[row * this->m_width + col];
     }
 };
