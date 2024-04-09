@@ -46,7 +46,7 @@ namespace tmedia {
       "prefix for arg: {}", FUNCDINFO, longarg));
     }
 
-    for (; longarg[i] != '\0' && longarg[i] != '='; i++)
+    for (; longarg[i] != '\0' && longarg[i] != '='; i++) // stop at either NUL or '='
       parg.value += longarg[i];
 
     if (std::find(lopts_w_args.begin(), lopts_w_args.end(), parg.value) != lopts_w_args.end()) {
@@ -57,7 +57,8 @@ namespace tmedia {
           throw std::runtime_error(fmt::format("[{}] param not found for long "
           "option {}.", FUNCDINFO, parg.value));
         }
-        parg.param = ps.argv[ps.argi++];
+        ps.argi++;
+        parg.param = ps.argv[ps.argi];
       } else { // read param after equals sign
         i++; // consume equals
         for (; longarg[i] != '\0'; i++) parg.param += longarg[i];
@@ -67,7 +68,6 @@ namespace tmedia {
           "option after '=' {}.", FUNCDINFO, longarg));
         }
       }
-
     } else {
       if (longarg[i] == '=') { 
         throw std::runtime_error(fmt::format("[{}] Attempted to add param to "
@@ -75,7 +75,7 @@ namespace tmedia {
       }
     }
 
-    ps.argi++;
+    ps.argi++; // consume current argument at index argi
     ps.pargs.push_back(parg);
   }
 

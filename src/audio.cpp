@@ -33,12 +33,10 @@ void audio_to_mono_ipfb(float* frames, int nb_frames, int nb_channels) {
 
 void audio_to_mono_ip(std::vector<float>& frames, int nb_channels) {
   const std::size_t nb_frames = frames.size() / nb_channels;
-  std::size_t frame_offset = 0;
   for (std::size_t frame = 0; frame < nb_frames; frame++) {
     float mono = 0.0;
-    frame_offset += nb_channels;
     for (int c = 0; c < nb_channels; c++) {
-      mono += frames[frame_offset + c];
+      mono += frames[frame * nb_channels + c];
     }
     frames[frame] = mono;
   }
