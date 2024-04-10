@@ -31,20 +31,21 @@ struct TMediaStartupState {
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
 };
 
-int tmedia_run(TMediaStartupState tmpd);
+int tmedia_run(TMediaStartupState& tmpd);
 
 
 struct TMediaCLIParseRes {
   TMediaStartupState tmss;
   bool exited;
-  TMediaCLIParseRes(TMediaStartupState tmss, bool exited) : tmss(tmss), exited(exited) {}
+  TMediaCLIParseRes(const TMediaStartupState& tmss, bool exited) : tmss(tmss), exited(exited) {}
+  TMediaCLIParseRes(TMediaStartupState&& tmss, bool exited) : tmss(std::move(tmss)), exited(exited) {}
 };
 
 //currently unimplemented
 TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv);
 
 struct TMediaProgramState {
-  Playlist<std::filesystem::path> playlist;
+  Playlist playlist;
   double volume = 1.0;
   bool muted = false;
   bool quit = false;

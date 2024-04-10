@@ -24,25 +24,14 @@ bool mchc_has_file(std::string_view file, MetadataCache& cache) {
   return cache.count(file) == 1;
 }
 
-bool mchc_has(const std::string& file, const std::string& key, MetadataCache& cache) {
+bool mchc_has(const std::string& file, std::string_view key, MetadataCache& cache) {
   if (cache.count(file) == 1) {
-    if (cache[file].count(key) == 1) {
-      return true;
-    }
+    return cache[file].count(key) == 1;
   }
   return false;
 }
 
 std::string_view mchc_get(const std::string& file, const std::string& key, MetadataCache& cache) {
-  // if (!mchc_has(file, key, cache)) {
-  //   if (mchc_has_file(file, cache)) {
-  //     throw std::runtime_error(fmt::format("[{}] could not find key (\"{}\") "
-  //     "in file (\"{}\") in metadata cache", FUNCDINFO, key, file));
-  //   }
-  //   throw std::runtime_error(fmt::format("[{}] could not find file (\"{}\") in "
-  //   "metadata cache", FUNCDINFO, file));
-  // }
-  
   return cache[file][key];
 }
 

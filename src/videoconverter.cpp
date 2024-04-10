@@ -3,6 +3,7 @@
 #include "ffmpeg_error.h"
 #include "avguard.h"
 #include "funcmac.h"
+#include "optim.h"
 
 #include <stdexcept>
 #include <fmt/format.h>
@@ -78,7 +79,7 @@ VideoConverter::~VideoConverter() {
 
 AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
   AVFrame* resized_video_frame = av_frame_alloc();
-  if (resized_video_frame == nullptr) {
+  if (unlikely(resized_video_frame == nullptr)) {
     throw std::runtime_error(fmt::format("[{}] Could not allocate resized "
     "frame for VideoConverter", FUNCDINFO));
   }
@@ -93,7 +94,7 @@ AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
   #endif
   
   int err = av_frame_get_buffer(resized_video_frame, 1); //watch this alignment
-  if (err) {
+  if (unlikely(err)) {
     throw ffmpeg_error(fmt::format("[{}] Failure on "
     "allocating buffers for resized video frame", FUNCDINFO), err);
   }

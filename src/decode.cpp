@@ -2,12 +2,14 @@
 
 #include "ffmpeg_error.h"
 #include "funcmac.h"
+#include "optim.h"
 
 #include <fmt/format.h>
 #include <vector>
 #include <deque>
 #include <stdexcept>
 #include <string>
+
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -34,7 +36,7 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
   }
 
   AVFrame* video_frame = av_frame_alloc();
-  if (video_frame == nullptr) {
+  if (unlikely(video_frame == nullptr)) {
     throw ffmpeg_error("[decode_video_packet] Could not allocate video_frame, "
     "no memory", AVERROR(ENOMEM));
   }
@@ -51,14 +53,14 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
     }
 
     AVFrame* saved_frame = av_frame_alloc();
-    if (saved_frame == nullptr) {
+    if (unlikely(saved_frame == nullptr)) {
       av_frame_free(&video_frame);
       clear_avframe_list(video_frames);
       throw ffmpeg_error("[decode_video_packet] Could not allocate saved_frame, no memory", AVERROR(ENOMEM));
     }
 
     result = av_frame_ref(saved_frame, video_frame);
-    if (result < 0) {
+    if (unlikely(result < 0)) {
       av_frame_free(&saved_frame);
       av_frame_free(&video_frame);
       clear_avframe_list(video_frames);
@@ -88,7 +90,7 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
   }
 
   AVFrame* audio_frame = av_frame_alloc();
-  if (audio_frame == nullptr) {
+  if (unlikely(audio_frame == nullptr)) {
     throw ffmpeg_error("[decode_audio_packet] Could not allocate audio_frame, "
     "no memory", AVERROR(ENOMEM));
   }
@@ -105,7 +107,7 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
     }
 
     AVFrame* saved_frame = av_frame_alloc();
-    if (saved_frame == nullptr) {
+    if (unlikely(saved_frame == nullptr)) {
       av_frame_free(&audio_frame);
       clear_avframe_list(audio_frames);
       throw ffmpeg_error("[decode_audio_packet] Could not allocate "
@@ -113,7 +115,7 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
     } 
 
     result = av_frame_ref(saved_frame, audio_frame); 
-    if (result < 0) {
+    if (unlikely(result < 0)) {
       clear_avframe_list(audio_frames);
       av_frame_free(&saved_frame);
       av_frame_free(&audio_frame);

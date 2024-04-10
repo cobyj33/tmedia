@@ -29,7 +29,7 @@ namespace tmedia {
     CLIParseState(int argc, char** argv) : argc(argc), argv(argv), argi(1) {}
   };
 
-  void cli_longopt_parse(CLIParseState& ps, const std::vector<std::string>& lopts_w_args) {
+  void cli_longopt_parse(CLIParseState& ps, const std::vector<std::string_view>& lopts_w_args) {
     int i = 0;
     const char * const longarg = ps.argv[ps.argi];
     CLIArg parg;
@@ -113,7 +113,7 @@ namespace tmedia {
     }
   }
 
-  std::vector<CLIArg> cli_parse(int argc, char** argv, std::string_view shortopts_with_args, const std::vector<std::string>& lopts_w_args) {
+  std::vector<CLIArg> cli_parse(int argc, char** argv, std::string_view shortopts_with_args, const std::vector<std::string_view>& lopts_w_args) {
     CLIParseState ps(argc, argv);
     int since_opt_stopper = -1;
     

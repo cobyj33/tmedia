@@ -6,52 +6,50 @@
 #include <fmt/format.h>
 
 #include <cstddef>
+#include <cassert>
 
 #include <vector>
 #include <string>
 #include <stdexcept>
 #include <algorithm>
 
+#include <cassert>
+
 #include <filesystem>
 
-
+constexpr int NO_MOVE_AVAILABLE = -1;
 int playlist_get_move(int current, int size, LoopType loop_type, PlaylistMvCmd move_cmd);
 
-template <typename T>
-Playlist<T>::Playlist() {
+Playlist::Playlist() {
   this->m_loop_type = LoopType::NO_LOOP;
-  this->m_queue_index = -1;
+  this->m_qi = -1;
   this->m_shuffled = false;
 }
 
-template <typename T>
-Playlist<T>::Playlist(std::vector<T> entries, LoopType loop_type) {
+Playlist::Playlist(const std::vector<std::filesystem::path>& entries, LoopType loop_type) {
   this->m_entries = entries;
-  this->m_queue_index = 0;
+  this->m_qi = entries.size() > 0 ? 0 : -1;
   this->m_loop_type = loop_type;
   this->m_shuffled = false;
 
   for (int i = 0; (std::size_t)i < entries.size(); i++) {
-    this->m_queue_indexes.push_back(i);
+    this->m_q.push_back(i);
   }
 }
 
-template <typename T>
-int Playlist<T>::index() const {
+int Playlist::index() const {
   if (this->m_entries.size() == 0) {
     throw std::runtime_error(fmt::format("[{}] Cannot access current "
     "index of empty playlist", FUNCDINFO));
   }
-  return this->m_queue_indexes[this->m_queue_index];
+
+  assert(this->m_qi < this->m_q.size());
+  assert(this->m_qi > 0);
+  
+  return this->m_q[this->m_qi];
 }
 
-template <typename T>
-std::size_t Playlist<T>::size() const noexcept {
-  return this->m_entries.size();
-}
-
-template <typename T>
-T Playlist<T>::current() const {
+const std::filesystem::path& Playlist::current() const {
   if (this->m_entries.size() == 0) {
     throw std::runtime_error(fmt::format("[{}] Cannot access current "
     "file of empty playlist", FUNCDINFO));
@@ -59,20 +57,117 @@ T Playlist<T>::current() const {
   return this->m_entries[this->index()];
 }
 
-template <typename T>
-LoopType Playlist<T>::loop_type() const noexcept {
-  return this->m_loop_type;
+void Playlist::insert(const std::filesystem::path& entry, std::size_t i) {
+  // note we don't have to handle the empty playlist case with
+  // this guard clause as well.
+  if (i >= this->m_q.size()) return this->push_back(entry);
+
+  this->m_entries.push_back(entry);
+  this->m_q.insert(this->m_q.begin() + i, this->m_entries.size() - 1);
+  this->m_qi += this->m_qi >= static_cast<int>(i);
 }
 
-template <typename T>
-void Playlist<T>::set_loop_type(LoopType loop_type) noexcept {
-  this->m_loop_type = loop_type;
+void Playlist::push_back(const std::filesystem::path& entry) {
+  this->m_qi = (this->m_qi > 0) * this->m_qi; // set m_qi to 0 if it is less than 0, or else keep it the same
+  this->m_entries.push_back(entry);
+  this->m_q.push_back(this->m_entries.size() - 1);
 }
 
-template <typename T>
-void Playlist<T>::move(PlaylistMvCmd move_cmd) {
-  int next = playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd);
-  if (next < 0) {
+void Playlist::clear() {
+  this->m_qi = -1;
+  this->m_entries.clear();
+  this->m_q.clear();
+  this->m_shuffled = false;
+}
+
+void Playlist::remove(std::size_t i) {
+  if (this->m_entries.size() == 0) return; // no-op on empty playlist
+  if (this->m_entries.size() == 1) return this->clear(); // edge case!
+
+  if (i > this->m_q.size()) {
+    throw std::runtime_error(fmt::format("[{}] Attempted to remove playlist"
+    "index greater than the size of the playlist: {} from {}", FUNCDINFO, i,
+    this->m_q.size()));
+  } 
+
+  int entry_index = this->m_q[i];
+  this->m_entries.erase(this->m_entries.begin() + entry_index);
+
+  // remove the queue entry
+  for (std::size_t qi = 0; qi < this->m_q.size(); qi++) {
+    if (this->m_q[qi] == entry_index) {
+      this->m_q.erase(this->m_q.begin() + qi);
+      break;
+    }
+  }
+
+  // decrement all higher queue indexes
+  for (std::size_t qi = 0; qi < this->m_q.size(); qi++) {
+    this->m_q[qi] -= this->m_q[qi] > entry_index;
+  }
+  this->m_qi -= this->m_qi > entry_index;
+}
+
+const std::filesystem::path& Playlist::at(std::size_t i) const {
+  if (i > this->m_q.size()) {
+    throw std::runtime_error(fmt::format("[{}] Attempted to get playlist item"
+    "at index greater than the size of the playlist: {} from {}", FUNCDINFO, i,
+    this->m_q.size()));
+  }
+
+  return this->m_entries[this->m_q[this->m_qi]];
+}
+
+const std::filesystem::path& Playlist::operator[](std::size_t i) {
+  return this->m_entries[this->m_q[i]];
+}
+
+const std::vector<std::filesystem::path>& Playlist::view() const {
+  return this->m_entries;
+}
+
+void Playlist::remove(const std::filesystem::path& entry) {
+  // this code is probably actually garbo lmao
+  if (this->m_entries.size() == 0) return;
+  if (this->m_entries.size() == 1) return this->clear(); // edge case!
+  
+  int entry_index = -1;
+  // find index of the entry
+  for (int i = 0; i < static_cast<int>(this->m_entries.size()); i++) {
+    if (this->m_entries[i] == entry) {
+      entry_index = i;
+      break;
+    }
+  }
+
+  if (entry_index == -1) return; // nothing found
+  
+  // removes the found entry
+  this->m_entries.erase(this->m_entries.begin() + entry_index);
+  
+  // remove the queue entry
+  for (std::size_t qi = 0; qi < this->m_q.size(); qi++) {
+    if (this->m_q[qi] == entry_index) {
+      this->m_q.erase(this->m_q.begin() + qi);
+      break;
+    }
+  }
+
+  // decrement all higher queue indexes
+  for (std::size_t qi = 0; qi < this->m_q.size(); qi++) {
+    this->m_q[qi] -= this->m_q[qi] > entry_index;
+  }
+  // decrement queue index if it was higher
+  this->m_qi -= this->m_qi > entry_index;
+}
+
+bool Playlist::has(const std::filesystem::path& entry) const {
+  return std::find(this->m_entries.begin(), this->m_entries.end(), entry) != this->m_entries.end();
+}
+
+void Playlist::move(PlaylistMvCmd move_cmd) {
+  int next = playlist_get_move(this->m_qi, this->m_q.size(), this->m_loop_type, move_cmd);
+  if (next == NO_MOVE_AVAILABLE) {
     throw std::runtime_error(fmt::format("[{}] can not commit move {}.",
     FUNCDINFO, playlist_move_cmd_cstr(move_cmd))); 
   }
@@ -84,57 +179,48 @@ void Playlist<T>::move(PlaylistMvCmd move_cmd) {
     }
   }
 
-  this->m_queue_index = next;
+  this->m_qi = next;
 
   // reshuffle our index queue so that the next song is not at the end and our shuffle remains fresh
   // unfortunate edge case, if we are going to the next file, and we are shuffled, and we are at the second to last song, we need to 
   if ((move_cmd == PlaylistMvCmd::NEXT || move_cmd == PlaylistMvCmd::SKIP) &&
-  this->m_shuffled && (std::size_t)this->m_queue_index == this->m_queue_indexes.size() - 2) {
+  this->m_shuffled && (std::size_t)this->m_qi == this->m_q.size() - 2) {
     this->shuffle(true);
   }
 }
 
-template <typename T>
-T Playlist<T>::peek_move(PlaylistMvCmd move_cmd) const {
-  int next = playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd);
-  if (next < 0) {
+const std::filesystem::path& Playlist::peek_move(PlaylistMvCmd move_cmd) const {
+  int next = playlist_get_move(this->m_qi, this->m_q.size(), this->m_loop_type, move_cmd);
+  if (next == NO_MOVE_AVAILABLE) {
     throw std::runtime_error(fmt::format("[{}] can not commit move {}",
     FUNCDINFO, playlist_move_cmd_cstr(move_cmd))); 
   }
 
-  return this->m_entries[this->m_queue_indexes[next]];
+  return this->m_entries[this->m_q[next]];
 }
 
-template <typename T>
-bool Playlist<T>::can_move(PlaylistMvCmd move_cmd) const noexcept {
-  return playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd) >= 0;
+bool Playlist::can_move(PlaylistMvCmd move_cmd) const noexcept {
+  return playlist_get_move(this->m_qi, this->m_q.size(), this->m_loop_type, move_cmd) >= 0;
 }
 
-template <typename T>
-bool Playlist<T>::shuffled() const {
-  return this->m_shuffled;
-}
-
-template <typename T>
-void Playlist<T>::shuffle(bool keep_current_file_first) {
-  if (this->m_queue_indexes.size() == 0) return;
+void Playlist::shuffle(bool keep_current_file_first) {
+  if (this->m_q.size() == 0) return;
 
   if (keep_current_file_first) {
-    int tmp = this->m_queue_indexes[0];
-    this->m_queue_indexes[0] = this->m_queue_indexes[this->m_queue_index];
-    this->m_queue_indexes[this->m_queue_index] = tmp;
-    effolkronium::random_thread_local::shuffle(this->m_queue_indexes.begin() + 1, this->m_queue_indexes.end());
+    int tmp = this->m_q[0];
+    this->m_q[0] = this->m_q[this->m_qi];
+    this->m_q[this->m_qi] = tmp;
+    effolkronium::random_thread_local::shuffle(this->m_q.begin() + 1, this->m_q.end());
   } else {
-    effolkronium::random_thread_local::shuffle(this->m_queue_indexes);
+    effolkronium::random_thread_local::shuffle(this->m_q);
   }
-  this->m_queue_index = 0;
+  this->m_qi = 0;
   this->m_shuffled = true;
 }
 
-template <typename T>
-void Playlist<T>::unshuffle() {
-  this->m_queue_index = this->m_queue_indexes[this->m_queue_index];
-  std::sort(this->m_queue_indexes.begin(), this->m_queue_indexes.end());
+void Playlist::unshuffle() {
+  this->m_qi = this->m_q[this->m_qi];
+  std::sort(this->m_q.begin(), this->m_q.end());
   this->m_shuffled = false;
 }
 
@@ -148,25 +234,25 @@ int playlist_get_move(int current, int size, LoopType loop_type, PlaylistMvCmd m
     case PlaylistMvCmd::SKIP: return playlist_get_skip(current, size, loop_type);
     case PlaylistMvCmd::REWIND: return playlist_get_rewind(current, size, loop_type);
   }
-  return -1;
+  return NO_MOVE_AVAILABLE;
 }
 
 int playlist_get_next(int current, int size, LoopType loop_type) {
   switch (loop_type) {
-    case LoopType::NO_LOOP: return current + 1 == size ? -1 : current + 1;
+    case LoopType::NO_LOOP: return current + 1 == size ? NO_MOVE_AVAILABLE : current + 1;
     case LoopType::REPEAT: return current + 1 == size ? 0 : current + 1;
     case LoopType::REPEAT_ONE: return current;
   }
-  return -1;
+  return NO_MOVE_AVAILABLE;
 }
 
 int playlist_get_skip(int current, int size, LoopType loop_type) {
   switch (loop_type) {
-    case LoopType::NO_LOOP: return current + 1 == size ? -1 : current + 1;
+    case LoopType::NO_LOOP: return current + 1 == size ? NO_MOVE_AVAILABLE : current + 1;
     case LoopType::REPEAT: 
     case LoopType::REPEAT_ONE: return current + 1 == size ? 0 : current + 1;
   }
-  return -1;
+  return NO_MOVE_AVAILABLE;
 }
 
 int playlist_get_rewind(int current, int size, LoopType loop_type) {
@@ -175,14 +261,8 @@ int playlist_get_rewind(int current, int size, LoopType loop_type) {
     case LoopType::REPEAT:
     case LoopType::REPEAT_ONE: return current - 1 < 0 ? size - 1 : current - 1;
   }
-  return -1;
+  return NO_MOVE_AVAILABLE;
 }
-
-const std::pair<std::string_view, LoopType> loop_type_strs[] = {
-  {"no-loop", LoopType::NO_LOOP},
-  {"repeat", LoopType::REPEAT},
-  {"repeat-one", LoopType::REPEAT_ONE},
-};
 
 const char* loop_type_cstr(LoopType loop_type) {
   switch (loop_type) {
@@ -214,5 +294,3 @@ const char* playlist_move_cmd_cstr(PlaylistMvCmd move_cmd) {
   }
   return "unknown";
 }
-
-template class Playlist<std::filesystem::path>;

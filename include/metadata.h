@@ -27,7 +27,7 @@ void mchc_cache(const std::string& file, MetadataCache& cache);
  * Check if the given metadata cache contains a file for
 */
 bool mchc_has_file(std::string_view file, MetadataCache& cache);
-bool mchc_has(const std::string& file, const std::string& key, MetadataCache& cache);
+bool mchc_has(const std::string& file, std::string_view key, MetadataCache& cache);
 std::string_view mchc_get(const std::string& file, const std::string& key, MetadataCache& cache);
 
 

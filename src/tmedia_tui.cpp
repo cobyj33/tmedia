@@ -17,7 +17,7 @@ extern "C" {
 static constexpr int MIN_RENDER_COLS = 2;
 static constexpr int MIN_RENDER_LINES = 2;
 
-const char* loop_type_str_short(LoopType loop_type);
+const char* loop_type_cstr_short(LoopType loop_type);
 std::string get_media_file_display_name(const std::string& abs_path, MetadataCache& mchc);
 
 void TMediaCursesRenderer::render(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
@@ -70,11 +70,11 @@ void TMediaCursesRenderer::render_tui_compact(const TMediaProgramState& tmps, co
     wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
     wprint_playback_bar(stdscr, LINES - 2, 0, COLS, snapshot.media_time_secs, snapshot.media_duration_secs);
 
-    std::vector<std::string> bottom_labels;
-    const std::string playing_str = snapshot.playing ? ">" : "||";
-    const std::string loop_str = loop_type_str_short(tmps.playlist.loop_type()); 
+    std::vector<std::string_view> bottom_labels;
+    const std::string_view playing_str = snapshot.playing ? ">" : "||";
+    const std::string_view loop_str = loop_type_cstr_short(tmps.playlist.loop_type()); 
     const std::string volume_str = tmps.muted ? "M" : (fmt::format("{}%", static_cast<int>(tmps.volume * 100)));
-    const std::string shuffled_str = tmps.playlist.shuffled() ? "S" : "NS";
+    const std::string_view shuffled_str = tmps.playlist.shuffled() ? "S" : "NS";
 
     bottom_labels.push_back(playing_str);
     if (tmps.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
@@ -125,11 +125,11 @@ void TMediaCursesRenderer::render_tui_large(const TMediaProgramState& tmps, cons
     wfill_box(stdscr, LINES - 3, 0, COLS, 1, '~');
     wprint_playback_bar(stdscr, LINES - 2, 0, COLS, snapshot.media_time_secs, snapshot.media_duration_secs);
 
-    std::vector<std::string> bottom_labels;
-    const std::string playing_str = snapshot.playing ? "PLAYING" : "PAUSED";
+    std::vector<std::string_view> bottom_labels;
+    const std::string_view playing_str = snapshot.playing ? "PLAYING" : "PAUSED";
     const std::string loop_str = str_capslock(loop_type_cstr(tmps.playlist.loop_type())); 
     const std::string volume_str = tmps.muted ? "MUTED" : fmt::format("VOLUME: {}%", static_cast<int>(tmps.volume * 100));
-    const std::string shuffled_str = tmps.playlist.shuffled() ? "SHUFFLED" : "NOT SHUFFLED";
+    const std::string_view shuffled_str = tmps.playlist.shuffled() ? "SHUFFLED" : "NOT SHUFFLED";
 
     bottom_labels.push_back(playing_str);
     if (tmps.playlist.size() > 1) bottom_labels.push_back(shuffled_str);
@@ -140,7 +140,7 @@ void TMediaCursesRenderer::render_tui_large(const TMediaProgramState& tmps, cons
   }
 }
 
-const char* loop_type_str_short(LoopType loop_type) {
+const char* loop_type_cstr_short(LoopType loop_type) {
   switch (loop_type) {
     case LoopType::NO_LOOP: return "NL";
     case LoopType::REPEAT: return "R";

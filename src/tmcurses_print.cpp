@@ -32,27 +32,17 @@ void tm_mvwaddstr_label(WINDOW* window, TMLabelStyle label_style, std::string_vi
   const int requested_text_area_col_end = label_style.col + label_style.width - label_style.margin_right; // not inclusive
   if (requested_text_area_col_end <= requested_text_area_col_start) return; // invalid or negative request
 
-  int text_area_col_start = requested_text_area_col_start;
-  int text_area_col_end = requested_text_area_col_end; // not inclusive
+  const int text_area_col_start = std::max(requested_text_area_col_start, 0); // bound to left edge
+  const int text_area_col_end = std::min(requested_text_area_col_end, COLS - 1); // bound to right edge
 
-  if (text_area_col_end >= COLS) text_area_col_end = COLS - 1; // bound to right edge
-  if (text_area_col_start < 0) text_area_col_start = 0; // bound to left edge
-
-  int text_area_width = text_area_col_end - text_area_col_start;
-  int text_area_col_center = (text_area_col_start + text_area_col_end) / 2;
-
-  if (text_area_width <= 0 ||
-  text_area_col_start < 0 || text_area_col_start >= COLS ||
-  text_area_col_end <= 0 || text_area_col_end > COLS) {
-    return; // if still invalid, just abort
-  }
-
-  std::string bounded_str = std::string(str.substr(0, text_area_width));
+  const int text_area_width = text_area_col_end - text_area_col_start;
+  const int text_area_col_center = (text_area_col_start + text_area_col_end) / 2;
+  std::string_view bounded_str = str.substr(0, text_area_width);
 
   switch (label_style.align) {
-    case TMAlign::LEFT: mvwaddstr(window, label_style.row, text_area_col_start, bounded_str.c_str()); break;
-    case TMAlign::CENTER: mvwaddstr(window, label_style.row, text_area_col_center - (bounded_str.length() / 2), bounded_str.c_str()); break;
-    case TMAlign::RIGHT: mvwaddstr(window, label_style.row, text_area_col_end - bounded_str.length(), bounded_str.c_str()); break;
+    case TMAlign::LEFT: mvwaddnstr(window, label_style.row, text_area_col_start, bounded_str.data(), bounded_str.size()); break;
+    case TMAlign::CENTER: mvwaddnstr(window, label_style.row, text_area_col_center - (bounded_str.length() / 2), bounded_str.data(), bounded_str.size()); break;
+    case TMAlign::RIGHT: mvwaddnstr(window, label_style.row, text_area_col_end - bounded_str.length(), bounded_str.data(), bounded_str.size()); break;
   }
 }
 
@@ -66,9 +56,8 @@ void tm_mvwprintw_label(WINDOW* window, TMLabelStyle label_style, const char* fo
 
 void wfill_box(WINDOW* window, int y, int x, int width, int height, char ch) {
     for (int row = y; row < y + height; row++) {
-        for (int col = x; col < x + width; col++) {
-            mvwaddch(window, row, col, ch);
-        }
+      wmove(window, row, x);
+      for (int col = x; col < x + width; col++) waddch(window, ch);
     }
 }
 

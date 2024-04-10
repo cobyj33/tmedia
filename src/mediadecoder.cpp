@@ -6,6 +6,7 @@
 #include "formatting.h"
 #include "funcmac.h"
 #include "ffmpeg_error.h"
+#include "optim.h"
 
 #include <string>
 #include <vector>
@@ -74,7 +75,7 @@ std::vector<AVFrame*> MediaDecoder::next_frames(enum AVMediaType media_type) {
 int MediaDecoder::fetch_next(int requested_packet_count) {
   int packets_read = 0;
   AVPacket* reading_packet = av_packet_alloc();
-  if (reading_packet == nullptr) {
+  if (unlikely(reading_packet == nullptr)) {
     throw ffmpeg_error(fmt::format("[{}] Failed to allocate AVPacket", FUNCDINFO), AVERROR(ENOMEM));
   }
 
@@ -83,14 +84,14 @@ int MediaDecoder::fetch_next(int requested_packet_count) {
     for (auto &dec_entry : this->decs) {
       if (dec_entry.second->get_stream_index() == reading_packet->stream_index) {
         AVPacket* saved_packet = av_packet_alloc();
-        if (saved_packet == nullptr) {
+        if (unlikely(saved_packet == nullptr)) {
           av_packet_free(&reading_packet);
           throw ffmpeg_error(fmt::format("[{}] Failed to allocate "
           "AVPacket", FUNCDINFO), AVERROR(ENOMEM));
         }
 
         int res = av_packet_ref(saved_packet, reading_packet);
-        if (res < 0) {
+        if (unlikely(res < 0)) {
           av_packet_free(&reading_packet);
           av_packet_free(&saved_packet);
           throw ffmpeg_error(fmt::format("[{}] Failed to reference "

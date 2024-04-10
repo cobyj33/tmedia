@@ -551,7 +551,7 @@ extern "C" {
 
       if (!std::filesystem::exists(curr, ec)) {
         throw std::runtime_error(fmt::format("[{}] Cannot open nonexistent "
-        "path: {}", FUNCDINFO, path.string()));
+        "path: {}", FUNCDINFO, path.c_str()));
       }
 
       if (std::filesystem::is_directory(curr, ec)) {

@@ -39,8 +39,6 @@ LoopType loop_type_from_str(std::string_view loop_type);
 */
 
 /**
- * 
- * 
  * A playlist can additionally enqueue and dequeue files for immediate playback.
  * 
  * 
@@ -85,72 +83,64 @@ LoopType loop_type_from_str(std::string_view loop_type);
  *  loop->repeat_one:
 */
 
-
-// class Playlist {
-//   private:
-//     std::vector<std::filesystem::path> m_files;
-
-//     std::vector<int> m_queue_indexes;
-//     int m_queue_index;
-//     circular_stack<int, 100> played;
-//     
-
-//     LoopType m_loop_type;
-//     bool m_shuffled;
-//   public:
-
-//     Playlist();
-//     Playlist(std::vector<std::string> media_files, LoopType loop_type);
-
-//     bool shuffled() const;
-//     void shuffle(bool keep_current_file_first);
-//     void unshuffle();
-
-//     std::size_t size() const noexcept;
-//     void set_loop_type(LoopType loop_type) noexcept;
-//     LoopType loop_type() const noexcept;
-
-//     int index() const;
-//     std::string current() const;
-
-//     void move(PlaylistMvCmd move_cmd);
-//     std::string peek_move(PlaylistMvCmd move_cmd) const;
-//     bool can_move(PlaylistMvCmd move_cmd) const noexcept;
-// };
-
-
-// class UnshuffledPlaylist {
-
-// };
-
-template <typename T>
 class Playlist {
   private:
-    std::vector<T> m_entries;
+    // class PlaylistEntry {
+    //   std::filesystem::path path;
+    //   int orig_ind;
+    //   PlaylistEntry() {}
+    //   PlaylistEntry(const std::filesystem::path& path, int i) : path(path), orig_ind(i) {} 
+    // };
 
-    std::vector<int> m_queue_indexes;
-    int m_queue_index;
+    std::vector<std::filesystem::path> m_entries;
+
+    std::vector<int> m_q;
+    int m_qi;
 
     LoopType m_loop_type;
     bool m_shuffled;
+
   public:
 
     Playlist();
-    Playlist(std::vector<T> entries, LoopType loop_type);
+    Playlist(const std::vector<std::filesystem::path>& entries, LoopType loop_type);
 
-    bool shuffled() const;
+    inline bool shuffled() const noexcept {
+      return this->m_shuffled;
+    }
+
+    inline LoopType loop_type() const noexcept {
+      return this->m_loop_type;
+    }
+
+    inline void set_loop_type(LoopType loop_type) noexcept {
+      this->m_loop_type = loop_type;
+    }
+
+    inline std::size_t size() const noexcept {
+      return this->m_entries.size();
+    }
+
     void shuffle(bool keep_current_file_first);
     void unshuffle();
 
-    std::size_t size() const noexcept;
-    void set_loop_type(LoopType loop_type) noexcept;
-    LoopType loop_type() const noexcept;
-
     int index() const;
-    T current() const;
+    const std::filesystem::path& current() const;
+
+    void insert(const std::filesystem::path& entry, std::size_t i);
+    void push_back(const std::filesystem::path& entry);
+    void remove(std::size_t i);
+    void remove(const std::filesystem::path& entry);
+    bool has(const std::filesystem::path& entry) const;
+    void clear();
+
+    const std::filesystem::path& at(std::size_t i) const;
+    const std::vector<std::filesystem::path>& view() const;
+
+    const std::filesystem::path& operator[](std::size_t i);
 
     void move(PlaylistMvCmd move_cmd);
-    T peek_move(PlaylistMvCmd move_cmd) const;
+    const std::filesystem::path& peek_move(PlaylistMvCmd move_cmd) const;
     bool can_move(PlaylistMvCmd move_cmd) const noexcept;
 };
 

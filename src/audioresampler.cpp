@@ -3,6 +3,7 @@
 #include "avguard.h"
 #include "ffmpeg_error.h"
 #include "funcmac.h"
+#include "optim.h"
 
 #include <fmt/format.h>
 #include <stdexcept>
@@ -33,9 +34,7 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
   #endif
   
   if (result < 0) {
-    if (context != nullptr) {
-      swr_free(&context);
-    }
+    if (context != nullptr) swr_free(&context);
     throw ffmpeg_error(fmt::format("[{}] Allocation of internal SwrContext of "
     "AudioResampler failed. Aborting...", FUNCDINFO), result);
   } else if (context == nullptr) {
@@ -44,9 +43,7 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
   } else {
     result = swr_init(context);
     if (result < 0) {
-      if (context != nullptr) {
-        swr_free(&context);
-      }
+      if (context != nullptr) swr_free(&context);
       throw ffmpeg_error(fmt::format("[{}] Initialization of internal "
       "SwrContext of AudioResampler failed. Aborting...", FUNCDINFO), result);
     }
@@ -104,7 +101,7 @@ std::vector<AVFrame*> AudioResampler::resample_audio_frames(std::vector<AVFrame*
 AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
   int result;
   AVFrame* resampled_frame = av_frame_alloc();
-  if (resampled_frame == NULL) {
+  if (unlikely(resampled_frame == NULL)) {
     throw std::runtime_error(fmt::format("[{}] Could not create AVFrame "
     "audio frame for resampling", FUNCDINFO));
   }
@@ -131,7 +128,7 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
   // .wav files were having a weird glitch where swr_conver_frame returns AVERROR_INPUT_CHANGED
   // on calling swr_convert_frame. This allows the SwrContext to "fix itself" (even though I think that's a bug)
   // whenever this happens.
-  if (result == AVERROR_INPUT_CHANGED) {
+  if (unlikely(result == AVERROR_INPUT_CHANGED)) {
     result = swr_config_frame(this->m_context, resampled_frame, original);
     if (result != 0) {
       throw ffmpeg_error(fmt::format("[{}] Unable to reconfigure "

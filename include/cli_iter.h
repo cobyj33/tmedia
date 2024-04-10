@@ -71,7 +71,7 @@ namespace tmedia {
    * @param longopts_with_args a vector of long options which should be parsed
    * to accept some sort of parameter
   */
-  std::vector<CLIArg> cli_parse(int argc, char** argv, std::string_view shortopts_with_args, const std::vector<std::string>& longopts_with_args);
+  std::vector<CLIArg> cli_parse(int argc, char** argv, std::string_view shortopts_with_args, const std::vector<std::string_view>& longopts_with_args);
 
   /**
    * notes:
