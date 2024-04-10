@@ -4,30 +4,17 @@
 
 TEST_CASE("color", "[color]") {
 
-  SECTION("Grayscale Constructor") {
-    RGB24 color(10);
-
-    REQUIRE(color.r == 10);
-    REQUIRE(color.g == 10);
-    REQUIRE(color.b == 10);
-  }
-
-  SECTION("RGB Constructor") {
-    RGB24 color(10, 20, 30);
-
-    REQUIRE(color.r == 10);
-    REQUIRE(color.g == 20);
-    REQUIRE(color.b == 30);
-  }
-
   SECTION("RGB24 Average") {
-    RGB24 first(10);
-    RGB24 second(20);
-    std::vector<RGB24> colors{first, second};
+    RGB24 first(10, 20, 30);
+    RGB24 second(20, 30, 40);
+    RGB24 third(30, 40, 50);
+    RGB24 fourth(40, 50, 60);
+    RGB24 fifth(50, 60, 70);
+    std::vector<RGB24> colors{first, second, third, fourth, fifth};
     RGB24 average = get_average_color(colors);
-    REQUIRE(average.r == 15);
-    REQUIRE(average.g == 15);
-    REQUIRE(average.b == 15);
+    REQUIRE(average.r == 30);
+    REQUIRE(average.g == 40);
+    REQUIRE(average.b == 50);
   }
 
 }

@@ -2,30 +2,35 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <vector>
 #include <utility>
+#include <string_view>
+#include <string>
+#include <cstddef>
 
 class MockCLI {
   public:
     int argc;
     char** argv;
 
-  MockCLI(std::vector<std::string> cli_args) {
+  MockCLI(const std::vector<std::string_view>& cli_args) {
     this->argc = static_cast<int>(cli_args.size());
 
-    this->argv = new char*[this->argc];
+    this->argv = new char*[this->argc + 1];
     for (int i = 0; i < this->argc; i++) {
-      int istrlen = static_cast<int>(cli_args[i].length());
+      std::size_t istrlen = cli_args[i].length();
       this->argv[i] = new char[istrlen + 1];
 
-      for (int j = 0; j < istrlen; j++) {
+      for (std::size_t j = 0; j < istrlen; j++) {
         this->argv[i][j] = cli_args[i][j];
       }
       this->argv[i][istrlen] = '\0';
     }
+    this->argv[argc] = nullptr;
   }
 
   ~MockCLI() {
-    for (int i = 0; i < argc; i++) {
+    for (int i = 0; i < this->argc; i++) {
       delete[] this->argv[i];
     }
     delete[] this->argv;
