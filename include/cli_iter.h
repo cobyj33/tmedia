@@ -52,15 +52,15 @@ namespace tmedia {
    * option, if there was any.
   */
   struct CLIArg {
-    std::string value;
+    std::string_view value;
     CLIArgType arg_type;
-    std::string prefix;
-    std::string param;
+    std::string_view prefix;
+    std::string_view param;
     CLIArg() {}
-    CLIArg(std::string_view value, CLIArgType arg_type, std::string prefix, std::string param) : value(value), arg_type(arg_type), prefix(prefix), param(param) {}
+    CLIArg(std::string_view value, CLIArgType arg_type, std::string_view prefix, std::string_view param) : value(value), arg_type(arg_type), prefix(prefix), param(param) {}
     CLIArg(std::string_view value, CLIArgType arg_type) : value(value), arg_type(arg_type), prefix(""), param("") {}
-    CLIArg(const CLIArg& other) : value(other.value), arg_type(other.arg_type), prefix(other.prefix), param(other.param) {}
-    CLIArg(CLIArg&& other) : value(std::move(other.value)), arg_type(other.arg_type), prefix(std::move(other.prefix)), param(std::move(other.param)) {}
+    CLIArg(const CLIArg& o) : value(o.value), arg_type(o.arg_type), prefix(o.prefix), param(o.param) {}
+    CLIArg(CLIArg&& o) : value(o.value), arg_type(o.arg_type), prefix(o.prefix), param(o.param) {}
   };
 
   /**

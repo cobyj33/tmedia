@@ -137,57 +137,60 @@ extern "C" {
 
   struct MediaPath {
     std::filesystem::path path;
-    MediaPathLocalSearchOptions search_options;
-    MediaPath(std::filesystem::path path) : path(path) {} 
+    MediaPathLocalSearchOptions srch_opts;
+    MediaPath(std::string_view path) : path(std::move(std::filesystem::path(path))) {} 
+    MediaPath(const std::filesystem::path& path) : path(path) {} 
+    MediaPath(MediaPath&& o) : path(std::move(o.path)), srch_opts(o.srch_opts) {} 
   };
 
-  struct TMediaCLIParseState {
+  struct CLIParseState {
     TMediaStartupState tmss;
     std::vector<MediaPath> paths;
 
-    MediaPathSearchOptions search_options;
-
+    MediaPathSearchOptions srch_opts;
     bool colored = false;
     bool grayscale = false;
     bool background = false;
   };
 
-  void resolve_cli_path(const std::filesystem::path& path, MediaPathSearchOptions search_options, std::vector<std::filesystem::path>& resolved_paths);
+  void resolve_cli_path(const std::filesystem::path& path,
+                        MediaPathSearchOptions srch_opts,
+                        std::vector<std::filesystem::path>& resolved_paths);
 
-  typedef std::function<void(TMediaCLIParseState&, tmedia::CLIArg& arg)> TMediaCLIArgParseFunc;
-  typedef std::map<std::string_view, TMediaCLIArgParseFunc, std::less<>> TMediaCliArgParseMap;
+  typedef std::function<void(CLIParseState&, const tmedia::CLIArg arg)> ArgParseFunc;
+  typedef std::map<std::string_view, ArgParseFunc, std::less<>> ArgParseMap;
 
-  void tmedia_cli_arg_help(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_version(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_ffmpeg_version(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_curses_version(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
+  void cli_arg_help(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_version(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_ffmpeg_version(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_curses_version(CLIParseState& ps, const tmedia::CLIArg arg);
 
-  void tmedia_cli_arg_background(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_chars(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_color(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_fullscreen(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_grayscale(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_no_repeat(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_repeat(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_repeat_one(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_mute(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_refresh_rate(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_shuffle(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_volume(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
+  void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_chars(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_color(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_fullscreen(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_grayscale(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_repeat(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_repeat(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_repeat_one(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_mute(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_refresh_rate(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_shuffle(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_volume(CLIParseState& ps, const tmedia::CLIArg arg);
 
-  void tmedia_cli_arg_ignore_video_global(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_ignore_audio_global(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_ignore_images_global(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_recurse_global(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
+  void cli_arg_ignore_video_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_ignore_audio_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_ignore_images_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_recurse_global(CLIParseState& ps, const tmedia::CLIArg arg);
 
-  void tmedia_cli_arg_ignore_video_local(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_ignore_audio_local(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_ignore_images_local(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
-  void tmedia_cli_arg_recurse_local(TMediaCLIParseState& ps, tmedia::CLIArg& arg);
+  void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_ignore_audio_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_ignore_images_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_recurse_local(CLIParseState& ps, const tmedia::CLIArg arg);
 
 
   TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv) {
-    TMediaCLIParseState ps;
+    CLIParseState ps;
     ps.tmss.muted = false;
     ps.tmss.refresh_rate_fps = 24;
     ps.tmss.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
@@ -206,82 +209,116 @@ extern "C" {
     std::vector<tmedia::CLIArg> parsed_cli = tmedia::cli_parse(argc, argv, "",
     {"volume", "chars", "refresh-rate"});
 
-    TMediaCliArgParseMap exiting_opt_map{
-      {"-h", tmedia_cli_arg_help},
-      {"-v", tmedia_cli_arg_version},
-      {"--help", tmedia_cli_arg_help},
-      {"--version", tmedia_cli_arg_version},
-      {"--ffmpeg-version", tmedia_cli_arg_ffmpeg_version},
-      {"--curses-version", tmedia_cli_arg_curses_version},
+
+    static const ArgParseMap short_exiting_opt_map{
+      {"h", cli_arg_help},
+      {"v", cli_arg_version}
     };
 
-    TMediaCliArgParseMap argparse_map{
-      {"-c", tmedia_cli_arg_color},
-      {"-b", tmedia_cli_arg_background},
-      {"-g", tmedia_cli_arg_grayscale},
-      {"-m", tmedia_cli_arg_mute},
-      {"-f", tmedia_cli_arg_fullscreen},
-      {"-s", tmedia_cli_arg_shuffle},
-      {"-r", tmedia_cli_arg_recurse_global},
-      {"--no-repeat", tmedia_cli_arg_no_repeat},
-      {"--no-loop", tmedia_cli_arg_no_repeat},
-      {"--repeat", tmedia_cli_arg_repeat},
-      {"--loop", tmedia_cli_arg_repeat},
-      {"--repeat-one", tmedia_cli_arg_repeat_one},
-      {"--loop-one", tmedia_cli_arg_repeat_one},
-      {"--volume", tmedia_cli_arg_volume},
-      {"--shuffle", tmedia_cli_arg_shuffle},
-      {"--shuffled", tmedia_cli_arg_shuffle},
-      {"--refresh-rate", tmedia_cli_arg_refresh_rate},
-      {"--chars", tmedia_cli_arg_chars},
-      {"--color", tmedia_cli_arg_color},
-      {"--colored", tmedia_cli_arg_color},
-      {"--gray", tmedia_cli_arg_grayscale},
-      {"--grey", tmedia_cli_arg_grayscale},
-      {"--greyscale", tmedia_cli_arg_grayscale},
-      {"--grayscale", tmedia_cli_arg_grayscale},
-      {"--background", tmedia_cli_arg_background},
-      {"--mute", tmedia_cli_arg_mute},
-      {"--muted", tmedia_cli_arg_mute},
-      {"--fullscreen", tmedia_cli_arg_fullscreen},
+    static const ArgParseMap long_exiting_opt_map{
+      {"help", cli_arg_help},
+      {"version", cli_arg_version},
+      {"ffmpeg-version", cli_arg_ffmpeg_version},
+      {"curses-version", cli_arg_curses_version},
+    };
+
+    static const ArgParseMap short_global_argparse_map{
+      {"c", cli_arg_color},
+      {"b", cli_arg_background},
+      {"g", cli_arg_grayscale},
+      {"m", cli_arg_mute},
+      {"f", cli_arg_fullscreen},
+      {"s", cli_arg_shuffle},
+      {"r", cli_arg_recurse_global},
+    };
+
+    static const ArgParseMap long_global_argparse_map{
+      {"no-repeat", cli_arg_no_repeat},
+      {"no-loop", cli_arg_no_repeat},
+      {"repeat", cli_arg_repeat},
+      {"loop", cli_arg_repeat},
+      {"repeat-one", cli_arg_repeat_one},
+      {"loop-one", cli_arg_repeat_one},
+      {"volume", cli_arg_volume},
+      {"shuffle", cli_arg_shuffle},
+      {"shuffled", cli_arg_shuffle},
+      {"refresh-rate", cli_arg_refresh_rate},
+      {"chars", cli_arg_chars},
+      {"color", cli_arg_color},
+      {"colored", cli_arg_color},
+      {"gray", cli_arg_grayscale},
+      {"grey", cli_arg_grayscale},
+      {"greyscale", cli_arg_grayscale},
+      {"grayscale", cli_arg_grayscale},
+      {"background", cli_arg_background},
+      {"mute", cli_arg_mute},
+      {"muted", cli_arg_mute},
+      {"fullscreen", cli_arg_fullscreen},
 
       // path searching opts
-      {"--ignore-audio", tmedia_cli_arg_ignore_audio_global},
-      {"--ignore-audios", tmedia_cli_arg_ignore_audio_global},
-      {"--ignore-video", tmedia_cli_arg_ignore_video_global},
-      {"--ignore-videos", tmedia_cli_arg_ignore_video_global},
-      {"--ignore-image", tmedia_cli_arg_ignore_images_global},
-      {"--ignore-images", tmedia_cli_arg_ignore_images_global},
-      {"--recurse", tmedia_cli_arg_recurse_global},
-      {"--recursive", tmedia_cli_arg_recurse_global},
-
-      {":r", tmedia_cli_arg_recurse_local},
-      {":ignore-audio", tmedia_cli_arg_ignore_audio_local},
-      {":ignore-audios", tmedia_cli_arg_ignore_audio_local},
-      {":ignore-video", tmedia_cli_arg_ignore_video_local},
-      {":ignore-videos", tmedia_cli_arg_ignore_video_local},
-      {":ignore-image", tmedia_cli_arg_ignore_images_local},
-      {":ignore-images", tmedia_cli_arg_ignore_images_local},
-      {":recurse", tmedia_cli_arg_recurse_local},
-      {":recursive", tmedia_cli_arg_recurse_local},
+      {"ignore-audio", cli_arg_ignore_audio_global},
+      {"ignore-audios", cli_arg_ignore_audio_global},
+      {"ignore-video", cli_arg_ignore_video_global},
+      {"ignore-videos", cli_arg_ignore_video_global},
+      {"ignore-image", cli_arg_ignore_images_global},
+      {"ignore-images", cli_arg_ignore_images_global},
+      {"recurse", cli_arg_recurse_global},
+      {"recursive", cli_arg_recurse_global}
     };
 
-    for (std::size_t i = 0; i < parsed_cli.size(); i++) {
-      switch (parsed_cli[i].arg_type) {
+    static const ArgParseMap short_local_argparse_map{
+      {"r", cli_arg_recurse_local}
+    };
+
+    static const ArgParseMap long_local_argparse_map{
+      {"ignore-audio", cli_arg_ignore_audio_local},
+      {"ignore-audios", cli_arg_ignore_audio_local},
+      {"ignore-video", cli_arg_ignore_video_local},
+      {"ignore-videos", cli_arg_ignore_video_local},
+      {"ignore-image", cli_arg_ignore_images_local},
+      {"ignore-images", cli_arg_ignore_images_local},
+      {"recurse", cli_arg_recurse_local},
+      {"recursive", cli_arg_recurse_local},
+    };
+
+    for (const tmedia::CLIArg& arg : parsed_cli) {
+      switch (arg.arg_type) {
         case tmedia::CLIArgType::POSITIONAL: {
-          std::filesystem::path file_path(parsed_cli[i].value);
-          ps.paths.push_back(MediaPath(file_path));
+          ps.paths.push_back(MediaPath(arg.value));
         } break;
         case tmedia::CLIArgType::OPTION: {
-          const std::string fullopt = parsed_cli[i].prefix + parsed_cli[i].value;
-          if (exiting_opt_map.count(fullopt) == 1) {
-            exiting_opt_map[fullopt](ps, parsed_cli[i]);
-            return { ps.tmss, true };
-          } else if (argparse_map.count(fullopt) == 1) {
-            argparse_map[fullopt](ps, parsed_cli[i]);
-          } else {
-            throw std::runtime_error(fmt::format("[{}] Unrecognized option: ",
-            FUNCDINFO, fullopt));
+          if (arg.prefix == "-") {
+            if (short_exiting_opt_map.count(arg.value)) {
+              short_exiting_opt_map.at(arg.value)(ps, arg);
+              return { ps.tmss, true };
+            } else if (short_global_argparse_map.count(arg.value)) {
+              short_global_argparse_map.at(arg.value)(ps, arg);
+            } else {
+              throw std::runtime_error(fmt::format("[{}] Unrecognized "
+              "short option: {}. Use the {} --help command to see all available"
+              " cli options", FUNCDINFO, arg.value, argv[0]));
+            }
+          } else if (arg.prefix == "--") {
+            if (long_exiting_opt_map.count(arg.value)) {
+              long_exiting_opt_map.at(arg.value)(ps, arg);
+              return { ps.tmss, true };
+            } else if (long_global_argparse_map.count(arg.value)) {
+              long_global_argparse_map.at(arg.value)(ps, arg);
+            } else {
+              throw std::runtime_error(fmt::format("[{}] Unrecognized "
+              "long option: {}. Use the {} --help command to see all available"
+              " cli options", FUNCDINFO, arg.value, argv[0]));
+            }
+          } else if (arg.prefix == ":") {
+            if (short_local_argparse_map.count(arg.value)) {
+              short_local_argparse_map.at(arg.value)(ps, arg);
+            } else if (long_local_argparse_map.count(arg.value)) {
+              long_local_argparse_map.at(arg.value)(ps, arg);
+            } else {
+              throw std::runtime_error(fmt::format("[{}] Unrecognized "
+              "local option: {}. Use the {} --help command to see all available"
+              " cli options", FUNCDINFO, arg.value, argv[0]));
+            }
           }
         } break;
       }
@@ -292,7 +329,9 @@ extern "C" {
     }
 
     for (const MediaPath& path : ps.paths) {
-      resolve_cli_path(path.path, resolve_path_search_options(ps.search_options, path.search_options), ps.tmss.media_files);
+      resolve_cli_path(path.path,
+            resolve_path_search_options(ps.srch_opts, path.srch_opts),
+            ps.tmss.media_files);
     }
 
     if (ps.tmss.media_files.size() == 0UL) {
@@ -307,76 +346,86 @@ extern "C" {
     return TMediaCLIParseRes(ps.tmss, false);
   }
 
-  void tmedia_cli_arg_help(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_help(CLIParseState& ps, const tmedia::CLIArg arg) {
     std::cout << help_text << std::endl;
     (void)ps; (void)arg;
   }
 
-  void tmedia_cli_arg_version(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_version(CLIParseState& ps, const tmedia::CLIArg arg) {
     std::cout << TMEDIA_VERSION << std::endl;
     (void)ps; (void)arg;
   }
 
-  void tmedia_cli_arg_ffmpeg_version(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
-    std::cout << "libavformat: " << LIBAVFORMAT_VERSION_MAJOR << ":" << LIBAVFORMAT_VERSION_MINOR << ":" << LIBAVFORMAT_VERSION_MICRO << std::endl;
-    std::cout << "libavcodec: " << LIBAVCODEC_VERSION_MAJOR << ":" << LIBAVCODEC_VERSION_MINOR << ":" << LIBAVCODEC_VERSION_MICRO << std::endl;
-    std::cout << "libavutil: " << LIBAVUTIL_VERSION_MAJOR << ":" << LIBAVUTIL_VERSION_MINOR << ":" << LIBAVUTIL_VERSION_MICRO << std::endl;
-    std::cout << "libswresample: " << LIBSWRESAMPLE_VERSION_MAJOR << ":" << LIBSWRESAMPLE_VERSION_MINOR << ":" << LIBSWRESAMPLE_VERSION_MICRO << std::endl;
-    std::cout << "libswscale: " << LIBSWSCALE_VERSION_MAJOR << ":" << LIBSWSCALE_VERSION_MINOR << ":" << LIBSWSCALE_VERSION_MICRO << std::endl;
+  void cli_arg_ffmpeg_version(CLIParseState& ps, const tmedia::CLIArg arg) {
+    std::cout << "libavformat: " << LIBAVFORMAT_VERSION_MAJOR << ":" <<
+                                 LIBAVFORMAT_VERSION_MINOR << ":" <<
+                                 LIBAVFORMAT_VERSION_MICRO << std::endl;
+    std::cout << "libavcodec: " << LIBAVCODEC_VERSION_MAJOR << ":" <<
+                                 LIBAVCODEC_VERSION_MINOR << ":" <<
+                                 LIBAVCODEC_VERSION_MICRO << std::endl;
+    std::cout << "libavutil: " << LIBAVUTIL_VERSION_MAJOR << ":" <<
+                                 LIBAVUTIL_VERSION_MINOR << ":" <<
+                                 LIBAVUTIL_VERSION_MICRO << std::endl;
+    std::cout << "libswresample: " << LIBSWRESAMPLE_VERSION_MAJOR << ":" <<
+                                 LIBSWRESAMPLE_VERSION_MINOR << ":" <<
+                                 LIBSWRESAMPLE_VERSION_MICRO << std::endl;
+    std::cout << "libswscale: " << LIBSWSCALE_VERSION_MAJOR << ":" <<
+                                 LIBSWSCALE_VERSION_MINOR << ":" <<
+                                 LIBSWSCALE_VERSION_MICRO << std::endl;
     (void)ps; (void)arg;
   }
 
-  void tmedia_cli_arg_curses_version(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_curses_version(CLIParseState& ps, const tmedia::CLIArg arg) {
     std::cout << curses_version() << std::endl;
     (void)ps; (void)arg;
   }
 
-  void tmedia_cli_arg_background(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.background = true;
     (void)arg;
   }
 
-  void tmedia_cli_arg_chars(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_chars(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.ascii_display_chars = arg.param;
     (void)arg;
   }
 
-  void tmedia_cli_arg_color(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_color(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.colored = true;
     (void)arg;
   }
 
-  void tmedia_cli_arg_fullscreen(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_fullscreen(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.fullscreen = true;
     (void)arg;
   }
 
-  void tmedia_cli_arg_grayscale(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_grayscale(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.grayscale = true;
     (void)arg;
   }
 
-  void tmedia_cli_arg_no_repeat(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_no_repeat(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.loop_type = LoopType::NO_LOOP;
     (void)arg;
   }
 
-  void tmedia_cli_arg_repeat(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_repeat(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.loop_type = LoopType::REPEAT;
     (void)arg;
   }
 
-  void tmedia_cli_arg_repeat_one(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_repeat_one(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.loop_type = LoopType::REPEAT_ONE;
     (void)arg;
   }
 
-  void tmedia_cli_arg_mute(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_mute(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.muted = true;
     (void)arg;
   }
 
-  void tmedia_cli_arg_refresh_rate(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_refresh_rate(CLIParseState& ps, const tmedia::CLIArg arg) {
     int res = 0;
     
     try {
@@ -394,12 +443,12 @@ extern "C" {
     ps.tmss.refresh_rate_fps = res;
   }
 
-  void tmedia_cli_arg_shuffle(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_shuffle(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.shuffled = true;
     (void)arg;
   }
 
-  void tmedia_cli_arg_volume(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_volume(CLIParseState& ps, const tmedia::CLIArg arg) {
     double volume = 1.0;
     try {
       volume = parse_percentage(arg.param);
@@ -416,50 +465,50 @@ extern "C" {
     ps.tmss.volume = volume;
   }
 
-  void tmedia_cli_arg_ignore_video_global(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
-    ps.search_options.ignore_video = true;
+  void cli_arg_ignore_video_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.ignore_video = true;
     (void)arg;
   }
 
-  void tmedia_cli_arg_ignore_audio_global(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
-    ps.search_options.ignore_audio = true;
+  void cli_arg_ignore_audio_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.ignore_audio = true;
     (void)arg;
   }
 
-  void tmedia_cli_arg_ignore_images_global(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
-    ps.search_options.ignore_images = true;
+  void cli_arg_ignore_images_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.ignore_images = true;
     (void)arg;
   }
 
-  void tmedia_cli_arg_recurse_global(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
-    ps.search_options.recurse = true;
+  void cli_arg_recurse_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.recurse = true;
     (void)arg;
   }
 
-  void tmedia_cli_arg_ignore_video_local(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL) {
-      ps.paths[ps.paths.size() - 1UL].search_options.ignore_video = InheritableBoolean::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_video = InheritableBoolean::TRUE;
     }
     (void)arg;
   }
 
-  void tmedia_cli_arg_ignore_audio_local(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_ignore_audio_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL) {
-      ps.paths[ps.paths.size() - 1UL].search_options.ignore_audio = InheritableBoolean::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_audio = InheritableBoolean::TRUE;
     }
     (void)arg;
   }
 
-  void tmedia_cli_arg_ignore_images_local(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_ignore_images_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL) {
-      ps.paths[ps.paths.size() - 1UL].search_options.ignore_images = InheritableBoolean::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_images = InheritableBoolean::TRUE;
     }
     (void)arg;
   }
 
-  void tmedia_cli_arg_recurse_local(TMediaCLIParseState& ps, tmedia::CLIArg& arg) {
+  void cli_arg_recurse_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL) {
-      ps.paths[ps.paths.size() - 1UL].search_options.recurse = InheritableBoolean::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.recurse = InheritableBoolean::TRUE;
     }
     (void)arg;
   }
@@ -491,7 +540,7 @@ extern "C" {
   }
 
 
-  void resolve_cli_path(const std::filesystem::path& path, MediaPathSearchOptions search_options, std::vector<std::filesystem::path>& resolved_paths) {
+  void resolve_cli_path(const std::filesystem::path& path, MediaPathSearchOptions srch_opts, std::vector<std::filesystem::path>& resolved_paths) {
     std::stack<std::filesystem::path> to_search;
     to_search.push(path);
     std::error_code ec;
@@ -508,9 +557,9 @@ extern "C" {
       if (std::filesystem::is_directory(curr, ec)) {
         std::vector<std::string> media_file_paths;
         for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(curr)) {
-          if (std::filesystem::is_directory(entry.path(), ec) && search_options.recurse) {
+          if (std::filesystem::is_directory(entry.path(), ec) && srch_opts.recurse) {
             to_search.push(std::move(entry.path()));
-          } else if (std::filesystem::is_regular_file(entry.path()) && test_media_file(entry.path(), search_options)) {
+          } else if (std::filesystem::is_regular_file(entry.path()) && test_media_file(entry.path(), srch_opts)) {
             media_file_paths.push_back(std::move(entry.path().string()));
           }
         }
@@ -520,7 +569,7 @@ extern "C" {
         for (auto&& media_file_path : media_file_paths) {
           resolved_paths.push_back(std::move(media_file_path));
         }
-      } else if (std::filesystem::is_regular_file(curr) && test_media_file(curr, search_options)) {
+      } else if (std::filesystem::is_regular_file(curr) && test_media_file(curr, srch_opts)) {
         resolved_paths.push_back(curr);
       }
     }

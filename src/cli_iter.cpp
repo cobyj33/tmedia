@@ -46,8 +46,9 @@ namespace tmedia {
       "prefix for arg: {}", FUNCDINFO, longarg));
     }
 
-    for (; longarg[i] != '\0' && longarg[i] != '='; i++) // stop at either NUL or '='
-      parg.value += longarg[i];
+    const int parg_start = i;
+    while (longarg[i] != '\0' && longarg[i] != '=') i++;
+    parg.value = std::string_view(longarg + parg_start, i - parg_start);
 
     if (std::find(lopts_w_args.begin(), lopts_w_args.end(), parg.value) != lopts_w_args.end()) {
       bool defer_param = longarg[i] != '=';
@@ -61,14 +62,16 @@ namespace tmedia {
         parg.param = ps.argv[ps.argi];
       } else { // read param after equals sign
         i++; // consume equals
-        for (; longarg[i] != '\0'; i++) parg.param += longarg[i];
+        const int param_start = i;
+        while (longarg[i] != '\0') i++;
+        parg.param = std::string_view(longarg + param_start, i - param_start);
 
         if (parg.param.length() == 0) {
           throw std::runtime_error(fmt::format("[{}] param not found for long "
           "option after '=' {}.", FUNCDINFO, longarg));
         }
       }
-    } else {
+    } else { // this option should take no argument
       if (longarg[i] == '=') { 
         throw std::runtime_error(fmt::format("[{}] Attempted to add param to "
         "non-param option: {}.", FUNCDINFO, longarg));
@@ -90,7 +93,7 @@ namespace tmedia {
         "alphabetical character: {} ({})", FUNCDINFO, shortopt, shortarg));
       }
 
-      ps.pargs.push_back(CLIArg(std::string(1, shortopt), CLIArgType::OPTION, "-", ""));
+      ps.pargs.push_back(CLIArg(std::string_view(shortarg + j, 1), CLIArgType::OPTION, "-", ""));
 
       if (shortopts_with_args.find(shortopt) != std::string::npos) { // is a shortopt that takes an argument
         if (shortarg[j + 1] != '\0') // if it is not the last option in the option chain
