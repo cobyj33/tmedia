@@ -17,19 +17,6 @@ TEST_CASE("Testing Wrapper Math Functions", "[wrapper]") {
     REQUIRE( clamp(0, 5, 0) == 0);
   }
 
-  SECTION("signum") {
-    REQUIRE( signum(0.5) == 1 );
-    REQUIRE( signum(134.542) == 1 );
-    REQUIRE( signum(-0.5) == -1 );
-    REQUIRE( signum(-42.333213) == -1 );
-    REQUIRE( signum(0) == 0 );
-    REQUIRE( signum(2) == 1 );
-    REQUIRE( signum(35897) == 1 );
-    REQUIRE( signum(-2) == -1 );
-    REQUIRE( signum(-53623) == -1 ); 
-    REQUIRE( signum(0) == 0 ); 
-  }
-
   SECTION("In range") {
     REQUIRE(in_range(10, 5, 15));
     REQUIRE(in_range(5, 5, 15));

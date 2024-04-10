@@ -34,7 +34,8 @@ void MAAudioOut::audio_queue_fill_thread_func() {
     const int request_size_frames = std::min(queue_frames_to_fill * DATA_GET_EXTEND_FACTOR, stkbuf_frames_size); // fetch a little extra
 
     this->m_on_data(stkbuf, request_size_frames);
-    for (int i = 0; i < request_size_frames * this->m_nb_channels; i++) {
+    const int nb_samples = request_size_frames * this->m_nb_channels;
+    for (int i = 0; i < nb_samples; i++) {
       while (this->playing() && !this->m_audio_queue->wait_enqueue_timed(stkbuf[i], std::chrono::milliseconds(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
     }
   }
@@ -44,13 +45,11 @@ void audioOutDataCallback(ma_device* pDevice, void* pOutput, const void* pInput,
   float sample;
   MAAudioOutCallbackData* cb_data = (MAAudioOutCallbackData*)pDevice->pUserData;
   bool muted = *cb_data->muted;
-  for (ma_uint32 i = 0; i < frameCount * pDevice->playback.channels; i++) {
-    if (cb_data->audio_queue->try_dequeue(sample)) {
-      if (!muted) ((float*)pOutput)[i] = sample;
-      else ((float*)pOutput)[i] = 0.0f;
-    } else {
-      ((float*)pOutput)[i] = 0.0f;
-    }
+  const ma_uint32 sampleCount = frameCount * pDevice->playback.channels;
+  for (ma_uint32 i = 0; i < sampleCount; i++) {
+    sample = 0.0f;
+    cb_data->audio_queue->try_dequeue(sample);
+    ((float*)pOutput)[i] = sample * !muted;
   }
 
   (void)pInput;

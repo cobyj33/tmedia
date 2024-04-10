@@ -73,12 +73,15 @@ Palette read_gimp_gpl_palette(std::istream& stream) {
     line = str_trim(line, " \r\n");
     if (line.empty()) continue;
     if (line[0] == '#') continue; // commented lines
-    if (!std::isdigit(line[0])) continue; // commented lines
+    if (!std::isdigit(line[0])) continue; // something else line
 
     RGB24 color;
+    int r = 0;
+    int g = 0;
+    int b = 0;
     std::istringstream lineRead(line);
-    lineRead >> color.r >> color.g >> color.b;
-    palette.insert(color); 
+    lineRead >> r >> g >> b;
+    palette.insert(RGB24(r & 0xFF, g & 0xFF, b & 0xFF)); 
   }
 
   return palette;

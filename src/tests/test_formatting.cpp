@@ -222,21 +222,30 @@ TEST_CASE("Formatting", "[functions]") {
   }
 
   SECTION("trim") {
-    REQUIRE(str_trim("    Trimmed   String       ", " ") == "Trimmed   String");
-    REQUIRE(str_trim("Trimmed   String       ", " ") == "Trimmed   String");
-    REQUIRE(str_trim("    Trimmed   String", " ") == "Trimmed   String");
+    #define TRIM_TEST(str, trimchars, res) \
+      REQUIRE(str_trim(str, trimchars) == res); \
+      REQUIRE(strv_trim(str, trimchars) == res);
     
-    REQUIRE(str_trim(" www  w Trimmed ww String       wwwwww", " w") == "Trimmed ww String");
-    REQUIRE(str_trim("    Trimmed   String       \r\n", " \r\n") == "Trimmed   String");
-    REQUIRE(str_trim(" _ !! w !Trimmed !__w_!  String_w   __w    ", " w_!") == "Trimmed !__w_!  String");
+    TRIM_TEST("    Trimmed   String       ", " ", "Trimmed   String");
+    TRIM_TEST("    Trimmed   String       ", " ", "Trimmed   String");
+    TRIM_TEST("Trimmed   String       ", " ", "Trimmed   String");
+    TRIM_TEST("    Trimmed   String", " ", "Trimmed   String");
+    TRIM_TEST(" www  w Trimmed ww String       wwwwww", " w", "Trimmed ww String");
+    TRIM_TEST("    Trimmed   String       \r\n", " \r\n", "Trimmed   String");
+    TRIM_TEST(" _ !! w !Trimmed !__w_!  String_w   __w    ", " w_!", "Trimmed !__w_!  String");
   }
 
   SECTION("strsplit") {
-    REQUIRE(are_vectors_equal(strsplit("this,is,split", ','), {"this", "is", "split"}));
-    REQUIRE(are_vectors_equal(strsplit("this,,is,,,split,,,", ','), {"this", "is", "split"}));
-    REQUIRE(are_vectors_equal(strsplit(",this,is,,,split", ','), {"this", "is", "split"}));
-    REQUIRE(are_vectors_equal(strsplit(",,,,,", ','), {}));
-    REQUIRE(are_vectors_equal(strsplit("", ','), {}));
-    REQUIRE(are_vectors_equal(strsplit("  ", ','), {"  "}));
+    #define STRSPLIT_TEST(str, splitchar, ...) \
+      REQUIRE(are_vectors_equal(strsplit(str, splitchar), __VA_ARGS__)); \
+      REQUIRE(are_vectors_equal(strvsplit(str, splitchar), __VA_ARGS__)); 
+    
+    STRSPLIT_TEST("this,is,split", ',', {"this", "is", "split"});
+    STRSPLIT_TEST("this,is,split", ',', {"this", "is", "split"});
+    STRSPLIT_TEST("this,,is,,,split,,,", ',', {"this", "is", "split"});
+    STRSPLIT_TEST(",this,is,,,split", ',', {"this", "is", "split"});
+    STRSPLIT_TEST(",,,,,", ',', {});
+    STRSPLIT_TEST("", ',', {});
+    STRSPLIT_TEST("  ", ',', {"  "});
   }
 }

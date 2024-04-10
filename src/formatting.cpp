@@ -37,24 +37,21 @@ std::string double_to_fixed_string(double num, int decimal_places) {
 }
 
 std::string_view strv_trim(std::string_view src, std::string_view trimchars) {
-  if (src.empty()) return ""; // needed to guard against src.length() - 1 flowing from 0 to SIZE_MAX
-  if (trimchars.empty()) return std::string(src);
+  if (trimchars.empty()) return src;
 
-  std::size_t start_index = 0;
-  std::size_t end_index = src.length() - 1;
+  std::size_t start = 0;
+  std::size_t end = src.length() - 1; // inclusive
 
-  while (start_index < src.length() - 1) {
-    if (trimchars.find(src[start_index]) == std::string::npos) break;
-    start_index++;
+  while (start < src.length() && trimchars.find(src[start]) != std::string_view::npos) {
+    start++;
   }
 
-  while (end_index > 0) {
-    if (trimchars.find(src[end_index]) == std::string::npos) break;
-    end_index--;
+  while (end > 0 && trimchars.find(src[end]) != std::string_view::npos) {
+    end--;
   }
 
-  if (end_index < start_index) return "";
-  return src.substr(start_index, end_index - start_index + 1);
+  if (end < start) return "";
+  return src.substr(start, end - start + 1);
 }
 
 std::string str_trim(std::string_view src, std::string_view trimchars) {
@@ -236,7 +233,7 @@ bool is_int_str(std::string_view str) {
   if (str.length() == 0) return false;
   if (str[0] == '-' && str.length() == 1) return false;
 
-  for (std::size_t i = 0; i < str.length(); i++) {
+  for (std::size_t i = str[0] == '-' || str[0] == '+'; i < str.length(); i++) {
     if (!std::isdigit(str[i])) { // the string has a character that is not a digit or a '-'
       return false;
     }

@@ -1,6 +1,7 @@
 #include "palette.h"
 
 #include <cstdint>
+#include <sstream>
 
 bool palette_equals(Palette& first, Palette& second) {
   if (first.size() != second.size()) {
@@ -14,6 +15,18 @@ bool palette_equals(Palette& first, Palette& second) {
   }
 
   return true;
+}
+
+std::string palette_str(Palette& palette) {
+  if (palette.size() == 0) return "{}";
+  std::stringstream buf;
+  buf << "{\n";
+  for (const RGB24& color : palette) {
+    buf << "\t{" << "r: " << color.r << ", g: " << color.g << " b: " <<
+      color.b << "}\n";
+  }
+  buf << "}";
+  return buf.str();
 }
 
 Palette palette_color_cube(int side) {
