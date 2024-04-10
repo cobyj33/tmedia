@@ -14,7 +14,7 @@ enum class PlaylistMvCmd {
   REWIND
 };
 
-std::string playlist_move_cmd_str(PlaylistMvCmd move_cmd);
+const char* playlist_move_cmd_cstr(PlaylistMvCmd move_cmd);
 
 enum class LoopType {
   REPEAT_ONE,
@@ -22,7 +22,7 @@ enum class LoopType {
   NO_LOOP
 };
 
-std::string loop_type_str(LoopType loop_type);
+const char* loop_type_cstr(LoopType loop_type);
 LoopType loop_type_from_str(std::string_view loop_type);
 
 /**

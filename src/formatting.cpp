@@ -33,8 +33,7 @@ std::string double_to_fixed_string(double num, int decimal_places) {
 
   std::stringstream stream;
   stream << std::fixed << std::setprecision(decimal_places) << num;
-  std::string s = stream.str();
-  return s;
+  return stream.str();
 }
 
 std::string_view strv_trim(std::string_view src, std::string_view trimchars) {

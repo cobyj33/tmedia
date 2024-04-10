@@ -32,7 +32,7 @@ class ffmpeg_error : public std::runtime_error {
      * @param message The explanation of this error's occourance
      * @param averror The FFmpeg error code
      */
-    ffmpeg_error(const std::string message, int averror) : std::runtime_error::runtime_error("") {
+    ffmpeg_error(const std::string& message, int averror) : std::runtime_error::runtime_error("") {
       this->averror = averror;
       if (averror == AVERROR(ENOMEM)) {
         static_cast<std::runtime_error&>(*this) = std::runtime_error(message); // directly forward error message

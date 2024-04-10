@@ -191,7 +191,7 @@ curses_color_pair_t get_closest_ncurses_color_pair(const RGB24& input) {
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 
-std::string ncurses_color_palette_string(TMNCursesColorPalette colorPalette) {
+const char* ncurses_color_palette_cstr(TMNCursesColorPalette colorPalette) {
   switch (colorPalette) {
     case TMNCursesColorPalette::RGB: return "rgb";
     case TMNCursesColorPalette::GRAYSCALE: return "grayscale";

@@ -49,7 +49,10 @@ static constexpr int MIN_RENDER_LINES = 2;
 void set_global_vom(VidOutMode* current, VidOutMode next);
 void init_global_video_output_mode(VidOutMode mode);
 
-const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
+const char* TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
+  "Labels for this document: \n"
+  "  (OST) - On Supported Terminals\n"
+  "\n"
   "Video and Audio Controls\n"
   "- Space - Play and Pause\n"
   "- Up Arrow - Increase Volume 1%\n"
@@ -59,12 +62,12 @@ const std::string TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "- Escape or Backspace or 'q' - Quit Program\n"
   "- '0' - Restart Playback\n"
   "- '1' through '9' - Skip To n/10 of the Media's Duration\n"
-  "- 'L' - Switch looping type of playback (between no loop, repeat, and repeat one)\n"
+  "- 'L' - Switch looping type of playback\n"
   "- 'M' - Mute/Unmute Audio\n"
   "Video, Audio, and Image Controls\n"
-  "- 'C' - Display Color (on supported terminals)\n"
-  "- 'G' - Display Grayscale (on supported terminals)\n"
-  "- 'B' - Display no Characters (on supported terminals) (must be in color or grayscale mode)\n"
+  "- 'C' - Color Mode (OST)\n"
+  "- 'G' - Gray Mode (OST)\n"
+  "- 'B' - Display no Characters (OST) (in Color or Gray mode)\n"
   "- 'N' - Skip to Next Media File\n"
   "- 'P' - Rewind to Previous Media File\n"
   "- 'R' - Fully Refresh the Screen\n";

@@ -10,13 +10,13 @@
 
 Palette read_gimp_gpl_palette(std::istream& stream);
 
-bool is_gimp_gpl_file(std::filesystem::path path);
-bool is_gimp_gpl_str(std::string str);
+bool is_gimp_gpl_file(const std::filesystem::path& path);
+bool is_gimp_gpl_str(const std::string& str);
 bool test_is_gimp_gpl_stream(std::istream& stream);
 
 const char* GMP_PALETTE_HEADER = "GIMP Palette";
 
-Palette read_palette_file(std::filesystem::path path) {
+Palette read_palette_file(const std::filesystem::path& path) {
   if (!std::filesystem::exists(path)) {
     throw std::runtime_error(fmt::format("[{}] Cannot read nonexistent palette "
     "path: {}", FUNCDINFO, path.c_str()));
@@ -31,7 +31,7 @@ Palette read_palette_file(std::filesystem::path path) {
   "{}", FUNCDINFO, path.c_str()));
 }
 
-Palette read_palette_str(std::string str) {
+Palette read_palette_str(const std::string& str) {
   if (is_gimp_gpl_str(str)) {
     std::istringstream stream(str);
     return read_gimp_gpl_palette(stream);
@@ -41,12 +41,12 @@ Palette read_palette_str(std::string str) {
   "string: {}.", FUNCDINFO, str));
 }
 
-bool is_gimp_gpl_file(std::filesystem::path path) {
+bool is_gimp_gpl_file(const std::filesystem::path& path) {
   std::ifstream stream(path);
   return test_is_gimp_gpl_stream(stream);
 }
 
-bool is_gimp_gpl_str(std::string str) {
+bool is_gimp_gpl_str(const std::string& str) {
   std::istringstream stream(str);
   return test_is_gimp_gpl_stream(stream);
 }

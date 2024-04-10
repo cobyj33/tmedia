@@ -98,15 +98,13 @@ std::optional<MediaType> media_type_from_mime_type(std::string_view mime_type) {
   return std::nullopt;
 }
 
-std::string media_type_to_string(MediaType media_type) {
+const char* media_type_cstr(MediaType media_type) {
   switch (media_type) {
     case MediaType::VIDEO: return "video";
     case MediaType::AUDIO: return "audio";
     case MediaType::IMAGE: return "image";
   }
-
-  throw std::runtime_error(fmt::format("[{}] attempted to get media type "
-  "string from unimplemented media type.", FUNCDINFO));
+  return "unknown"; // unreachable
 }
 
 std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat) {

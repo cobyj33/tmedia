@@ -74,7 +74,7 @@ void Playlist<T>::move(PlaylistMvCmd move_cmd) {
   int next = playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd);
   if (next < 0) {
     throw std::runtime_error(fmt::format("[{}] can not commit move {}.",
-    FUNCDINFO, playlist_move_cmd_str(move_cmd))); 
+    FUNCDINFO, playlist_move_cmd_cstr(move_cmd))); 
   }
 
   // if skipping or rewinding, kick out of repeat_one mode
@@ -99,7 +99,7 @@ T Playlist<T>::peek_move(PlaylistMvCmd move_cmd) const {
   int next = playlist_get_move(this->m_queue_index, this->m_queue_indexes.size(), this->m_loop_type, move_cmd);
   if (next < 0) {
     throw std::runtime_error(fmt::format("[{}] can not commit move {}",
-    FUNCDINFO, playlist_move_cmd_str(move_cmd))); 
+    FUNCDINFO, playlist_move_cmd_cstr(move_cmd))); 
   }
 
   return this->m_entries[this->m_queue_indexes[next]];
@@ -184,7 +184,7 @@ const std::pair<std::string_view, LoopType> loop_type_strs[] = {
   {"repeat-one", LoopType::REPEAT_ONE},
 };
 
-std::string loop_type_str(LoopType loop_type) {
+const char* loop_type_cstr(LoopType loop_type) {
   switch (loop_type) {
     case LoopType::NO_LOOP: return "no-loop";
     case LoopType::REPEAT: return "repeat";
@@ -193,20 +193,20 @@ std::string loop_type_str(LoopType loop_type) {
   return "unknown";
 }
 
-LoopType loop_type_from_str(std::string_view loop_type_str) {
-  if (loop_type_str == "no-loop") {
+LoopType loop_type_from_str(std::string_view str) {
+  if (str == "no-loop") {
     return LoopType::NO_LOOP;
-  } else if (loop_type_str == "repeat") {
+  } else if (str == "repeat") {
     return LoopType::REPEAT;
-  } else if (loop_type_str == "repeat-one") {
+  } else if (str == "repeat-one") {
     return LoopType::REPEAT_ONE;
   }
 
   throw std::runtime_error(fmt::format("[{}] cannot find repr of loop "
-                                  "type string: {}", FUNCDINFO, loop_type_str));
+                                  "type string: {}", FUNCDINFO, str));
 }
 
-std::string playlist_move_cmd_str(PlaylistMvCmd move_cmd) {
+const char* playlist_move_cmd_cstr(PlaylistMvCmd move_cmd) {
   switch (move_cmd) {
     case PlaylistMvCmd::NEXT: return "next";
     case PlaylistMvCmd::SKIP: return "skip";

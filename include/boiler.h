@@ -27,7 +27,7 @@ enum class MediaType {
   IMAGE
 };
 
-std::string media_type_to_string(MediaType media_type);
+const char* media_type_cstr(MediaType media_type);
 MediaType media_type_from_avformat_context(AVFormatContext* fmt_ctx);
 std::optional<MediaType> media_type_from_mime_type(std::string_view mime_type);
 std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat);

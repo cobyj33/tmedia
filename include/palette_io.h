@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <string>
 
-Palette read_palette_file(std::filesystem::path path);
-Palette read_palette_str(std::string str);
+Palette read_palette_file(const std::filesystem::path& path);
+Palette read_palette_str(const std::string& str);
 
 #endif

@@ -15,7 +15,7 @@
 #include <string>
 #include <filesystem>
 
-extern const std::string TMEDIA_CONTROLS_USAGE;
+extern const char* TMEDIA_CONTROLS_USAGE;
 
 
 struct TMediaStartupState {

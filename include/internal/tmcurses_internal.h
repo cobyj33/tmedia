@@ -28,7 +28,7 @@ struct CursesColorPair {
   CursesColorPair(const CursesColorPair& cp) : fg(cp.fg), bg(cp.bg) {}
 };
 
-std::string ncurses_color_palette_string(TMNCursesColorPalette colorPalette);
+const char* ncurses_color_palette_cstr(TMNCursesColorPalette colorPalette);
 
 RGB24 ncurses_get_color_number_content(curses_color_t);
 ColorPair ncurses_get_pair_number_content(curses_color_pair_t);
