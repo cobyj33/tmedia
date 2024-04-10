@@ -295,8 +295,8 @@ extern "C" {
               short_global_argparse_map.at(arg.value)(ps, arg);
             } else {
               throw std::runtime_error(fmt::format("[{}] Unrecognized "
-              "short option: {}. Use the {} --help command to see all available"
-              " cli options", FUNCDINFO, arg.value, argv[0]));
+              "short option: '{}'. Use the '{} --help' command to see all "
+              "available cli options", FUNCDINFO, arg.value, argv[0]));
             }
           } else if (arg.prefix == "--") {
             if (long_exiting_opt_map.count(arg.value)) {
@@ -306,8 +306,8 @@ extern "C" {
               long_global_argparse_map.at(arg.value)(ps, arg);
             } else {
               throw std::runtime_error(fmt::format("[{}] Unrecognized "
-              "long option: {}. Use the {} --help command to see all available"
-              " cli options", FUNCDINFO, arg.value, argv[0]));
+              "long option: '{}'. Use the '{} --help' command to see all "
+              "available cli options", FUNCDINFO, arg.value, argv[0]));
             }
           } else if (arg.prefix == ":") {
             if (short_local_argparse_map.count(arg.value)) {
@@ -316,8 +316,8 @@ extern "C" {
               long_local_argparse_map.at(arg.value)(ps, arg);
             } else {
               throw std::runtime_error(fmt::format("[{}] Unrecognized "
-              "local option: {}. Use the {} --help command to see all available"
-              " cli options", FUNCDINFO, arg.value, argv[0]));
+              "local option: '{}'. Use the '{} --help' command to see all "
+              "available cli options", FUNCDINFO, arg.value, argv[0]));
             }
           }
         } break;
