@@ -12,7 +12,7 @@
 */
 void MediaFetcher::duration_checking_thread_func() {
   if (this->media_type == MediaType::IMAGE) return;
-  const int DC_LOOP_TIME_MS = 100;
+  constexpr int DC_LOOP_TIME_MS = 100;
 
   while (!this->should_exit()) {
     {

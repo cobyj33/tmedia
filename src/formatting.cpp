@@ -110,7 +110,7 @@ std::string format_duration(double time_in_seconds) {
 }
 
 
-int parse_duration(std::string duration) {
+int parse_duration(std::string_view duration) {
   if (is_h_mm_ss_duration(duration)) {
     return parse_h_mm_ss_duration(duration);
   } else if (is_m_ss_duration(duration)) {
@@ -121,7 +121,7 @@ int parse_duration(std::string duration) {
   FUNCDINFO, duration));
 }
 
-bool is_duration(std::string duration) {
+bool is_duration(std::string_view duration) {
   return is_h_mm_ss_duration(duration) || is_m_ss_duration(duration);  
 }
 
@@ -135,44 +135,44 @@ std::string format_time_hh_mm_ss(double time_in_seconds) {
   return format_duration_time_digit(hours) + ":" + format_duration_time_digit(minutes) + ":" + format_duration_time_digit(seconds);
 }
 
-int parse_h_mm_ss_duration(std::string formatted_duration) {
-  if (!is_h_mm_ss_duration(formatted_duration)) {
+int parse_h_mm_ss_duration(std::string_view dur) {
+  if (!is_h_mm_ss_duration(dur)) {
     throw std::runtime_error(fmt::format("[{}] Cannot parse H:MM:SS duration "
     "of {}, this duration is not formatted correctly as H:MM:SS",
-    FUNCDINFO, formatted_duration));
+    FUNCDINFO, dur));
   }
 
-  const int END = formatted_duration.length() - 1;
+  const int END = dur.length() - 1;
   const int MM_SS_COLON_POSITION = END - 2;
   const int HH_MM_COLON_POSITION = END - 5;
-  std::string hours_str = formatted_duration.substr(0, HH_MM_COLON_POSITION);
-  std::string minutes_str = formatted_duration.substr(HH_MM_COLON_POSITION + 1, 2);
-  std::string seconds_str = formatted_duration.substr(MM_SS_COLON_POSITION + 1, 2);
-  return std::stoi(hours_str) * HOURS_TO_SECONDS + std::stoi(minutes_str) * MINUTES_TO_SECONDS + std::stoi(seconds_str);
+  std::string_view hours_str = dur.substr(0, HH_MM_COLON_POSITION);
+  std::string_view minutes_str = dur.substr(HH_MM_COLON_POSITION + 1, 2);
+  std::string_view seconds_str = dur.substr(MM_SS_COLON_POSITION + 1, 2);
+  return strtoi32(hours_str) * HOURS_TO_SECONDS + strtoi32(minutes_str) * MINUTES_TO_SECONDS + strtoi32(seconds_str);
 }
 
-bool is_h_mm_ss_duration(std::string formatted_duration) {
-  if (formatted_duration.length() < 7) {
+bool is_h_mm_ss_duration(std::string_view dur) {
+  if (dur.length() < 7) {
     return false;
   }
 
-  const std::size_t END = formatted_duration.length() - 1;
+  const std::size_t END = dur.length() - 1;
   const std::size_t MM_SS_COLON_POSITION = END - 2;
   const std::size_t HH_MM_COLON_POSITION = END - 5;
 
-  if (formatted_duration[MM_SS_COLON_POSITION] != ':' || formatted_duration[HH_MM_COLON_POSITION] != ':') {
+  if (dur[MM_SS_COLON_POSITION] != ':' || dur[HH_MM_COLON_POSITION] != ':') {
     return false;
   }
 
-  for (std::size_t i = 0; i < formatted_duration.length(); i++) {
-    if (!std::isdigit(formatted_duration[i]) && !(i == MM_SS_COLON_POSITION || i == HH_MM_COLON_POSITION )) {
+  for (std::size_t i = 0; i < dur.length(); i++) {
+    if (!std::isdigit(dur[i]) && !(i == MM_SS_COLON_POSITION || i == HH_MM_COLON_POSITION )) {
       return false;
     }
   }
 
-  std::string hours_section = formatted_duration.substr(0, HH_MM_COLON_POSITION);
-  std::string minutes_section = formatted_duration.substr(HH_MM_COLON_POSITION + 1, 2);
-  std::string seconds_section = formatted_duration.substr(MM_SS_COLON_POSITION + 1, 2);
+  std::string_view hours_section = dur.substr(0, HH_MM_COLON_POSITION);
+  std::string_view minutes_section = dur.substr(HH_MM_COLON_POSITION + 1, 2);
+  std::string_view seconds_section = dur.substr(MM_SS_COLON_POSITION + 1, 2);
 
   if (hours_section.length() > 2) {
     if (hours_section[0] == '0') {
@@ -180,8 +180,8 @@ bool is_h_mm_ss_duration(std::string formatted_duration) {
     }
   }
 
-  int seconds = std::stoi(seconds_section);
-  int minutes = std::stoi(minutes_section);
+  int seconds = strtoi32(seconds_section);
+  int minutes = strtoi32(minutes_section);
   
   return seconds < 60 && minutes < 60;
 }
@@ -193,68 +193,51 @@ std::string format_time_mm_ss(double time_in_seconds) {
   return format_duration_time_digit(minutes) + ":" + format_duration_time_digit(seconds);
 }
 
-int parse_m_ss_duration(std::string formatted_duration) {
-  if (!is_m_ss_duration(formatted_duration)) {
+int parse_m_ss_duration(std::string_view dur) {
+  if (!is_m_ss_duration(dur)) {
     throw std::runtime_error(fmt::format("[{}] Cannot parse M:SS duration "
     "of {}, this duration is not formatted correctly as M:SS",
-    FUNCDINFO, formatted_duration));
+    FUNCDINFO, dur));
   }
 
-  const int END = formatted_duration.length() - 1;
+  const int END = dur.length() - 1;
   const int COLON_POSITION = END - 2;
-  std::string minutes_str = formatted_duration.substr(0, COLON_POSITION);
-  std::string seconds_str = formatted_duration.substr(COLON_POSITION + 1, 2);
-  return std::stoi(minutes_str) * MINUTES_TO_SECONDS + std::stoi(seconds_str);
+  std::string_view minutes_str = dur.substr(0, COLON_POSITION);
+  std::string_view seconds_str = dur.substr(COLON_POSITION + 1, 2);
+  return strtoi32(minutes_str) * MINUTES_TO_SECONDS + strtoi32(seconds_str);
 }
 
 
-bool is_m_ss_duration(std::string formatted_duration) {
-  if (formatted_duration.length() < 4) {
+bool is_m_ss_duration(std::string_view dur) {
+  if (dur.length() < 4) {
     return false;
   }
 
-  const std::size_t END = formatted_duration.length() - 1;
+  const std::size_t END = dur.length() - 1;
   const std::size_t COLON_POSITION = END - 2;
-  if (formatted_duration[COLON_POSITION] != ':') {
+  if (dur[COLON_POSITION] != ':') {
     return false;
   }
 
-  for (std::size_t i = 0; i < formatted_duration.length(); i++) {
-    if (!std::isdigit(formatted_duration[i]) && i != COLON_POSITION) {
-      return false;
-    }
+  for (std::size_t i = 0; i < COLON_POSITION; i++)
+    if (!std::isdigit(dur[i])) return false;
+  for (std::size_t i = COLON_POSITION + 1; i < dur.length(); i++)
+    if (!std::isdigit(dur[i])) return false;
+
+  std::string_view minutes_section = dur.substr(0, COLON_POSITION);
+  if (minutes_section.length() > 2 && minutes_section[0] == '0') { // no leading 0
+    return false;
   }
 
-  std::string minutes_section = formatted_duration.substr(0, COLON_POSITION);
-  if (minutes_section.length() > 2) {
-    if (minutes_section[0] == '0') {
-      return false;
-    }
-  }
-
-
-  std::string seconds_section = formatted_duration.substr(COLON_POSITION + 1, 2);
-  int seconds = std::stoi(seconds_section);
-  
-  return seconds < 60;
+  std::string_view seconds_section = dur.substr(COLON_POSITION + 1, 2);
+  return strtoi32(seconds_section) < 60;
 }
 
 bool is_int_str(std::string_view str) {
-  if (str.length() == 0) {
-    return false;
-  }
+  if (str.length() == 0) return false;
+  if (str[0] == '-' && str.length() == 1) return false;
 
   for (std::size_t i = 0; i < str.length(); i++) {
-    if (str[i] == '-') {
-      if (i == 0) {
-        if (str.length() == 1) { // the string is "-"
-          return false;
-        }
-        continue;
-      }
-      return false; // The string has a '-' somewhere besides the start
-    }
-    
     if (!std::isdigit(str[i])) { // the string has a character that is not a digit or a '-'
       return false;
     }
@@ -263,15 +246,9 @@ bool is_int_str(std::string_view str) {
   return true;
 }
 
-std::string format_list(std::vector<std::string> items, std::string_view conjunction) {
-  if (items.size() == 0) {
-    return "";
-  }
-
-  if (items.size() == 1) {
-    return items[0];
-  }
-
+std::string format_list(const std::vector<std::string>& items, std::string_view conjunction) {
+  if (items.size() == 0) return "";
+  if (items.size() == 1) return items[0];
   if (items.size() == 2) {
     std::stringstream sstream;
     sstream << items[0] << " " << conjunction << " " << items[1];
@@ -284,15 +261,6 @@ std::string format_list(std::vector<std::string> items, std::string_view conjunc
   }
   sstream << conjunction << " " << items[items.size() - 1];
   return sstream.str();
-}
-
-
-
-std::string str_bound(std::string_view str, std::size_t max_size) {
-  if (str.length() > max_size) {
-    return std::string(str.substr(0, max_size));
-  }
-  return std::string(str);
 }
 
 std::string str_capslock(std::string_view str) {
@@ -309,14 +277,14 @@ std::vector<std::string_view> strvsplit(std::string_view s, char delim) {
 
   for (std::size_t ssend = 0; ssend < s.length(); ssend++) {
     if (s[ssend] == delim) {
-      if (ssend > ssstart)
-      ssstart = ssend;
+      if (ssend > ssstart) // no 0-length string views
+        result.push_back(s.substr(ssstart, ssend - ssstart));
+      ssstart = ssend + 1;
     }
   }
 
-  if (ssstart < s.length() - 1) 
-    result.push_back(s.substr(ssstart, s.length()));
-
+  if (s.length() > 0 && ssstart < s.length() - 1) 
+    result.push_back(s.substr(ssstart, s.length() - ssstart));
   return result;
 }
 
@@ -326,30 +294,22 @@ std::vector<std::string> strsplit(std::string_view s, char delim) {
 
   for (std::size_t ssend = 0; ssend < s.length(); ssend++) {
     if (s[ssend] == delim) {
-      if (ssend > ssstart)
+      if (ssend > ssstart) // no 0-length strings
         result.push_back(std::string(s.substr(ssstart, ssend - ssstart)));
       ssstart = ssend + 1;
     }
   }
 
-  if (s.length() > 0 && ssstart < s.length() - 1) {
+  if (s.length() > 0 && ssstart < s.length() - 1)
     result.push_back(std::string(s.substr(ssstart, s.length() - ssstart)));
-  }
-
   return result;
 }
 
 std::string_view str_until(std::string_view s, char ch) {
-  std::size_t end = s.length();
-
   for (std::size_t i = 0; i < s.length(); i++) {
-    if (s[i] == ch) {
-      end = i;
-      break;
-    }
+    if (s[i] == ch) return s.substr(0, i);
   }
-
-  return s.substr(0, end);
+  return s;
 }
 
 bool strisi32(std::string_view str) noexcept {
@@ -365,17 +325,17 @@ int strtoi32(std::string_view str) {
   double out = 0;
   if (str.empty())
     throw std::runtime_error(fmt::format("[{}] Attempted to parse empty "
-    "string as i32", FUNCDINFO));
+    "string as i32: {}", FUNCDINFO, str));
   if (str == "-" || str == "+")
     throw std::runtime_error(fmt::format("[{}] Attempted to parse string with "
     "only a sign as i32: {}.", FUNCDINFO, str));
 
   int sign = str[0] == '-' ? -1 : 1;
 
-  for (std::size_t i = str[0] == '-' || str[0] == '+' ? 1 : 0; i < str.length(); i++) {
+  for (std::size_t i = (str[0] == '-' || str[0] == '+'); i < str.length(); i++) {
     if (!std::isdigit(str[i]))
       throw std::runtime_error(fmt::format("[{}] Attempted to parse string "
-      "with invalid non-digit character: ", FUNCDINFO, str));
+      "with invalid non-digit character: {}", FUNCDINFO, str));
     if (out >= (INT_MAX - 9) / 10)
       throw std::runtime_error(fmt::format("[{}] i32 integer overflow: {}, "
       "Must be in the range [ {} -> {} ]", FUNCDINFO, str, INT_MIN, INT_MAX));
@@ -406,33 +366,32 @@ double strtodouble(std::string_view str) {
     throw std::runtime_error(fmt::format("[{}] Attempted to parse invalid "
     "signed string: {}.", FUNCDINFO, str));
 
-  int foundDecimal = 0;
-  double decimalMultiplier = 0.1;
   double sign = str[0] == '-' ? -1.0 : 1.0;
+  std::size_t i = (str[0] == '-' || str[0] == '+'); // skip initial sign
 
-  for (std::size_t i = str[0] == '-' || str[0] == '+' ? 1 : 0; i < str.length(); i++) {
-    if (str[i] == '.') {
-      if (foundDecimal)
-        throw std::runtime_error(fmt::format("[{}] Attempted to parse string "
-        "with multiple decimal points: {}.", FUNCDINFO, str));
-      foundDecimal = 1;
-    } else if (std::isdigit(str[i])) {
-      if (out >= (DBL_MAX - 9) / 10)
-        throw std::runtime_error(fmt::format("[{}] double overflow: {}.",
-        FUNCDINFO, str));
-      
-      if (foundDecimal) {
-        out = out + (str[i] - '0') * decimalMultiplier;
-        decimalMultiplier /= 10.0;
-      }
-      else {
-        out = out * 10.0 + (str[i] - '0'); 
-      }
-
-    } else {
+  for (; i < str.length() && str[i] != '.'; i++) { 
+    if (!std::isdigit(str[i])) 
       throw std::runtime_error(fmt::format("[{}] Attempted to parse string "
       "with invalid non-digit character: {}.", FUNCDINFO, str));
-    }
+    if (out >= (DBL_MAX - 9) / 10)
+      throw std::runtime_error(fmt::format("[{}] double overflow: {}.",
+      FUNCDINFO, str));
+    
+    out = out * 10.0 + (str[i] - '0'); 
+  }
+
+  i++; // consume period if we found it
+  double decimalMultiplier = 0.1;
+  for (; i < str.length(); i++) {
+    if (!std::isdigit(str[i])) 
+      throw std::runtime_error(fmt::format("[{}] Attempted to parse string "
+      "with invalid non-digit character: {}.", FUNCDINFO, str));
+    if (str[i] == '.')
+      throw std::runtime_error(fmt::format("[{}] Attempted to parse string "
+        "with multiple decimal points: {}.", FUNCDINFO, str));
+    
+    out = out + (str[i] - '0') * decimalMultiplier;
+    decimalMultiplier /= 10.0;
   }
 
   return out * sign;

@@ -27,18 +27,16 @@ MediaDecoder::MediaDecoder(const std::filesystem::path& path, std::set<enum AVMe
     this->fmt_ctx = open_format_context(path);
   } catch (std::runtime_error const& e) {
     throw std::runtime_error(fmt::format("[{}] Could not allocate Media "
-    "Decoder of {} because of error while fetching file format data: {}",
-    FUNCDINFO, path.c_str(), + e.what()));
+    "Decoder of {} because of error while fetching file format data: \n\t{}",
+    FUNCDINFO, path.c_str(), e.what()));
   }
-
+   
   this->media_type = media_type_from_avformat_context(this->fmt_ctx);
 
   for (const enum AVMediaType& stream_type : requested_streams) {
     try {
-      this->stream_decoders[stream_type] = std::move(std::make_unique<StreamDecoder>(fmt_ctx, stream_type));
-    } catch (std::runtime_error const& e) {
-      continue;
-    }
+      this->decs[stream_type] = std::move(std::make_unique<StreamDecoder>(fmt_ctx, stream_type));
+    } catch (std::runtime_error const& e) { } // no-op
   }
 }
 
@@ -57,7 +55,7 @@ std::vector<AVFrame*> MediaDecoder::next_frames(enum AVMediaType media_type) {
 
   constexpr int NO_FETCH_MADE = -1;
 
-  StreamDecoder& stream_decoder = *(this->stream_decoders[media_type]);
+  StreamDecoder& stream_decoder = *(this->decs[media_type]);
   std::vector<AVFrame*> dec_frames;
   int fetch_count = NO_FETCH_MADE; 
 
@@ -82,28 +80,33 @@ int MediaDecoder::fetch_next(int requested_packet_count) {
 
   while (av_read_frame(this->fmt_ctx, reading_packet) == 0) {
      
-    for (auto &decoder_pair : this->stream_decoders) {
-      if (decoder_pair.second->get_stream_index() == reading_packet->stream_index) {
+    for (auto &dec_entry : this->decs) {
+      if (dec_entry.second->get_stream_index() == reading_packet->stream_index) {
         AVPacket* saved_packet = av_packet_alloc();
         if (saved_packet == nullptr) {
           av_packet_free(&reading_packet);
-          throw ffmpeg_error(fmt::format("[{}] Failed to allocate AVPacket", FUNCDINFO), AVERROR(ENOMEM));
+          throw ffmpeg_error(fmt::format("[{}] Failed to allocate "
+          "AVPacket", FUNCDINFO), AVERROR(ENOMEM));
         }
 
-        av_packet_ref(saved_packet, reading_packet);
+        int res = av_packet_ref(saved_packet, reading_packet);
+        if (res < 0) {
+          av_packet_free(&reading_packet);
+          av_packet_free(&saved_packet);
+          throw ffmpeg_error(fmt::format("[{}] Failed to reference "
+          "frame from format context", FUNCDINFO), AVERROR(ENOMEM));
+        }
         
-        decoder_pair.second->push_back(saved_packet);
+        dec_entry.second->push_back(saved_packet);
         packets_read++;
         break;
       }
     }
 
     av_packet_unref(reading_packet);
-
-     if (packets_read >= requested_packet_count) break;
+    if (packets_read >= requested_packet_count) break;
   }
 
-  //reached EOF
   av_packet_free(&reading_packet);
   return packets_read;
 }
@@ -123,19 +126,19 @@ int MediaDecoder::jump_to_time(double target_time) {
     return ret;
   }
 
-  for (auto& decoder_pair : this->stream_decoders) {
-    decoder_pair.second->reset();
+  for (auto& dec_entry : this->decs) {
+    dec_entry.second->reset();
   }
 
-  for (auto& decoder_pair : this->stream_decoders) {
+  for (auto& dec_entry : this->decs) {
     std::vector<AVFrame*> frames;
     bool passed_target_time = false;
 
     do {
       clear_avframe_list(frames);
-      frames = this->next_frames(decoder_pair.first);
+      frames = this->next_frames(dec_entry.first);
       for (std::size_t i = 0; i < frames.size(); i++) {
-        if (frames[i]->pts * decoder_pair.second->get_time_base() >= target_time) {
+        if (frames[i]->pts * dec_entry.second->get_time_base() >= target_time) {
           passed_target_time = true;
           break;
         }

@@ -128,7 +128,7 @@ void TMediaCursesRenderer::render_tui_large(const TMediaProgramState& tmps, cons
     std::vector<std::string> bottom_labels;
     const std::string playing_str = snapshot.playing ? "PLAYING" : "PAUSED";
     const std::string loop_str = str_capslock(loop_type_str(tmps.playlist.loop_type())); 
-    const std::string volume_str = fmt::format("VOLUME: {}", tmps.muted ? "MUTED" : fmt::format("{}%", static_cast<int>(tmps.volume * 100)));
+    const std::string volume_str = tmps.muted ? "MUTED" : fmt::format("VOLUME: {}%", static_cast<int>(tmps.volume * 100));
     const std::string shuffled_str = tmps.playlist.shuffled() ? "SHUFFLED" : "NOT SHUFFLED";
 
     bottom_labels.push_back(playing_str);

@@ -54,12 +54,12 @@ std::string format_time_hh_mm_ss(double time_in_seconds); // ex: 13:03:45
  * is_h_mm_ss_duration should be called beforehand, especially with user input,
  * in order to see if the string is in the correct format.
 */
-int parse_h_mm_ss_duration(std::string formatted_duration);
-bool is_h_mm_ss_duration(std::string formatted_duration);
+int parse_h_mm_ss_duration(std::string_view formatted_duration);
+bool is_h_mm_ss_duration(std::string_view formatted_duration);
 
 std::string format_time_mm_ss(double time_in_seconds); // ex: 32:45
-int parse_m_ss_duration(std::string formatted_duration);
-bool is_m_ss_duration(std::string formatted_duration);
+int parse_m_ss_duration(std::string_view formatted_duration);
+bool is_m_ss_duration(std::string_view formatted_duration);
 
 bool strisi32(std::string_view) noexcept;
 int strtoi32(std::string_view);
@@ -71,8 +71,8 @@ double strtodouble(std::string_view);
 // int parse_h_mm_ss_SSS_duration(std::string formatted_duration);
 // bool is_h_mm_ss_SSS_duration(std::string formatted_duration);
 
-int parse_duration(std::string duration);
-bool is_duration(std::string duration);
+int parse_duration(std::string_view duration);
+bool is_duration(std::string_view duration);
 
 std::string double_to_fixed_string(double num, int decimal_places);
 
@@ -86,11 +86,12 @@ inline std::string to_file_ext(std::string_view path_str) {
   return std::filesystem::path(path_str).extension();
 }
 
-std::string format_list(std::vector<std::string> items, std::string_view conjunction);
+std::string format_list(const std::vector<std::string>& items, std::string_view conjunction);
 
 double parse_percentage(std::string_view percentage);
 bool is_percentage(std::string_view percentage);
 
+std::string strv_bound(std::string_view str, std::size_t max_size);
 std::string str_bound(std::string_view str, std::size_t max_size);
 std::string str_capslock(std::string_view str);
 std::string_view strv_trim(std::string_view src, std::string_view trimchars);

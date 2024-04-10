@@ -77,14 +77,6 @@ void MediaFetcher::resume(double currsystime) {
 }
 
 
-
-/**
- * For thread safety, alter_mutex must be locked
-*/
-double MediaFetcher::get_time(double currsystime) const {
-  return this->clock.get_time(currsystime);
-}
-
 /**
  * For threadsafety, alter_mutex must be locked
 */

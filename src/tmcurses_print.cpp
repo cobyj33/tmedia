@@ -47,7 +47,7 @@ void tm_mvwaddstr_label(WINDOW* window, TMLabelStyle label_style, std::string_vi
     return; // if still invalid, just abort
   }
 
-  std::string bounded_str = str_bound(str, text_area_width);
+  std::string bounded_str = std::string(str.substr(0, text_area_width));
 
   switch (label_style.align) {
     case TMAlign::LEFT: mvwaddstr(window, label_style.row, text_area_col_start, bounded_str.c_str()); break;

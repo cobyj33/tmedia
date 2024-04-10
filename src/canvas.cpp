@@ -14,7 +14,7 @@ Canvas::Canvas(int nb_rows, int nb_cols) {
   this->nb_cols = nb_cols;
   this->canvas->reserve(nb_rows * nb_cols);
   for (int i = 0; i < nb_rows * nb_cols; i++) {
-    this->canvas->push_back(std::move(RGB24(0)));
+    this->canvas->push_back(RGB24(0));
   }
 }
 

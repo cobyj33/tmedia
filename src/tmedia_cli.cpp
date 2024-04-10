@@ -432,7 +432,7 @@ extern "C" {
       res = strtoi32(arg.param);
     } catch (const std::runtime_error& err) {
       throw std::runtime_error(fmt::format("[{}] Could not parse param {} as "
-      "integer: {}", FUNCDINFO, arg.param, err.what()));
+      "integer: \n\t{}", FUNCDINFO, arg.param, err.what()));
     }
 
     if (res <= 0) {
@@ -454,7 +454,7 @@ extern "C" {
       volume = parse_percentage(arg.param);
     } catch (const std::runtime_error& err) {
       throw std::runtime_error(fmt::format("[{}] Could not parse parameter {} "
-      "as a percentage value: {}", FUNCDINFO, arg.param, err.what()));
+      "as a percentage value: \n\t{}", FUNCDINFO, arg.param, err.what()));
     }
 
     if (volume < 0.0 || volume > 1.0) {

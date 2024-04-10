@@ -28,7 +28,8 @@ void on_terminate() {
     std::rethrow_exception(exptr);
   }
   catch (std::exception const& ex) {
-    std::cerr << "[tmedia] Terminated due to exception: " << ex.what() << std::endl;
+    std::cerr << "[tmedia] Terminated due to exception: \n\t" <<
+      ex.what() << std::endl;
   }
 
   std::abort();

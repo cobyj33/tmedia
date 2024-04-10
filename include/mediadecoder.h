@@ -23,8 +23,9 @@ extern "C" {
 */
 class MediaDecoder {
   private:
+    using StreamDecoderPair = std::pair<enum AVMediaType, std::unique_ptr<StreamDecoder>>;
     AVFormatContext* fmt_ctx;
-    std::map<enum AVMediaType, std::unique_ptr<StreamDecoder>> stream_decoders;
+    std::map<enum AVMediaType, std::unique_ptr<StreamDecoder>> decs;
     MediaType media_type;
 
     int fetch_next(int requested_packet_count);
@@ -44,35 +45,35 @@ class MediaDecoder {
     }
 
     inline bool has_stream_decoder(enum AVMediaType media_type) const {
-      return this->stream_decoders.count(media_type) == 1;
+      return this->decs.count(media_type) == 1;
     }
 
     inline int get_nb_channels() {
       #if HAS_AVCHANNEL_LAYOUT
-      return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->ch_layout.nb_channels;
+      return this->decs[AVMEDIA_TYPE_AUDIO]->get_codec_context()->ch_layout.nb_channels;
       #else
-      return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channels;
+      return this->decs[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channels;
       #endif
     }
 
     inline int get_sample_rate() {
-      return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->sample_rate;
+      return this->decs[AVMEDIA_TYPE_AUDIO]->get_codec_context()->sample_rate;
     }
 
     inline AVSampleFormat get_sample_fmt() {
-      return this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->sample_fmt;
+      return this->decs[AVMEDIA_TYPE_AUDIO]->get_codec_context()->sample_fmt;
     }
 
     #if HAS_AVCHANNEL_LAYOUT
     inline AVChannelLayout* get_ch_layout() {
-      return &(this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->ch_layout);
+      return &(this->decs[AVMEDIA_TYPE_AUDIO]->get_codec_context()->ch_layout);
     }
     #else
     inline int64_t get_ch_layout() {
-      int64_t channel_layout = this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channel_layout;
+      int64_t channel_layout = this->decs[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channel_layout;
       if (channel_layout != 0) return channel_layout;
 
-      int channels = this->stream_decoders[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channels;
+      int channels = this->decs[AVMEDIA_TYPE_AUDIO]->get_codec_context()->channels;
       if (channels > 0) return av_get_default_channel_layout(channels);
       return AV_CH_LAYOUT_STEREO;
     }
@@ -81,27 +82,27 @@ class MediaDecoder {
 
 
     inline int get_width() {
-      return this->stream_decoders[AVMEDIA_TYPE_VIDEO]->get_codec_context()->width;
+      return this->decs[AVMEDIA_TYPE_VIDEO]->get_codec_context()->width;
     }
 
     inline int get_height() {
-      return this->stream_decoders[AVMEDIA_TYPE_VIDEO]->get_codec_context()->height;
+      return this->decs[AVMEDIA_TYPE_VIDEO]->get_codec_context()->height;
     }
 
     inline AVPixelFormat get_pix_fmt() {
-      return this->stream_decoders[AVMEDIA_TYPE_VIDEO]->get_codec_context()->pix_fmt;
+      return this->decs[AVMEDIA_TYPE_VIDEO]->get_codec_context()->pix_fmt;
     }
 
     inline double get_start_time(enum AVMediaType media_type) {
-      return this->stream_decoders[media_type]->get_start_time();
+      return this->decs[media_type]->get_start_time();
     }
 
     inline double get_time_base(enum AVMediaType media_type) {
-      return this->stream_decoders[media_type]->get_time_base();
+      return this->decs[media_type]->get_time_base();
     }
 
     inline double get_avgfts(enum AVMediaType media_type) {
-      return this->stream_decoders[media_type]->get_avgfts();
+      return this->decs[media_type]->get_avgfts();
     }    
 
     ~MediaDecoder();

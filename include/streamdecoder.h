@@ -35,6 +35,8 @@ class StreamDecoder {
 
   public:
     StreamDecoder(AVFormatContext* fmt_ctx, enum AVMediaType media_type);
+    void reset() noexcept;
+    std::vector<AVFrame*> decode_next();
 
     inline double get_average_frame_rate_sec() const noexcept {
       return av_q2d(this->stream->avg_frame_rate);
@@ -64,12 +66,13 @@ class StreamDecoder {
       return this->codec_context;
     }
     
-    void reset() noexcept;
+    inline bool has_packets() {
+      return !this->packet_queue.empty();
+    }
 
-    bool has_packets();
-    void push_back(AVPacket*);
-
-    std::vector<AVFrame*> decode_next();
+    inline void push_back(AVPacket* packet) {
+      this->packet_queue.push_back(packet);
+    }
 
     ~StreamDecoder();
 };

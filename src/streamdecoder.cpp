@@ -84,7 +84,8 @@ std::vector<AVFrame*> StreamDecoder::decode_next() {
       decoding_error_thrown = true;
       if (i >= ALLOWED_FAILURES) {
         throw std::runtime_error(fmt::format("[{}] Could not decode next {} "
-        "packet: {}", FUNCDINFO, av_get_media_type_string(this->media_type), e.what()));
+        "packet: \n\t{}", FUNCDINFO, av_get_media_type_string(this->media_type),
+         e.what()));
       }
     }
 
@@ -105,10 +106,4 @@ StreamDecoder::~StreamDecoder() {
   }
 };
 
-bool StreamDecoder::has_packets() {
-  return !this->packet_queue.empty();
-}
 
-void StreamDecoder::push_back(AVPacket* packet) {
-  this->packet_queue.push_back(packet);
-}

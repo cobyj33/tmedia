@@ -124,13 +124,23 @@ class MediaFetcher {
 
 
     /**
-     * @brief Returns the current timestamp of the video in seconds since the beginning of playback. This takes into account pausing, skipping, etc... and calculates the time according to the current system time given.
+     * Returns the current timestamp of the video in seconds since the
+     * beginning of playback. This takes into account pausing,
+     * skipping, etc... and calculates the time according to the
+     * current system time given.
      * 
+     * Not thread-safe, lock alter_mutex first
      * 
      * @return The current time of playback since 0:00 in seconds
      */
-    double get_time(double currsystime) const; // Not thread-safe, lock alter_mutex first
-    double get_desync_time(double currsystime) const; // Not thread-safe, lock alter_mutex first
+    inline double get_time(double currsystime) const {
+      return this->clock.get_time(currsystime);
+    }
+
+    /**
+     * Not thread-safe, lock alter_mutex first
+    */
+    double get_desync_time(double currsystime) const;
 
     /**
      * @brief Moves the MediaFetcher's playback to a certain time (including video and audio streams)
