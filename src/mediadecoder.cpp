@@ -8,6 +8,7 @@
 #include "ffmpeg_error.h"
 #include "optim.h"
 
+#include <mutex>
 #include <string>
 #include <vector>
 #include <set>
@@ -17,6 +18,7 @@
 #include <filesystem>
 
 #include <fmt/format.h>
+#include <cassert>
 
 extern "C" {
   #include <libavutil/avutil.h>
@@ -45,15 +47,8 @@ MediaDecoder::~MediaDecoder() {
   avformat_close_input(&(this->fmt_ctx));
 }
 
-
-
 std::vector<AVFrame*> MediaDecoder::next_frames(enum AVMediaType media_type) {
-  if (!this->has_stream_decoder(media_type)) {
-    throw std::runtime_error(fmt::format("[{0}] Cannot get next {1} frames, "
-    "as no {1} stream is available to decode from",
-    FUNCDINFO, av_get_media_type_string(media_type)));
-  }
-
+  assert(this->has_stream_decoder(media_type));
   constexpr int NO_FETCH_MADE = -1;
 
   StreamDecoder& stream_decoder = *(this->decs[media_type]);
@@ -80,7 +75,6 @@ int MediaDecoder::fetch_next(int requested_packet_count) {
   }
 
   while (av_read_frame(this->fmt_ctx, reading_packet) == 0) {
-     
     for (auto &dec_entry : this->decs) {
       if (dec_entry.second->get_stream_index() == reading_packet->stream_index) {
         AVPacket* saved_packet = av_packet_alloc();
@@ -113,13 +107,7 @@ int MediaDecoder::fetch_next(int requested_packet_count) {
 }
 
 int MediaDecoder::jump_to_time(double target_time) {
-  if (target_time < 0.0 || target_time > this->get_duration()) {
-    throw std::runtime_error(fmt::format("[{}]Could not jump to time {} ({} "
-    "seconds), time is out of the bounds of duration {} ({} seconds)",
-    FUNCDINFO, format_time_hh_mm_ss(target_time), target_time,
-    format_time_hh_mm_ss(this->get_duration()), this->get_duration()));
-  }
-
+  assert(target_time >= 0.0 && target_time <= this->get_duration());
   int ret = avformat_seek_file(this->fmt_ctx, -1, 0.0,
     target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
 

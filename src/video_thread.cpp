@@ -84,12 +84,8 @@ void MediaFetcher::frame_video_fetching_func() {
   MAX_FRAME_HEIGHT);
 
   const double avg_fts = this->mdec->get_avgfts(AVMEDIA_TYPE_VIDEO);
-  VideoConverter vconv(def_outdim.width,
-  def_outdim.height,
-  AV_PIX_FMT_RGB24,
-  this->mdec->get_width(),
-  this->mdec->get_height(),
-  this->mdec->get_pix_fmt());
+  VideoConverter vconv(def_outdim.width, def_outdim.height, AV_PIX_FMT_RGB24,
+  this->mdec->get_width(), this->mdec->get_height(), this->mdec->get_pix_fmt());
 
   while (!this->should_exit()) {
     {
@@ -105,14 +101,12 @@ void MediaFetcher::frame_video_fetching_func() {
         Dim2 req_dims_bounded = bound_dims(
         this->mdec->get_width() * PAR_HEIGHT,
         this->mdec->get_height() * PAR_WIDTH,
-        this->req_dims->width,
-        this->req_dims->height);
+        this->req_dims->width, this->req_dims->height);
 
         Dim2 out_dim = bound_dims(
         req_dims_bounded.width,
         req_dims_bounded.height,
-        MAX_FRAME_WIDTH,
-        MAX_FRAME_HEIGHT);
+        MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
         
         vconv.reset_dst_size(out_dim.width, out_dim.height);
       }
@@ -123,9 +117,9 @@ void MediaFetcher::frame_video_fetching_func() {
     double current_time = 0.0;
 
     {
-      std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
-      current_time = this->get_time(sys_clk_sec());
+      std::scoped_lock<std::mutex, std::mutex> lock(this->dec_mtx, this->alter_mutex);
       dec_frames = this->mdec->next_frames(AVMEDIA_TYPE_VIDEO);
+      current_time = this->get_time(sys_clk_sec());
     }
 
     if (dec_frames.size() > 0) {
@@ -174,7 +168,7 @@ void MediaFetcher::frame_image_fetching_func() {
   std::vector<AVFrame*> dec_frames;
 
   {
-    std::lock_guard<std::mutex> mutex_lock(this->alter_mutex);
+    std::lock_guard<std::mutex> dec_lock(this->dec_mtx);
     dec_frames = this->mdec->next_frames(AVMEDIA_TYPE_VIDEO);
   }
 

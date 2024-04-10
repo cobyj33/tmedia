@@ -76,6 +76,7 @@ class MediaFetcher {
     PixelData frame;
 
     std::mutex alter_mutex;
+    std::mutex dec_mtx;
     std::optional<Dim2> req_dims;
 
     MediaFetcher(std::filesystem::path path);

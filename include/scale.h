@@ -15,8 +15,11 @@
 struct Dim2 {
   int width;
   int height;
-  Dim2(int width, int height) : width(width), height(height) {}
   Dim2() : width(0), height(0) {}
+  Dim2(int width, int height) : width(width), height(height) {}
+  Dim2(const Dim2& o) : width(o.width), height(o.height) {}
+  Dim2(Dim2&& o) : width(o.width), height(o.height) {}
+  void operator=(Dim2&& o) { this->width = o.width; this->height = o.height; }
 };
 
 /**

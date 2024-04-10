@@ -40,6 +40,10 @@ class VideoConverter {
     inline int get_dst_height() { return this->m_dst_height; }
     inline enum AVPixelFormat get_dst_pix_fmt() { return this->m_dst_pix_fmt; }
 
+    /**
+     * No-op if the current dst_width and dst_height equal to the passed in
+     * dst_width and dst_height
+    */
     void reset_dst_size(int dst_width, int dst_height);
 
     ~VideoConverter();

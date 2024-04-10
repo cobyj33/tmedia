@@ -17,6 +17,8 @@
 
 #include <fmt/format.h>
 
+#include <cassert>
+
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
@@ -90,15 +92,10 @@ double MediaFetcher::get_desync_time(double currsystime) const {
 }
 
 /**
- * For threadsafety, both alter_mutex must be locked
+ * For threadsafety, both alter_mutex and dec_mtx must be locked
 */
 int MediaFetcher::jump_to_time(double target_time, double currsystime) {
-  if (target_time < 0.0 || target_time > this->get_duration()) {
-    throw std::runtime_error(fmt::format("[{}] Could not jump to time {} ({} "
-    "seconds). Time is out of the bounds of duration {} ( {} seconds )",
-    FUNCDINFO, format_time_hh_mm_ss(target_time), target_time,
-    format_time_hh_mm_ss(this->get_duration()), this->get_duration()));
-  }
+  assert(target_time >= 0.0 && target_time <= this->get_duration());
 
   const double original_time = this->get_time(currsystime);
   int ret = this->mdec->jump_to_time(target_time);

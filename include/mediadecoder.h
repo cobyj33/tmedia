@@ -10,6 +10,7 @@
 #include <string>
 #include <set>
 #include <filesystem>
+#include <mutex>
 
 extern "C" {
   #include <libavutil/avutil.h>
@@ -28,6 +29,7 @@ class MediaDecoder {
     std::map<enum AVMediaType, std::unique_ptr<StreamDecoder>> decs;
     MediaType media_type;
 
+    std::mutex fmt_ctx_mutex; // currently unused
     int fetch_next(int requested_packet_count);
   public:
 

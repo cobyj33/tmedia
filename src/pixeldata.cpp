@@ -21,6 +21,8 @@
 #include <utility>
 #include <memory>
 
+#include <cassert>
+
 #include <fmt/format.h>
 
 extern "C" {
@@ -29,7 +31,7 @@ extern "C" {
 
 // Accepts empty matrices
 template <typename T>
-bool is_rectangular_vector_matrix(const std::vector<std::vector<T>>& vector_2d) {
+bool is_rect_vec_mat(const std::vector<std::vector<T>>& vector_2d) {
   if (vector_2d.size() == 0)
     return true;
 
@@ -41,70 +43,86 @@ bool is_rectangular_vector_matrix(const std::vector<std::vector<T>>& vector_2d) 
   return true;
 }
 
-template <typename T>
-void PixelData::init_from_source(int width, int height, T&& fill) {
+// remember to allocate this->pixels before calling init_from_avframe
+void PixelData::init_from_avframe(AVFrame* video_frame) {
   this->pixels->clear();
-  this->pixels->reserve(width * height);
-  this->m_width = width;
-  this->m_height = height;
+  this->pixels->reserve(video_frame->width * video_frame->height);
+  this->m_width = video_frame->width;
+  this->m_height = video_frame->height;
+  const uint8_t* const data = video_frame->data[0];
 
-  for (int row = 0; row < height; row++) {
-    for (int col = 0; col < width; col++) {
-      this->pixels->push_back(fill(row, col));
-    }
+  switch (static_cast<AVPixelFormat>(video_frame->format)) {
+    case AV_PIX_FMT_GRAY8: {
+      const int datalen = this->m_width * this->m_height;
+      for (int i = 0; i < datalen; i++) {
+        (*this->pixels)[i] = RGB24(data[i]);
+      }
+    } break;
+    case AV_PIX_FMT_RGB24: {
+      const int area = this->m_width * this->m_height;
+      int di = 0;
+      for (int i = 0; i < area; i++) {
+        (*this->pixels)[i] = RGB24(data[di], data[di + 1], data[di + 2]);
+        di += 3;
+      }
+    } break;
+    default: throw std::runtime_error(fmt::format("[{}] Passed in AVFrame "
+    "with unimplemeted format, only supported formats for initializing from "
+    "AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24", FUNCDINFO));
   }
 }
 
-void PixelData::init_from_avframe(AVFrame* video_frame) {
-  this->init_from_source(video_frame->width, video_frame->height,
-  [video_frame](int row, int col) {
-    switch ((AVPixelFormat)video_frame->format) {
-      case AV_PIX_FMT_GRAY8: return RGB24(video_frame->data[0][row * video_frame->width + col]);
-      case AV_PIX_FMT_RGB24: return RGB24( video_frame->data[0][row * video_frame->width * 3 + col * 3],
-      video_frame->data[0][row * video_frame->width * 3 + col * 3 + 1],
-      video_frame->data[0][row * video_frame->width * 3 + col * 3 + 2] );
-      default: throw std::runtime_error(fmt::format("[{}] Passed in AVFrame "
-      "with unimplemeted format, only supported formats for initializing from "
-      "AVFrame are AV_PIX_FMT_GRAY8 and AV_PIX_FMT_RGB24", FUNCDINFO));
-    }
-  });
-}
-
-PixelData::PixelData(const std::vector<std::vector<RGB24>>& raw_rgb_data) {
-  if (!is_rectangular_vector_matrix(raw_rgb_data)) {
+PixelData::PixelData(const std::vector<std::vector<RGB24>>& rgbm) {
+  if (!is_rect_vec_mat(rgbm)) {
     throw std::runtime_error(fmt::format("[{}] Cannot initialize pixel data "
                                     "with non-rectangular matrix", FUNCDINFO));
   }
 
   this->pixels = std::make_shared<std::vector<RGB24>>();
-  this->m_height = raw_rgb_data.size();
-  this->m_width = 0;
-  if (raw_rgb_data.size() > 0) {
-    this->init_from_source((int)raw_rgb_data[0].size(), (int)raw_rgb_data.size(), [raw_rgb_data](int row, int col) { return raw_rgb_data[row][col]; });
+  this->m_height = rgbm.size();
+  this->m_width = rgbm.size() > 0 ? rgbm[0].size() : 0;
+  this->pixels->reserve(this->m_height * this->m_width);
+
+  for (int row = 0; row < this->m_height; row++) {
+    for (int col = 0; col < this->m_width; col++) {
+      (*this->pixels)[row * this->m_width + col] = rgbm[row][col];
+    }
   }
 }
 
-PixelData::PixelData(const std::vector<std::vector<uint8_t> >& raw_grayscale_data) {
-  if (!is_rectangular_vector_matrix(raw_grayscale_data)) {
+PixelData::PixelData(const std::vector<std::vector<uint8_t> >& graym) {
+  if (!is_rect_vec_mat(graym)) {
     throw std::runtime_error(fmt::format("[{}]Cannot initialize pixel data "
                                     "with non-rectangular matrix", FUNCDINFO));
   }
+
   this->pixels = std::make_shared<std::vector<RGB24>>();
-  this->m_height = raw_grayscale_data.size();
-  this->m_width = 0;
-  if (raw_grayscale_data.size() > 0) {
-    this->init_from_source(raw_grayscale_data[0].size(), raw_grayscale_data.size(), [raw_grayscale_data](int row, int col) { return RGB24(raw_grayscale_data[row][col]);  });
+  this->m_height = graym.size();
+  this->m_width = graym.size() > 0 ? graym[0].size() : 0;
+  this->pixels->reserve(this->m_height * this->m_width);
+
+  for (int row = 0; row < this->m_height; row++) {
+    for (int col = 0; col < this->m_width; col++) {
+      (*this->pixels)[row * this->m_width + col] = RGB24(graym[row][col]);
+    }
   }
 }
 
-PixelData::PixelData(const std::vector<RGB24>& flat_rgb, int width, int height) {
-  if (std::size_t(width * height) != flat_rgb.size()) 
+PixelData::PixelData(const std::vector<RGB24>& flatrgb, int width, int height) {
+  if (std::size_t(width * height) != flatrgb.size()) 
     throw std::runtime_error(fmt::format("[{}] Cannot initialize PixelData "
     "with innacurate flattened rgb vector: size = {}, given width: {}, "
-    "given height: {}", FUNCDINFO, flat_rgb.size(), width, height));
+    "given height: {}", FUNCDINFO, flatrgb.size(), width, height));
 
   this->pixels = std::make_shared<std::vector<RGB24>>();
-  this->init_from_source(width, height, [flat_rgb, width](int row, int col) { return flat_rgb[row * width + col]; } );
+  this->pixels->reserve(width * height);
+  this->m_width = width;
+  this->m_height = height;
+  const int area = width * height; 
+
+  for (int i = 0; i < area; i++) {
+    (*this->pixels)[i] = flatrgb[i];
+  }
 }
 
 PixelData::PixelData(std::shared_ptr<std::vector<RGB24>> colors, int width, int height) {
@@ -217,27 +235,26 @@ bool PixelData::equals(const PixelData& pix_data) const {
 }
 
 
-
-RGB24 get_avg_color_from_area(const PixelData& pixel_data, double row, double col, double width, double height) {
-  return get_avg_color_from_area(pixel_data, static_cast<int>(std::floor(row)),
-        static_cast<int>(std::floor(col)), static_cast<int>(std::ceil(width)), static_cast<int>(std::ceil(height)));
-}
-
 RGB24 get_avg_color_from_area(const PixelData& pixel_data, int row, int col, int width, int height) {
-  if (width * height <= 0) {
-    throw std::runtime_error(fmt::format("[{}] Cannot get average color from "
-    "an area with dimensions: ( width: {} height: {} ). Dimensions must be "
-    "positive", FUNCDINFO, width, height));
-  }
+  assert(width * height > 0);
+  assert(row >= 0);
+  assert(col >= 0);
 
-  std::vector<RGB24> colors;
-  for (int curr_row = row; curr_row < row + height; curr_row++) {
-    for (int curr_col = col; curr_col < col + width; curr_col++) {
-      if (pixel_data.in_bounds(curr_row, curr_col)) {
-        colors.push_back(pixel_data.at(curr_row, curr_col));
-      }
+  const int rowmax = std::min(pixel_data.get_height(), row + height);
+  const int colmax = std::min(pixel_data.get_width(), col + width);
+  int sums[3] = {0, 0, 0};
+  int colors = 0;
+
+  for (int curr_row = row; curr_row < rowmax; curr_row++) {
+    for (int curr_col = col; curr_col < colmax; curr_col++) {
+      RGB24 color = pixel_data.at(curr_row, curr_col);
+      sums[0] += color.r;
+      sums[1] += color.g;
+      sums[2] += color.b;
+      colors++;
     }
   }
 
-  return get_average_color(colors);
+  colors = (colors == 0) ? 1 : colors;
+  return RGB24((sums[0]/colors) & 0xFF, (sums[1]/colors) & 0xFF, (sums[2]/colors) & 0xFF);
 }

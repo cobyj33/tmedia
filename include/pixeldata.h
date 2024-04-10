@@ -48,8 +48,6 @@ class PixelData {
     int m_width;
     int m_height;
 
-    template <typename T>
-    void init_from_source(int width, int height, T&& fill);
     void init_from_avframe(AVFrame* video_frame);
   public:
 
@@ -87,9 +85,17 @@ class PixelData {
     inline const RGB24& at(int row, int col) const {
       return (*this->pixels)[row * this->m_width + col];
     }
+
+    inline const std::vector<RGB24>& data() const {
+      return (*this->pixels);
+    }
 };
 
 RGB24 get_avg_color_from_area(const PixelData& data, int row, int col, int width, int height);
-RGB24 get_avg_color_from_area(const PixelData& data, double row, double col, double width, double height);
+
+inline RGB24 get_avg_color_from_area(const PixelData& pixel_data, double row, double col, double width, double height) {
+  return get_avg_color_from_area(pixel_data, static_cast<int>(std::floor(row)),
+        static_cast<int>(std::floor(col)), static_cast<int>(std::ceil(width)), static_cast<int>(std::ceil(height)));
+}
 
 #endif

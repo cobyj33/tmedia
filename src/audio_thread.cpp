@@ -42,7 +42,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
       std::vector<AVFrame*> next_raw_audio_frames;
 
       {
-        std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
+        std::lock_guard<std::mutex> dec_lock(this->dec_mtx);
         next_raw_audio_frames = this->mdec->next_frames(AVMEDIA_TYPE_AUDIO);
       }
 

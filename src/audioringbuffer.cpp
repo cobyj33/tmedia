@@ -10,6 +10,7 @@
 #include <system_error>
 #include <cstddef>
 
+#include <cassert>
 
 /**
  * Implementation details:
@@ -56,12 +57,7 @@ bool AudioRingBuffer::is_time_in_bounds(double playback_time) {
 }
 
 void AudioRingBuffer::set_time_in_bounds(double playback_time) {
-  if (!is_time_in_bounds(playback_time)) {
-    throw std::runtime_error(fmt::format("[{}] Attempted to set audio ring "
-    "buffer to out of bounds time {} ( start: {}, end: {} ).", FUNCDINFO, 
-    playback_time, this->get_buffer_current_time(),
-    this->get_buffer_end_time()));
-  }
+  assert(is_time_in_bounds(playback_time));
 
   const double time_offset = playback_time - this->get_buffer_current_time();
   const int frame_offset = this->m_sample_rate * time_offset;
@@ -81,11 +77,7 @@ int AudioRingBuffer::get_frames_can_write() {
 }
 
 void AudioRingBuffer::read_into(int nb_frames, float* out) {
-  if (this->get_frames_can_read() < nb_frames) {
-    throw std::runtime_error(fmt::format("[{}] Cannot read {} frames ( size: "
-    "{}, can read: {})", FUNCDINFO, nb_frames, this->m_size_frames, 
-    this->get_frames_can_read()));
-  }
+  assert(this->get_frames_can_read() >= nb_frames);
 
   for (int i = 0; i < nb_frames * this->m_nb_channels; i++) {
     out[i] = this->rb[this->m_head];
@@ -96,11 +88,7 @@ void AudioRingBuffer::read_into(int nb_frames, float* out) {
 }
 
 void AudioRingBuffer::peek_into(int nb_frames, float* out) {
-  if (this->get_frames_can_read() < nb_frames) {
-    throw std::runtime_error(fmt::format("[{}] Cannot read {} frames ( size: "
-    "{}, can read: {})", FUNCDINFO, nb_frames, this->m_size_frames, 
-    this->get_frames_can_read()));
-  }
+  assert(this->get_frames_can_read() >= nb_frames);
 
   int original_head = this->m_head;
   this->read_into(nb_frames, out);
@@ -120,11 +108,7 @@ std::vector<float> AudioRingBuffer::peek_into(int nb_frames) {
 }
 
 void AudioRingBuffer::write_into(int nb_frames, float* in) {
-  if (this->get_frames_can_write() < nb_frames) {
-    throw std::runtime_error(fmt::format("[{}] Cannot write {} frames ( size: "
-    "{}, can write: {})", FUNCDINFO, nb_frames, this->m_size_frames, 
-    this->get_frames_can_write()));
-  }
+  assert(this->get_frames_can_write() >= nb_frames);
 
   for (int i = 0; i < nb_frames * this->m_nb_channels; i++) {
     this->rb[this->m_tail] = in[i];

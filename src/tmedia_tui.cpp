@@ -20,7 +20,7 @@ static constexpr int MIN_RENDER_LINES = 2;
 const char* loop_type_cstr_short(LoopType loop_type);
 std::string get_media_file_display_name(const std::string& abs_path, MetadataCache& mchc);
 
-void TMediaCursesRenderer::render(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
+void TMediaCursesRenderer::render(TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
   if (snapshot.frame.get_width() != this->last_frame_dims.width || snapshot.frame.get_height() != this->last_frame_dims.height) {
     erase();
   }
@@ -38,13 +38,15 @@ void TMediaCursesRenderer::render(const TMediaProgramState& tmps, const TMediaPr
   this->last_frame_dims = Dim2(snapshot.frame.get_width(), snapshot.frame.get_height());
 }
 
-void TMediaCursesRenderer::render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
+void TMediaCursesRenderer::render_tui_fullscreen(TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
   render_pixel_data(snapshot.frame, 0, 0, COLS, LINES, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+  tmps.req_frame_dim = Dim2(COLS, LINES);
 }
 
-void TMediaCursesRenderer::render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
+void TMediaCursesRenderer::render_tui_compact(TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
   static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
   render_pixel_data(snapshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+  tmps.req_frame_dim = Dim2(COLS, LINES - 4);
 
   wfill_box(stdscr, 1, 0, COLS, 1, '~');
   werasebox(stdscr, 0, 0, COLS, 1);
@@ -86,10 +88,11 @@ void TMediaCursesRenderer::render_tui_compact(const TMediaProgramState& tmps, co
 
 }
 
-void TMediaCursesRenderer::render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
+void TMediaCursesRenderer::render_tui_large(TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) {
   static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
   render_pixel_data(snapshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
-
+  tmps.req_frame_dim = Dim2(COLS, LINES - 4);
+  
   werasebox(stdscr, 0, 0, COLS, 2);
   const std::string current_playlist_index_str = fmt::format("({}/{})", tmps.playlist.index() + 1, tmps.playlist.size());
   const std::string current_playlist_media_str = get_media_file_display_name(tmps.playlist.current(), this->metadata_cache);
@@ -146,7 +149,7 @@ const char* loop_type_cstr_short(LoopType loop_type) {
     case LoopType::REPEAT: return "R";
     case LoopType::REPEAT_ONE: return "RO";
   }
-  throw std::runtime_error(fmt::format("[{}] Could not identify loop_type", FUNCDINFO));
+  return "UNK";
 }
 
 std::string get_media_file_display_name(const std::string& abs_path, MetadataCache& mchc) {

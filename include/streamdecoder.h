@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <deque>
+#include <mutex>
 
 extern "C" {
   #include <libavcodec/avcodec.h>
@@ -32,6 +33,7 @@ class StreamDecoder {
     const AVCodec* decoder;
     AVCodecContext* codec_context;
     std::deque<AVPacket*> packet_queue;
+    std::mutex queue_mutex; // currently unused
 
   public:
     StreamDecoder(AVFormatContext* fmt_ctx, enum AVMediaType media_type);

@@ -84,6 +84,7 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState& tmss) {
   tmps.volume = tmss.volume;
   tmps.vom = tmss.vom;
   tmps.quit = false;
+  tmps.req_frame_dim = Dim2(100, 100);
   return tmps;
 }
 
@@ -101,10 +102,12 @@ int tmedia_run(TMediaStartupState& tmss) {
 
 int tmedia_main_loop(TMediaProgramState tmps) {
   TMediaCursesRenderer renderer;
+  tmps.req_frame_dim = Dim2(COLS, LINES);
 
   while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.playlist.size() > 0) {
     PlaylistMvCmd current_move_cmd = PlaylistMvCmd::NEXT;
     std::unique_ptr<MediaFetcher> fetcher;
+    std::string currently_playing = tmps.playlist.current();
     std::string cmd_buf; // currently unused
 
     try { 
@@ -115,6 +118,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
       tmps.playlist.move(current_move_cmd);
       continue;
     }
+
 
     fetcher->req_dims = Dim2(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
     std::unique_ptr<MAAudioOut> audio_output;
@@ -143,11 +147,12 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
         {
           static constexpr double MAX_AUDIO_DESYNC_SECS = 0.6;  
-          std::lock_guard<std::mutex> _alter_lock(fetcher->alter_mutex);
+          std::lock_guard<std::mutex> lock(fetcher->alter_mutex);
           curr_systime = sys_clk_sec(); // set in here, since locking the mutex could take an undetermined amount of time
           curr_medtime = fetcher->get_time(curr_systime);
           req_jumptime = curr_medtime;
           frame = fetcher->frame;
+          fetcher->req_dims = tmps.req_frame_dim;
           req_jump = fetcher->get_desync_time(curr_systime) > MAX_AUDIO_DESYNC_SECS;
         }
 
@@ -310,13 +315,14 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         if (req_jump) {
           if (audio_output && fetcher->is_playing()) audio_output->stop();
           {
-            std::scoped_lock<std::mutex> total_lock{fetcher->alter_mutex};
+            std::scoped_lock<std::mutex, std::mutex> total_lock{fetcher->alter_mutex, fetcher->dec_mtx};
             fetcher->jump_to_time(clamp(req_jumptime, 0.0, fetcher->get_duration()), sys_clk_sec());
           }
           if (audio_output && fetcher->is_playing()) audio_output->start();
         }
 
         TMediaProgramSnapshot snapshot;
+        snapshot.currently_playing = currently_playing;
         snapshot.frame = frame;
         snapshot.playing = fetcher->media_type != MediaType::IMAGE ? fetcher->is_playing() : false;
         snapshot.has_audio_output = audio_output ? true : false;

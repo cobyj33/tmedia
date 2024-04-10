@@ -54,9 +54,11 @@ struct TMediaProgramState {
   ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
   VidOutMode vom = VidOutMode::PLAIN;
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
+  Dim2 req_frame_dim = Dim2(1, 1);
 };
 
 struct TMediaProgramSnapshot {
+  std::string currently_playing;
   PixelData frame;
   MediaType media_type;
   bool playing;
@@ -107,19 +109,19 @@ class TMediaCommandHandler {
 
 class TMediaRenderer {
   public:
-    virtual void render(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) = 0;
+    virtual void render(TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot) = 0;
 };
 
 class TMediaCursesRenderer : public TMediaRenderer {
   private:
     MetadataCache metadata_cache;
     Dim2 last_frame_dims;
-    void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
-    void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
-    void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
+    void render_tui_fullscreen(TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
+    void render_tui_compact(TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
+    void render_tui_large(TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
   
   public:
-    void render(const TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
+    void render(TMediaProgramState& tmps, const TMediaProgramSnapshot& snapshot);
 };
 
 class TMediaCursesCommandHandler : public TMediaCommandHandler {

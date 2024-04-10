@@ -43,8 +43,8 @@ int Playlist::index() const {
     "index of empty playlist", FUNCDINFO));
   }
 
+  assert(this->m_qi >= 0);
   assert(this->m_qi < this->m_q.size());
-  assert(this->m_qi > 0);
   
   return this->m_q[this->m_qi];
 }
