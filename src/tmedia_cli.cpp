@@ -164,6 +164,7 @@ extern "C" {
   void cli_arg_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ffmpeg_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_curses_version(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_lib_versions(CLIParseState& ps, const tmedia::CLIArg arg);
 
   void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_chars(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -220,6 +221,10 @@ extern "C" {
       {"version", cli_arg_version},
       {"ffmpeg-version", cli_arg_ffmpeg_version},
       {"curses-version", cli_arg_curses_version},
+      {"dep-version", cli_arg_lib_versions},
+      {"dep-versions", cli_arg_lib_versions},
+      {"lib-version", cli_arg_lib_versions},
+      {"lib-versions", cli_arg_lib_versions},
     };
 
     static const ArgParseMap short_global_argparse_map{
@@ -359,7 +364,7 @@ extern "C" {
     (void)ps; (void)arg;
   }
 
-  void cli_arg_ffmpeg_version(CLIParseState& ps, const tmedia::CLIArg arg) {
+  void print_ffmpeg_version() {
     std::cout << "libavformat: " << LIBAVFORMAT_VERSION_MAJOR << ":" <<
                                  LIBAVFORMAT_VERSION_MINOR << ":" <<
                                  LIBAVFORMAT_VERSION_MICRO << std::endl;
@@ -375,11 +380,25 @@ extern "C" {
     std::cout << "libswscale: " << LIBSWSCALE_VERSION_MAJOR << ":" <<
                                  LIBSWSCALE_VERSION_MINOR << ":" <<
                                  LIBSWSCALE_VERSION_MICRO << std::endl;
+  }
+
+  void print_curses_version() {
+    std::cout << curses_version() << std::endl;
+  }
+
+  void cli_arg_ffmpeg_version(CLIParseState& ps, const tmedia::CLIArg arg) {
+    print_ffmpeg_version();
     (void)ps; (void)arg;
   }
 
   void cli_arg_curses_version(CLIParseState& ps, const tmedia::CLIArg arg) {
-    std::cout << curses_version() << std::endl;
+    print_curses_version();
+    (void)ps; (void)arg;
+  }
+
+  void cli_arg_lib_versions(CLIParseState& ps, const tmedia::CLIArg arg) {
+    print_curses_version();
+    print_ffmpeg_version();
     (void)ps; (void)arg;
   }
 
