@@ -79,8 +79,8 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState& tmss) {
   tmps.ascii_display_chars = tmss.ascii_display_chars;
   tmps.fullscreen = tmss.fullscreen;
   tmps.muted = false;
-  tmps.playlist = Playlist(tmss.media_files, tmss.loop_type);
-  if (tmss.shuffled) tmps.playlist.shuffle(false);
+  tmps.plist = Playlist(tmss.media_files, tmss.loop_type);
+  if (tmss.shuffled) tmps.plist.shuffle(false);
   tmps.refresh_rate_fps = tmss.refresh_rate_fps;
   tmps.scaling_algorithm = tmss.scaling_algorithm;
   tmps.volume = tmss.volume;
@@ -106,18 +106,18 @@ int tmedia_main_loop(TMediaProgramState tmps) {
   TMediaCursesRenderer renderer;
   tmps.req_frame_dim = Dim2(COLS, LINES);
 
-  while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.playlist.size() > 0) {
-    PlaylistMvCmd current_move_cmd = PlaylistMvCmd::NEXT;
+  while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.plist.size() > 0) {
+    PlaylistMvCmd move_cmd = PlaylistMvCmd::NEXT;
     std::unique_ptr<MediaFetcher> fetcher;
-    std::string currently_playing = tmps.playlist.current();
+    std::string currently_playing = tmps.plist.current();
     std::string cmd_buf; // currently unused
 
     try { 
-      fetcher = std::make_unique<MediaFetcher>(tmps.playlist.current());
+      fetcher = std::make_unique<MediaFetcher>(tmps.plist.current());
     } catch (const std::runtime_error& err) {
-      tmps.playlist.remove(tmps.playlist.index());
-      if (!tmps.playlist.can_move(current_move_cmd)) break;
-      tmps.playlist.move(current_move_cmd);
+      tmps.plist.remove(tmps.plist.index());
+      if (!tmps.plist.can_move(move_cmd)) break;
+      tmps.plist.move(move_cmd);
       continue;
     }
 
@@ -219,12 +219,12 @@ int tmedia_main_loop(TMediaProgramState tmps) {
             } break;
             case 'n':
             case 'N': {
-              current_move_cmd = PlaylistMvCmd::SKIP;
+              move_cmd = PlaylistMvCmd::SKIP;
               fetcher->dispatch_exit();
             } break;
             case 'p':
             case 'P': {
-              current_move_cmd = PlaylistMvCmd::REWIND;
+              move_cmd = PlaylistMvCmd::REWIND;
               fetcher->dispatch_exit();
             } break;
             case 'f':
@@ -254,19 +254,19 @@ int tmedia_main_loop(TMediaProgramState tmps) {
             case 'l':
             case 'L': {
               if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
-                switch (tmps.playlist.loop_type()) {
-                  case LoopType::NO_LOOP: tmps.playlist.set_loop_type(LoopType::REPEAT); break;
-                  case LoopType::REPEAT: tmps.playlist.set_loop_type(LoopType::REPEAT_ONE); break;
-                  case LoopType::REPEAT_ONE: tmps.playlist.set_loop_type(LoopType::NO_LOOP); break;
+                switch (tmps.plist.loop_type()) {
+                  case LoopType::NO_LOOP: tmps.plist.set_loop_type(LoopType::REPEAT); break;
+                  case LoopType::REPEAT: tmps.plist.set_loop_type(LoopType::REPEAT_ONE); break;
+                  case LoopType::REPEAT_ONE: tmps.plist.set_loop_type(LoopType::NO_LOOP); break;
                 } 
               }
             } break;
             case 's':
             case 'S': {
-              if (!tmps.playlist.shuffled()) {
-                tmps.playlist.shuffle(true);
+              if (!tmps.plist.shuffled()) {
+                tmps.plist.shuffle(true);
               } else {
-                tmps.playlist.unshuffle();
+                tmps.plist.unshuffle();
               }
             } break;
             case ' ': {
@@ -353,8 +353,8 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     //flush getch
     while (getch() != ERR) getch(); 
     erase();
-    if (!tmps.playlist.can_move(current_move_cmd)) break;
-    tmps.playlist.move(current_move_cmd);
+    if (!tmps.plist.can_move(move_cmd)) break;
+    tmps.plist.move(move_cmd);
   }
 
   return EXIT_SUCCESS;

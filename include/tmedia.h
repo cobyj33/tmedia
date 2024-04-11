@@ -45,7 +45,7 @@ struct TMediaCLIParseRes {
 TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv);
 
 struct TMediaProgramState {
-  Playlist playlist;
+  Playlist plist;
   double volume = 1.0;
   bool muted = false;
   bool quit = false;
