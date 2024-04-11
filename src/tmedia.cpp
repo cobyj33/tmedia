@@ -49,7 +49,8 @@ static constexpr int MIN_RENDER_LINES = 2;
 void set_global_vom(VidOutMode* current, VidOutMode next);
 void init_global_video_output_mode(VidOutMode mode);
 
-const char* TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
+const char* TMEDIA_CONTROLS_USAGE = ""
+  "---------------------------------CONTROLS---------------------------------\n"
   "Labels for this document: \n"
   "  (OST) - On Supported Terminals\n"
   "\n"
@@ -70,7 +71,8 @@ const char* TMEDIA_CONTROLS_USAGE = "-------CONTROLS-----------\n"
   "- 'B' - Display no Characters (OST) (in Color or Gray mode)\n"
   "- 'N' - Skip to Next Media File\n"
   "- 'P' - Rewind to Previous Media File\n"
-  "- 'R' - Fully Refresh the Screen\n";
+  "- 'R' - Fully Refresh the Screen\n"
+  "---------------------------------------------------------------------------";
 
 TMediaProgramState tmss_to_tmps(TMediaStartupState& tmss) {
   TMediaProgramState tmps;

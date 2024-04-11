@@ -16,7 +16,7 @@
 #include <filesystem>
 
 extern const char* TMEDIA_CONTROLS_USAGE;
-
+extern const char* TMEDIA_CLI_OPTIONS_DESC;
 
 struct TMediaStartupState {
   std::vector<std::filesystem::path> media_files;

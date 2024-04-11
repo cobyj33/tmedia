@@ -38,31 +38,8 @@ extern "C" {
 #undef FALSE
 
 // namespace tmedia {
-
-  const char* help_text = "Usage: tmedia OPTIONS paths\n"
-  "\n"
-  "CONTROLS:\n"
-  "\n"
-  "  Video and Audio Controls\n"
-  "    - Space                   Play and Pause\n"
-  "    - Up Arrow                Increase Volume 1%\n"
-  "    - Down Arrow              Decrease Volume 1%\n"
-  "    - Left Arrow              Skip Backward 5 Seconds\n"
-  "    - Right Arrow             Skip Forward 5 Seconds\n"
-  "    - Esc, Backspace or 'q'   Quit Program\n"
-  "    - '0'                     Restart Playback\n"
-  "    - '1' through '9'         Skip To n/10 of the Media's Duration\n"
-  "    - 'L'                     Switch looping type of playback\n"
-  "    - 'M'                     Mute/Unmute Audio\n"
-  "  Video, Audio, and Image Controls\n"
-  "    - 'C'    Display Color (on supported terminals)\n"
-  "    - 'G'    Display Grayscale (on supported terminals)\n"
-  "    - 'B'    Display Spaces (on supported terms & while colored/grayscale)\n"
-  "    - 'N'    Skip to Next Media File\n"
-  "    - 'P'    Rewind to Previous Media File\n"
-  "    - 'R'    Fully Refresh the Screen\n"
-  "\n"
-  "ARGUMENTS:\n"
+const char* TMEDIA_CLI_OPTIONS_DESC = ""
+  "-------------------------------CLI ARGUMENTS------------------------------\n"
   "\n"
   "  Positional arguments:\n"
   "    paths                  The the paths to files or directories to be\n"
@@ -104,7 +81,8 @@ extern "C" {
   "    :r, :recursive         Recurse child directories of the last listed path \n"
   "    :ignore-images         Ignore image files when searching last listed path\n"
   "    :ignore-video          Ignore video files when searching last listed path\n"
-  "    :ignore-audio          Ignore audio files when searching last listed path\n";
+  "    :ignore-audio          Ignore audio files when searching last listed path\n"
+  "---------------------------------------------------------------------------";
 
   /**
    * The idea of inheritable boolean is that each media item will either have
@@ -161,6 +139,8 @@ extern "C" {
   typedef std::function<void(CLIParseState&, const tmedia::CLIArg arg)> ArgParseFunc;
   typedef std::map<std::string_view, ArgParseFunc, std::less<>> ArgParseMap;
 
+  void print_help_text();
+
   void cli_arg_help(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ffmpeg_version(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -204,7 +184,7 @@ extern "C" {
     ps.tmss.shuffled = false;
 
     if (argc == 1) {
-      std::cout << help_text << std::endl;
+      print_help_text();
       return { ps.tmss, true };
     }
 
@@ -364,8 +344,14 @@ extern "C" {
     return TMediaCLIParseRes(ps.tmss, false);
   }
 
+  void print_help_text() {
+    std::cout << "Usage: tmedia [OPTIONS] paths\n" << std::endl;
+    std::cout << TMEDIA_CONTROLS_USAGE << '\n' << std::endl;
+    std::cout << TMEDIA_CLI_OPTIONS_DESC << std::endl;
+  }
+
   void cli_arg_help(CLIParseState& ps, const tmedia::CLIArg arg) {
-    std::cout << help_text << std::endl;
+    print_help_text();
     (void)ps; (void)arg;
   }
 
