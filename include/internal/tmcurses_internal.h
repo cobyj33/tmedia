@@ -18,6 +18,7 @@ struct ColorPair {
   ColorPair() : fg(RGB24(0)), bg(RGB24(0)) { } 
   ColorPair(const RGB24 fg, const RGB24 bg) : fg(fg), bg(bg) {}
   ColorPair(const ColorPair& cp) : fg(cp.fg), bg(cp.bg) {}
+  ColorPair(ColorPair&& cp) : fg(cp.fg), bg(cp.bg) {}
 };
 
 struct CursesColorPair {
@@ -26,6 +27,7 @@ struct CursesColorPair {
   CursesColorPair() : fg(0), bg(0) { } 
   CursesColorPair(int fg, int bg) : fg(fg), bg(bg) {}
   CursesColorPair(const CursesColorPair& cp) : fg(cp.fg), bg(cp.bg) {}
+  CursesColorPair(CursesColorPair&& cp) : fg(cp.fg), bg(cp.bg) {}
 };
 
 const char* ncurses_color_palette_cstr(TMNCursesColorPalette colorPalette);
