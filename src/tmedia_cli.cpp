@@ -245,7 +245,9 @@ extern "C" {
       {"refresh-rate", cli_arg_refresh_rate},
       {"chars", cli_arg_chars},
       {"color", cli_arg_color},
+      {"colour", cli_arg_color},
       {"colored", cli_arg_color},
+      {"coloured", cli_arg_color},
       {"gray", cli_arg_grayscale},
       {"grey", cli_arg_grayscale},
       {"greyscale", cli_arg_grayscale},
@@ -254,6 +256,7 @@ extern "C" {
       {"mute", cli_arg_mute},
       {"muted", cli_arg_mute},
       {"fullscreen", cli_arg_fullscreen},
+      {"fullscreened", cli_arg_fullscreen},
 
       // path searching opts
       {"ignore-audio", cli_arg_ignore_audio_global},
