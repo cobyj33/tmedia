@@ -146,6 +146,7 @@ extern "C" {
   struct CLIParseState {
     TMediaStartupState tmss;
     std::vector<MediaPath> paths;
+    std::vector<std::string> argerrs;
 
     MediaPathSearchOptions srch_opts;
     bool colored = false;
@@ -333,7 +334,16 @@ extern "C" {
     }
 
     if (ps.paths.size() == 0UL) {
-      throw std::runtime_error(fmt::format("[{}] No paths entered", FUNCDINFO));
+      ps.argerrs.push_back(fmt::format("[{}] No paths entered", FUNCDINFO));
+    }
+
+    if (ps.argerrs.size() > 0) {
+      std::stringstream ss;
+      for (std::size_t i = 0; i < ps.argerrs.size(); i++) {
+        ss << ps.argerrs[i];
+        if (i < ps.argerrs.size() - 1) ss << '\n'; 
+      }
+      throw std::runtime_error(ss.str());
     }
 
     for (const MediaPath& path : ps.paths) {
@@ -448,18 +458,17 @@ extern "C" {
   }
 
   void cli_arg_refresh_rate(CLIParseState& ps, const tmedia::CLIArg arg) {
-    int res = 0;
+    int res = 24;
     
     try {
       res = strtoi32(arg.param);
+      if (res <= 0) {
+        ps.argerrs.push_back(fmt::format("[{}] refresh rate must be greater "
+        "than 0. (got {})", FUNCDINFO, res));
+      }
     } catch (const std::runtime_error& err) {
-      throw std::runtime_error(fmt::format("[{}] Could not parse param {} as "
+      ps.argerrs.push_back(fmt::format("[{}] Could not parse param {} as "
       "integer: \n\t{}", FUNCDINFO, arg.param, err.what()));
-    }
-
-    if (res <= 0) {
-      throw std::runtime_error(fmt::format("[{}] refresh rate must be greater "
-      "than 0. (got {})", FUNCDINFO, res));
     }
 
     ps.tmss.refresh_rate_fps = res;
@@ -474,17 +483,16 @@ extern "C" {
     double volume = 1.0;
     try {
       volume = parse_percentage(arg.param);
+      if (volume >= 0.0 && volume <= 1.0) {
+        ps.tmss.volume = volume;
+      } else {
+        ps.argerrs.push_back(fmt::format("[{}] Volume out of bounds "
+        " [0.0, 1.0] (got {})", FUNCDINFO, volume));
+      }
     } catch (const std::runtime_error& err) {
-      throw std::runtime_error(fmt::format("[{}] Could not parse parameter {} "
+      ps.argerrs.push_back(fmt::format("[{}] Could not parse parameter {} "
       "as a percentage value: \n\t{}", FUNCDINFO, arg.param, err.what()));
     }
-
-    if (volume < 0.0 || volume > 1.0) {
-      throw std::runtime_error(fmt::format("[{}] Volume out of bounds "
-      " [0.0, 1.0] (got {})", FUNCDINFO, volume));
-    }
-
-    ps.tmss.volume = volume;
   }
 
   void cli_arg_ignore_video_global(CLIParseState& ps, const tmedia::CLIArg arg) {
