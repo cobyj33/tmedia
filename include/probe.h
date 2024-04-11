@@ -23,10 +23,9 @@ struct AVProbeFileRet {
   int score = 0;
 };
 
-AVProbeFileRet av_probe_file(std::filesystem::path path);
-
-std::optional<MediaType> media_type_probe(std::filesystem::path path);
-bool probably_valid_media_file_path(std::filesystem::path path);
-bool is_valid_media_file_path(std::filesystem::path path);
+AVProbeFileRet av_probe_file(const std::filesystem::path& path);
+std::optional<MediaType> media_type_probe(const std::filesystem::path& path);
+bool probably_valid_media_file_path(const std::filesystem::path& path);
+bool is_valid_media_file_path(const std::filesystem::path& path);
 
 #endif

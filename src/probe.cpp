@@ -17,7 +17,7 @@ extern "C" {
 }
 
 
-AVProbeFileRet av_probe_file(std::filesystem::path path) {
+AVProbeFileRet av_probe_file(const std::filesystem::path& path) {
   AVProbeFileRet res;
 
   AVIOContext* avio_ctx;
@@ -44,13 +44,13 @@ AVProbeFileRet av_probe_file(std::filesystem::path path) {
   return res;
 }
 
-bool probably_valid_media_file_path(std::filesystem::path path) {
+bool probably_valid_media_file_path(const std::filesystem::path& path) {
   const AVOutputFormat* fmt = av_guess_format(NULL, path.filename().c_str(), NULL);
   if (fmt != NULL) return true;
   return is_valid_media_file_path(path);
 }
 
-std::optional<MediaType> media_type_probe(std::filesystem::path path) {
+std::optional<MediaType> media_type_probe(const std::filesystem::path& path) {
   try {
     AVProbeFileRet pfret = av_probe_file(path);
     if (pfret.score > AVPROBE_SCORE_RETRY) {
@@ -58,32 +58,26 @@ std::optional<MediaType> media_type_probe(std::filesystem::path path) {
         return from_iformat;
       }
     }
-  } catch (const std::runtime_error& e) {
-    // no-op
-  }
+  } catch (const std::runtime_error& e) {} // no-op
 
   try {
     AVFormatContext* fmt_ctx = open_format_context(path);
     MediaType media_type = media_type_from_avformat_context(fmt_ctx);
     avformat_close_input(&fmt_ctx);
     return media_type;
-  } catch (const std::runtime_error& e) {
-    // no-op
-  }
+  } catch (const std::runtime_error& e) {} // no-op
 
   return std::nullopt;
 }
 
-bool is_valid_media_file_path(std::filesystem::path path) {
+bool is_valid_media_file_path(const std::filesystem::path& path) {
   std::error_code ec;
   if (!std::filesystem::is_regular_file(path, ec)) return false;
 
   try {
     AVProbeFileRet pfret = av_probe_file(path);
     if (pfret.score > AVPROBE_SCORE_EXTENSION) return true;
-  } catch (const std::runtime_error& e) {
-    // no-op
-  }
+  } catch (const std::runtime_error& e) {} // no-op
 
   try {
     AVFormatContext* fmt_ctx = open_format_context(path);

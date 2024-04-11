@@ -79,7 +79,7 @@ class MediaFetcher {
     std::mutex dec_mtx;
     std::optional<Dim2> req_dims;
 
-    MediaFetcher(std::filesystem::path path);
+    MediaFetcher(const std::filesystem::path& path);
 
     void begin(double currsystime); // Only to be called by owning thread
     void join(double currsystime); // Only to be called by owning thread after in_use is set to false
@@ -112,12 +112,12 @@ class MediaFetcher {
       return *this->error;
     }
 
-    void dispatch_exit();
-    void dispatch_exit(std::string_view err);
-    
     inline bool should_exit() {
       return !this->in_use;
     }
+
+    void dispatch_exit();
+    void dispatch_exit(std::string_view err);
 
     bool is_playing();
     void pause(double currsystime);

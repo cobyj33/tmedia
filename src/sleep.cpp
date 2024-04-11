@@ -9,9 +9,9 @@ void sleep_for_ns(long ns) {
 }
 
 void sleep_for_ms(long ms) {
-  sleep_for_ns((double)ms * MILLISECONDS_TO_NANOSECONDS);
+  sleep_for_ns(ms * MILLISECONDS_TO_NANOSECONDS);
 }
 
 void sleep_for_sec(double secs) {
-  sleep_for_ns((long)(secs * SECONDS_TO_NANOSECONDS));
+  sleep_for_ns(static_cast<long>(secs * SECONDS_TO_NANOSECONDS));
 }

@@ -24,7 +24,7 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-MediaFetcher::MediaFetcher(std::filesystem::path path) {
+MediaFetcher::MediaFetcher(const std::filesystem::path& path) {
   this->path = path;
   this->in_use = false;
 
