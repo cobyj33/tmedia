@@ -169,7 +169,7 @@ MediaType media_type_from_avformat_context(AVFormatContext* fmt_ctx) {
     }
 
     bool video_is_attached_pic = true;
-    for (std::size_t i = 0; i < fmt_ctx->nb_streams; i++) {
+    for (unsigned int i = 0; i < fmt_ctx->nb_streams; i++) {
       if (fmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
         video_is_attached_pic = video_is_attached_pic && fmt_ctx->streams[i]->disposition & AV_DISPOSITION_ATTACHED_PIC;
       }
@@ -178,6 +178,7 @@ MediaType media_type_from_avformat_context(AVFormatContext* fmt_ctx) {
     if (video_is_attached_pic) {
       return avformat_context_has_media_stream(fmt_ctx, AVMEDIA_TYPE_AUDIO) ? MediaType::AUDIO : MediaType::IMAGE;
     }
+    
     return MediaType::VIDEO;
   }
   
