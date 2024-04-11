@@ -100,6 +100,7 @@ class Playlist {
     LoopType m_loop_type;
     bool m_shuffled;
 
+    void remove_entry_at_entry_index(int i);
   public:
 
     Playlist();

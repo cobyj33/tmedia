@@ -44,7 +44,7 @@ int Playlist::index() const {
   }
 
   assert(this->m_qi >= 0);
-  assert(this->m_qi < this->m_q.size());
+  assert(static_cast<std::size_t>(this->m_qi) < this->m_q.size());
   
   return this->m_q[this->m_qi];
 }
@@ -54,6 +54,10 @@ const std::filesystem::path& Playlist::current() const {
     throw std::runtime_error(fmt::format("[{}] Cannot access current "
     "file of empty playlist", FUNCDINFO));
   }
+
+  assert(this->m_qi >= 0);
+  assert(static_cast<std::size_t>(this->m_qi) < this->m_q.size());
+
   return this->m_entries[this->index()];
 }
 
@@ -80,68 +84,11 @@ void Playlist::clear() {
   this->m_shuffled = false;
 }
 
-void Playlist::remove(std::size_t i) {
-  if (this->m_entries.size() == 0) return; // no-op on empty playlist
-  if (this->m_entries.size() == 1) return this->clear(); // edge case!
+void Playlist::remove_entry_at_entry_index(int entry_index) {
+  assert(i >= 0);
+  assert(this->m_entries.size() > 0);
+  assert(i < static_cast<int>(this->m_entries.size()));
 
-  if (i > this->m_q.size()) {
-    throw std::runtime_error(fmt::format("[{}] Attempted to remove playlist"
-    "index greater than the size of the playlist: {} from {}", FUNCDINFO, i,
-    this->m_q.size()));
-  } 
-
-  int entry_index = this->m_q[i];
-  this->m_entries.erase(this->m_entries.begin() + entry_index);
-
-  // remove the queue entry
-  for (std::size_t qi = 0; qi < this->m_q.size(); qi++) {
-    if (this->m_q[qi] == entry_index) {
-      this->m_q.erase(this->m_q.begin() + qi);
-      break;
-    }
-  }
-
-  // decrement all higher queue indexes
-  for (std::size_t qi = 0; qi < this->m_q.size(); qi++) {
-    this->m_q[qi] -= this->m_q[qi] > entry_index;
-  }
-  this->m_qi -= this->m_qi > entry_index;
-}
-
-const std::filesystem::path& Playlist::at(std::size_t i) const {
-  if (i > this->m_q.size()) {
-    throw std::runtime_error(fmt::format("[{}] Attempted to get playlist item"
-    "at index greater than the size of the playlist: {} from {}", FUNCDINFO, i,
-    this->m_q.size()));
-  }
-
-  return this->m_entries[this->m_q[this->m_qi]];
-}
-
-const std::filesystem::path& Playlist::operator[](std::size_t i) {
-  return this->m_entries[this->m_q[i]];
-}
-
-const std::vector<std::filesystem::path>& Playlist::view() const {
-  return this->m_entries;
-}
-
-void Playlist::remove(const std::filesystem::path& entry) {
-  // this code is probably actually garbo lmao
-  if (this->m_entries.size() == 0) return;
-  if (this->m_entries.size() == 1) return this->clear(); // edge case!
-  
-  int entry_index = -1;
-  // find index of the entry
-  for (int i = 0; i < static_cast<int>(this->m_entries.size()); i++) {
-    if (this->m_entries[i] == entry) {
-      entry_index = i;
-      break;
-    }
-  }
-
-  if (entry_index == -1) return; // nothing found
-  
   // removes the found entry
   this->m_entries.erase(this->m_entries.begin() + entry_index);
   
@@ -159,6 +106,49 @@ void Playlist::remove(const std::filesystem::path& entry) {
   }
   // decrement queue index if it was higher
   this->m_qi -= this->m_qi > entry_index;
+
+  assert(this->m_qi >= 0 && this->m_qi < this->m_q.size());
+}
+
+void Playlist::remove(std::size_t i) {
+  if (this->m_entries.size() <= 1) return this->clear(); // edge case!
+
+  if (i > this->m_q.size()) {
+    throw std::runtime_error(fmt::format("[{}] Attempted to remove playlist"
+    "index greater than the size of the playlist: {} from {}", FUNCDINFO, i,
+    this->m_q.size()));
+  } 
+
+  int entry_index = this->m_q[i];
+  this->remove_entry_at_entry_index(entry_index);
+}
+
+void Playlist::remove(const std::filesystem::path& entry) {
+  assert(this->m_q.size() == this->m_entries.size());
+  if (this->m_entries.size() <= 1) return this->clear();
+
+  
+  for (int i = 0; i < static_cast<int>(this->m_entries.size()); i++) {
+    if (this->m_entries[i] == entry) return this->remove_entry_at_entry_index(i);
+  }
+}
+
+const std::filesystem::path& Playlist::at(std::size_t i) const {
+  if (i > this->m_q.size()) {
+    throw std::runtime_error(fmt::format("[{}] Attempted to get playlist item"
+    "at index greater than the size of the playlist: {} from {}", FUNCDINFO, i,
+    this->m_q.size()));
+  }
+
+  return this->m_entries[this->m_q[i]];
+}
+
+const std::filesystem::path& Playlist::operator[](std::size_t i) {
+  return this->m_entries[this->m_q[i]];
+}
+
+const std::vector<std::filesystem::path>& Playlist::view() const {
+  return this->m_entries;
 }
 
 bool Playlist::has(const std::filesystem::path& entry) const {
@@ -173,10 +163,9 @@ void Playlist::move(PlaylistMvCmd move_cmd) {
   }
 
   // if skipping or rewinding, kick out of repeat_one mode
-  if (move_cmd == PlaylistMvCmd::REWIND || move_cmd == PlaylistMvCmd::SKIP) {
-    if (this->m_loop_type == LoopType::REPEAT_ONE) {
-      this->m_loop_type = LoopType::REPEAT;
-    }
+  if ((move_cmd == PlaylistMvCmd::REWIND || move_cmd == PlaylistMvCmd::SKIP) &&
+      this->m_loop_type == LoopType::REPEAT_ONE) {
+    this->m_loop_type = LoopType::REPEAT;
   }
 
   this->m_qi = next;
@@ -184,7 +173,7 @@ void Playlist::move(PlaylistMvCmd move_cmd) {
   // reshuffle our index queue so that the next song is not at the end and our shuffle remains fresh
   // unfortunate edge case, if we are going to the next file, and we are shuffled, and we are at the second to last song, we need to 
   if ((move_cmd == PlaylistMvCmd::NEXT || move_cmd == PlaylistMvCmd::SKIP) &&
-  this->m_shuffled && (std::size_t)this->m_qi == this->m_q.size() - 2) {
+      this->m_shuffled && (std::size_t)this->m_qi == this->m_q.size() - 2) {
     this->shuffle(true);
   }
 }
@@ -219,6 +208,8 @@ void Playlist::shuffle(bool keep_current_file_first) {
 }
 
 void Playlist::unshuffle() {
+  if (this->m_q.size() == 0) return;
+
   this->m_qi = this->m_q[this->m_qi];
   std::sort(this->m_q.begin(), this->m_q.end());
   this->m_shuffled = false;
