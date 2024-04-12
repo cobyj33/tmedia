@@ -85,9 +85,9 @@ void Playlist::clear() {
 }
 
 void Playlist::remove_entry_at_entry_index(int entry_index) {
-  assert(i >= 0);
+  assert(entry_index >= 0);
   assert(this->m_entries.size() > 0);
-  assert(i < static_cast<int>(this->m_entries.size()));
+  assert(entry_index < static_cast<int>(this->m_entries.size()));
 
   // removes the found entry
   this->m_entries.erase(this->m_entries.begin() + entry_index);
@@ -107,7 +107,8 @@ void Playlist::remove_entry_at_entry_index(int entry_index) {
   // decrement queue index if it was higher
   this->m_qi -= this->m_qi > entry_index;
 
-  assert(this->m_qi >= 0 && this->m_qi < this->m_q.size());
+  assert(this->m_qi >= 0);
+  assert((std::size_t)this->m_qi < this->m_q.size());
 }
 
 void Playlist::remove(std::size_t i) {

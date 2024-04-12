@@ -19,6 +19,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 list(APPEND CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
 
+# Note that it seems like CMake appends CMAKE_PREFIX_PATH onto the searched
+# pkg-config directories, instead of prepending them. If you want to say where
+# pkg-config should search first, I'd still recommend setting the PKG_CONFIG_PATH
+# environment variable in your shell.
+# set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH ON) 
+
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 list(APPEND CMAKE_INSTALL_RPATH "$\{ORIGIN\}")

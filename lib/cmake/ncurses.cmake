@@ -1,4 +1,9 @@
 if(FIND_CURSES)
+  
+  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(NCURSES_NEED_DEBUG ON)
+  endif()
+  
   set(CURSES_NEED_WIDE ON)
   find_package(Curses)
 

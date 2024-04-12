@@ -25,6 +25,8 @@ class Canvas {
   public:
     Canvas(int rows, int cols);
     void line(int row1, int col1, int row2, int col2, const RGB24 color);
+    void vertline(int row1, int row2, int col, const RGB24 color);
+    void horzline(int col1, int col2, int row, const RGB24 color);
     PixelData get_image();
 };
 

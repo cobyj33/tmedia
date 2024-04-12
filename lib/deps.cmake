@@ -1,3 +1,11 @@
+# Note that this file should be called with include instead of add_subdirectory,
+# since add_subdirectory will create a new scope, and include will not. We'd
+# like all variables declared and modified  here and in the cmake modules
+# directories to be exposed to the top-level CMakeLists.txt 
+
+# prefer local modules to cmake global modules (FindCurses)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/lib/cmake/modules)
+
 set(TMEDIA_DEPS_CMAKE_PROFILE 
 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 -DBUILD_SHARED_LIBS=ON

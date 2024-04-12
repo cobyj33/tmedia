@@ -54,7 +54,8 @@ int main(int argc, char** argv)
   std::set_terminate(on_terminate);
 
   TMediaCLIParseRes res = tmedia_parse_cli(argc, argv);
-  if (res.exited)
-    return EXIT_SUCCESS;
-  return tmedia_run(res.tmss);
+  return EXIT_SUCCESS;
+  // if (res.exited)
+  //   return EXIT_SUCCESS;
+  // return tmedia_run(res.tmss);
 }
