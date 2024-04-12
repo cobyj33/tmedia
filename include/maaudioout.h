@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <atomic>
+#include <condition_variable>
 #include <thread>
 #include <functional>
 
@@ -29,10 +30,17 @@ class MAAudioOut : public AudioOut {
     MAAudioOutCallbackData* m_cb_data;
 
     void audio_queue_fill_thread_func();
+    int get_data_req_size(int max_buffer_size); // to be called from audio_queue_fill_thread only!
 
     std::unique_ptr<ma_device_w> m_audio_device;
     moodycamel::BlockingReaderWriterCircularBuffer<float>* m_audio_queue;
     std::atomic<bool> m_muted;
+
+    enum class MAAudioOutState { STOPPING, STOPPED, PLAYING };
+    std::atomic<MAAudioOutState> state;
+
+    std::condition_variable stop_cond;
+    std::mutex stop_mutex;
 
     int m_nb_channels;
     int m_sample_rate;

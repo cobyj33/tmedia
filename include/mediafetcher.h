@@ -41,6 +41,11 @@ extern "C" {
    * 
 */
 
+enum class MediaFetcherFlags {
+  VISUALIZE_VIDEO = (1 << 0),
+  IGNORE_ATTACHED_PIC = (1 << 1)
+};
+
 class MediaFetcher {
   private:
     std::thread video_thread;
@@ -78,6 +83,10 @@ class MediaFetcher {
     std::mutex alter_mutex;
     std::mutex dec_mtx;
     std::optional<Dim2> req_dims;
+
+    static constexpr int VISUALIZE_VIDEO = 1 << 0;
+    static constexpr int IGNORE_ATTACHED_PIC = 1 << 1;
+    std::atomic<int> flags;
 
     MediaFetcher(const std::filesystem::path& path);
 

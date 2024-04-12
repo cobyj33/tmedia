@@ -349,7 +349,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     }
 
     fetcher->dispatch_exit();
-
+    if (audio_output) audio_output->stop();
     fetcher->join(sys_clk_sec());
     if (fetcher->has_error()) {
       throw std::runtime_error(fmt::format("[{}]: Media Fetcher Error: {}",

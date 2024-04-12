@@ -19354,11 +19354,16 @@ static ma_result ma_device_stop__pulse(ma_device* pDevice)
         broken on some systems to the point where no audio processing seems to happen. When this
         happens, draining never completes and we get stuck here. For now I'm disabling draining of
         the device so we don't just freeze the application.
-        */
-    #if 0
+        */ // tmedia: yeah I enabled it.
+    // #if 0   
+        ma_bool32 wasSuccessful = MA_FALSE;
         ma_pa_operation* pOP = ((ma_pa_stream_drain_proc)pDevice->pContext->pulse.pa_stream_drain)((ma_pa_stream*)pDevice->pulse.pStreamPlayback, ma_pulse_operation_complete_callback, &wasSuccessful);
         ma_wait_for_operation_and_unref__pulse(pDevice->pContext, pDevice->pulse.pMainLoop, pOP);
-    #endif
+
+        if (!wasSuccessful) {
+          ma_log_postf(ma_device_get_log(pDevice), MA_LOG_LEVEL_ERROR, "[PulseAudio] Failed to drain PulseAudio stream.");
+        }
+    // #endif
 
         result = ma_device__cork_stream__pulse(pDevice, ma_device_type_playback, 1);
         if (result != MA_SUCCESS) {

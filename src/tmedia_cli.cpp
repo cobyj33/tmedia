@@ -107,7 +107,7 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     bool ignore_video = false;
     bool ignore_images = false;
     bool recurse = false;
-    bool probe;
+    bool probe = false;
   };
 
   struct MediaPathLocalSearchOptions {
