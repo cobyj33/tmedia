@@ -13,6 +13,8 @@
  * media type.
 */
 
+#include "mediatype.h"
+
 extern const char* banned_iformat_names;
 
 extern const char* image_iformat_names;
@@ -24,5 +26,17 @@ extern const char* audio_iformat_exts;
 extern const char* video_iformat_exts;
 
 extern const char* container_iformat_exts;
+
+// null terminated list of file extensions. Each file extension includes
+// its period in its string in order to fufill equalness with 
+// std::filesystem::path::extension().c_str()
+
+struct mext_mdata {
+  const char* ext;
+  MediaType type;
+  mext_mdata(const char* ext, MediaType type) : ext(ext), type(type) {} 
+};
+
+extern const mext_mdata mm_exts[];
 
 #endif

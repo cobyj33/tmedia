@@ -16,7 +16,9 @@ extern "C" {
 
 void mchc_cache(const std::string& file, MetadataCache& cache) {
   if (cache.count(file) == 0) {
-    cache[file] = get_file_metadata(file);
+    try {
+      cache[file] = get_file_metadata(file);
+    } catch (const std::runtime_error& err) { } //no-op
   }
 }
 

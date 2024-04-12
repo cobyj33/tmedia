@@ -34,6 +34,8 @@ extern "C" {
   #include <libswscale/version.h>
 }
 
+namespace fs = std::filesystem;
+
 #undef TRUE
 #undef FALSE
 
@@ -74,14 +76,18 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
   "    -s, --shuffle          Shuffle the given playlist \n"
   "\n"
   "  File Searching: \n"
+  "    NOTE: all local (:) options override global options\n"
+  "\n"
   "    -r, --recursive        Recurse child directories to find media files \n"
   "    --ignore-images        Ignore image files while searching directories\n"
   "    --ignore-video         Ignore video files while searching directories\n"
   "    --ignore-audio         Ignore audio files while searching directories\n"
+  "    --probe, --no-probe    (Don't) probe all files\n"
   "    :r, :recursive         Recurse child directories of the last listed path \n"
   "    :ignore-images         Ignore image files when searching last listed path\n"
   "    :ignore-video          Ignore video files when searching last listed path\n"
   "    :ignore-audio          Ignore audio files when searching last listed path\n"
+  "    :probe, :no-probe      (Don't) probe last file/directory\n"
   "---------------------------------------------------------------------------";
 
   /**
@@ -90,7 +96,7 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
    * or videos). Therefore, when the inheritable boolean is INHERIT, we signal
    * to read the global value rather than any local value.
   */
-  enum class InheritableBoolean {
+  enum class InheritBool {
     FALSE = 0,
     TRUE = 1,
     INHERIT = -1
@@ -101,23 +107,25 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     bool ignore_video = false;
     bool ignore_images = false;
     bool recurse = false;
+    bool probe;
   };
 
   struct MediaPathLocalSearchOptions {
-    InheritableBoolean ignore_audio = InheritableBoolean::INHERIT;
-    InheritableBoolean ignore_video = InheritableBoolean::INHERIT;
-    InheritableBoolean ignore_images = InheritableBoolean::INHERIT;
-    InheritableBoolean recurse = InheritableBoolean::INHERIT;
+    InheritBool ignore_audio = InheritBool::INHERIT;
+    InheritBool ignore_video = InheritBool::INHERIT;
+    InheritBool ignore_images = InheritBool::INHERIT;
+    InheritBool recurse = InheritBool::INHERIT;
+    InheritBool probe = InheritBool::INHERIT;
   };
 
-  bool resolve_inheritable_bool(InheritableBoolean ib, bool parent_bool);
+  bool resolve_inheritable_bool(InheritBool ib, bool parent_bool);
   MediaPathSearchOptions resolve_path_search_options(MediaPathSearchOptions global, MediaPathLocalSearchOptions local);
 
   struct MediaPath {
-    std::filesystem::path path;
+    fs::path path;
     MediaPathLocalSearchOptions srch_opts;
-    MediaPath(std::string_view path) : path(std::move(std::filesystem::path(path))) {} 
-    MediaPath(const std::filesystem::path& path) : path(path) {} 
+    MediaPath(std::string_view path) : path(std::move(fs::path(path))) {} 
+    MediaPath(const fs::path& path) : path(path) {} 
     MediaPath(MediaPath&& o) : path(std::move(o.path)), srch_opts(o.srch_opts) {} 
   };
 
@@ -132,9 +140,9 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     bool background = false;
   };
 
-  void resolve_cli_path(const std::filesystem::path& path,
+  void resolve_cli_path(const fs::path& path,
                         MediaPathSearchOptions srch_opts,
-                        std::vector<std::filesystem::path>& resolved_paths);
+                        std::vector<fs::path>& resolved_paths);
 
   typedef std::function<void(CLIParseState&, const tmedia::CLIArg arg)> ArgParseFunc;
   typedef std::map<std::string_view, ArgParseFunc, std::less<>> ArgParseMap;
@@ -164,11 +172,15 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
   void cli_arg_ignore_audio_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ignore_images_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_recurse_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_probe_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_probe_global(CLIParseState& ps, const tmedia::CLIArg arg);
 
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ignore_audio_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ignore_images_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_recurse_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_probe_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_probe_local(CLIParseState& ps, const tmedia::CLIArg arg);
 
 
   TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv) {
@@ -252,7 +264,10 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
       {"ignore-image", cli_arg_ignore_images_global},
       {"ignore-images", cli_arg_ignore_images_global},
       {"recurse", cli_arg_recurse_global},
-      {"recursive", cli_arg_recurse_global}
+      {"recursive", cli_arg_recurse_global},
+      {"probe", cli_arg_probe_global},
+      {"no-probe", cli_arg_no_probe_global},
+      {"dont-probe", cli_arg_no_probe_global},
     };
 
     static const ArgParseMap short_local_argparse_map{
@@ -268,12 +283,21 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
       {"ignore-images", cli_arg_ignore_images_local},
       {"recurse", cli_arg_recurse_local},
       {"recursive", cli_arg_recurse_local},
+      {"probe", cli_arg_probe_local},
+      {"no-probe", cli_arg_no_probe_local},
+      {"dont-probe", cli_arg_no_probe_local},
     };
 
     for (const tmedia::CLIArg& arg : parsed_cli) {
       switch (arg.arg_type) {
         case tmedia::CLIArgType::POSITIONAL: {
-          ps.paths.push_back(MediaPath(arg.value));
+          try {
+            ps.paths.push_back(MediaPath(arg.value));
+          } catch (const std::exception& e) { // fs::path creation failed
+            ps.argerrs.push_back(fmt::format("[{}]: Failed to create Media "
+              "Path from cli argument #{} ({}): {}",
+              FUNCDINFO, arg.argi, arg.value, e.what()));
+          }
         } break;
         case tmedia::CLIArgType::OPTION: {
           if (arg.prefix == "-") {
@@ -501,36 +525,60 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     (void)arg;
   }
 
+  void cli_arg_probe_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.probe = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_probe_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.probe = false;
+    (void)arg;
+  }
+
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL) {
-      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_video = InheritableBoolean::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_video = InheritBool::TRUE;
     }
     (void)arg;
   }
 
   void cli_arg_ignore_audio_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL) {
-      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_audio = InheritableBoolean::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_audio = InheritBool::TRUE;
     }
     (void)arg;
   }
 
   void cli_arg_ignore_images_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL) {
-      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_images = InheritableBoolean::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_images = InheritBool::TRUE;
     }
     (void)arg;
   }
 
   void cli_arg_recurse_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL) {
-      ps.paths[ps.paths.size() - 1UL].srch_opts.recurse = InheritableBoolean::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.recurse = InheritBool::TRUE;
     }
     (void)arg;
   }
 
-  bool resolve_inheritable_bool(InheritableBoolean ib, bool parent_bool) {
-    return ib == InheritableBoolean::INHERIT ? parent_bool : ( ib == InheritableBoolean::TRUE ? true : false);
+  void cli_arg_probe_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() > 0UL) {
+      ps.paths[ps.paths.size() - 1UL].srch_opts.probe = InheritBool::TRUE;
+    }
+    (void)arg;
+  }
+
+  void cli_arg_no_probe_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() > 0UL) {
+      ps.paths[ps.paths.size() - 1UL].srch_opts.probe = InheritBool::FALSE;
+    }
+    (void)arg;
+  }
+
+  bool resolve_inheritable_bool(InheritBool ib, bool parent_bool) {
+    return ib == InheritBool::INHERIT ? parent_bool : (ib == InheritBool::TRUE);
   }
 
   MediaPathSearchOptions resolve_path_search_options(MediaPathSearchOptions global, MediaPathLocalSearchOptions local) {
@@ -539,10 +587,11 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     res.ignore_audio = resolve_inheritable_bool(local.ignore_audio, global.ignore_audio);
     res.ignore_images = resolve_inheritable_bool(local.ignore_images, global.ignore_images);
     res.recurse = resolve_inheritable_bool(local.recurse, global.recurse);
+    res.probe = resolve_inheritable_bool(local.probe, global.probe);
     return res;
   }
 
-  bool test_media_file(const std::filesystem::path& path, MediaPathSearchOptions search_opts) {
+  bool test_media_file_probe(const fs::path& path, MediaPathSearchOptions search_opts) {
     std::optional<MediaType> media_type = media_type_probe(path);
     if (!media_type.has_value()) return false;
 
@@ -555,27 +604,47 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     return false;
   }
 
+  bool test_media_file_stupid(const fs::path& path, MediaPathSearchOptions search_opts) {
+    std::optional<MediaType> media_type = media_type_from_path(path);
+    if (!media_type.has_value()) return false;
+    
+    if (media_type) {
+      switch (*media_type) {
+        case MediaType::VIDEO: return !search_opts.ignore_video;
+        case MediaType::AUDIO: return !search_opts.ignore_audio;
+        case MediaType::IMAGE: return !search_opts.ignore_images;
+      }
+    }
 
-  void resolve_cli_path(const std::filesystem::path& path, MediaPathSearchOptions srch_opts, std::vector<std::filesystem::path>& resolved_paths) {
-    std::stack<std::filesystem::path> to_search;
+    return false;
+  }
+
+  bool test_media_file(const fs::path& path, MediaPathSearchOptions search_opts) {
+    return search_opts.probe ? test_media_file_probe(path, search_opts)
+                             : test_media_file_stupid(path, search_opts);
+  }
+
+
+  void resolve_cli_path(const fs::path& path, MediaPathSearchOptions srch_opts, std::vector<fs::path>& resolved_paths) {
+    std::stack<fs::path> to_search;
     to_search.push(path);
     std::error_code ec;
 
     while (!to_search.empty()) {
-      const std::filesystem::path curr = std::move(to_search.top());
+      const fs::path curr = std::move(to_search.top());
       to_search.pop();
 
-      if (!std::filesystem::exists(curr, ec)) {
+      if (!fs::exists(curr, ec)) {
         throw std::runtime_error(fmt::format("[{}] Cannot open nonexistent "
         "path: {}", FUNCDINFO, path.c_str()));
       }
 
-      if (std::filesystem::is_directory(curr, ec)) {
+      if (fs::is_directory(curr, ec)) {
         std::vector<std::string> media_file_paths;
-        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(curr)) {
-          if (std::filesystem::is_directory(entry.path(), ec) && srch_opts.recurse) {
+        for (const fs::directory_entry& entry : fs::directory_iterator(curr)) {
+          if (fs::is_directory(entry.path(), ec) && srch_opts.recurse) {
             to_search.push(std::move(entry.path()));
-          } else if (std::filesystem::is_regular_file(entry.path()) && test_media_file(entry.path(), srch_opts)) {
+          } else if (fs::is_regular_file(entry.path()) && test_media_file(entry.path(), srch_opts)) {
             media_file_paths.push_back(std::move(entry.path().string()));
           }
         }
@@ -585,7 +654,7 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
         for (auto&& media_file_path : media_file_paths) {
           resolved_paths.push_back(std::move(media_file_path));
         }
-      } else if (std::filesystem::is_regular_file(curr) && test_media_file(curr, srch_opts)) {
+      } else if (fs::is_regular_file(curr) && test_media_file(curr, srch_opts)) {
         resolved_paths.push_back(curr);
       }
     }

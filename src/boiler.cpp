@@ -34,9 +34,10 @@ AVFormatContext* open_format_context(const std::filesystem::path& path) {
   }
 
   if (av_match_list(fmt_ctx->iformat->name, banned_iformat_names, ',')) {
+    std::string iformatname(fmt_ctx->iformat->name);
     avformat_close_input(&fmt_ctx);
     throw std::runtime_error(fmt::format("[{}] Cannot open banned format type: "
-    "{}", FUNCDINFO, fmt_ctx->iformat->name));
+    "{}", FUNCDINFO, iformatname));
   }
 
   result = avformat_find_stream_info(fmt_ctx, NULL);

@@ -11,26 +11,18 @@
  * @copyright Copyright (c) 2023
  */
 
+#include "mediatype.h"
+
 #include <string>
 #include <map>
 #include <optional>
 
 #include <filesystem>
 
+
 extern "C" {
 #include <libavformat/avformat.h>
 }
-
-enum class MediaType {
-  VIDEO,
-  AUDIO,
-  IMAGE
-};
-
-const char* media_type_cstr(MediaType media_type);
-MediaType media_type_from_avformat_context(AVFormatContext* fmt_ctx);
-std::optional<MediaType> media_type_from_mime_type(std::string_view mime_type);
-std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat);
 
 /**
  * @brief Opens and returns an AVFormat Context
@@ -64,5 +56,8 @@ double get_file_duration(const std::filesystem::path& path);
 
 
 bool avformat_context_has_media_stream(AVFormatContext* fmt_ctx, enum AVMediaType media_type);
+
+MediaType media_type_from_avformat_context(AVFormatContext* fmt_ctx);
+std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat);
 
 #endif

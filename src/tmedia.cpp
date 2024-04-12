@@ -115,9 +115,15 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     try { 
       fetcher = std::make_unique<MediaFetcher>(tmps.plist.current());
     } catch (const std::runtime_error& err) {
-      tmps.plist.remove(tmps.plist.index());
-      if (!tmps.plist.can_move(move_cmd)) break;
+      int failed_plist_index = tmps.plist.index();
+
+      // force skip this current file. If the loop type was in repeat-one, then
+      // we might repeat it once we call move
+      if (move_cmd == PlaylistMvCmd::NEXT) move_cmd = PlaylistMvCmd::SKIP;
+      if (!tmps.plist.can_move(move_cmd)) break; // If we cannot move, we should just exit gracefully
       tmps.plist.move(move_cmd);
+
+      tmps.plist.remove(failed_plist_index);
       continue;
     }
 

@@ -37,6 +37,10 @@ Playlist::Playlist(const std::vector<std::filesystem::path>& entries, LoopType l
   }
 }
 
+/**
+ * Note that this returns the location of the current entry in m_entries,
+ * not the current queue location of m_q
+*/
 int Playlist::index() const {
   if (this->m_entries.size() == 0) {
     throw std::runtime_error(fmt::format("[{}] Cannot access current "
@@ -84,8 +88,7 @@ void Playlist::clear() {
   this->m_shuffled = false;
 }
 
-void Playlist::remove_entry_at_entry_index(int entry_index) {
-  assert(entry_index >= 0);
+void Playlist::remove_at_entry_idx(int entry_index) {
   assert(this->m_entries.size() > 0);
   assert(entry_index < static_cast<int>(this->m_entries.size()));
 
@@ -114,14 +117,13 @@ void Playlist::remove_entry_at_entry_index(int entry_index) {
 void Playlist::remove(std::size_t i) {
   if (this->m_entries.size() <= 1) return this->clear(); // edge case!
 
-  if (i > this->m_q.size()) {
+  if (i > this->m_entries.size()) {
     throw std::runtime_error(fmt::format("[{}] Attempted to remove playlist"
     "index greater than the size of the playlist: {} from {}", FUNCDINFO, i,
     this->m_q.size()));
   } 
 
-  int entry_index = this->m_q[i];
-  this->remove_entry_at_entry_index(entry_index);
+  this->remove_at_entry_idx(i);
 }
 
 void Playlist::remove(const std::filesystem::path& entry) {
@@ -130,7 +132,8 @@ void Playlist::remove(const std::filesystem::path& entry) {
 
   
   for (int i = 0; i < static_cast<int>(this->m_entries.size()); i++) {
-    if (this->m_entries[i] == entry) return this->remove_entry_at_entry_index(i);
+    if (this->m_entries[i] == entry)
+      return (void)this->remove_at_entry_idx(i);
   }
 }
 

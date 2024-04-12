@@ -1,6 +1,7 @@
 #include "probe.h"
 
 #include "ffmpeg_error.h"
+#include "mediaformat.h"
 #include "boiler.h"
 #include "formatting.h"
 #include <funcmac.h>
@@ -8,6 +9,7 @@
 #include <string>
 #include <stdexcept>
 #include <filesystem>
+#include <cstring>
 
 #include <fmt/format.h>
 
@@ -88,4 +90,22 @@ bool is_valid_media_file_path(const std::filesystem::path& path) {
   }
 
   return false;
+}
+
+bool has_media_fsext(const std::filesystem::path& path) {
+  std::filesystem::path ext = path.extension();
+  for (int i = 0; mm_exts[i].ext != nullptr; i++) {
+    if (strcmp(ext.c_str(), mm_exts[i].ext) == 0)
+      return true;
+  }
+  return false;
+}
+
+std::optional<MediaType> media_type_from_path(const std::filesystem::path& path) {
+  std::filesystem::path ext = path.extension();
+  for (int i = 0; mm_exts[i].ext != nullptr; i++) {
+    if (strcmp(ext.c_str(), mm_exts[i].ext) == 0)
+      return mm_exts[i].type;
+  }
+  return std::nullopt;
 }

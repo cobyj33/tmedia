@@ -11,7 +11,7 @@ class ma_device_w {
   private: 
     ma_device device;
     ma_device_config config_cache;
-    double volume_cache;
+    std::atomic<float> volume_cache;
     std::atomic<bool> m_playing;
 
   public:

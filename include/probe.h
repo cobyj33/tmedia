@@ -27,5 +27,7 @@ AVProbeFileRet av_probe_file(const std::filesystem::path& path);
 std::optional<MediaType> media_type_probe(const std::filesystem::path& path);
 bool probably_valid_media_file_path(const std::filesystem::path& path);
 bool is_valid_media_file_path(const std::filesystem::path& path);
+bool has_media_fsext(const std::filesystem::path& path);
+std::optional<MediaType> media_type_from_path(const std::filesystem::path& path);
 
 #endif

@@ -100,7 +100,7 @@ class Playlist {
     LoopType m_loop_type;
     bool m_shuffled;
 
-    void remove_entry_at_entry_index(int i);
+    void remove_at_entry_idx(int i);
   public:
 
     Playlist();
@@ -140,6 +140,10 @@ class Playlist {
 
     const std::filesystem::path& operator[](std::size_t i);
 
+    /**
+     * After a move, it is guaranteed that the next file will not be the
+     * same as the previous file
+    */
     void move(PlaylistMvCmd move_cmd);
     const std::filesystem::path& peek_move(PlaylistMvCmd move_cmd) const;
     bool can_move(PlaylistMvCmd move_cmd) const noexcept;

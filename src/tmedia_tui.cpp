@@ -161,5 +161,6 @@ std::string get_media_file_display_name(const std::string& abs_path, MetadataCac
   } else if (has_title) {
     return std::string(mchc_get(abs_path, "title", mchc));
   }
-  return to_filename(abs_path);
+
+  return std::filesystem::path(abs_path).filename().string();
 }

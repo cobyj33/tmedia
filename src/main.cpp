@@ -36,8 +36,7 @@ void on_terminate() {
 }
 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   #if USE_AV_REGISTER_ALL
   av_register_all();
   #endif
@@ -54,8 +53,7 @@ int main(int argc, char** argv)
   std::set_terminate(on_terminate);
 
   TMediaCLIParseRes res = tmedia_parse_cli(argc, argv);
-  return EXIT_SUCCESS;
-  // if (res.exited)
-  //   return EXIT_SUCCESS;
-  // return tmedia_run(res.tmss);
+  if (res.exited)
+    return EXIT_SUCCESS;
+  return tmedia_run(res.tmss);
 }

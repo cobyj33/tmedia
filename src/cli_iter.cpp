@@ -33,6 +33,7 @@ namespace tmedia {
     int i = 0;
     const char * const longarg = ps.argv[ps.argi];
     CLIArg parg;
+    parg.argi = ps.argi;
     parg.arg_type = CLIArgType::OPTION;
 
     if (longarg[0] == '-' && longarg[1] == '-') {
@@ -93,7 +94,7 @@ namespace tmedia {
         "alphabetical character: {} ({})", FUNCDINFO, shortopt, shortarg));
       }
 
-      ps.pargs.push_back(CLIArg(std::string_view(shortarg + j, 1), CLIArgType::OPTION, "-", ""));
+      ps.pargs.push_back(CLIArg(std::string_view(shortarg + j, 1), CLIArgType::OPTION, ps.argi, "-", ""));
 
       if (shortopts_with_args.find(shortopt) != std::string::npos) { // is a shortopt that takes an argument
         if (shortarg[j + 1] != '\0') // if it is not the last option in the option chain
@@ -109,7 +110,8 @@ namespace tmedia {
         throw std::runtime_error(fmt::format("[{}] param not found for short "
         "option {}.", FUNCDINFO, ps.pargs[ps.pargs.size() - 1].value));
       }
-      ps.pargs[ps.pargs.size() - 1].param = ps.argv[ps.argi++];
+      ps.pargs[ps.pargs.size() - 1].param = ps.argv[ps.argi];
+      ps.argi++;
     }
   }
 
@@ -122,14 +124,15 @@ namespace tmedia {
 
       if (since_opt_stopper >= 0) {
         if (since_opt_stopper > 0)
-          ps.pargs.push_back(CLIArg(ps.argv[ps.argi], CLIArgType::POSITIONAL));
+          ps.pargs.push_back(CLIArg(ps.argv[ps.argi], CLIArgType::POSITIONAL, ps.argi));
         ps.argi++;
       } else if (is_shortopt(ps.argv[ps.argi])) {
         cli_shortopt_parse(ps, shortopts_with_args);
       } else if (is_longopt(ps.argv[ps.argi])) {
         cli_longopt_parse(ps, lopts_w_args);
       } else {
-        ps.pargs.push_back(CLIArg(ps.argv[ps.argi++], CLIArgType::POSITIONAL));
+        ps.pargs.push_back(CLIArg(ps.argv[ps.argi], CLIArgType::POSITIONAL, ps.argi));
+        ps.argi++;
       }
     }
 
