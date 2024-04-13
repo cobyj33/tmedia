@@ -26,10 +26,12 @@ void MediaFetcher::audio_dispatch_thread_func() {
   static constexpr int AUDIO_BUFFER_TRY_WRITE_WAIT_MS = 25;
 
   try { // super try block :)
+    MediaDecoder adec(this->mdec->path, { AVMEDIA_TYPE_AUDIO });
+    if (!adec.has_stream_decoder(AVMEDIA_TYPE_AUDIO)) return; // copy failed?
     AudioResampler audio_resampler(
-    this->mdec->get_ch_layout(), AV_SAMPLE_FMT_FLT, this->mdec->get_sample_rate(),
-    this->mdec->get_ch_layout(), this->mdec->get_sample_fmt(), this->mdec->get_sample_rate());
-    sleep_for_sec(this->mdec->get_start_time(AVMEDIA_TYPE_AUDIO));
+    adec.get_ch_layout(), AV_SAMPLE_FMT_FLT, adec.get_sample_rate(),
+    adec.get_ch_layout(), adec.get_sample_fmt(), adec.get_sample_rate());
+    sleep_for_sec(adec.get_start_time(AVMEDIA_TYPE_AUDIO));
 
     while (!this->should_exit()) {
       {
@@ -40,10 +42,22 @@ void MediaFetcher::audio_dispatch_thread_func() {
       }
 
       std::vector<AVFrame*> next_raw_audio_frames;
+      int msg_audio_jump_curr_time_cache = 0;
+      double current_time = 0;
 
       {
-        std::lock_guard<std::mutex> dec_lock(this->dec_mtx);
-        next_raw_audio_frames = this->mdec->next_frames(AVMEDIA_TYPE_AUDIO);
+        next_raw_audio_frames = adec.next_frames(AVMEDIA_TYPE_AUDIO);
+        std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
+        current_time = this->clock.get_time(sys_clk_sec());
+        msg_audio_jump_curr_time_cache = this->msg_audio_jump_curr_time;
+      }
+
+      if (msg_audio_jump_curr_time_cache > 0) {
+        this->audio_buffer->clear(current_time);
+        adec.jump_to_time(current_time);
+        next_raw_audio_frames = adec.next_frames(AVMEDIA_TYPE_AUDIO);
+        std::scoped_lock<std::mutex> lock(this->alter_mutex);
+        this->msg_audio_jump_curr_time--;
       }
 
       if (next_raw_audio_frames.size() != 0) {

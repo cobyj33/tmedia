@@ -8,7 +8,6 @@
 #include "ffmpeg_error.h"
 #include "optim.h"
 
-#include <mutex>
 #include <string>
 #include <vector>
 #include <set>
@@ -25,7 +24,7 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
-MediaDecoder::MediaDecoder(const std::filesystem::path& path, std::set<enum AVMediaType>& requested_streams) {
+MediaDecoder::MediaDecoder(const std::filesystem::path& path, const std::set<enum AVMediaType>& requested_streams) : path(path) {
   try {
     this->fmt_ctx = open_format_context(path);
   } catch (std::runtime_error const& e) {
@@ -75,8 +74,10 @@ int MediaDecoder::fetch_next(int requested_packet_count) {
   }
 
   while (av_read_frame(this->fmt_ctx, reading_packet) == 0) {
-    for (auto &dec_entry : this->decs) {
-      if (dec_entry.second->get_stream_index() == reading_packet->stream_index) {
+    for (auto &dec : this->decs) {
+      if (!dec) continue;
+      
+      if (dec->get_stream_index() == reading_packet->stream_index) {
         AVPacket* saved_packet = av_packet_alloc();
         if (unlikely(saved_packet == nullptr)) {
           av_packet_free(&reading_packet);
@@ -92,7 +93,7 @@ int MediaDecoder::fetch_next(int requested_packet_count) {
           "frame from format context", FUNCDINFO), AVERROR(ENOMEM));
         }
         
-        dec_entry.second->push_back(saved_packet);
+        dec->push_back(saved_packet);
         packets_read++;
         break;
       }
@@ -115,19 +116,22 @@ int MediaDecoder::jump_to_time(double target_time) {
     return ret;
   }
 
-  for (auto& dec_entry : this->decs) {
-    dec_entry.second->reset();
+  for (auto& dec : this->decs) {
+    if (!dec) continue;
+    dec->reset();
   }
 
-  for (auto& dec_entry : this->decs) {
+  for (int i = 0; i < AVMEDIA_TYPE_NB; i++) {
+    std::unique_ptr<StreamDecoder>& dec = this->decs[i];
+    if (!dec) continue;
     std::vector<AVFrame*> frames;
     bool passed_target_time = false;
 
     do {
       clear_avframe_list(frames);
-      frames = this->next_frames(dec_entry.first);
+      frames = this->next_frames((enum AVMediaType)i);
       for (std::size_t i = 0; i < frames.size(); i++) {
-        if (frames[i]->pts * dec_entry.second->get_time_base() >= target_time) {
+        if (frames[i]->pts * dec->get_time_base() >= target_time) {
           passed_target_time = true;
           break;
         }

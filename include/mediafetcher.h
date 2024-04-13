@@ -61,17 +61,20 @@ class MediaFetcher {
 
     void audio_fetching_thread_func();
 
-    std::filesystem::path path;
     MediaClock clock;
+    const std::filesystem::path path;
+    
     std::atomic<bool> in_use;
     std::optional<std::string> error;
     std::unique_ptr<Visualizer> audio_visualizer;
 
+    int msg_video_jump_curr_time;
     std::mutex ex_noti_mtx;
     std::condition_variable exit_cond;
 
     std::mutex resume_notify_mutex;
     std::condition_variable resume_cond;
+    int msg_audio_jump_curr_time;
 
   public:
 
@@ -81,7 +84,6 @@ class MediaFetcher {
     PixelData frame;
 
     std::mutex alter_mutex;
-    std::mutex dec_mtx;
     std::optional<Dim2> req_dims;
 
     static constexpr int VISUALIZE_VIDEO = 1 << 0;
@@ -160,8 +162,10 @@ class MediaFetcher {
      * @param target_time The target time to jump the playback to (must be reachable)
      * @param currsystime The current system time
      * @throws If the target time is not in the boudns of the video's playtime
+     * 
+     * alter_mutex must be locked first before calling for thread safety
      */
-    int jump_to_time(double target_time, double currsystime); // Not thread-safe, lock alter_mutex first
+    int jump_to_time(double target_time, double currsystime);
 };
 
 

@@ -24,14 +24,15 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-MediaFetcher::MediaFetcher(const std::filesystem::path& path) {
-  this->path = path;
+MediaFetcher::MediaFetcher(const std::filesystem::path& path) : path(path) {
   this->in_use = false;
 
   std::set<enum AVMediaType> requested_stream_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
   this->mdec = std::move(std::make_unique<MediaDecoder>(path, requested_stream_types));
   this->media_type = this->mdec->get_media_type();
   this->audio_visualizer = std::move(std::make_unique<AmplitudeAbs>());
+  this->msg_video_jump_curr_time = 0;
+  this->msg_audio_jump_curr_time = 0;
 
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
@@ -97,18 +98,22 @@ double MediaFetcher::get_desync_time(double currsystime) const {
 int MediaFetcher::jump_to_time(double target_time, double currsystime) {
   assert(target_time >= 0.0 && target_time <= this->get_duration());
 
-  const double original_time = this->get_time(currsystime);
-  int ret = this->mdec->jump_to_time(target_time);
+  // int ret = this->mdec->jump_to_time(target_time);
 
-  if (ret < 0)
-    return ret;
+  const double original_time = this->get_time(currsystime);
+  this->msg_audio_jump_curr_time++;
+  this->msg_video_jump_curr_time++;
+
+  // if (ret < 0)
+  //   return ret;
   
-  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    this->audio_buffer->clear(target_time);
-  }
+  // if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+  //   this->audio_buffer->clear(target_time);
+  // }
+
   
   this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time
-  return ret;
+  return 0; // assume success
 }
 
 void MediaFetcher::begin(double currsystime) {

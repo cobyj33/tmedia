@@ -78,14 +78,17 @@ void MediaFetcher::video_fetching_thread_func() {
 }
 
 void MediaFetcher::frame_video_fetching_func() {
-  const Dim2 def_outdim = bound_dims(this->mdec->get_width() * PAR_HEIGHT,
-  this->mdec->get_height() * PAR_WIDTH,
+  MediaDecoder vdec(this->mdec->path, { AVMEDIA_TYPE_VIDEO });
+  if (!vdec.has_stream_decoder(AVMEDIA_TYPE_VIDEO)) return; // copy failed?
+
+  const Dim2 def_outdim = bound_dims(vdec.get_width() * PAR_HEIGHT,
+  vdec.get_height() * PAR_WIDTH,
   MAX_FRAME_WIDTH,
   MAX_FRAME_HEIGHT);
 
-  const double avg_fts = this->mdec->get_avgfts(AVMEDIA_TYPE_VIDEO);
+  const double avg_fts = vdec.get_avgfts(AVMEDIA_TYPE_VIDEO);
   VideoConverter vconv(def_outdim.width, def_outdim.height, AV_PIX_FMT_RGB24,
-  this->mdec->get_width(), this->mdec->get_height(), this->mdec->get_pix_fmt());
+  vdec.get_width(), vdec.get_height(), vdec.get_pix_fmt());
 
   while (!this->should_exit()) {
     {
@@ -99,8 +102,8 @@ void MediaFetcher::frame_video_fetching_func() {
       std::lock_guard<std::mutex> alter_mutex_lock(this->alter_mutex);
       if (this->req_dims) {
         Dim2 req_dims_bounded = bound_dims(
-        this->mdec->get_width() * PAR_HEIGHT,
-        this->mdec->get_height() * PAR_WIDTH,
+        vdec.get_width() * PAR_HEIGHT,
+        vdec.get_height() * PAR_WIDTH,
         this->req_dims->width, this->req_dims->height);
 
         Dim2 out_dim = bound_dims(
@@ -115,15 +118,23 @@ void MediaFetcher::frame_video_fetching_func() {
     double wait_duration = avg_fts;
     std::vector<AVFrame*> dec_frames;
     double current_time = 0.0;
-
+    int msg_video_jump_curr_time_cache = 0;
     {
-      std::scoped_lock<std::mutex, std::mutex> lock(this->dec_mtx, this->alter_mutex);
-      dec_frames = this->mdec->next_frames(AVMEDIA_TYPE_VIDEO);
+      dec_frames = vdec.next_frames(AVMEDIA_TYPE_VIDEO);
+      std::scoped_lock<std::mutex> lock(this->alter_mutex);
       current_time = this->get_time(sys_clk_sec());
+      msg_video_jump_curr_time_cache = this->msg_video_jump_curr_time;
+    }
+
+    if (msg_video_jump_curr_time_cache > 0) {
+      vdec.jump_to_time(current_time);
+      dec_frames = vdec.next_frames(AVMEDIA_TYPE_VIDEO);
+      std::scoped_lock<std::mutex> lock(this->alter_mutex);
+      this->msg_video_jump_curr_time--;
     }
 
     if (dec_frames.size() > 0) {
-      const double frame_pts_time_sec = (double)dec_frames[0]->pts * this->mdec->get_time_base(AVMEDIA_TYPE_VIDEO);
+      const double frame_pts_time_sec = (double)dec_frames[0]->pts * vdec.get_time_base(AVMEDIA_TYPE_VIDEO);
       const double extra_delay = (double)(dec_frames[0]->repeat_pict) / (2 * avg_fts);
       wait_duration = frame_pts_time_sec - current_time + extra_delay;
 
@@ -153,25 +164,21 @@ void MediaFetcher::frame_video_fetching_func() {
 }
 
 void MediaFetcher::frame_image_fetching_func() {
-  Dim2 outdim = bound_dims(this->mdec->get_width() * PAR_HEIGHT,
-  this->mdec->get_height() * PAR_WIDTH,
+  MediaDecoder vdec(this->mdec->path, { AVMEDIA_TYPE_VIDEO });
+
+  Dim2 outdim = bound_dims(vdec.get_width() * PAR_HEIGHT,
+  vdec.get_height() * PAR_WIDTH,
   MAX_FRAME_WIDTH,
   MAX_FRAME_HEIGHT);
 
   VideoConverter vconv(outdim.width,
   outdim.height,
   AV_PIX_FMT_RGB24,
-  this->mdec->get_width(),
-  this->mdec->get_height(),
-  this->mdec->get_pix_fmt());
+  vdec.get_width(),
+  vdec.get_height(),
+  vdec.get_pix_fmt());
 
-  std::vector<AVFrame*> dec_frames;
-
-  {
-    std::lock_guard<std::mutex> dec_lock(this->dec_mtx);
-    dec_frames = this->mdec->next_frames(AVMEDIA_TYPE_VIDEO);
-  }
-
+  std::vector<AVFrame*> dec_frames = vdec.next_frames(AVMEDIA_TYPE_VIDEO);
   if (dec_frames.size() > 0 && dec_frames[0] != nullptr) {
     AVFrame* frame_image = vconv.convert_video_frame(dec_frames[0]);
     PixelData frame_pixel_data = PixelData(frame_image);
@@ -181,7 +188,6 @@ void MediaFetcher::frame_image_fetching_func() {
     }
     av_frame_free(&frame_image);
   }
-
   clear_avframe_list(dec_frames);
 }
 

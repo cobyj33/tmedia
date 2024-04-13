@@ -13,7 +13,7 @@ extern "C" {
 using ms = std::chrono::milliseconds;
 
 // audio constants
-static constexpr int AUDIO_QUEUE_SIZE_FRAMES = 2048;
+static constexpr int AUDIO_QUEUE_SIZE_FRAMES = 4096;
 static constexpr int FETCHER_AUDIO_READING_BLOCK_SIZE_SAMPLES = 4096;
 static constexpr int MINIAUDIO_PERIOD_SIZE_FRAMES = 0;
 static constexpr int MINIAUDIO_PERIOD_SIZE_MS = 75;

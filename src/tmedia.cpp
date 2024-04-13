@@ -323,7 +323,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         if (req_jump) {
           if (audio_output && fetcher->is_playing()) audio_output->stop();
           {
-            std::scoped_lock<std::mutex, std::mutex> total_lock{fetcher->alter_mutex, fetcher->dec_mtx};
+            std::scoped_lock<std::mutex> total_lock{fetcher->alter_mutex};
             fetcher->jump_to_time(clamp(req_jumptime, 0.0, fetcher->get_duration()), sys_clk_sec());
           }
           if (audio_output && fetcher->is_playing()) audio_output->start();

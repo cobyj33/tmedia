@@ -24,16 +24,18 @@ extern "C" {
 */
 class MediaDecoder {
   private:
-    using StreamDecoderPair = std::pair<enum AVMediaType, std::unique_ptr<StreamDecoder>>;
     AVFormatContext* fmt_ctx;
-    std::map<enum AVMediaType, std::unique_ptr<StreamDecoder>> decs;
+    std::unique_ptr<StreamDecoder> decs[AVMEDIA_TYPE_NB];
     MediaType media_type;
 
-    std::mutex fmt_ctx_mutex; // currently unused
     int fetch_next(int requested_packet_count);
   public:
+    const std::filesystem::path path;
 
-    MediaDecoder(const std::filesystem::path& file_path, std::set<enum AVMediaType>& requested_streams);
+    MediaDecoder(const std::filesystem::path& file_path, const std::set<enum AVMediaType>& requested_streams);
+
+    MediaDecoder from();
+
 
     std::vector<AVFrame*> next_frames(enum AVMediaType media_type); // Not Thread-Safe
     int jump_to_time(double target_time); // Not Thread-Safe
@@ -47,7 +49,7 @@ class MediaDecoder {
     }
 
     inline bool has_stream_decoder(enum AVMediaType media_type) const {
-      return this->decs.count(media_type) == 1;
+      return this->decs[media_type] != nullptr;
     }
 
     inline int get_nb_channels() {
