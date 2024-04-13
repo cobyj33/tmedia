@@ -60,17 +60,14 @@ void MediaFetcher::audio_dispatch_thread_func() {
         this->msg_audio_jump_curr_time--;
       }
 
-      if (next_raw_audio_frames.size() != 0) {
-        std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
-        
-        for (std::size_t i = 0; i < audio_frames.size(); i++) {
-          while (!this->audio_buffer->try_write_into(audio_frames[i]->nb_samples, (float*)(audio_frames[i]->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
-            if (this->should_exit()) break;
-          }
+      std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
+      
+      for (std::size_t i = 0; i < audio_frames.size(); i++) {
+        while (!this->audio_buffer->try_write_into(audio_frames[i]->nb_samples, (float*)(audio_frames[i]->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
+          if (this->should_exit()) break;
         }
-
-        clear_avframe_list(audio_frames);
       }
+      clear_avframe_list(audio_frames);
       clear_avframe_list(next_raw_audio_frames);
     }
   } catch (std::exception const& err) {
