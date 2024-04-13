@@ -32,18 +32,20 @@ class MAAudioOut : public AudioOut {
     void audio_queue_fill_thread_func();
     int get_data_req_size(int max_buffer_size); // to be called from audio_queue_fill_thread only!
 
+    const int m_nb_channels;
     std::unique_ptr<ma_device_w> m_audio_device;
     moodycamel::BlockingReaderWriterCircularBuffer<float>* m_audio_queue;
     std::atomic<bool> m_muted;
 
+    const int m_sample_rate;
     enum class MAAudioOutState { STOPPING, STOPPED, PLAYING };
     std::atomic<MAAudioOutState> state;
 
+    const int m_audio_queue_size_frames;
     std::condition_variable stop_cond;
     std::mutex stop_mutex;
+    const int m_audio_queue_size_samples;
 
-    int m_nb_channels;
-    int m_sample_rate;
   public:
     MAAudioOut(int nb_channels, int sample_rate, std::function<void(float*, int)> on_data);
 

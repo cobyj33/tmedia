@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <cassert>
 
 extern "C" {
   #include <miniaudio.h>
@@ -44,6 +45,7 @@ void MAAudioOut::audio_queue_fill_thread_func() {
    * whenever audio is started or stopped.
   */
 
+ #if 0
  {
     const float rampup_sample_end = static_cast<float>(this->m_sample_rate) * RAMP_UP_TIME_SECONDS;
     float rampup_samples = 0;
@@ -61,6 +63,7 @@ void MAAudioOut::audio_queue_fill_thread_func() {
 
     }
  }
+ #endif
 
 
 
@@ -75,6 +78,7 @@ void MAAudioOut::audio_queue_fill_thread_func() {
   } 
   // state is MAAudioOutState::STOPPING
 
+  #if 0
   {
     // const float rampdown_sample_start = this->m_sample_rate / 0.25f; // 0.0625 seconds
     const float rampdown_sample_start = static_cast<float>(this->m_sample_rate) * RAMP_DOWN_TIME_SECONDS;
@@ -92,9 +96,7 @@ void MAAudioOut::audio_queue_fill_thread_func() {
       }
     }
   }
-
-  // it takes a long time for the queue to empty. Since our volume is already at 0,
-  // we might as well just exit
+  #endif
 
   while (this->m_audio_queue->size_approx() > 0) { } // spin until queue is empty! 
 
@@ -117,12 +119,16 @@ void audioOutDataCallback(ma_device* pDevice, void* pOutput, const void* pInput,
   (void)pInput;
 }
 
-MAAudioOut::MAAudioOut(int nb_channels, int sample_rate, std::function<void(float*, int)> on_data) {
-  this->m_nb_channels = nb_channels;
-  this->m_sample_rate = sample_rate;
+MAAudioOut::MAAudioOut(int nb_channels, int sample_rate, std::function<void(float*, int)> on_data)
+  : m_nb_channels(nb_channels), m_sample_rate(sample_rate),
+  m_audio_queue_size_frames(AUDIO_QUEUE_SIZE_FRAMES),
+  m_audio_queue_size_samples(AUDIO_QUEUE_SIZE_FRAMES * nb_channels) {
+  assert(nb_channels > 0);
+  assert(sample_rate > 0);
   this->m_muted = false;
-  
-  this->m_audio_queue = new moodycamel::BlockingReaderWriterCircularBuffer<float>(AUDIO_QUEUE_SIZE_FRAMES * nb_channels);
+
+  this->m_audio_queue = new moodycamel::BlockingReaderWriterCircularBuffer<float>(this->m_audio_queue_size_samples);
+
   this->m_cb_data = new MAAudioOutCallbackData(this->m_audio_queue, &this->m_muted);
   this->m_on_data = on_data;
 
@@ -170,7 +176,8 @@ void MAAudioOut::stop() {
   }
 
   this->m_audio_device->stop();
-  if (this->audio_queue_fill_thread.joinable()) this->audio_queue_fill_thread.join();
+  if (this->audio_queue_fill_thread.joinable())
+    this->audio_queue_fill_thread.join();
   this->state = MAAudioOutState::STOPPED;
 }
 
