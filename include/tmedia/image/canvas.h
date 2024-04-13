@@ -6,7 +6,7 @@
 
 class PixelData;
 
-#include "color.h"
+#include <tmedia/image/color.h>
 
 
 /**

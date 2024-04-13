@@ -3,6 +3,8 @@
 
 #include <cstddef>
 
+#include <tmedia/media/metadata.h>
+
 #include <vector>
 #include <string>
 #include <string_view>
@@ -85,12 +87,13 @@ LoopType loop_type_from_str(std::string_view loop_type);
 
 class Playlist {
   private:
-    // class PlaylistEntry {
-    //   std::filesystem::path path;
-    //   int orig_ind;
-    //   PlaylistEntry() {}
-    //   PlaylistEntry(const std::filesystem::path& path, int i) : path(path), orig_ind(i) {} 
-    // };
+    class PlaylistEntry { // currently unused, as I'm not sure what data I'd like to use for each entry
+      std::filesystem::path path;
+      Metadata metadata;
+      int orig_ind;
+      PlaylistEntry() {}
+      PlaylistEntry(const std::filesystem::path& path, int i) : path(path), orig_ind(i) {} 
+    };
 
     std::vector<std::filesystem::path> m_entries;
 

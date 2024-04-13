@@ -1,5 +1,5 @@
-#include "palette.h"
-#include "palette_io.h"
+#include <tmedia/image/palette.h>
+#include <tmedia/image/palette_io.h>
 
 #include <catch2/catch_test_macros.hpp>
 

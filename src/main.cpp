@@ -1,9 +1,9 @@
-#include "signalstate.h"
+#include <tmedia/signalstate.h>
 
-#include "wtime.h"
-#include "avguard.h"
-#include "tmcurses.h"
-#include "tmedia.h"
+#include <tmedia/util/wtime.h>
+#include <tmedia/ffmpeg/avguard.h>
+#include <tmedia/tmcurses/tmcurses.h>
+#include <tmedia/tmedia.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -15,7 +15,7 @@ extern "C" {
 }
 
 
-bool INTERRUPT_RECEIVED = false; //defined as extern in signalstate.h
+bool INTERRUPT_RECEIVED = false; //defined as extern in tmedia/signalstate.h
 void interrupt_handler(int) {
   INTERRUPT_RECEIVED = true;
 }

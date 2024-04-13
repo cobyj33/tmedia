@@ -1,4 +1,4 @@
-#include "pixeldata.h"
+#include <tmedia/image/pixeldata.h>
 
 #include <catch2/catch_test_macros.hpp>
 

@@ -1,8 +1,8 @@
-#include "metadata.h"
+#include <tmedia/media/metadata.h>
 
-#include "formatting.h"
-#include "boiler.h"
-#include "funcmac.h"
+#include <tmedia/util/formatting.h>
+#include <tmedia/ffmpeg/boiler.h>
+#include <tmedia/util/funcmac.h>
 
 #include <fmt/format.h>
 

@@ -1,7 +1,7 @@
 #ifndef TMEDIA_PALETTE_H
 #define TMEDIA_PALETTE_H
 
-#include "color.h"
+#include <tmedia/image/color.h>
 #include <unordered_set>
 #include <string>
 

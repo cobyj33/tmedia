@@ -1,7 +1,7 @@
-#include "mediafetcher.h"
+#include <tmedia/media/mediafetcher.h>
 
-#include "sleep.h"
-#include "wtime.h"
+#include <tmedia/util/sleep.h>
+#include <tmedia/util/wtime.h>
 
 #include <mutex>
 using ms = std::chrono::milliseconds;

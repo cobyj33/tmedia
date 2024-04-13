@@ -1,6 +1,6 @@
-#include "audio.h"
+#include <tmedia/audio/audio.h>
 
-#include "wmath.h"
+#include <tmedia/util/wmath.h>
 
 #include <vector>
 #include <cstddef>

@@ -1,10 +1,10 @@
-#include "tmcurses.h"
+#include <tmedia/tmcurses/tmcurses.h>
 
-#include "color.h"
-#include "wmath.h"
-#include "palette.h"
+#include <tmedia/image/color.h>
+#include <tmedia/util/wmath.h>
+#include <tmedia/image/palette.h>
 #define TMEDIA_TMCURSES_INTERNAL_IMPLEMENTATION
-#include "internal/tmcurses_internal.h"
+#include <tmedia/tmcurses/internal/tmcurses_internal.h>
 #undef TMEDIA_TMCURSES_INTERNAL_IMPLEMENTATION
 
 #include <cmath>
@@ -13,7 +13,7 @@
 #include <string>
 
 #include <fmt/format.h>
-#include "funcmac.h"
+#include <tmedia/util/funcmac.h>
 
 extern "C" {
 #include <curses.h>

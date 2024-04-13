@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "avguard.h"
+#include <tmedia/ffmpeg/avguard.h>
 
 extern "C" {
   #include <libavutil/frame.h>

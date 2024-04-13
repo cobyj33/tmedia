@@ -1,10 +1,10 @@
-#include "probe.h"
+#include <tmedia/ffmpeg/probe.h>
 
-#include "ffmpeg_error.h"
-#include "mediaformat.h"
-#include "boiler.h"
-#include "formatting.h"
-#include <funcmac.h>
+#include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/media/mediaformat.h>
+#include <tmedia/ffmpeg/boiler.h>
+#include <tmedia/util/formatting.h>
+#include <tmedia/util/funcmac.h>
 
 #include <string>
 #include <stdexcept>

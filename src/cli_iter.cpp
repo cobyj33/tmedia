@@ -1,6 +1,6 @@
-#include "cli_iter.h"
+#include <tmedia/cli/cli_iter.h>
 
-#include "funcmac.h"
+#include <tmedia/util/funcmac.h>
 
 #include <vector>
 #include <string>

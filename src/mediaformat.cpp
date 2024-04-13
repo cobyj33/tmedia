@@ -1,6 +1,6 @@
-#include "mediaformat.h"
+#include <tmedia/media/mediaformat.h>
 
-// Chcek mediaformat.h for more details about why these formats were chosen
+// Chcek tmedia/media/mediaformat.h for more details about why these formats were chosen
 // to be explicitly listed.
 
 /**

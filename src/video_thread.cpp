@@ -1,13 +1,13 @@
-#include "mediafetcher.h"
+#include <tmedia/media/mediafetcher.h>
 
-#include "decode.h"
-#include "audio.h"
-#include "audio_visualizer.h"
-#include "sleep.h"
-#include "scale.h"
-#include "wtime.h"
-#include "videoconverter.h"
-#include "funcmac.h"
+#include <tmedia/ffmpeg/decode.h>
+#include <tmedia/audio/audio.h>
+#include <tmedia/audio/audio_visualizer.h>
+#include <tmedia/util/sleep.h>
+#include <tmedia/image/scale.h>
+#include <tmedia/util/wtime.h>
+#include <tmedia/ffmpeg/videoconverter.h>
+#include <tmedia/util/funcmac.h>
 
 #include <mutex>
 #include <memory>

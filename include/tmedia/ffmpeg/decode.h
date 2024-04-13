@@ -2,7 +2,7 @@
 #define TMEDIA_DECODE_H
 
 /**
- * @file decode.h
+ * @file tmedia/ffmpeg/decode.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
  * @brief Wrapper functions for AVPacket decoding
  * @version 0.5

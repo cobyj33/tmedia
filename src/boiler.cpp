@@ -1,12 +1,12 @@
 
-#include "boiler.h"
+#include <tmedia/ffmpeg/boiler.h>
 
-#include "decode.h"
-#include "ffmpeg_error.h"
-#include "formatting.h"
-#include "avguard.h"
-#include "mediaformat.h"
-#include "funcmac.h"
+#include <tmedia/ffmpeg/decode.h>
+#include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/util/formatting.h>
+#include <tmedia/ffmpeg/avguard.h>
+#include <tmedia/media/mediaformat.h>
+#include <tmedia/util/funcmac.h>
 
 #include <cstring>
 #include <stdexcept>

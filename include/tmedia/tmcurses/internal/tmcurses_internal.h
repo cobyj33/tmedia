@@ -2,11 +2,11 @@
 #define TMEDIA_TMCURSES_INTERNAL_H
 
 #ifndef TMEDIA_TMCURSES_INTERNAL_IMPLEMENTATION
-#error "Cannot include internal tmcurses implementation details in public api. Include exposed functions through tmcurses.h instead"
+#error "Cannot include internal tmcurses implementation details in public api. Include exposed functions through tmedia/tmcurses/tmcurses.h instead"
 #endif
 
-#include "color.h"
-#include "tmcurses.h"
+#include <tmedia/image/color.h>
+#include <tmedia/tmcurses/tmcurses.h>
 #include <string>
 
 void ncurses_init_color();

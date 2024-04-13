@@ -115,9 +115,7 @@ ${CMAKE_SOURCE_DIR}/src/tmedia_tui.cpp
 ${CMAKE_SOURCE_DIR}/src/tmedia_tui_elems.cpp
 ${CMAKE_SOURCE_DIR}/src/video_thread.cpp
 ${CMAKE_SOURCE_DIR}/src/videoconverter.cpp
-${CMAKE_SOURCE_DIR}/src/wmath.cpp
-${CMAKE_SOURCE_DIR}/src/wminiaudio.cpp
-${CMAKE_SOURCE_DIR}/src/wtime.cpp)
+${CMAKE_SOURCE_DIR}/src/wminiaudio.cpp)
 
 set(TEST_SOURCE_FILES
 ${CMAKE_SOURCE_DIR}/src/tests/test_color.cpp
@@ -171,7 +169,7 @@ LANGUAGES ${TMEDIA_SUPPORTED_LANGUAGES}
 DESCRIPTION "Terminal video media player")
 
 add_executable(tmedia ${COMMON_SOURCE_FILES} ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/src/tmedia.cpp)
-configure_file(${CMAKE_SOURCE_DIR}/include/version.h.in ${CMAKE_BINARY_DIR}/include/version.h @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/include/tmedia/version.h.in ${CMAKE_BINARY_DIR}/include/tmedia/version.h @ONLY)
 include(${CMAKE_SOURCE_DIR}/lib/deps.cmake)
 
 message("\nThird Party Libs:")

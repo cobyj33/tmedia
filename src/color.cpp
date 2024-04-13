@@ -1,7 +1,7 @@
-#include "color.h"
+#include <tmedia/image/color.h>
 
-#include "wmath.h"
-#include "funcmac.h"
+#include <tmedia/util/wmath.h>
+#include <tmedia/util/funcmac.h>
 
 #include <fmt/format.h>
 

@@ -1,11 +1,11 @@
 #ifndef TMEDIA_MA_AO_H
 #define TMEDIA_MA_AO_H
 
-#include "audioout.h"
+#include <tmedia/audio/audioout.h>
 
-#include "wminiaudio.h"
+#include <tmedia/audio/wminiaudio.h>
 
-#include "readerwritercircularbuffer.h"
+#include <readerwritercircularbuffer.h>
 
 #include <memory>
 #include <atomic>

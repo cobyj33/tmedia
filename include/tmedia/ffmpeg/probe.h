@@ -2,9 +2,9 @@
 #ifndef TMEDIA_PROBE_H
 #define TMEDIA_PROBE_H
 
-#include "avguard.h"
+#include <tmedia/ffmpeg/avguard.h>
 
-#include "boiler.h"
+#include <tmedia/ffmpeg/boiler.h>
 
 extern "C" {
   #include <libavformat/avformat.h>

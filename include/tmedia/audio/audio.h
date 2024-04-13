@@ -1,7 +1,7 @@
 #ifndef TMEDIA_AUDIO_H
 #define TMEDIA_AUDIO_H
 /**
- * @file audio.h
+ * @file tmedia/audio/audio.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
  * @brief Common functions for audio manipulation in tmedia
  * @version 0.1

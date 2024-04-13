@@ -1,4 +1,4 @@
-#include "formatting.h"
+#include <tmedia/util/formatting.h>
 
 #include <catch2/catch_test_macros.hpp>
 

@@ -1,12 +1,12 @@
-#include "mediadecoder.h"
+#include <tmedia/media/mediadecoder.h>
 
-#include "avguard.h"
-#include "boiler.h"
-#include "decode.h"
-#include "formatting.h"
-#include "funcmac.h"
-#include "ffmpeg_error.h"
-#include "optim.h"
+#include <tmedia/ffmpeg/avguard.h>
+#include <tmedia/ffmpeg/boiler.h>
+#include <tmedia/ffmpeg/decode.h>
+#include <tmedia/util/formatting.h>
+#include <tmedia/util/funcmac.h>
+#include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/util/optim.h>
 
 #include <string>
 #include <vector>

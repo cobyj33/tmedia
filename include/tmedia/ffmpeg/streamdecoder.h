@@ -12,7 +12,7 @@ extern "C" {
 
 /**
  * StreamDecoder largely wraps around easy decoding functions defined in
- * decode.h
+ * tmedia/ffmpeg/decode.h
 */
 
 /**
@@ -24,7 +24,7 @@ extern "C" {
  * 
  * Note that a StreamDecoder is not responsible for putting the packets needed
  * for decoding into its own packet queue. This is the responsibility of the
- * MediaDecoder class described in mediadecoder.h
+ * MediaDecoder class described in tmedia/media/mediadecoder.h
 */
 class StreamDecoder {
   private:
@@ -68,7 +68,7 @@ class StreamDecoder {
       return this->codec_context;
     }
     
-    inline bool has_packets() {
+    inline bool has_packets() const {
       return !this->packet_queue.empty();
     }
 

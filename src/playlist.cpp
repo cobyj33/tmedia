@@ -1,6 +1,6 @@
-#include "playlist.h"
+#include <tmedia/media/playlist.h>
 
-#include "funcmac.h"
+#include <tmedia/util/funcmac.h>
 
 #include <effolkronium/random.hpp>
 #include <fmt/format.h>

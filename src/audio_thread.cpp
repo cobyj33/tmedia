@@ -1,11 +1,11 @@
-#include "mediafetcher.h"
+#include <tmedia/media/mediafetcher.h>
 
-#include "audio.h"
-#include "sleep.h"
-#include "wtime.h"
-#include "wmath.h"
-#include "decode.h"
-#include "audioresampler.h"
+#include <tmedia/audio/audio.h>
+#include <tmedia/util/sleep.h>
+#include <tmedia/util/wtime.h>
+#include <tmedia/util/wmath.h>
+#include <tmedia/ffmpeg/decode.h>
+#include <tmedia/ffmpeg/audioresampler.h>
 
 #include <mutex>
 #include <chrono>
@@ -60,14 +60,13 @@ void MediaFetcher::audio_dispatch_thread_func() {
         this->msg_audio_jump_curr_time--;
       }
 
-      std::vector<AVFrame*> audio_frames = audio_resampler.resample_audio_frames(next_raw_audio_frames);
-      
-      for (std::size_t i = 0; i < audio_frames.size(); i++) {
-        while (!this->audio_buffer->try_write_into(audio_frames[i]->nb_samples, (float*)(audio_frames[i]->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
+      for (std::size_t i = 0; i < next_raw_audio_frames.size(); i++) {
+        AVFrame* frame = audio_resampler.resample_audio_frame(next_raw_audio_frames[i]);
+        while (!this->audio_buffer->try_write_into(frame->nb_samples, (float*)(frame->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
           if (this->should_exit()) break;
         }
+        av_frame_free(&frame);
       }
-      clear_avframe_list(audio_frames);
       clear_avframe_list(next_raw_audio_frames);
     }
   } catch (std::exception const& err) {

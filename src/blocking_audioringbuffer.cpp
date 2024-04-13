@@ -1,4 +1,4 @@
-#include "blocking_audioringbuffer.h"
+#include <tmedia/audio/blocking_audioringbuffer.h>
 
 #include <mutex>
 #include <condition_variable>

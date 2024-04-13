@@ -1,7 +1,7 @@
-#include "ascii.h" 
+#include <tmedia/util/funcmac.h> 
 
-#include "pixeldata.h"
-#include "funcmac.h"
+#include <tmedia/image/pixeldata.h>
+#include <tmedia/util/funcmac.h>
 
 #include <fmt/format.h>
 

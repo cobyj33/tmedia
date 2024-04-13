@@ -1,15 +1,15 @@
-#include "pixeldata.h"
+#include <tmedia/image/pixeldata.h>
 
-#include "color.h"
-#include "wmath.h"
-#include "scale.h"
-#include "decode.h"
-#include "boiler.h"
-#include "videoconverter.h"
-#include "ffmpeg_error.h"
-#include "streamdecoder.h"
+#include <tmedia/image/color.h>
+#include <tmedia/util/wmath.h>
+#include <tmedia/image/scale.h>
+#include <tmedia/ffmpeg/decode.h>
+#include <tmedia/ffmpeg/boiler.h>
+#include <tmedia/ffmpeg/videoconverter.h>
+#include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/streamdecoder.h>
 
-#include "funcmac.h"
+#include <tmedia/util/funcmac.h>
 
 #include <stdexcept>
 #include <cstdio>

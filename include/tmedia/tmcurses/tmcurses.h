@@ -1,7 +1,7 @@
 #ifndef TMEDIA_TM_CURSES_H
 #define TMEDIA_TM_CURSES_H
 /**
- * @file tmcurses.h
+ * @file tmedia/tmcurses/tmcurses.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
  * @brief Custom routines initialize curses, print to screen, and handle terminal colors
  * @version 0.1
@@ -18,7 +18,7 @@
  * @copyright MIT License (c) 2023 (see LICENSE)
  */
 
-#include "palette.h"
+#include <tmedia/image/palette.h>
 #include <vector>
 #include <string>
 #include <string_view>

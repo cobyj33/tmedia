@@ -1,12 +1,12 @@
 #ifndef TMEDIA_MEDIA_FETCHER_H
 #define TMEDIA_MEDIA_FETCHER_H
 
-#include "mediaclock.h"
-#include "pixeldata.h"
-#include "mediadecoder.h"
-#include "blocking_audioringbuffer.h"
-#include "scale.h"
-#include "audio_visualizer.h"
+#include <tmedia/media/mediaclock.h>
+#include <tmedia/image/pixeldata.h>
+#include <tmedia/media/mediadecoder.h>
+#include <tmedia/audio/blocking_audioringbuffer.h>
+#include <tmedia/image/scale.h>
+#include <tmedia/audio/audio_visualizer.h>
 
 #include <memory>
 #include <string>
@@ -79,7 +79,7 @@ class MediaFetcher {
   public:
 
     MediaType media_type;
-    std::unique_ptr<MediaDecoder> mdec;
+    const std::unique_ptr<MediaDecoder> mdec;
     std::unique_ptr<BlockingAudioRingBuffer> audio_buffer;
     PixelData frame;
 
@@ -90,7 +90,7 @@ class MediaFetcher {
     static constexpr int IGNORE_ATTACHED_PIC = 1 << 1;
     std::atomic<int> flags;
 
-    MediaFetcher(const std::filesystem::path& path);
+    MediaFetcher(const std::filesystem::path& path, const std::set<enum AVMediaType>& requested_streams);
 
     void begin(double currsystime); // Only to be called by owning thread
     void join(double currsystime); // Only to be called by owning thread after in_use is set to false

@@ -5,7 +5,7 @@
 #include <string>
 
 #include <fmt/format.h>
-#include <funcmac.h>
+#include <tmedia/util/funcmac.h>
 
 extern "C" {
   #include <libavutil/error.h>

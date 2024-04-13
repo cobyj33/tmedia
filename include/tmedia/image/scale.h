@@ -1,7 +1,7 @@
 #ifndef TMEDIA_IMAGE_H
 #define TMEDIA_IMAGE_H
 /**
- * @file scale.h
+ * @file tmedia/image/scale.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
  * @brief Common functions for determining scaling dimensions and factors
  * @version 0.1

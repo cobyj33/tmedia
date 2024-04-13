@@ -1,7 +1,7 @@
 #ifndef TMEDIA_BLOCKING_AUDIO_RING_BUFFER_H
 #define TMEDIA_BLOCKING_AUDIO_RING_BUFFER_H
 
-#include "audioringbuffer.h"
+#include <tmedia/audio/audioringbuffer.h>
 
 #include <mutex>
 #include <condition_variable>

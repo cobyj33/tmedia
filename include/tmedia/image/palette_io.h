@@ -1,7 +1,7 @@
 #ifndef TMEDIA_PALETTE_IO_H
 #define TMEDIA_PALETTE_IO_H
 
-#include "palette.h"
+#include <tmedia/image/palette.h>
 #include <filesystem>
 #include <string>
 

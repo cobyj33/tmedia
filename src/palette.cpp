@@ -1,4 +1,4 @@
-#include "palette.h"
+#include <tmedia/image/palette.h>
 
 #include <cstdint>
 #include <sstream>

@@ -1,7 +1,7 @@
-#include "canvas.h"
+#include <tmedia/image/canvas.h>
 
-#include "color.h"
-#include "pixeldata.h"
+#include <tmedia/image/color.h>
+#include <tmedia/image/pixeldata.h>
 
 #include <vector>
 #include <utility>

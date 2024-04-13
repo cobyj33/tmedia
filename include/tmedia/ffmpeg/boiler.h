@@ -2,7 +2,7 @@
 #define TMEDIA_BOILER_H
 
 /**
- * @file boiler.h
+ * @file tmedia/ffmpeg/boiler.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
  * @brief Boilerplate reducing functions for various miscellaneous FFmpeg operations
  * @version 0.1
@@ -11,7 +11,7 @@
  * @copyright Copyright (c) 2023
  */
 
-#include "mediatype.h"
+#include <tmedia/media/mediatype.h>
 
 #include <string>
 #include <map>

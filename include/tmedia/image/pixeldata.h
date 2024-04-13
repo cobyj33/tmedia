@@ -1,7 +1,7 @@
 #ifndef TMEDIA_PIXEL_DATA_H
 #define TMEDIA_PIXEL_DATA_H
 /**
- * @file audio.h
+ * @file tmedia/audio/audio.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
  * @brief Common functions for audio manipulation in tmedia
  * @version 0.1
@@ -10,7 +10,7 @@
  * @copyright Copyright (c) 2023
  */
 
-#include "color.h"
+#include <tmedia/image/color.h>
 
 #include <cstdint>
 #include <vector>

@@ -1,8 +1,8 @@
-#include "audioout.h"
-#include "maaudioout.h"
+#include <tmedia/audio/maaudioout.h>
+#include <tmedia/audio/audioout.h>
 
-#include "wmath.h"
-#include "unitconvert.h"
+#include <tmedia/util/wmath.h>
+#include <tmedia/util/unitconvert.h>
 
 #include <algorithm>
 #include <memory>

@@ -1,7 +1,7 @@
-#include "formatting.h"
+#include <tmedia/util/formatting.h>
  
-#include "unitconvert.h"
-#include "funcmac.h"
+#include <tmedia/util/unitconvert.h>
+#include <tmedia/util/funcmac.h>
 
 #include <fmt/format.h>
 
@@ -94,7 +94,7 @@ std::string vsprintf_str(const char* format, va_list args) {
   return output;
 }
 
-std::string format_duration_time_digit(int time_value) { // not in formatting.h
+std::string format_duration_time_digit(int time_value) { // not in tmedia/util/formatting.h
   return (time_value < 10 ? "0" : "") + std::to_string(time_value);
 }
 

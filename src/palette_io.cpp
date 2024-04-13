@@ -1,8 +1,8 @@
-#include "palette_io.h"
+#include <tmedia/image/palette_io.h>
 
-#include "palette.h"
-#include "formatting.h"
-#include "funcmac.h"
+#include <tmedia/image/palette.h>
+#include <tmedia/util/formatting.h>
+#include <tmedia/util/funcmac.h>
 
 #include <fstream>
 #include <sstream>

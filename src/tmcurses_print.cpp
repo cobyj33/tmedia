@@ -1,6 +1,6 @@
-#include "tmcurses.h"
+#include <tmedia/tmcurses/tmcurses.h>
 
-#include "formatting.h" 
+#include <tmedia/util/formatting.h> 
 extern "C" {
   #include <curses.h>
 }

@@ -1,11 +1,12 @@
-#include "tmedia_tui_elems.h"
+#include <tmedia/tmedia_tui_elems.h>
 
-#include "pixeldata.h"
-#include "ascii.h"
-#include "formatting.h"
-#include "tmcurses.h"
-#include "tmedia_vom.h"
-#include "funcmac.h"
+#include <tmedia/image/ascii.h>
+#include <tmedia/image/pixeldata.h>
+#include <tmedia/util/funcmac.h>
+#include <tmedia/util/formatting.h>
+#include <tmedia/tmcurses/tmcurses.h>
+#include <tmedia/tmedia_vom.h>
+#include <tmedia/util/funcmac.h>
 
 #include <fmt/format.h>
 

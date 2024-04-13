@@ -1,7 +1,7 @@
-#include "wminiaudio.h"
+#include <tmedia/audio/wminiaudio.h>
 
-#include "wmath.h"
-#include "funcmac.h"
+#include <tmedia/util/wmath.h>
+#include <tmedia/util/funcmac.h>
 
 #include <stdexcept>
 

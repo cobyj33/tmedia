@@ -1,15 +1,15 @@
-#include "tmedia.h"
+#include <tmedia/tmedia.h>
 
-#include "cli_iter.h"
-#include "playlist.h"
-#include "formatting.h"
-#include "version.h"
-#include "ascii.h"
-#include "scale.h"
-#include "probe.h"
-#include "boiler.h"
-#include "pixeldata.h"
-#include "funcmac.h"
+#include <tmedia/cli/cli_iter.h>
+#include <tmedia/media/playlist.h>
+#include <tmedia/util/formatting.h>
+#include <tmedia/version.h>
+#include <tmedia/util/funcmac.h>
+#include <tmedia/image/scale.h>
+#include <tmedia/ffmpeg/probe.h>
+#include <tmedia/ffmpeg/boiler.h>
+#include <tmedia/image/pixeldata.h>
+#include <tmedia/util/funcmac.h>
 
 #include <natural_sort.hpp>
 

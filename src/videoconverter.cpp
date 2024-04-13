@@ -1,9 +1,9 @@
-#include "videoconverter.h"
+#include <tmedia/ffmpeg/videoconverter.h>
 
-#include "ffmpeg_error.h"
-#include "avguard.h"
-#include "funcmac.h"
-#include "optim.h"
+#include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/avguard.h>
+#include <tmedia/util/funcmac.h>
+#include <tmedia/util/optim.h>
 
 #include <stdexcept>
 #include <fmt/format.h>

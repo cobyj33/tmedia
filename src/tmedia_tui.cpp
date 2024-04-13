@@ -1,10 +1,10 @@
-#include "tmedia.h"
+#include <tmedia/tmedia.h>
 
-#include "tmcurses.h"
-#include "tmedia_tui_elems.h"
-#include "formatting.h"
-#include "metadata.h"
-#include "funcmac.h"
+#include <tmedia/tmcurses/tmcurses.h>
+#include <tmedia/tmedia_tui_elems.h>
+#include <tmedia/util/formatting.h>
+#include <tmedia/media/metadata.h>
+#include <tmedia/util/funcmac.h>
 
 #include <stdexcept>
 #include <fmt/format.h>

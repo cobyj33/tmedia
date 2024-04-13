@@ -1,13 +1,13 @@
 
-#include "mediafetcher.h"
+#include <tmedia/media/mediafetcher.h>
 
-#include "decode.h"
-#include "wtime.h"
-#include "wmath.h"
-#include "formatting.h"
-#include "audioresampler.h"
-#include "audio_visualizer.h"
-#include "funcmac.h"
+#include <tmedia/ffmpeg/decode.h>
+#include <tmedia/util/wtime.h>
+#include <tmedia/util/wmath.h>
+#include <tmedia/util/formatting.h>
+#include <tmedia/ffmpeg/audioresampler.h>
+#include <tmedia/audio/audio_visualizer.h>
+#include <tmedia/util/funcmac.h>
 
 #include <string>
 #include <memory>
@@ -24,11 +24,11 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-MediaFetcher::MediaFetcher(const std::filesystem::path& path) : path(path) {
+MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::set<enum AVMediaType>& requested_streams) :
+  path(path), mdec(std::move(std::make_unique<MediaDecoder>(path, requested_streams))) {
   this->in_use = false;
 
   std::set<enum AVMediaType> requested_stream_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
-  this->mdec = std::move(std::make_unique<MediaDecoder>(path, requested_stream_types));
   this->media_type = this->mdec->get_media_type();
   this->audio_visualizer = std::move(std::make_unique<AmplitudeAbs>());
   this->msg_video_jump_curr_time = 0;
@@ -93,24 +93,13 @@ double MediaFetcher::get_desync_time(double currsystime) const {
 }
 
 /**
- * For threadsafety, both alter_mutex and dec_mtx must be locked
+ * alter_mutex must be locked
 */
 int MediaFetcher::jump_to_time(double target_time, double currsystime) {
   assert(target_time >= 0.0 && target_time <= this->get_duration());
-
-  // int ret = this->mdec->jump_to_time(target_time);
-
   const double original_time = this->get_time(currsystime);
   this->msg_audio_jump_curr_time++;
   this->msg_video_jump_curr_time++;
-
-  // if (ret < 0)
-  //   return ret;
-  
-  // if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-  //   this->audio_buffer->clear(target_time);
-  // }
-
   
   this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time
   return 0; // assume success

@@ -1,23 +1,23 @@
-#include "tmedia.h"
+#include <tmedia/tmedia.h>
 
-#include "mediafetcher.h"
-#include "wminiaudio.h"
-#include "pixeldata.h"
-#include "tmcurses.h"
-#include "signalstate.h"
-#include "wtime.h"
-#include "wmath.h"
-#include "wtime.h"
-#include "ascii.h"
-#include "sleep.h"
-#include "formatting.h"
-#include "tmedia_vom.h"
-#include "tmedia_tui_elems.h"
-#include "maaudioout.h"
-#include "palette.h"
-#include "funcmac.h"
+#include <tmedia/media/mediafetcher.h>
+#include <tmedia/audio/wminiaudio.h>
+#include <tmedia/image/pixeldata.h>
+#include <tmedia/tmcurses/tmcurses.h>
+#include <tmedia/signalstate.h>
+#include <tmedia/util/wtime.h>
+#include <tmedia/util/wmath.h>
+#include <tmedia/util/wtime.h>
+#include <tmedia/util/funcmac.h>
+#include <tmedia/util/sleep.h>
+#include <tmedia/util/formatting.h>
+#include <tmedia/tmedia_vom.h>
+#include <tmedia/tmedia_tui_elems.h>
+#include <tmedia/audio/maaudioout.h>
+#include <tmedia/image/palette.h>
+#include <tmedia/util/funcmac.h>
 
-#include "readerwritercircularbuffer.h"
+#include <readerwritercircularbuffer.h>
 #include <fmt/format.h>
 
 #include <memory>
@@ -112,8 +112,9 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     std::string currently_playing = tmps.plist.current();
     std::string cmd_buf; // currently unused
 
-    try { 
-      fetcher = std::make_unique<MediaFetcher>(tmps.plist.current());
+    try {
+      const std::set<enum AVMediaType> streams = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
+      fetcher = std::make_unique<MediaFetcher>(tmps.plist.current(), streams);
     } catch (const std::runtime_error& err) {
       int failed_plist_index = tmps.plist.index();
 

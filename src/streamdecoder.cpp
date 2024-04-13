@@ -1,11 +1,11 @@
-#include "streamdecoder.h"
+#include <tmedia/ffmpeg/streamdecoder.h>
 
 
-#include "decode.h"
-#include "boiler.h"
-#include "ffmpeg_error.h"
-#include "avguard.h"
-#include "funcmac.h"
+#include <tmedia/ffmpeg/decode.h>
+#include <tmedia/ffmpeg/boiler.h>
+#include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/avguard.h>
+#include <tmedia/util/funcmac.h>
 
 #include <fmt/format.h>
 

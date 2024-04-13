@@ -1,1 +1,1 @@
-#include "scale.h"
+#include <tmedia/image/scale.h>

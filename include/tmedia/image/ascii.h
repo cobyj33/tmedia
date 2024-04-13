@@ -9,7 +9,7 @@ class RGB24;
 #include <string_view>
 
 /**
- * @file ascii.h
+ * @file tmedia/image/funcmac.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
  * @brief Common functions for converting from colors to ascii characters
  * @version 0.1

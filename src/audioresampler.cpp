@@ -1,9 +1,9 @@
-#include "audioresampler.h"
+#include <tmedia/ffmpeg/audioresampler.h>
 
-#include "avguard.h"
-#include "ffmpeg_error.h"
-#include "funcmac.h"
-#include "optim.h"
+#include <tmedia/ffmpeg/avguard.h>
+#include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/util/funcmac.h>
+#include <tmedia/util/optim.h>
 
 #include <fmt/format.h>
 #include <stdexcept>

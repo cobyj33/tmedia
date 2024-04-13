@@ -1,9 +1,9 @@
-#include "audio_visualizer.h"
+#include <tmedia/audio/audio_visualizer.h>
 
-#include "audio.h"
-#include "canvas.h"
-#include "pixeldata.h"
-#include "wmath.h"
+#include <tmedia/audio/audio.h>
+#include <tmedia/image/canvas.h>
+#include <tmedia/image/pixeldata.h>
+#include <tmedia/util/wmath.h>
 
 #include <memory>
 #include <utility>

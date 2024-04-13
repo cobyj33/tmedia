@@ -2,13 +2,14 @@
 #define TMEDIA_TMEDIA_H
 
 
-#include "tmedia_vom.h" // for VidOutMode
-#include "playlist.h" // for LoopType 
-#include "metadata.h" // for MetadataCache
-#include "scale.h" // for Dim2
-#include "boiler.h" // for MediaType
-#include "pixeldata.h" // for PixelData and ScalingAlgo
-#include "ascii.h" // for ASCII_STANDARD_CHAR_MAP
+#include <tmedia/image/ascii.h> // for VidOutMode
+#include <tmedia/tmedia_vom.h> // for VidOutMode
+#include <tmedia/media/playlist.h> // for LoopType 
+#include <tmedia/media/metadata.h> // for MetadataCache
+#include <tmedia/image/scale.h> // for Dim2
+#include <tmedia/ffmpeg/boiler.h> // for MediaType
+#include <tmedia/image/pixeldata.h> // for PixelData and ScalingAlgo
+#include <tmedia/util/funcmac.h> // for ASCII_STANDARD_CHAR_MAP
 
 #include <optional>
 #include <vector>
@@ -43,6 +44,7 @@ struct TMediaCLIParseRes {
 
 //currently unimplemented
 TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv);
+
 
 struct TMediaProgramState {
   Playlist plist;
