@@ -17,7 +17,7 @@ using ms = std::chrono::milliseconds;
 // audio constants
 static constexpr int AUDIO_QUEUE_SIZE_FRAMES = 2048;
 static constexpr int FETCHER_AUDIO_READING_BLOCK_SIZE_SAMPLES = 4096;
-static constexpr int MINIAUDIO_PERIOD_SIZE_MS = 10;
+static constexpr int MINIAUDIO_PERIOD_SIZE_MS = 20;
 static constexpr int MINIAUDIO_PERIODS = 3;
 static constexpr int MAX_CHANNELS = 64; // inclusive
 
@@ -38,7 +38,7 @@ int MAAudioOut::get_data_req_size(int max_buffer_size) {
 #define SAMPLE(frame, channels, channel) (((frame) * (channels)) + (channel))
 
 void MAAudioOut::audio_queue_fill_thread_func() {
-  static constexpr int AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS = 10;
+  static constexpr ms AUDBUF_READ_TRY_WAIT_CHRONO_MS = ms(10);
   static constexpr int RAMP_UP_TIME_MS = MINIAUDIO_PERIOD_SIZE_MS * MINIAUDIO_PERIODS * 2;
   static constexpr int RAMP_DOWN_TIME_MS = MINIAUDIO_PERIOD_SIZE_MS * MINIAUDIO_PERIODS * 2;
   static constexpr float RAMP_UP_TIME_SECONDS = static_cast<float>(RAMP_UP_TIME_MS) * MILLISECONDS_TO_SECONDS;
@@ -72,7 +72,7 @@ void MAAudioOut::audio_queue_fill_thread_func() {
           const float last_sample = stkbuf[SAMPLE(frame - 1, nb_channels, ch)];
           const float curr_sample = stkbuf[SAMPLE(frame, nb_channels, ch)];
           if (ZERO_CROSS(last_sample, curr_sample)) ch_gain[ch] = 1.0f;
-          while (!this->m_audio_queue->wait_enqueue_timed(curr_sample * ch_gain[ch], ms(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
+          while (!this->m_audio_queue->wait_enqueue_timed(curr_sample * ch_gain[ch], AUDBUF_READ_TRY_WAIT_CHRONO_MS)) {}
         }
       }
 
@@ -85,7 +85,7 @@ void MAAudioOut::audio_queue_fill_thread_func() {
     this->m_on_data(stkbuf, request_size_frames);
     const int nb_samples = request_size_frames * nb_channels;
     for (int s = 0; s < nb_samples; s++) {
-      while (this->playing() && !this->m_audio_queue->wait_enqueue_timed(stkbuf[s], ms(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
+      while (!this->m_audio_queue->wait_enqueue_timed(stkbuf[s], AUDBUF_READ_TRY_WAIT_CHRONO_MS)) {}
     }
   } 
   // state is MAAudioOutState::STOPPING
@@ -112,7 +112,7 @@ void MAAudioOut::audio_queue_fill_thread_func() {
           const float last_sample = stkbuf[SAMPLE(frame - 1, nb_channels, ch)];
           const float curr_sample = stkbuf[SAMPLE(frame, nb_channels, ch)];
           if (ZERO_CROSS(last_sample, curr_sample)) ch_gain[ch] = 0.0f;
-          while (!this->m_audio_queue->wait_enqueue_timed(curr_sample * ch_gain[ch], ms(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
+          while (!this->m_audio_queue->wait_enqueue_timed(curr_sample * ch_gain[ch], AUDBUF_READ_TRY_WAIT_CHRONO_MS)) {}
         }
       }
 

@@ -51,19 +51,17 @@ std::vector<AVFrame*> MediaDecoder::next_frames(enum AVMediaType media_type) {
   constexpr int NO_FETCH_MADE = -1;
 
   StreamDecoder& stream_decoder = *(this->decs[media_type]);
-  std::vector<AVFrame*> dec_frames;
   int fetch_count = NO_FETCH_MADE; 
 
   do {
     fetch_count = !stream_decoder.has_packets() ? this->fetch_next(10) : NO_FETCH_MADE;
-    dec_frames = stream_decoder.decode_next();
-    if (dec_frames.size() > 0) {
+    std::vector<AVFrame*> dec_frames = stream_decoder.decode_next();
+    if (dec_frames.size() > 0)
       return dec_frames;
-    }
     // no need to clear dec_frames, if the size of decoded frames is greater than 0, would have already returned
   } while (fetch_count > 0 || fetch_count == NO_FETCH_MADE);
 
-  return dec_frames; // no video frames could sadly be found. This should only really ever happen once the file ends
+  return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
 }
 
 int MediaDecoder::fetch_next(int requested_packet_count) {

@@ -50,19 +50,20 @@ void PixelData::init_from_avframe(AVFrame* video_frame) {
   this->m_width = video_frame->width;
   this->m_height = video_frame->height;
   const uint8_t* const data = video_frame->data[0];
+  std::vector<RGB24>& pixels = *this->pixels;
 
   switch (static_cast<AVPixelFormat>(video_frame->format)) {
     case AV_PIX_FMT_GRAY8: {
       const int datalen = this->m_width * this->m_height;
       for (int i = 0; i < datalen; i++) {
-        (*this->pixels)[i] = RGB24(data[i]);
+        pixels[i] = RGB24(data[i]);
       }
     } break;
     case AV_PIX_FMT_RGB24: {
       const int area = this->m_width * this->m_height;
       int di = 0;
       for (int i = 0; i < area; i++) {
-        (*this->pixels)[i] = RGB24(data[di], data[di + 1], data[di + 2]);
+        pixels[i] = RGB24(data[di], data[di + 1], data[di + 2]);
         di += 3;
       }
     } break;

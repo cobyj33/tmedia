@@ -54,6 +54,11 @@ void tm_mvwprintw_label(WINDOW* window, TMLabelStyle label_style, const char* fo
   va_end(args);
 }
 
+void wfill_line(WINDOW* window, int y, int x, int width, char ch) {
+  wmove(window, y, x);
+  for (int col = x; col < x + width; col++) waddch(window, ch);
+}
+
 void wfill_box(WINDOW* window, int y, int x, int width, int height, char ch) {
     for (int row = y; row < y + height; row++) {
       wmove(window, row, x);

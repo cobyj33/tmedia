@@ -83,6 +83,7 @@ struct TMLabelStyle {
 void tm_mvwaddstr_label(WINDOW* window, TMLabelStyle label_style, std::string_view str);
 void tm_mvwprintw_label(WINDOW* window, TMLabelStyle label_style, const char* format, ...);
 
+void wfill_line(WINDOW* window, int y, int x, int width, char ch);
 void wfill_box(WINDOW* window, int y, int x, int width, int height, char ch);
 void werasebox(WINDOW* window, int y, int x, int width, int height);
 

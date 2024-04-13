@@ -71,7 +71,6 @@ void StreamDecoder::reset() noexcept {
 }
 
 std::vector<AVFrame*> StreamDecoder::decode_next() {
-  std::vector<AVFrame*> dec_frames;
   static constexpr int ALLOWED_FAILURES = 5;
 
   bool decoding_error_thrown = true; //init to true so loop runs
@@ -79,7 +78,7 @@ std::vector<AVFrame*> StreamDecoder::decode_next() {
     decoding_error_thrown = false;
 
     try {
-      dec_frames = decode_packet_queue(this->codec_context, this->packet_queue, this->media_type);
+      return decode_packet_queue(this->codec_context, this->packet_queue, this->media_type);
     } catch (ffmpeg_error const& e) {
       decoding_error_thrown = true;
       if (i >= ALLOWED_FAILURES) {
@@ -91,7 +90,7 @@ std::vector<AVFrame*> StreamDecoder::decode_next() {
 
   }
   
-  return dec_frames;
+  return {};
 }
 
 StreamDecoder::~StreamDecoder() {

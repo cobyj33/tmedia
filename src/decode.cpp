@@ -21,7 +21,7 @@ void clear_avframe_list(std::vector<AVFrame*>& frame_list) {
   for (std::size_t i = 0; i < frame_list.size(); i++) {
     av_frame_free(&(frame_list[i]));
   }
-  frame_list.clear();
+  frame_list.resize(0);
 }
 
 
@@ -132,16 +132,22 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
 }
 
 std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::deque<AVPacket*>& packet_queue, enum AVMediaType packet_type) {
-  std::vector<AVFrame*> dec_frames;
-
   while (!packet_queue.empty()) {
     AVPacket* packet = packet_queue.front();
     packet_queue.pop_front();
 
     try {
       switch (packet_type) {
-        case AVMEDIA_TYPE_AUDIO: dec_frames = decode_audio_packet(codec_context, packet); break;
-        case AVMEDIA_TYPE_VIDEO: dec_frames = decode_video_packet(codec_context, packet); break;
+        case AVMEDIA_TYPE_AUDIO: {
+          std::vector<AVFrame*> dec_frames = decode_audio_packet(codec_context, packet);
+          av_packet_free(&packet);
+          return dec_frames;
+        } break;
+        case AVMEDIA_TYPE_VIDEO: {
+          std::vector<AVFrame*> dec_frames = decode_video_packet(codec_context, packet);
+          av_packet_free(&packet);
+          return dec_frames;
+        } break;
         default: throw std::runtime_error(fmt::format("[{}] Could not decode "
           "packet queue of unimplemented AVMediaType {}.",
           FUNCDINFO, av_get_media_type_string(packet_type)));
@@ -154,10 +160,7 @@ std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::de
     }
     
     av_packet_free(&packet);
-    if (dec_frames.size() > 0) {
-      return dec_frames;
-    }
   }
 
-  return dec_frames;
+  return {};
 }
