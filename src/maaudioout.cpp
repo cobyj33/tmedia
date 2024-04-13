@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <memory>
 #include <cassert>
-
+#include <sstream>
 extern "C" {
   #include <miniaudio.h>
 }
@@ -14,11 +14,12 @@ extern "C" {
 using ms = std::chrono::milliseconds;
 
 // audio constants
-static constexpr int AUDIO_QUEUE_SIZE_FRAMES = 4096;
+static constexpr int AUDIO_QUEUE_SIZE_FRAMES = 2048;
 static constexpr int FETCHER_AUDIO_READING_BLOCK_SIZE_SAMPLES = 4096;
 static constexpr int MINIAUDIO_PERIOD_SIZE_FRAMES = 0;
-static constexpr int MINIAUDIO_PERIOD_SIZE_MS = 75;
+static constexpr int MINIAUDIO_PERIOD_SIZE_MS = 10;
 static constexpr int MINIAUDIO_PERIODS = 3;
+static constexpr int MAX_CHANNELS = 64; // inclusive
 
 // ONLY call from audio_queue_fill_thread
 int MAAudioOut::get_data_req_size(int max_buffer_size) {
@@ -33,72 +34,88 @@ int MAAudioOut::get_data_req_size(int max_buffer_size) {
   return request_size_frames;
 }
 
+#define ZERO_CROSS(sample1, sample2) (((sample1) <= 0.0f && (sample2) >= 0.0f) || ((sample1) >= 0.0f && (sample2) <= 0.0f))
+#define SAMPLE(frame, channels, channel) (((frame) * (channels)) + (channel))
+
 void MAAudioOut::audio_queue_fill_thread_func() {
   static constexpr int AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS = 10;
   static constexpr float RAMP_UP_TIME_SECONDS = 0.0625f;
   static constexpr float RAMP_DOWN_TIME_SECONDS = 0.0625f;
   float stkbuf[FETCHER_AUDIO_READING_BLOCK_SIZE_SAMPLES];
-  const int stkbuf_frames_size = FETCHER_AUDIO_READING_BLOCK_SIZE_SAMPLES / this->m_nb_channels;
+  const int nb_channels = this->m_nb_channels;
+  const int stkbuf_frames_size = FETCHER_AUDIO_READING_BLOCK_SIZE_SAMPLES / nb_channels;
 
   /**
    * Ramping up and down is done to prevent weird sudden jumping in the speaker
    * whenever audio is started or stopped.
   */
 
- #if 0
- {
-    const float rampup_sample_end = static_cast<float>(this->m_sample_rate) * RAMP_UP_TIME_SECONDS;
-    float rampup_samples = 0;
+ // i am so sorry that this code is ugly
 
-    while (rampup_samples < rampup_sample_end) {
+  /**
+   * Starts the audio at the first zero crossing found in the given audio stream
+  */
+ {
+    float ch_gain[MAX_CHANNELS + 1]; // init to 0.0f
+    const int rampup_sample_end = static_cast<float>(this->m_sample_rate) * RAMP_UP_TIME_SECONDS;
+    int rampup_samples = 0;
+
+    while (rampup_samples < rampup_sample_end && state == MAAudioOutState::PLAYING) {
       const int request_size_frames = stkbuf_frames_size;
       this->m_on_data(stkbuf, request_size_frames);
-      const int nb_samples = stkbuf_frames_size * this->m_nb_channels;
-      for (int i = 0; i < nb_samples; i++) {
-        const float vol_percent = rampup_samples / rampup_sample_end;
-        const float adjusted_sample = stkbuf[i] * vol_percent;
-        while (this->playing() && !this->m_audio_queue->wait_enqueue_timed(adjusted_sample, ms(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
-        rampup_samples++;
+      const int nb_samples = request_size_frames * nb_channels;
+      for (int frame = 1; frame < request_size_frames; frame++) {
+        for (int ch = 0; ch < nb_channels; ch++) {
+          const float last_sample = stkbuf[SAMPLE(frame - 1, nb_channels, ch)];
+          const float curr_sample = stkbuf[SAMPLE(frame, nb_channels, ch)];
+          if (ZERO_CROSS(last_sample, curr_sample)) ch_gain[ch] = 1.0f;
+          while (!this->m_audio_queue->wait_enqueue_timed(curr_sample * ch_gain[ch], ms(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
+        }
       }
-
+      rampup_samples += nb_samples;
     }
  }
- #endif
-
-
 
   while (this->state == MAAudioOutState::PLAYING) {
     const int request_size_frames = this->get_data_req_size(stkbuf_frames_size);
-
     this->m_on_data(stkbuf, request_size_frames);
-    const int nb_samples = request_size_frames * this->m_nb_channels;
-    for (int i = 0; i < nb_samples; i++) {
-      while (this->playing() && !this->m_audio_queue->wait_enqueue_timed(stkbuf[i], ms(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
+    const int nb_samples = request_size_frames * nb_channels;
+    for (int s = 0; s < nb_samples; s++) {
+      while (this->playing() && !this->m_audio_queue->wait_enqueue_timed(stkbuf[s], ms(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
     }
   } 
   // state is MAAudioOutState::STOPPING
 
-  #if 0
+  /**
+   * Cuts off the audio at the first zero crossing found in the given audio stream
+  */
   {
-    // const float rampdown_sample_start = this->m_sample_rate / 0.25f; // 0.0625 seconds
-    const float rampdown_sample_start = static_cast<float>(this->m_sample_rate) * RAMP_DOWN_TIME_SECONDS;
+    float ch_gain[MAX_CHANNELS + 1];
+    for (int i = 0; i < MAX_CHANNELS + 1; i++) ch_gain[i] = 1.0f;
+
+    const float rampdown_sample_start = static_cast<float>(this->m_sample_rate) * RAMP_DOWN_TIME_SECONDS; // the maximum amount of samples to look for an end
     float rampdown_samples = rampdown_sample_start;
 
+    // while (rampdown_samples > 0.0f && !found_all_zero_crosses) {
     while (rampdown_samples > 0.0f) {
       const int request_size_frames = stkbuf_frames_size;
       this->m_on_data(stkbuf, request_size_frames);
-      const int nb_samples = stkbuf_frames_size * this->m_nb_channels;
-      for (int i = 0; i < nb_samples; i++) {
-        const float vol_percent = rampdown_samples / rampdown_sample_start;
-        const float adjusted_sample = stkbuf[i] * vol_percent;
-        while (this->playing() && !this->m_audio_queue->wait_enqueue_timed(adjusted_sample, ms(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
-        rampdown_samples--;
+      const int nb_samples = request_size_frames * nb_channels;
+      for (int frame = 1; frame < request_size_frames; frame++) { // should this just end once we find all zero crossings?
+        // found_all_zero_crosses = true;
+        for (int ch = 0; ch < nb_channels; ch++) {
+          const float last_sample = stkbuf[SAMPLE(frame - 1, nb_channels, ch)];
+          const float curr_sample = stkbuf[SAMPLE(frame, nb_channels, ch)];
+          if (ZERO_CROSS(last_sample, curr_sample)) ch_gain[ch] = 0.0f;
+          while (!this->m_audio_queue->wait_enqueue_timed(curr_sample * ch_gain[ch], ms(AUDIO_BUFFER_READ_INTO_TRY_WAIT_MS))) {}
+        }
       }
+      rampdown_samples -= nb_samples;
     }
   }
-  #endif
 
-  while (this->m_audio_queue->size_approx() > 0) { } // spin until queue is empty! 
+  // wait for the audio queue to drain
+  while (this->m_audio_queue->size_approx() > 0) { }
 
   std::unique_lock<std::mutex> stop_lock(this->stop_mutex);
   this->state = MAAudioOutState::STOPPED;
@@ -108,8 +125,8 @@ void MAAudioOut::audio_queue_fill_thread_func() {
 void audioOutDataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
   float sample;
   MAAudioOutCallbackData* cb_data = (MAAudioOutCallbackData*)pDevice->pUserData;
-  bool muted = *cb_data->muted;
   const ma_uint32 sampleCount = frameCount * pDevice->playback.channels;
+  bool muted = *cb_data->muted;
   for (ma_uint32 i = 0; i < sampleCount; i++) {
     sample = 0.0f;
     cb_data->audio_queue->try_dequeue(sample);
@@ -124,11 +141,11 @@ MAAudioOut::MAAudioOut(int nb_channels, int sample_rate, std::function<void(floa
   m_audio_queue_size_frames(AUDIO_QUEUE_SIZE_FRAMES),
   m_audio_queue_size_samples(AUDIO_QUEUE_SIZE_FRAMES * nb_channels) {
   assert(nb_channels > 0);
+  assert(nb_channels <= MAX_CHANNELS);
   assert(sample_rate > 0);
   this->m_muted = false;
 
   this->m_audio_queue = new moodycamel::BlockingReaderWriterCircularBuffer<float>(this->m_audio_queue_size_samples);
-
   this->m_cb_data = new MAAudioOutCallbackData(this->m_audio_queue, &this->m_muted);
   this->m_on_data = on_data;
 
