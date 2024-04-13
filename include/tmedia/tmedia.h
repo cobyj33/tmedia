@@ -2,8 +2,7 @@
 #define TMEDIA_TMEDIA_H
 
 
-#include <tmedia/image/ascii.h> // for VidOutMode
-#include <tmedia/tmedia_vom.h> // for VidOutMode
+#include <tmedia/image/ascii.h> // for ASCII_STANDARD_CHAR_MAP
 #include <tmedia/media/playlist.h> // for LoopType 
 #include <tmedia/media/metadata.h> // for MetadataCache
 #include <tmedia/image/scale.h> // for Dim2
@@ -18,6 +17,15 @@
 
 extern const char* TMEDIA_CONTROLS_USAGE;
 extern const char* TMEDIA_CLI_OPTIONS_DESC;
+
+enum class VidOutMode {
+  PLAIN,
+  COLOR,
+  GRAY,
+  COLOR_BG,
+  GRAY_BG
+};
+
 
 struct TMediaStartupState {
   std::vector<std::filesystem::path> media_files;

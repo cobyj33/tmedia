@@ -18,6 +18,7 @@ static constexpr int MIN_RENDER_LINES = 2;
 
 const char* loop_type_cstr_short(LoopType loop_type);
 std::string get_media_file_display_name(const std::string& abs_path, MetadataCache& mchc);
+void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map);
 
 void TMediaCursesRenderer::render(TMediaProgramState& tmps, const TMediaProgramSnapshot& sshhot) {
   if (sshhot.frame.get_width() != this->last_frame_dims.width || sshhot.frame.get_height() != this->last_frame_dims.height) {
@@ -163,4 +164,17 @@ std::string get_media_file_display_name(const std::string& abs_path, MetadataCac
   }
 
   return std::filesystem::path(abs_path).filename().string();
+}
+
+void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map) {
+  if (!has_colors()) // if there are no colors, just don't print colors :)
+    output_mode = VidOutMode::PLAIN;
+
+  switch (output_mode) {
+    case VidOutMode::PLAIN: return render_pixel_data_plain(pixel_data, bounds_row, bounds_col, bounds_width, bounds_height, scaling_algorithm, ascii_char_map);
+    case VidOutMode::COLOR:
+    case VidOutMode::GRAY: return render_pixel_data_color(pixel_data, bounds_row, bounds_col, bounds_width, bounds_height, scaling_algorithm, ascii_char_map);
+    case VidOutMode::COLOR_BG:
+    case VidOutMode::GRAY_BG: return render_pixel_data_bg(pixel_data, bounds_row, bounds_col, bounds_width, bounds_height, scaling_algorithm);
+  }
 }

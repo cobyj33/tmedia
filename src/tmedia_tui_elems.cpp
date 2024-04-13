@@ -5,7 +5,6 @@
 #include <tmedia/util/funcmac.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/tmcurses/tmcurses.h>
-#include <tmedia/tmedia_vom.h>
 #include <tmedia/util/funcmac.h>
 
 #include <fmt/format.h>
@@ -94,21 +93,6 @@ void render_pixel_data_color(const PixelData& pixel_data, int bounds_row, int bo
     }
   }
 }
-
-void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map) {
-  if (!has_colors()) // if there are no colors, just don't print colors :)
-    output_mode = VidOutMode::PLAIN;
-
-  switch (output_mode) {
-    case VidOutMode::PLAIN: return render_pixel_data_plain(pixel_data, bounds_row, bounds_col, bounds_width, bounds_height, scaling_algorithm, ascii_char_map);
-    case VidOutMode::COLOR:
-    case VidOutMode::GRAY: return render_pixel_data_color(pixel_data, bounds_row, bounds_col, bounds_width, bounds_height, scaling_algorithm, ascii_char_map);
-    case VidOutMode::COLOR_BG:
-    case VidOutMode::GRAY_BG: return render_pixel_data_bg(pixel_data, bounds_row, bounds_col, bounds_width, bounds_height, scaling_algorithm);
-  }
-}
-
-
 
 void wprint_labels(WINDOW* window, std::vector<std::string_view>& labels, int y, int x, int width) {
   if (width <= 0)

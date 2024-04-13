@@ -11,7 +11,6 @@
 #include <tmedia/util/funcmac.h>
 #include <tmedia/util/sleep.h>
 #include <tmedia/util/formatting.h>
-#include <tmedia/tmedia_vom.h>
 #include <tmedia/tmedia_tui_elems.h>
 #include <tmedia/audio/maaudioout.h>
 #include <tmedia/image/palette.h>
