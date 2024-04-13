@@ -79,43 +79,51 @@ message("Options: FFMPEG_EXTRA_CONFIGURE_OPTIONS: " ${FFMPEG_EXTRA_CONFIGURE_OPT
 
 
 set(COMMON_SOURCE_FILES 
-${CMAKE_SOURCE_DIR}/src/ascii.cpp
-${CMAKE_SOURCE_DIR}/src/audio_thread.cpp
-${CMAKE_SOURCE_DIR}/src/audio_visualizer.cpp
-${CMAKE_SOURCE_DIR}/src/audio.cpp
-${CMAKE_SOURCE_DIR}/src/maaudioout.cpp
-${CMAKE_SOURCE_DIR}/src/audioresampler.cpp
-${CMAKE_SOURCE_DIR}/src/audioringbuffer.cpp
-${CMAKE_SOURCE_DIR}/src/blocking_audioringbuffer.cpp
-${CMAKE_SOURCE_DIR}/src/boiler.cpp
-${CMAKE_SOURCE_DIR}/src/canvas.cpp
-${CMAKE_SOURCE_DIR}/src/color.cpp
-${CMAKE_SOURCE_DIR}/src/cli_iter.cpp
+${CMAKE_SOURCE_DIR}/src/audio/audio_visualizer.cpp
+${CMAKE_SOURCE_DIR}/src/audio/audio.cpp
+${CMAKE_SOURCE_DIR}/src/audio/audioringbuffer.cpp
+${CMAKE_SOURCE_DIR}/src/audio/blocking_audioringbuffer.cpp
+${CMAKE_SOURCE_DIR}/src/audio/maaudioout.cpp
+${CMAKE_SOURCE_DIR}/src/audio/wminiaudio.cpp
+
+${CMAKE_SOURCE_DIR}/src/cli/cli_iter.cpp
+
+${CMAKE_SOURCE_DIR}/src/ffmpeg/audioresampler.cpp
+${CMAKE_SOURCE_DIR}/src/ffmpeg/boiler.cpp
+${CMAKE_SOURCE_DIR}/src/ffmpeg/decode.cpp
+${CMAKE_SOURCE_DIR}/src/ffmpeg/ffmpeg_error.cpp
+${CMAKE_SOURCE_DIR}/src/ffmpeg/probe.cpp
+${CMAKE_SOURCE_DIR}/src/ffmpeg/streamdecoder.cpp
+${CMAKE_SOURCE_DIR}/src/ffmpeg/videoconverter.cpp
+
+${CMAKE_SOURCE_DIR}/src/image/ascii.cpp
+${CMAKE_SOURCE_DIR}/src/image/canvas.cpp
+${CMAKE_SOURCE_DIR}/src/image/color.cpp
+${CMAKE_SOURCE_DIR}/src/image/palette.cpp
+${CMAKE_SOURCE_DIR}/src/image/palette_io.cpp
+${CMAKE_SOURCE_DIR}/src/image/pixeldata.cpp
+${CMAKE_SOURCE_DIR}/src/image/scale.cpp
+
+${CMAKE_SOURCE_DIR}/src/media/audio_thread.cpp
+${CMAKE_SOURCE_DIR}/src/media/duration_checking.cpp
+${CMAKE_SOURCE_DIR}/src/media/mediaclock.cpp
+${CMAKE_SOURCE_DIR}/src/media/mediadecoder.cpp
+${CMAKE_SOURCE_DIR}/src/media/mediafetcher.cpp
+${CMAKE_SOURCE_DIR}/src/media/mediaformat.cpp
+${CMAKE_SOURCE_DIR}/src/media/metadata.cpp
+${CMAKE_SOURCE_DIR}/src/media/playlist.cpp
+${CMAKE_SOURCE_DIR}/src/media/video_thread.cpp
+
+${CMAKE_SOURCE_DIR}/src/tmcurses/tmcurses_print.cpp
+${CMAKE_SOURCE_DIR}/src/tmcurses/tmcurses.cpp
+
+${CMAKE_SOURCE_DIR}/src/util/formatting.cpp
+${CMAKE_SOURCE_DIR}/src/util/sleep.cpp
+
 ${CMAKE_SOURCE_DIR}/src/tmedia_cli.cpp
-${CMAKE_SOURCE_DIR}/src/decode.cpp
-${CMAKE_SOURCE_DIR}/src/duration_checking.cpp
-${CMAKE_SOURCE_DIR}/src/ffmpeg_error.cpp
-${CMAKE_SOURCE_DIR}/src/formatting.cpp
-${CMAKE_SOURCE_DIR}/src/mediaclock.cpp
-${CMAKE_SOURCE_DIR}/src/mediadecoder.cpp
-${CMAKE_SOURCE_DIR}/src/mediafetcher.cpp
-${CMAKE_SOURCE_DIR}/src/mediaformat.cpp
-${CMAKE_SOURCE_DIR}/src/metadata.cpp
-${CMAKE_SOURCE_DIR}/src/palette.cpp
-${CMAKE_SOURCE_DIR}/src/palette_io.cpp
-${CMAKE_SOURCE_DIR}/src/pixeldata.cpp
-${CMAKE_SOURCE_DIR}/src/playlist.cpp
-${CMAKE_SOURCE_DIR}/src/probe.cpp
-${CMAKE_SOURCE_DIR}/src/scale.cpp
-${CMAKE_SOURCE_DIR}/src/sleep.cpp
-${CMAKE_SOURCE_DIR}/src/streamdecoder.cpp
-${CMAKE_SOURCE_DIR}/src/tmcurses_print.cpp
-${CMAKE_SOURCE_DIR}/src/tmcurses.cpp
 ${CMAKE_SOURCE_DIR}/src/tmedia_tui.cpp
 ${CMAKE_SOURCE_DIR}/src/tmedia_tui_elems.cpp
-${CMAKE_SOURCE_DIR}/src/video_thread.cpp
-${CMAKE_SOURCE_DIR}/src/videoconverter.cpp
-${CMAKE_SOURCE_DIR}/src/wminiaudio.cpp)
+)
 
 set(TEST_SOURCE_FILES
 ${CMAKE_SOURCE_DIR}/src/tests/test_color.cpp
@@ -168,8 +176,8 @@ VERSION ${TMEDIA_VERSION}
 LANGUAGES ${TMEDIA_SUPPORTED_LANGUAGES}
 DESCRIPTION "Terminal video media player")
 
-add_executable(tmedia ${COMMON_SOURCE_FILES} ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/src/tmedia.cpp)
 configure_file(${CMAKE_SOURCE_DIR}/include/tmedia/version.h.in ${CMAKE_BINARY_DIR}/include/tmedia/version.h @ONLY)
+add_executable(tmedia ${COMMON_SOURCE_FILES} ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/src/tmedia.cpp)
 include(${CMAKE_SOURCE_DIR}/lib/deps.cmake)
 
 message("\nThird Party Libs:")
