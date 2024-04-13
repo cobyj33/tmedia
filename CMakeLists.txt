@@ -115,6 +115,7 @@ ${CMAKE_SOURCE_DIR}/src/media/playlist.cpp
 ${CMAKE_SOURCE_DIR}/src/media/video_thread.cpp
 
 ${CMAKE_SOURCE_DIR}/src/tmcurses/tmcurses_print.cpp
+${CMAKE_SOURCE_DIR}/src/tmcurses/tmcurses_init.cpp
 ${CMAKE_SOURCE_DIR}/src/tmcurses/tmcurses.cpp
 
 ${CMAKE_SOURCE_DIR}/src/util/formatting.cpp

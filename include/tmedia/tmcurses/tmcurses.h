@@ -65,6 +65,18 @@ enum class TMAlign {
   CENTER
 };
 
+struct Style {
+  int row;
+  int col;
+  int width;
+  int height;
+  TMAlign align;
+  int padding_left;
+  int padding_right;
+  int padding_top;
+  int padding_bottom;
+};
+
 /**
  * Encapsulates the style guides for 
 */

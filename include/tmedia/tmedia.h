@@ -26,6 +26,13 @@ enum class VidOutMode {
   GRAY_BG
 };
 
+enum class Screen {
+  PLAYER,
+  HELP,
+  // PLAYLIST,
+  // FILE_EXPLORER,
+  // LOG
+};
 
 struct TMediaStartupState {
   std::vector<std::filesystem::path> media_files;
@@ -61,10 +68,12 @@ struct TMediaProgramState {
   bool quit = false;
   bool fullscreen = false;
   int refresh_rate_fps = 24;
+  Dim2 req_frame_dim = Dim2(1, 1);
+  Screen screen = Screen::PLAYER;
   ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
   VidOutMode vom = VidOutMode::PLAIN;
+  std::string cmd_buf;
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
-  Dim2 req_frame_dim = Dim2(1, 1);
 };
 
 struct TMediaProgramSnapshot {
