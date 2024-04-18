@@ -11,6 +11,8 @@
 #include <tmedia/image/pixeldata.h>
 #include <tmedia/util/defines.h>
 
+#include <tmedia/ctnr/arraypairmap.hpp>
+
 #include <natural_sort.hpp>
 
 #include <vector>
@@ -149,7 +151,7 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
                         std::vector<fs::path>& resolved_paths);
 
   typedef std::function<void(CLIParseState&, const tmedia::CLIArg arg)> ArgParseFunc;
-  typedef std::map<std::string_view, ArgParseFunc, std::less<>> ArgParseMap;
+  typedef tmedia::ArrayPairMap<std::string_view, ArgParseFunc, 50, std::less<>> ArgParseMap;
 
   void print_help_text();
 
@@ -363,11 +365,8 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     for (const MediaPath& path : ps.paths) {
       MediaPathSearchOptions resolved_srch_opts = resolve_path_search_options(ps.srch_opts, path.srch_opts);
       for (unsigned int i = 0; i < resolved_srch_opts.num_reads; i++) {
-        resolve_cli_path(path.path,
-              resolve_path_search_options(ps.srch_opts, path.srch_opts),
-              ps.tmss.media_files);
+        resolve_cli_path(path.path, resolved_srch_opts, ps.tmss.media_files);
       }
-      
     }
 
     if (ps.tmss.media_files.size() == 0UL) {
