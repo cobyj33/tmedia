@@ -7,7 +7,7 @@
 #include <tmedia/image/scale.h>
 #include <tmedia/util/wtime.h>
 #include <tmedia/ffmpeg/videoconverter.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <mutex>
 #include <memory>

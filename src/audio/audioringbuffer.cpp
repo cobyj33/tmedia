@@ -1,7 +1,7 @@
 #include <tmedia/audio/audioringbuffer.h>
 
 #include <tmedia/util/formatting.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <fmt/format.h>
 

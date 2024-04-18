@@ -4,7 +4,7 @@
 #include <tmedia/tmedia_tui_elems.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/media/metadata.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <stdexcept>
 #include <fmt/format.h>

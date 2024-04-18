@@ -1,6 +1,7 @@
 if(FIND_FFMPEG)
   find_package(PkgConfig REQUIRED)
-  pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET libavcodec
+  pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
+  libavcodec
   libavformat
   libavutil
   libswresample
@@ -59,7 +60,7 @@ else()
     CONFIGURE_COMMAND     ${TMEDIA_DEPS_DOWNLOAD_DIR}/ffmpeg/src/configure --enable-libvorbis --enable-libopus ${FFMPEG_CONFIGURE_OPTIONS}
     PREFIX          ${CMAKE_BINARY_DIR}
     INSTALL_DIR       ${CMAKE_BINARY_DIR}
-    BUILD_COMMAND       make -j${TMEDIA_DEP_JOBS}
+    BUILD_COMMAND       make -j
     BUILD_IN_SOURCE     OFF
     INSTALL_COMMAND     make install
     DEPENDS libvorbis libopus

@@ -2,7 +2,7 @@
 
 #include <tmedia/util/formatting.h>
 #include <tmedia/ffmpeg/boiler.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <fmt/format.h>
 

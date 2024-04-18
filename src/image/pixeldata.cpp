@@ -9,7 +9,7 @@
 #include <tmedia/ffmpeg/ffmpeg_error.h>
 #include <tmedia/ffmpeg/streamdecoder.h>
 
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <stdexcept>
 #include <cstdio>

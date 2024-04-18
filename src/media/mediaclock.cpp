@@ -1,6 +1,6 @@
 #include <tmedia/media/mediaclock.h>
 
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 #include <fmt/format.h>
 
 #include <stdexcept>

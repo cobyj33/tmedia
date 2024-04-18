@@ -2,10 +2,10 @@
 
 #include <tmedia/image/ascii.h>
 #include <tmedia/image/pixeldata.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/tmcurses/tmcurses.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <fmt/format.h>
 

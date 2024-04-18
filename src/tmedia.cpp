@@ -8,13 +8,13 @@
 #include <tmedia/util/wtime.h>
 #include <tmedia/util/wmath.h>
 #include <tmedia/util/wtime.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 #include <tmedia/util/sleep.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/tmedia_tui_elems.h>
 #include <tmedia/audio/maaudioout.h>
 #include <tmedia/image/palette.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <readerwritercircularbuffer.h>
 #include <fmt/format.h>
@@ -264,7 +264,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
                   case LoopType::NO_LOOP: tmps.plist.set_loop_type(LoopType::REPEAT); break;
                   case LoopType::REPEAT: tmps.plist.set_loop_type(LoopType::REPEAT_ONE); break;
                   case LoopType::REPEAT_ONE: tmps.plist.set_loop_type(LoopType::NO_LOOP); break;
-                } 
+                }
               }
             } break;
             case 's':

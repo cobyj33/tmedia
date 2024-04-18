@@ -8,7 +8,7 @@
 #include <tmedia/image/scale.h> // for Dim2
 #include <tmedia/ffmpeg/boiler.h> // for MediaType
 #include <tmedia/image/pixeldata.h> // for PixelData and ScalingAlgo
-#include <tmedia/util/funcmac.h> // for ASCII_STANDARD_CHAR_MAP
+#include <tmedia/util/defines.h> // for ASCII_STANDARD_CHAR_MAP
 
 #include <optional>
 #include <vector>
@@ -26,13 +26,53 @@ enum class VidOutMode {
   GRAY_BG
 };
 
-enum class Screen {
-  PLAYER,
-  HELP,
-  // PLAYLIST,
-  // FILE_EXPLORER,
-  // LOG
-};
+// class Error {
+//   std::string msg;
+// };
+
+
+
+// class Screen {
+//   std::string name;
+// };
+
+// class Command {
+//   std::string name;
+//   std::function<void(TMedia& state)> action;
+// };
+
+// class MediaPlayer {
+//   Playlist playlist;
+//   Playlist queue;
+//   std::unique_ptr<MediaFetcher> fetcher;
+//   std::unique_ptr<MAAudioOut> audio_output;
+//   PixelData curr_frame;
+
+//   next();
+//   rewind();
+//   skip();
+//   media_type();
+//   stop();
+//   start();
+//   jump(double time);
+//   jump_relative(double time);
+//   time();
+//   shuffle();
+//   unshuffle();
+//   const Playlist& get_playlist();
+//   const Playlist& get_queue();
+// };
+
+// class TMedia {
+//   std::unique_ptr<MediaPlayer> player;
+//   std::vector<Screen> screens;
+//   std::vector<Command> commands;
+//   bool fullscreen;
+//   int vid_refresh_rate;
+//   std::string cmd_buf;
+//   std::string ascii_display_chars;
+//   VidOutMode vom;
+// };
 
 struct TMediaStartupState {
   std::vector<std::filesystem::path> media_files;
@@ -57,7 +97,6 @@ struct TMediaCLIParseRes {
   TMediaCLIParseRes(TMediaStartupState&& tmss, bool exited) : tmss(std::move(tmss)), exited(exited) {}
 };
 
-//currently unimplemented
 TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv);
 
 
@@ -69,11 +108,11 @@ struct TMediaProgramState {
   bool fullscreen = false;
   int refresh_rate_fps = 24;
   Dim2 req_frame_dim = Dim2(1, 1);
-  Screen screen = Screen::PLAYER;
+  // Screen screen = Screen::PLAYER;
   ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
   VidOutMode vom = VidOutMode::PLAIN;
-  std::string cmd_buf;
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
+  
 };
 
 struct TMediaProgramSnapshot {
@@ -94,26 +133,26 @@ enum class TMediaCommand {
   UNSHUFFLE,
   TOGGLE_SHUFFLE,
   SET_LOOP_TYPE,
-
   // Playback Commands
   SEEK,
   SEEK_OFFSET,
   PLAY,
   PAUSE,
-  TOGGLE_PLAYBACK,
+  TOGGLE_PLAYBACK
 
   // Visual commands
-  SET_VIDEO_OUTPUT_MODE,
-  RESIZE,
-  REFRESH,
-  FULLSCREEN,
-  NO_FULLSCREEN,
-  TOGGLE_FULLSCREEN,
+  // Visual commands are not handled by tmedia commands
+  // SET_VIDEO_OUTPUT_MODE,
+  // RESIZE,
+  // REFRESH,
+  // FULLSCREEN,
+  // NO_FULLSCREEN,
+  // TOGGLE_FULLSCREEN,
 
-  // volume controls
-  SET_VOLUME,
-  VOLUME_OFFSET,
-  MUTE
+  // // volume controls
+  // SET_VOLUME,
+  // VOLUME_OFFSET,
+  // MUTE
 };
 
 struct TMediaCommandData {

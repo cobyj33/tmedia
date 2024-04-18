@@ -1,5 +1,18 @@
-#ifndef FUNCMAC_H
-#define FUNCMAC_H
+#ifndef TMEDIA_DEFINES_H
+#define TMEDIA_DEFINES_H
+
+
+/* Branch prediction */
+#if (defined(__GNUC__) && __GNUC__ >= 3) || defined(__clang__)
+# define likely(p)     __builtin_expect(!!(p), 1)
+# define unlikely(p)   __builtin_expect(!!(p), 0)
+#elif defined(_MSC_VER)
+# define likely(p)     (!!(p))
+# define unlikely(p)   (!!(p))
+#else
+# define likely(p)     (!!(p))
+# define unlikely(p)   (!!(p))
+#endif
 
 /**
  * Note that these function macros are should be treated as only defined within
@@ -72,6 +85,20 @@
     #define FUNCINFO ""
   #endif
 #endif
+
+
+# if __cplusplus > 201703L
+#  define TMEDIA_CPP20_CONSTEXPR constexpr
+# else
+#  define TMEDIA_CPP20_CONSTEXPR
+# endif
+
+# if __cplusplus >= 201703L
+#  define TMEDIA_CPP17_CONSTEXPR constexpr
+# else
+#  define TMEDIA_CPP17_CONSTEXPR
+# endif
+
 
 
 #endif

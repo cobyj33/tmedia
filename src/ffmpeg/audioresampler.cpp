@@ -2,8 +2,7 @@
 
 #include <tmedia/ffmpeg/avguard.h>
 #include <tmedia/ffmpeg/ffmpeg_error.h>
-#include <tmedia/util/funcmac.h>
-#include <tmedia/util/optim.h>
+#include <tmedia/util/defines.h>
 
 #include <fmt/format.h>
 #include <stdexcept>

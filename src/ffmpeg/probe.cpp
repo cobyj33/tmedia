@@ -4,7 +4,7 @@
 #include <tmedia/media/mediaformat.h>
 #include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/util/formatting.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <string>
 #include <stdexcept>

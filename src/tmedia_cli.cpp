@@ -4,12 +4,12 @@
 #include <tmedia/media/playlist.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/version.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 #include <tmedia/image/scale.h>
 #include <tmedia/ffmpeg/probe.h>
 #include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/image/pixeldata.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <natural_sort.hpp>
 
@@ -83,7 +83,9 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
   "    --ignore-video         Ignore video files while searching directories\n"
   "    --ignore-audio         Ignore audio files while searching directories\n"
   "    --probe, --no-probe    (Don't) probe all files\n"
+  "    --repeat-paths [UINT]    Repeat all cli path arguments n times\n"
   "    :r, :recursive         Recurse child directories of the last listed path \n"
+  "    :repeat-path [UINT]    Repeat the last given cli path argument n times\n"
   "    :ignore-images         Ignore image files when searching last listed path\n"
   "    :ignore-video          Ignore video files when searching last listed path\n"
   "    :ignore-audio          Ignore audio files when searching last listed path\n"
@@ -108,6 +110,7 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     bool ignore_images = false;
     bool recurse = false;
     bool probe = false;
+    unsigned int num_reads = 1;
   };
 
   struct MediaPathLocalSearchOptions {
@@ -116,6 +119,7 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     InheritBool ignore_images = InheritBool::INHERIT;
     InheritBool recurse = InheritBool::INHERIT;
     InheritBool probe = InheritBool::INHERIT;
+    std::optional<unsigned int> num_reads = std::nullopt;
   };
 
   bool resolve_inheritable_bool(InheritBool ib, bool parent_bool);
@@ -174,6 +178,7 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
   void cli_arg_recurse_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_probe_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_probe_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_repeat_paths_global(CLIParseState& ps, const tmedia::CLIArg arg);
 
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ignore_audio_local(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -181,6 +186,7 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
   void cli_arg_recurse_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_probe_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_probe_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_repeat_path_local(CLIParseState& ps, const tmedia::CLIArg arg);
 
 
   TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv) {
@@ -201,7 +207,7 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     }
 
     std::vector<tmedia::CLIArg> parsed_cli = tmedia::cli_parse(argc, argv, "",
-    {"volume", "chars", "refresh-rate"});
+    {"volume", "chars", "refresh-rate", "repeat-path", "repeat-paths"});
 
 
     static const ArgParseMap short_exiting_opt_map{
@@ -268,6 +274,8 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
       {"probe", cli_arg_probe_global},
       {"no-probe", cli_arg_no_probe_global},
       {"dont-probe", cli_arg_no_probe_global},
+      {"repeat-paths", cli_arg_repeat_paths_global},
+      {"repeat-path", cli_arg_repeat_paths_global},
     };
 
     static const ArgParseMap short_local_argparse_map{
@@ -286,6 +294,8 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
       {"probe", cli_arg_probe_local},
       {"no-probe", cli_arg_no_probe_local},
       {"dont-probe", cli_arg_no_probe_local},
+      {"repeat-path", cli_arg_repeat_path_local},
+      {"repeat-paths", cli_arg_repeat_path_local},
     };
 
     for (const tmedia::CLIArg& arg : parsed_cli) {
@@ -351,9 +361,13 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     }
 
     for (const MediaPath& path : ps.paths) {
-      resolve_cli_path(path.path,
-            resolve_path_search_options(ps.srch_opts, path.srch_opts),
-            ps.tmss.media_files);
+      MediaPathSearchOptions resolved_srch_opts = resolve_path_search_options(ps.srch_opts, path.srch_opts);
+      for (unsigned int i = 0; i < resolved_srch_opts.num_reads; i++) {
+        resolve_cli_path(path.path,
+              resolve_path_search_options(ps.srch_opts, path.srch_opts),
+              ps.tmss.media_files);
+      }
+      
     }
 
     if (ps.tmss.media_files.size() == 0UL) {
@@ -535,6 +549,24 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     (void)arg;
   }
 
+  void cli_arg_repeat_paths_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    try {
+      int repeats = strtoi32(arg.param);
+      if (repeats >= 0) {
+        ps.srch_opts.num_reads = repeats + 1; // plus one for the additional normal read
+      } else {
+        ps.argerrs.push_back(fmt::format("[{}] Could not read unsigned integer "
+        "from {}{} at index ${}: Received a negative number '{}'", FUNCDINFO,
+        arg.prefix, arg.param, arg.argi, repeats));
+      }
+    } catch (const std::runtime_error& err) {
+      ps.argerrs.push_back(fmt::format("[{}] Could not read unsigned integer "
+      "from {}{} at index #{}: {}", FUNCDINFO, arg.prefix, arg.param,
+      arg.argi, err.what()));
+    }
+    (void)arg;
+  }
+
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL) {
       ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_video = InheritBool::TRUE;
@@ -577,6 +609,26 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     (void)arg;
   }
 
+  void cli_arg_repeat_path_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() == 0UL) return;
+
+    try {
+      int repeats = strtoi32(arg.param);
+      if (repeats >= 0) {
+        ps.paths[ps.paths.size() - 1UL].srch_opts.num_reads = repeats + 1; // plus one for the additional normal read
+      } else {
+        ps.argerrs.push_back(fmt::format("[{}] Could not read unsigned integer "
+        "from {}{} at index ${}: Received a negative number '{}'", FUNCDINFO,
+        arg.prefix, arg.param, arg.argi, repeats));
+      }
+    } catch (const std::runtime_error& err) {
+      ps.argerrs.push_back(fmt::format("[{}] Could not read unsigned integer "
+      "from {}{} at index #{}: {}", FUNCDINFO, arg.prefix, arg.param,
+      arg.argi, err.what()));
+    }
+    (void)arg;
+  }
+
   bool resolve_inheritable_bool(InheritBool ib, bool parent_bool) {
     return ib == InheritBool::INHERIT ? parent_bool : (ib == InheritBool::TRUE);
   }
@@ -588,24 +640,15 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     res.ignore_images = resolve_inheritable_bool(local.ignore_images, global.ignore_images);
     res.recurse = resolve_inheritable_bool(local.recurse, global.recurse);
     res.probe = resolve_inheritable_bool(local.probe, global.probe);
+    res.num_reads = local.num_reads.has_value() ? (*local.num_reads) : global.num_reads;
     return res;
   }
 
-  bool test_media_file_probe(const fs::path& path, MediaPathSearchOptions search_opts) {
-    std::optional<MediaType> media_type = media_type_probe(path);
-    if (!media_type.has_value()) return false;
-
-    switch (*media_type) {
-      case MediaType::VIDEO: return !search_opts.ignore_video;
-      case MediaType::AUDIO: return !search_opts.ignore_audio;
-      case MediaType::IMAGE: return !search_opts.ignore_images;
-    }
-
-    return false;
-  }
-
-  bool test_media_file_stupid(const fs::path& path, MediaPathSearchOptions search_opts) {
-    std::optional<MediaType> media_type = media_type_from_path(path);
+  bool test_media_file(const fs::path& path, MediaPathSearchOptions search_opts) {
+    std::optional<MediaType> media_type = search_opts.probe ?
+                                          media_type_probe(path) :
+                                          media_type_from_path(path);
+    
     if (!media_type.has_value()) return false;
     
     if (media_type) {
@@ -617,11 +660,6 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
     }
 
     return false;
-  }
-
-  bool test_media_file(const fs::path& path, MediaPathSearchOptions search_opts) {
-    return search_opts.probe ? test_media_file_probe(path, search_opts)
-                             : test_media_file_stupid(path, search_opts);
   }
 
 

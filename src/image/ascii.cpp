@@ -1,7 +1,7 @@
-#include <tmedia/util/funcmac.h> 
+#include <tmedia/util/defines.h> 
 
 #include <tmedia/image/pixeldata.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <fmt/format.h>
 

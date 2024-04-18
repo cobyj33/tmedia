@@ -87,24 +87,16 @@ LoopType loop_type_from_str(std::string_view loop_type);
 
 class Playlist {
   private:
-    class PlaylistEntry { // currently unused, as I'm not sure what data I'd like to use for each entry
-      std::filesystem::path path;
-      Metadata metadata;
-      int orig_ind;
-      PlaylistEntry() {}
-      PlaylistEntry(const std::filesystem::path& path, int i) : path(path), orig_ind(i) {} 
-    };
-
     std::vector<std::filesystem::path> m_entries;
-
-    std::vector<int> m_q;
-    int m_qi;
+    std::vector<std::size_t> m_q;
+    std::size_t m_qi;
 
     LoopType m_loop_type;
     bool m_shuffled;
 
-    void remove_at_entry_idx(int i);
+    void remove_at_entry_idx(std::size_t i);
   public:
+    static constexpr std::size_t npos = (std::size_t)-1;
 
     Playlist();
     Playlist(const std::vector<std::filesystem::path>& entries, LoopType loop_type);
@@ -138,10 +130,10 @@ class Playlist {
     bool has(const std::filesystem::path& entry) const;
     void clear();
 
-    const std::filesystem::path& at(std::size_t i) const;
     const std::vector<std::filesystem::path>& view() const;
 
-    const std::filesystem::path& operator[](std::size_t i);
+    const std::filesystem::path& operator[](std::size_t i) const;
+    const std::filesystem::path& at(std::size_t i) const;
 
     /**
      * After a move, it is guaranteed that the next file will not be the

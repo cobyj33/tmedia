@@ -6,7 +6,7 @@
 #include <tmedia/util/formatting.h>
 #include <tmedia/ffmpeg/avguard.h>
 #include <tmedia/media/mediaformat.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <cstring>
 #include <stdexcept>

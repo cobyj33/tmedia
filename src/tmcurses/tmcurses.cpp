@@ -13,12 +13,11 @@
 #include <string>
 
 #include <fmt/format.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 extern "C" {
 #include <curses.h>
 }
-
 
 static constexpr int COLOR_MAP_SIDE = 7;
 static constexpr int MAX_TERMINAL_COLORS = 256;

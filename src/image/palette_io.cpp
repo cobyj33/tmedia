@@ -2,7 +2,7 @@
 
 #include <tmedia/image/palette.h>
 #include <tmedia/util/formatting.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <fstream>
 #include <sstream>

@@ -32,7 +32,7 @@ else()
     PREFIX      ${CMAKE_BINARY_DIR}
     INSTALL_DIR     ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ${TMEDIA_DEPS_DOWNLOAD_DIR}/ncurses/src/configure ${NCURSES_CONFIGURE_OPTIONS}
-    BUILD_COMMAND   make -j${TMEDIA_DEP_JOBS}
+    BUILD_COMMAND   make -j
     INSTALL_COMMAND   make install
     BUILD_IN_SOURCE   OFF
     URL         https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.4.tar.gz

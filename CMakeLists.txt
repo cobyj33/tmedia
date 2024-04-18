@@ -66,17 +66,25 @@ endif()
 option(TMEDIA_BUILD_TESTS "Build Testing Executable for tmedia" OFF)
 option(FIND_FFMPEG "Find FFmpeg Libraries on system rather than build FFmpeg alongside tmedia. Default ON" ON)
 option(FIND_CURSES "Find Curses Libraries on system rather than build NCurses alongside tmedia. Default ON" ON)
-option(FIND_FMT "Find Curses Libraries on system rather than build NCurses alongside tmedia. Default OFF" OFF)
+option(FIND_FMT "Find fmt library on system rather than build fmt alongside tmedia. Default OFF" OFF)
 
-set(TMEDIA_DEP_JOBS "4" CACHE STRING "Set the number of jobs used when building dependencies")
+message("+---TMEDIA-BUILD-CONFIGURATION---------------------------------------")
+message("| Options: CMAKE_BUILD_TYPE: " ${CMAKE_BUILD_TYPE})
+message("| Options: TMEDIA_BUILD_TESTS: " ${TMEDIA_BUILD_TESTS})
 
-message("Options: TMEDIA_BUILD_TESTS: " ${TMEDIA_BUILD_TESTS})
-message("Options: FIND_FFMPEG: " ${FIND_FFMPEG})
-message("Options: FIND_CURSES: " ${FIND_CURSES})
-message("Options: TMEDIA_DEP_JOBS: " ${TMEDIA_DEP_JOBS})
-message("Options: NCURSES_EXTRA_CONFIGURE_OPTIONS: " ${NCURSES_EXTRA_CONFIGURE_OPTIONS})
-message("Options: FFMPEG_EXTRA_CONFIGURE_OPTIONS: " ${FFMPEG_EXTRA_CONFIGURE_OPTIONS})
+message("| Options: FIND_FFMPEG: " ${FIND_FFMPEG})
+if (NOT FIND_FFMPEG)
+message("| Options: FFMPEG_EXTRA_CONFIGURE_OPTIONS: " ${FFMPEG_EXTRA_CONFIGURE_OPTIONS})
+endif()
 
+message("| Options: FIND_CURSES: " ${FIND_CURSES})
+if(NOT FIND_CURSES)
+message("| Options: NCURSES_EXTRA_CONFIGURE_OPTIONS: " ${NCURSES_EXTRA_CONFIGURE_OPTIONS})
+endif()
+
+
+message("| Options: FIND_FMT: " ${FIND_FMT})
+message("+--------------------------------------------------------------------")
 
 set(COMMON_SOURCE_FILES 
 ${CMAKE_SOURCE_DIR}/src/audio/audio_visualizer.cpp
@@ -138,6 +146,7 @@ ${CMAKE_SOURCE_DIR}/src/tests/test_palette_io_gpl.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_wmath.cpp
 )
 
+# Default ncurses configure options if building with FIND_CURSES=OFF
 set(NCURSES_CONFIGURE_OPTIONS --prefix=${CMAKE_BINARY_DIR}
 --datadir=${CMAKE_BINARY_DIR}/data
 --without-tests
@@ -147,6 +156,7 @@ set(NCURSES_CONFIGURE_OPTIONS --prefix=${CMAKE_BINARY_DIR}
 --with-shared
 --without-normal)
 
+# Default ffmpeg configure options if building with FIND_FFMPEG=OFF
 set(FFMPEG_CONFIGURE_OPTIONS --prefix=${CMAKE_BINARY_DIR}
 --pkg-config-flags=--static
 --extra-cflags=-I${CMAKE_BINARY_DIR}/include

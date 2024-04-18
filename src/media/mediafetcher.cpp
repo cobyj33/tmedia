@@ -7,7 +7,7 @@
 #include <tmedia/util/formatting.h>
 #include <tmedia/ffmpeg/audioresampler.h>
 #include <tmedia/audio/audio_visualizer.h>
-#include <tmedia/util/funcmac.h>
+#include <tmedia/util/defines.h>
 
 #include <string>
 #include <memory>

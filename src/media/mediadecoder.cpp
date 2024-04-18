@@ -4,9 +4,8 @@
 #include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/ffmpeg/decode.h>
 #include <tmedia/util/formatting.h>
-#include <tmedia/util/funcmac.h>
 #include <tmedia/ffmpeg/ffmpeg_error.h>
-#include <tmedia/util/optim.h>
+#include <tmedia/util/defines.h>
 
 #include <string>
 #include <vector>

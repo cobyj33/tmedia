@@ -23,4 +23,6 @@ void render_pixel_data_bg(const PixelData& pixel_data, int bounds_row, int bound
 void render_pixel_data_color(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map);
 
 
+
+
 #endif
