@@ -117,6 +117,10 @@ class Playlist {
       return this->m_entries.size();
     }
 
+    bool empty() const noexcept {
+      return this->size() == 0;
+    }
+
     void shuffle(bool keep_current_file_first);
     void unshuffle();
 

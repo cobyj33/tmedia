@@ -129,6 +129,7 @@ ${CMAKE_SOURCE_DIR}/src/tmcurses/tmcurses.cpp
 ${CMAKE_SOURCE_DIR}/src/util/formatting.cpp
 ${CMAKE_SOURCE_DIR}/src/util/sleep.cpp
 
+
 ${CMAKE_SOURCE_DIR}/src/tmedia_cli.cpp
 ${CMAKE_SOURCE_DIR}/src/tmedia_tui.cpp
 ${CMAKE_SOURCE_DIR}/src/tmedia_tui_elems.cpp
@@ -144,6 +145,7 @@ ${CMAKE_SOURCE_DIR}/src/tests/test_scale.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_unitconvert.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_palette_io_gpl.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_wmath.cpp
+${CMAKE_SOURCE_DIR}/src/tests/test_playlist.cpp
 )
 
 # Default ncurses configure options if building with FIND_CURSES=OFF

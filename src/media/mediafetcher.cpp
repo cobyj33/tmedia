@@ -57,9 +57,6 @@ void MediaFetcher::dispatch_exit() {
 }
 
 bool MediaFetcher::is_playing() {
-  if (this->media_type == MediaType::IMAGE)
-    throw std::runtime_error(fmt::format("[{}] Cannot check playing state of "
-    "Image media file", FUNCDINFO));
   return this->clock.is_playing();
 }
 

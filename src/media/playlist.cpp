@@ -41,7 +41,7 @@ Playlist::Playlist(const std::vector<std::filesystem::path>& entries, LoopType l
  * not the current queue location of m_q
 */
 int Playlist::index() const {
-  if (this->m_entries.size() == 0) {
+  if (this->empty()) {
     throw std::runtime_error(fmt::format("[{}] Cannot access current "
     "index of empty playlist", FUNCDINFO));
   }
@@ -53,7 +53,7 @@ int Playlist::index() const {
 }
 
 const std::filesystem::path& Playlist::current() const {
-  if (this->m_entries.size() == 0) {
+  if (this->empty()) {
     throw std::runtime_error(fmt::format("[{}] Cannot access current "
     "file of empty playlist", FUNCDINFO));
   }
@@ -67,15 +67,25 @@ const std::filesystem::path& Playlist::current() const {
 void Playlist::insert(const std::filesystem::path& entry, std::size_t i) {
   // note we don't have to handle the empty playlist case with
   // this guard clause as well.
-  if (i >= this->m_q.size()) return this->push_back(entry);
+  if (i >= this->m_q.size() || this->empty()) return this->push_back(entry);
 
-  this->m_entries.push_back(entry);
-  this->m_q.insert(this->m_q.begin() + i, this->m_entries.size() - 1);
+  this->m_entries.insert(this->m_entries.begin() + i, entry);
+
+  for (std::size_t qi = 0; qi < this->m_q.size(); qi++) {
+    if (this->m_q[qi] >= i) {
+      this->m_q[qi]++;
+    }
+  }
+
+  this->m_q.insert(this->m_q.begin() + i, i);
   this->m_qi += this->m_qi >= i;
 }
 
 void Playlist::push_back(const std::filesystem::path& entry) {
-  this->m_qi = (this->m_qi > 0) * this->m_qi; // set m_qi to 0 if it is less than 0, or else keep it the same
+  if (this->m_qi == Playlist::npos) {
+    this->m_qi = 0;
+  }
+
   this->m_entries.push_back(entry);
   this->m_q.push_back(this->m_entries.size() - 1);
 }
@@ -89,18 +99,15 @@ void Playlist::clear() {
 
 void Playlist::remove_at_entry_idx(std::size_t entry_index) {
   assert(this->m_entries.size() > 0);
-  assert(entry_index < static_cast<int>(this->m_entries.size()));
+  assert(entry_index < this->m_entries.size());
 
   // removes the found entry
   this->m_entries.erase(this->m_entries.begin() + entry_index);
   
   // remove the queue entry
-  for (std::size_t qi = 0; qi < this->m_q.size(); qi++) {
-    if (this->m_q[qi] == entry_index) {
-      this->m_q.erase(this->m_q.begin() + qi);
-      break;
-    }
-  }
+  std::vector<std::size_t>::iterator erase_iter = std::find(this->m_q.begin(), this->m_q.end(), entry_index);
+  if (erase_iter != this->m_q.end())
+    this->m_q.erase(erase_iter);
 
   // decrement all higher queue indexes
   for (std::size_t qi = 0; qi < this->m_q.size(); qi++) {
@@ -109,41 +116,44 @@ void Playlist::remove_at_entry_idx(std::size_t entry_index) {
   // decrement current queue index if it was higher
   this->m_qi -= this->m_qi > entry_index;
 
-  assert(this->m_qi != Playlist::npos);
-  assert(this->m_qi < this->m_q.size());
+  if (this->empty()) {
+    this->clear(); // reset m_qi and shuffled state
+  } else {
+    assert(this->m_qi != Playlist::npos);
+    assert(this->m_qi < this->m_q.size());
+  }
 }
 
 void Playlist::remove(std::size_t i) {
-  if (this->m_entries.size() <= 1) return this->clear(); // edge case!
-
+  assert(this->m_q.size() == this->m_entries.size());
   if (i > this->m_entries.size()) {
     throw std::runtime_error(fmt::format("[{}] Attempted to remove playlist"
     "index greater than the size of the playlist: {} from {}", FUNCDINFO, i,
     this->m_q.size()));
   } 
 
+  if (this->m_entries.size() <= 1) return this->clear(); // edge case!
+
   this->remove_at_entry_idx(i);
 }
 
 void Playlist::remove(const std::filesystem::path& entry) {
   assert(this->m_q.size() == this->m_entries.size());
-  if (this->m_entries.size() <= 1) return this->clear();
-
   
-  for (int i = 0; i < static_cast<int>(this->m_entries.size()); i++) {
+  for (std::size_t i = 0; i < this->m_entries.size(); i++) {
     if (this->m_entries[i] == entry)
       return (void)this->remove_at_entry_idx(i);
   }
 }
 
 const std::filesystem::path& Playlist::at(std::size_t i) const {
-  if (i > this->m_q.size()) {
+  if (i > this->m_q.size() || this->empty()) {
     throw std::runtime_error(fmt::format("[{}] Attempted to get playlist item"
     "at index greater than the size of the playlist: {} from {}", FUNCDINFO, i,
     this->m_q.size()));
   }
 
-  return this->m_entries[this->m_q[i]];
+  return this->m_entries[i];
 }
 
 const std::filesystem::path& Playlist::operator[](std::size_t i) const {
@@ -159,6 +169,11 @@ bool Playlist::has(const std::filesystem::path& entry) const {
 }
 
 void Playlist::move(PlaylistMvCmd move_cmd) {
+  if (this->empty()) {
+    throw std::runtime_error(fmt::format("[{}] can not commit move on empty "
+    "playlist {}.", FUNCDINFO, playlist_move_cmd_cstr(move_cmd))); 
+  }
+
   std::size_t next = playlist_get_move(this->m_qi, this->m_q.size(), this->m_loop_type, move_cmd);
   if (next == Playlist::npos) {
     throw std::runtime_error(fmt::format("[{}] can not commit move {}.",
@@ -182,6 +197,11 @@ void Playlist::move(PlaylistMvCmd move_cmd) {
 }
 
 const std::filesystem::path& Playlist::peek_move(PlaylistMvCmd move_cmd) const {
+  if (this->empty()) {
+    throw std::runtime_error(fmt::format("[{}] can not commit move on empty "
+    "playlist {}.", FUNCDINFO, playlist_move_cmd_cstr(move_cmd))); 
+  }
+
   std::size_t next = playlist_get_move(this->m_qi, this->m_q.size(), this->m_loop_type, move_cmd);
   if (next == Playlist::npos) {
     throw std::runtime_error(fmt::format("[{}] can not commit move {}",
@@ -192,19 +212,18 @@ const std::filesystem::path& Playlist::peek_move(PlaylistMvCmd move_cmd) const {
 }
 
 bool Playlist::can_move(PlaylistMvCmd move_cmd) const noexcept {
+  if (this->empty()) return false;
   return playlist_get_move(this->m_qi, this->m_q.size(), this->m_loop_type, move_cmd) != Playlist::npos;
 }
 
 void Playlist::shuffle(bool keep_current_file_first) {
-  if (this->m_q.size() == 0) {
+  if (this->empty()) {
     this->m_shuffled = true;
     return; 
   }
 
   if (keep_current_file_first) {
-    int tmp = this->m_q[0];
-    this->m_q[0] = this->m_q[this->m_qi];
-    this->m_q[this->m_qi] = tmp;
+    std::iter_swap(this->m_q.begin(), this->m_q.begin() + this->m_qi);
     effolkronium::random_thread_local::shuffle(this->m_q.begin() + 1, this->m_q.end());
   } else {
     effolkronium::random_thread_local::shuffle(this->m_q);
@@ -214,7 +233,7 @@ void Playlist::shuffle(bool keep_current_file_first) {
 }
 
 void Playlist::unshuffle() {
-  if (this->m_q.size() == 0) {
+  if (this->empty()) {
     this->m_shuffled = false;
     return;
   }

@@ -48,30 +48,6 @@ static constexpr int MIN_RENDER_LINES = 2;
 void set_global_vom(VidOutMode* current, VidOutMode next);
 void init_global_video_output_mode(VidOutMode mode);
 
-const char* TMEDIA_CONTROLS_USAGE = ""
-  "---------------------------------CONTROLS---------------------------------\n"
-  "Labels for this document: \n"
-  "  (OST) - On Supported Terminals\n"
-  "\n"
-  "Video and Audio Controls\n"
-  "- Space - Play and Pause\n"
-  "- Up Arrow - Increase Volume 1%\n"
-  "- Down Arrow - Decrease Volume 1%\n"
-  "- Left Arrow - Skip Backward 5 Seconds\n"
-  "- Right Arrow - Skip Forward 5 Seconds\n"
-  "- Escape or Backspace or 'q' - Quit Program\n"
-  "- '0' - Restart Playback\n"
-  "- '1' through '9' - Skip To n/10 of the Media's Duration\n"
-  "- 'L' - Switch looping type of playback\n"
-  "- 'M' - Mute/Unmute Audio\n"
-  "Video, Audio, and Image Controls\n"
-  "- 'C' - Color Mode (OST)\n"
-  "- 'G' - Gray Mode (OST)\n"
-  "- 'B' - Display no Characters (OST) (in Color or Gray mode)\n"
-  "- 'N' - Skip to Next Media File\n"
-  "- 'P' - Rewind to Previous Media File\n"
-  "- 'R' - Fully Refresh the Screen\n"
-  "---------------------------------------------------------------------------";
 
 TMediaProgramState tmss_to_tmps(TMediaStartupState& tmss) {
   TMediaProgramState tmps;
@@ -115,7 +91,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
       const std::set<enum AVMediaType> streams = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
       fetcher = std::make_unique<MediaFetcher>(tmps.plist.current(), streams);
     } catch (const std::runtime_error& err) {
-      int failed_plist_index = tmps.plist.index();
+      std::size_t failed_plist_index = tmps.plist.index();
 
       // force skip this current file. If the loop type was in repeat-one, then
       // we might repeat it once we call move
@@ -332,7 +308,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         TMediaProgramSnapshot snapshot;
         snapshot.currently_playing = currently_playing;
         snapshot.frame = frame;
-        snapshot.playing = fetcher->media_type != MediaType::IMAGE ? fetcher->is_playing() : false;
+        snapshot.playing = fetcher->is_playing();
         snapshot.has_audio_output = audio_output ? true : false;
         snapshot.media_time_secs = curr_medtime;
         snapshot.media_duration_secs = fetcher->get_duration();
