@@ -82,7 +82,6 @@ if(NOT FIND_CURSES)
 message("| Options: NCURSES_EXTRA_CONFIGURE_OPTIONS: " ${NCURSES_EXTRA_CONFIGURE_OPTIONS})
 endif()
 
-
 message("| Options: FIND_FMT: " ${FIND_FMT})
 message("+--------------------------------------------------------------------")
 

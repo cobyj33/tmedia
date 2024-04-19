@@ -79,14 +79,14 @@ function(set_ncurses_library_names)
   # we don't know anything about cursesw, so only ncurses
   # may be ncursesw
   if(NOT CURSES_NEED_WIDE)
-    set(NCURSES_LIBRARY_NAME PARENT_SCOPE "ncurses")
-    set(CURSES_FORM_LIBRARY_NAME PARENT_SCOPE "form")
+    set(NCURSES_LIBRARY_NAME "ncurses" PARENT_SCOPE)
+    set(CURSES_FORM_LIBRARY_NAME "form" PARENT_SCOPE)
   else()
-    set(NCURSES_LIBRARY_NAME PARENT_SCOPE "ncursesw")
-    set(CURSES_FORM_LIBRARY_NAME PARENT_SCOPE "formw")
+    set(NCURSES_LIBRARY_NAME "ncursesw" PARENT_SCOPE)
+    set(CURSES_FORM_LIBRARY_NAME "formw" PARENT_SCOPE)
     # Also, if we are searching for wide curses - we are actually searching
     # for ncurses, we don't know about any other unicode version.
-    set(CURSES_NEED_NCURSES PARENT_SCOPE TRUE)
+    set(CURSES_NEED_NCURSES TRUE PARENT_SCOPE)
   endif()
 endfunction()
 
