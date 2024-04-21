@@ -25,12 +25,12 @@ extern "C" {
 }
 
 MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::set<enum AVMediaType>& requested_streams) :
-  path(path), mdec(std::move(std::make_unique<MediaDecoder>(path, requested_streams))) {
+  path(path), mdec(std::make_unique<MediaDecoder>(path, requested_streams)) {
   this->in_use = false;
 
   std::set<enum AVMediaType> requested_stream_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
   this->media_type = this->mdec->get_media_type();
-  this->audio_visualizer = std::move(std::make_unique<AmplitudeAbs>());
+  this->audio_visualizer = std::make_unique<AmplitudeAbs>();
   this->msg_video_jump_curr_time = 0;
   this->msg_audio_jump_curr_time = 0;
 
@@ -40,12 +40,12 @@ MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::set<enu
     const int sample_rate = this->mdec->get_sample_rate();
     const int nb_channels = this->mdec->get_nb_channels();
     const int frame_capacity = sample_rate * INTERNAL_AUDIO_BUFFER_LENGTH_SECONDS;
-    this->audio_buffer = std::move(std::make_unique<BlockingAudioRingBuffer>(frame_capacity, nb_channels, sample_rate, 0.0));
+    this->audio_buffer = std::make_unique<BlockingAudioRingBuffer>(frame_capacity, nb_channels, sample_rate, 0.0);
   }
 }
 
 void MediaFetcher::dispatch_exit(std::string_view err) {
-  this->error = std::move(std::string(err));
+  this->error = std::string(err);
   this->dispatch_exit();
 }
 

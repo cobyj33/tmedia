@@ -22,7 +22,13 @@ extern "C" {
 static constexpr int COLOR_MAP_SIDE = 7;
 static constexpr int MAX_TERMINAL_COLORS = 256;
 static constexpr int MAX_TERMINAL_COLOR_PAIRS = 256;
+
+#if 0
+// We offset by COLOR_PALETTE_START into the terminal's color indexes. This
+// is still technically true though, the first 8 are reserved. It is unused
+// for now though.
 static constexpr int DEFAULT_TERMINAL_COLOR_COUNT = 8;
+#endif
 
 /**
  * Some terminals (namely Windows Terminal) dont want to return to their
@@ -204,7 +210,7 @@ int ncurses_init_grayscale_color_palette() {
 }
 
 void ncurses_init_color_pairs() {
-  const int COLOR_PAIRS_TO_INIT = std::min(COLOR_PAIRS, available_color_palette_colors);
+  const int COLOR_PAIRS_TO_INIT = std::min(MAX_TERMINAL_COLOR_PAIRS, std::min(COLOR_PAIRS, available_color_palette_colors));
   for (int i = 0; i < COLOR_PAIRS_TO_INIT; i++) {
     curses_color_pair_t color_pair_index = i;
     curses_color_t color_index = i + COLOR_PALETTE_START;

@@ -36,7 +36,7 @@ MediaDecoder::MediaDecoder(const std::filesystem::path& path, const std::set<enu
 
   for (const enum AVMediaType& stream_type : requested_streams) {
     try {
-      this->decs[stream_type] = std::move(std::make_unique<StreamDecoder>(fmt_ctx, stream_type));
+      this->decs[stream_type] = std::make_unique<StreamDecoder>(fmt_ctx, stream_type);
     } catch (std::runtime_error const& e) { } // no-op
   }
 }

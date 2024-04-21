@@ -43,7 +43,7 @@ PixelData AmplitudeAbs::visualize(float* frames, int nb_frames, int nb_channels,
 }
 
 std::unique_ptr<Visualizer> AmplitudeAbs::clone() {
-  return std::move(std::make_unique<AmplitudeAbs>());
+  return std::make_unique<AmplitudeAbs>();
 } 
 
 AmplitudeSimple::AmplitudeSimple() {}
@@ -65,7 +65,7 @@ PixelData AmplitudeSimple::visualize(float* frames, int nb_frames, int nb_channe
 }
 
 std::unique_ptr<Visualizer> AmplitudeSimple::clone() {
-  return std::move(std::make_unique<AmplitudeSimple>());
+  return std::make_unique<AmplitudeSimple>();
 } 
 
 
@@ -94,7 +94,7 @@ PixelData AmplitudeMax::visualize(float* frames, int nb_frames, int nb_channels,
 }
 
 std::unique_ptr<Visualizer> AmplitudeMax::clone() {
-  return std::move(std::make_unique<AmplitudeMax>());
+  return std::make_unique<AmplitudeMax>();
 } 
 
 std::vector<float> audio_float_buffer_to_normalized_mono(float* frames, int nb_frames, int nb_channels) {

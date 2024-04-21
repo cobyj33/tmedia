@@ -5,11 +5,10 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
-#include <utility>
 #include <chrono>
 
 BlockingAudioRingBuffer::BlockingAudioRingBuffer(int frame_capacity, int nb_channels, int sample_rate, double playback_start_time) {
-  this->rb = std::move(std::make_unique<AudioRingBuffer>(frame_capacity, nb_channels, sample_rate, playback_start_time));
+  this->rb = std::make_unique<AudioRingBuffer>(frame_capacity, nb_channels, sample_rate, playback_start_time);
 }
 
 

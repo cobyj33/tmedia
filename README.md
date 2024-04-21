@@ -58,49 +58,8 @@ with --help
 
 ## Installing
 
-### Dependencies
-
-* [curses](https://invisible-island.net/ncurses/) - Terminal Output
-* [FFmpeg](https://ffmpeg.org/) - Multimedia decoding, scaling, and resampling
-* [cmake](https://cmake.org/) - Building
-* [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/) - Finding ffmpeg libs
-
-### Ubuntu/Debian Linux
-
-```bash
-sudo apt-get update
-sudo apt-get install git build-essential cmake pkg-config libavdevice-dev libncurses-dev
-```
-
-Next, clone this repository to your desired directory with
-
-```bash
-git clone https://github.com/cobyj33/tmedia.git
-```
-
-run these 4 commands in the terminal, starting from
-the root of the repository:
-
-```bash
-mkdir build
-cd build
-cmake ../
-make -j$(nproc)
-```
-The file "tmedia" should appear once the build finishes, and can be
-symlinked to an area on your PATH if you want to use it anywhere
-
-## Windows
-
-Currently for windows, WSL 2 running Debian/Ubuntu must be used to run tmedia.
-
-After running WSL 2 with Debian/Ubuntu Linux, you can follow the installation
-directions under [Ubuntu/Debian Linux](#ubuntudebian-linux)
-
-> Currently, anything outside of Ubuntu/Debian is not tested. That being said,
-> if you have the libav libraries from FFmpeg and the curses libraries available, 
-> building tmedia should still work with all dependencies. If you need help with this,
-> I'll be happy to help in an issue.
+See [BUILD.md](./BUILD.md) for information. Currently, Ubuntu 20.04 is the main
+tested 
 
 ## Bug and Feature Reporting
 

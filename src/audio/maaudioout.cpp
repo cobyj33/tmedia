@@ -25,11 +25,9 @@ static constexpr int MAX_CHANNELS = 64; // inclusive
 int MAAudioOut::get_data_req_size(int max_buffer_size) {
   static constexpr int DATA_GET_EXTEND_FACTOR = 2;
 
-  const int q_cap = static_cast<int>(this->m_audio_queue->max_capacity());
-  const int q_cap_frames = q_cap / this->m_nb_channels;
   const int queue_size = static_cast<int>(this->m_audio_queue->size_approx());
   const int queue_size_frames = queue_size / this->m_nb_channels;
-  const int queue_frames_to_fill = q_cap_frames - queue_size_frames;
+  const int queue_frames_to_fill = this->m_audio_queue_cap_frames - queue_size_frames;
   const int request_size_frames = std::min(queue_frames_to_fill * DATA_GET_EXTEND_FACTOR, max_buffer_size); // fetch a little extra
   return request_size_frames;
 }
@@ -144,14 +142,14 @@ void audioOutDataCallback(ma_device* pDevice, void* pOutput, const void* pInput,
 
 MAAudioOut::MAAudioOut(int nb_channels, int sample_rate, std::function<void(float*, int)> on_data)
   : m_nb_channels(nb_channels), m_sample_rate(sample_rate),
-  m_audio_queue_size_frames(AUDIO_QUEUE_SIZE_FRAMES),
-  m_audio_queue_size_samples(AUDIO_QUEUE_SIZE_FRAMES * nb_channels) {
+  m_audio_queue_cap_frames(AUDIO_QUEUE_SIZE_FRAMES),
+  m_audio_queue_cap_samples(AUDIO_QUEUE_SIZE_FRAMES * nb_channels) {
   assert(nb_channels > 0);
   assert(nb_channels <= MAX_CHANNELS);
   assert(sample_rate > 0);
   this->m_muted = false;
 
-  this->m_audio_queue = new moodycamel::BlockingReaderWriterCircularBuffer<float>(this->m_audio_queue_size_samples);
+  this->m_audio_queue = new moodycamel::BlockingReaderWriterCircularBuffer<float>(this->m_audio_queue_cap_samples);
   this->m_cb_data = new MAAudioOutCallbackData(this->m_audio_queue, &this->m_muted);
   this->m_on_data = on_data;
 

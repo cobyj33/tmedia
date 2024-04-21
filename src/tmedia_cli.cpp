@@ -156,8 +156,9 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
   struct MediaPath {
     fs::path path;
     MediaPathLocalSearchOptions srch_opts;
-    MediaPath(std::string_view path) : path(std::move(fs::path(path))) {} 
+    MediaPath(std::string_view strv_path) : path(fs::path(strv_path)) {} 
     MediaPath(const fs::path& path) : path(path) {} 
+    MediaPath(const MediaPath& o) = default;
     MediaPath(MediaPath&& o) : path(std::move(o.path)), srch_opts(o.srch_opts) {} 
   };
 
@@ -708,7 +709,7 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
           if (fs::is_directory(entry.path(), ec) && srch_opts.recurse) {
             to_search.push(std::move(entry.path()));
           } else if (fs::is_regular_file(entry.path()) && test_media_file(entry.path(), srch_opts)) {
-            media_file_paths.push_back(std::move(entry.path().string()));
+            media_file_paths.push_back(entry.path().string());
           }
         }
 

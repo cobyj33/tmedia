@@ -254,15 +254,12 @@ int tmedia_main_loop(TMediaProgramState tmps) {
             case ' ': {
               if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
                 std::lock_guard<std::mutex> alter_lock(fetcher->alter_mutex); 
-                switch (fetcher->is_playing()) {
-                  case true:  {
-                    if (audio_output) audio_output->stop();
-                    fetcher->pause(curr_systime);
-                  } break;
-                  case false: {
-                    if (audio_output) audio_output->start();
-                    fetcher->resume(curr_systime);
-                  } break;
+                if (fetcher->is_playing())  {
+                  if (audio_output) audio_output->stop();
+                  fetcher->pause(curr_systime);
+                } else  {
+                  if (audio_output) audio_output->start();
+                  fetcher->resume(curr_systime);
                 }
               }
             } break;
