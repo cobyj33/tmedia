@@ -11,6 +11,7 @@
  */
 
 #include <tmedia/image/color.h>
+#include <tmedia/util/defines.h>
 
 #include <cstdint>
 #include <vector>
@@ -70,23 +71,23 @@ class PixelData {
 
     bool equals(const PixelData& pix_data) const;
 
-    inline int get_width() const {
+    TMEDIA_ALWAYS_INLINE inline int get_width() const {
       return this->m_width;
     }
 
-    inline int get_height() const {
+    TMEDIA_ALWAYS_INLINE inline int get_height() const {
       return this->m_height;
     }
 
-    inline bool in_bounds(int row, int col) const {
+    TMEDIA_ALWAYS_INLINE inline bool in_bounds(int row, int col) const {
       return row >= 0 && col >= 0 && row < this->m_height && col < this->m_width;
     }
 
-    inline const RGB24& at(int row, int col) const {
+    TMEDIA_ALWAYS_INLINE inline const RGB24& at(int row, int col) const {
       return (*this->pixels)[row * this->m_width + col];
     }
 
-    inline const std::vector<RGB24>& data() const {
+    TMEDIA_ALWAYS_INLINE inline const std::vector<RGB24>& data() const {
       return (*this->pixels);
     }
 };

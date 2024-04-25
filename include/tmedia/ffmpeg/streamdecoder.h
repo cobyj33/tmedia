@@ -4,6 +4,7 @@
 #include <vector>
 #include <deque>
 #include <mutex>
+#include <tmedia/util/defines.h>
 
 extern "C" {
   #include <libavcodec/avcodec.h>
@@ -40,39 +41,39 @@ class StreamDecoder {
     void reset() noexcept;
     std::vector<AVFrame*> decode_next();
 
-    inline double get_average_frame_rate_sec() const noexcept {
+    TMEDIA_ALWAYS_INLINE inline double get_average_frame_rate_sec() const noexcept {
       return av_q2d(this->stream->avg_frame_rate);
     }
 
-    inline double get_avgfts() const noexcept {
+    TMEDIA_ALWAYS_INLINE inline double get_avgfts() const noexcept {
       return 1 / av_q2d(this->stream->avg_frame_rate);
     }
 
-    inline double get_start_time() const noexcept {
+    TMEDIA_ALWAYS_INLINE inline double get_start_time() const noexcept {
       return (this->stream->start_time != AV_NOPTS_VALUE) * (this->stream->start_time * this->get_time_base());
     }
 
-    inline int get_stream_index() const noexcept {
+    TMEDIA_ALWAYS_INLINE inline int get_stream_index() const noexcept {
       return this->stream->index;
     }
 
-    inline enum AVMediaType get_media_type() const noexcept {
+    TMEDIA_ALWAYS_INLINE inline enum AVMediaType get_media_type() const noexcept {
       return this->media_type;
     }
 
-    inline double get_time_base() const noexcept {
+    TMEDIA_ALWAYS_INLINE inline double get_time_base() const noexcept {
       return av_q2d(this->stream->time_base);
     }
 
-    inline AVCodecContext* get_codec_context() const noexcept {
+    TMEDIA_ALWAYS_INLINE inline AVCodecContext* get_codec_context() const noexcept {
       return this->codec_context;
     }
     
-    inline bool has_packets() const {
+    TMEDIA_ALWAYS_INLINE inline bool has_packets() const {
       return !this->packet_queue.empty();
     }
 
-    inline void push_back(AVPacket* packet) {
+    TMEDIA_ALWAYS_INLINE inline void push_back(AVPacket* packet) {
       this->packet_queue.push_back(packet);
     }
 

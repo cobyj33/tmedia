@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <tmedia/ffmpeg/avguard.h>
+#include <tmedia/util/defines.h>
 
 extern "C" {
   #include <libavutil/frame.h>
@@ -49,10 +50,10 @@ class AudioResampler {
             int src_sample_rate);
     #endif
 
-    inline int get_src_sample_rate() { return this->m_src_sample_rate; }
-    inline int get_src_sample_fmt() { return this->m_src_sample_fmt; }
-    inline int get_dst_sample_rate() { return this->m_dst_sample_rate; }
-    inline int get_dst_sample_fmt() { return this->m_dst_sample_fmt; } 
+    TMEDIA_ALWAYS_INLINE inline int get_src_sample_rate() { return this->m_src_sample_rate; }
+    TMEDIA_ALWAYS_INLINE inline int get_src_sample_fmt() { return this->m_src_sample_fmt; }
+    TMEDIA_ALWAYS_INLINE inline int get_dst_sample_rate() { return this->m_dst_sample_rate; }
+    TMEDIA_ALWAYS_INLINE inline int get_dst_sample_fmt() { return this->m_dst_sample_fmt; } 
 
     /**
      * @brief Resample an audio frame according to the initialized AudioResampler's parameters

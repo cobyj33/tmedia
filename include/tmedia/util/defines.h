@@ -99,6 +99,15 @@
 #  define TMEDIA_CPP17_CONSTEXPR
 # endif
 
+#ifndef TMEDIA_ALWAYS_INLINE
+#  if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+#    define TMEDIA_ALWAYS_INLINE __attribute__((always_inline))
+#  elif defined(_MSC_VER)
+#    define TMEDIA_ALWAYS_INLINE __forceinline
+#  else
+#    define TMEDIA_ALWAYS_INLINE
+#  endif
+#endif
 
 
 #endif

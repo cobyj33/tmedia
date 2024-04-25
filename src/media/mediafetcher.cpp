@@ -28,7 +28,9 @@ MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::set<enu
   path(path), mdec(std::make_unique<MediaDecoder>(path, requested_streams)) {
   this->in_use = false;
 
-  std::set<enum AVMediaType> requested_stream_types = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
+  if (this->mdec->nb_stream_decoders() == 0)
+    throw std::runtime_error(fmt::format("[{}] Could not find any media streams", FUNCDINFO));
+
   this->media_type = this->mdec->get_media_type();
   this->audio_visualizer = std::make_unique<AmplitudeAbs>();
   this->msg_video_jump_curr_time = 0;

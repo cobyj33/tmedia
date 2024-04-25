@@ -7,6 +7,7 @@
 #include <tmedia/audio/blocking_audioringbuffer.h>
 #include <tmedia/image/scale.h>
 #include <tmedia/audio/audio_visualizer.h>
+#include <tmedia/util/defines.h>
 
 #include <memory>
 #include <string>
@@ -98,7 +99,7 @@ class MediaFetcher {
     /**
      * Thread-Safe
     */
-    inline bool has_media_stream(enum AVMediaType media_type) const {
+    TMEDIA_ALWAYS_INLINE inline bool has_media_stream(enum AVMediaType media_type) const {
       return this->mdec->has_stream_decoder(media_type);
     }
 
@@ -107,23 +108,23 @@ class MediaFetcher {
      * @return double 
      * Thread Safe
      */
-    inline double get_duration() const {
+    TMEDIA_ALWAYS_INLINE inline double get_duration() const {
       return this->mdec->get_duration();
     }
 
 
-    inline bool has_error() const noexcept {
+    TMEDIA_ALWAYS_INLINE inline bool has_error() const noexcept {
       return this->error.has_value();
     }
 
     /**
      * Make sure to check with has_error first!
     */
-    inline std::string get_error() const {
+    TMEDIA_ALWAYS_INLINE inline std::string get_error() const {
       return *this->error;
     }
 
-    inline bool should_exit() {
+    TMEDIA_ALWAYS_INLINE inline bool should_exit() {
       return !this->in_use;
     }
 
@@ -145,7 +146,7 @@ class MediaFetcher {
      * 
      * @return The current time of playback since 0:00 in seconds
      */
-    inline double get_time(double currsystime) const {
+    TMEDIA_ALWAYS_INLINE inline double get_time(double currsystime) const {
       return this->clock.get_time(currsystime);
     }
 
