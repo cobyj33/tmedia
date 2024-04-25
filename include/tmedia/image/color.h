@@ -7,13 +7,13 @@
 #include <tmedia/util/defines.h>
 
 TMEDIA_ALWAYS_INLINE inline std::uint8_t get_gray8(std::uint8_t r, std::uint8_t g, std::uint8_t b) {
-  return static_cast<std::uint8_t>(0.299 * r + 0.587 * g + 0.114 * b);
+  return static_cast<std::uint8_t>(0.299 * static_cast<double>(r) + 0.587 * static_cast<double>(g) + 0.114 * static_cast<double>(b));
 }
 
 
 
 TMEDIA_ALWAYS_INLINE inline int get_grayint(int r, int g, int b) {
-  return static_cast<int>(0.299 * r + 0.587 * g + 0.114 * b);
+  return static_cast<int>(0.299 * static_cast<double>(r) + 0.587 * static_cast<double>(g) + 0.114 * static_cast<double>(b));
 }
 
 
@@ -42,13 +42,13 @@ class RGB24 {
     RGB24(const RGB24& color) : r(color.r), g(color.g), b(color.b) {}
     RGB24(RGB24&& color) : r(color.r), g(color.g), b(color.b) {}
 
-    inline void operator=(const RGB24& color) {
+    TMEDIA_ALWAYS_INLINE inline void operator=(const RGB24& color) {
       this->r = color.r;
       this->g = color.g;
       this->b = color.b;
     }
 
-    inline void operator=(RGB24&& color) {
+    TMEDIA_ALWAYS_INLINE inline void operator=(RGB24&& color) {
       this->r = color.r;
       this->g = color.g;
       this->b = color.b;
