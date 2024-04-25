@@ -46,11 +46,11 @@ class ffmpeg_error : public std::runtime_error {
       }
     }
 
-    TMEDIA_ALWAYS_INLINE inline get_averror() const {
+    TMEDIA_ALWAYS_INLINE inline int get_averror() const {
       return this->averror;
     }
 
-    TMEDIA_ALWAYS_INLINE std::string get_averror_string() const {
+    TMEDIA_ALWAYS_INLINE inline std::string get_averror_string() const {
       return std::string(this->errstr);
     }
 };
