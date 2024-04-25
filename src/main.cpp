@@ -21,7 +21,7 @@ void interrupt_handler(int) {
 }
 
 void on_terminate() {
-  ncurses_uninit();
+  tmcurses_uninit();
 
   std::exception_ptr exptr = std::current_exception();
   try {

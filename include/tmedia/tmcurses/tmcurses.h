@@ -42,22 +42,42 @@ enum class TMNCursesColorPalette {
 };
 
 /**
- * This should be called before ncurses is used at all within tmedia
-*/
-void ncurses_init();
-
-/**
- * Way to check if ncurses_init() has been called and succeeded.
- * (assuming ncurses_uninit() hasn't been called ofc)
-*/
-bool ncurses_is_initialized();
-
-/**
- * This should be called
+ * This should be called before curses is used at all within tmedia.
  * 
- * No-ops if tmcurses was not initalized with ncurses_init previously
+ * No-op if tmcurses is already initialized
 */
-void ncurses_uninit();
+void tmcurses_init();
+
+/**
+ * Way to check if tmcurses has been initialized with tmcurses_init() and has
+ * not been uninitialized with tmcurses_uninit()
+*/
+bool tmcurses_is_initialized();
+
+/**
+ * Returns if tmcurses can use colors in this terminal.
+ * 
+ * Returns false if curses has_colors() returns false or the environment
+ * variable NO_COLOR is defined and non-empty (https://no-color.org/)
+*/
+bool tmcurses_has_colors();
+
+/**
+ * Returns if tmcurses can change colors defined in the terminal.
+ * 
+ * Returns false if curses has_colors() returns false or the environment
+ * variable NO_COLOR is defined and non-empty (https://no-color.org/)
+*/
+bool tmcurses_can_change_colors();
+
+/**
+ * This should be called at the end of the program, even before termination,
+ * in order to restore the terminal to its original state
+ * 
+ * Results in a no-op if tmcurses was not initalized with
+ * tmcurses_init previously
+*/
+void tmcurses_uninit();
 
 enum class TMAlign {
   LEFT = 0,
@@ -102,8 +122,8 @@ void werasebox(WINDOW* window, int y, int x, int width, int height);
 /**
  * @brief Initialize ncurses's color palette for a given preset color palette. 
  */
-void ncurses_set_color_palette(TMNCursesColorPalette);
-void ncurses_set_color_palette_custom(const Palette&);
+void tmcurses_set_color_palette(TMNCursesColorPalette);
+void tmcurses_set_color_palette_custom(const Palette&);
 
 /**
  * @brief Find the closest registered ncurses color pair integer to the inputted RGB24.
@@ -111,12 +131,12 @@ void ncurses_set_color_palette_custom(const Palette&);
  * Color pairs are used to apply attributes to printed terminal colors
  * @returns The closest registered ncurses color pair attribute index
  */
-curses_color_pair_t get_closest_ncurses_color_pair(const RGB24& input);
+curses_color_pair_t get_closest_tmcurses_color_pair(const RGB24& input);
 
 /**
  * @brief Find the closest registered ncurses color integer to the inputted RGB24.
  * @returns The closest registered ncurses color pair attribute index
  */
-curses_color_t get_closest_ncurses_color(const RGB24& input);
+curses_color_t get_closest_tmcurses_color(const RGB24& input);
 
 #endif

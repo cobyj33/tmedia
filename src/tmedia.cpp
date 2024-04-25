@@ -68,12 +68,12 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState& tmss) {
 int tmedia_main_loop(TMediaProgramState tmps);
 
 int tmedia_run(TMediaStartupState& tmss) {
-  ncurses_init();
+  tmcurses_init();
   erase();
   TMediaProgramState tmps = tmss_to_tmps(tmss);
   init_global_video_output_mode(tmss.vom);
   int res = tmedia_main_loop(tmps);
-  ncurses_uninit();
+  tmcurses_uninit();
   return res;
 }
 
@@ -189,7 +189,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
             } break;
             case 'b':
             case 'B': {
-              if (has_colors() && can_change_color()) {
+              if (tmcurses_has_colors() && tmcurses_can_change_colors()) {
                 switch (tmps.vom) {
                   case VidOutMode::COLOR: set_global_vom(&tmps.vom, VidOutMode::COLOR_BG); break;
                   case VidOutMode::GRAY: set_global_vom(&tmps.vom, VidOutMode::GRAY_BG); break;
@@ -342,9 +342,9 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 void init_global_video_output_mode(VidOutMode mode) {
   switch (mode) {
     case VidOutMode::COLOR:
-    case VidOutMode::COLOR_BG: ncurses_set_color_palette(TMNCursesColorPalette::RGB); break;
+    case VidOutMode::COLOR_BG: tmcurses_set_color_palette(TMNCursesColorPalette::RGB); break;
     case VidOutMode::GRAY:
-    case VidOutMode::GRAY_BG: ncurses_set_color_palette(TMNCursesColorPalette::GRAYSCALE); break;
+    case VidOutMode::GRAY_BG: tmcurses_set_color_palette(TMNCursesColorPalette::GRAYSCALE); break;
     case VidOutMode::PLAIN: break;
   }
 }

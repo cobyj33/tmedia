@@ -69,7 +69,7 @@ void render_pixel_data_bg(const PixelData& pixel_data, int bounds_row, int bound
     move(image_start_row + row, image_start_col);
     const int row_offset = row * width;
     for (int col = 0; col < width; col++) {
-      const int color_pair = get_closest_ncurses_color_pair(pixels[row_offset + col]);
+      const int color_pair = get_closest_tmcurses_color_pair(pixels[row_offset + col]);
       addch(' ' | COLOR_PAIR(color_pair));
     }
   }
@@ -88,7 +88,7 @@ void render_pixel_data_color(const PixelData& pixel_data, int bounds_row, int bo
     for (int col = 0; col < width; col++) {
       const RGB24 target_color = pixels[row_offset + col];
       const char target_char = get_char_from_rgb(ascii_char_map, target_color);
-      const int color_pair = get_closest_ncurses_color_pair(target_color);
+      const int color_pair = get_closest_tmcurses_color_pair(target_color);
       addch(target_char | COLOR_PAIR(color_pair));
     }
   }

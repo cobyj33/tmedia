@@ -4,15 +4,16 @@
 #include <tmedia/tmcurses/internal/tmcurses_internal.h>
 #undef TMEDIA_TMCURSES_INTERNAL_IMPLEMENTATION
 
-bool ncurses_initialized = false;
+bool tmcurses_initialized = false;
 
-void ncurses_init() {
-  if (ncurses_initialized) return;
-  ncurses_initialized = true;
+void tmcurses_init() {
+  if (tmcurses_initialized) return;
+  tmcurses_initialized = true;
   initscr();
   savetty();
-  ncurses_init_color();
-  ncurses_set_color_palette(TMNCursesColorPalette::RGB);
+  tmcurses_init_color();
+
+  tmcurses_set_color_palette(TMNCursesColorPalette::RGB);
   cbreak();
   noecho();
   nodelay(stdscr, true);
@@ -26,16 +27,16 @@ void ncurses_init() {
   curs_set(0);
 }
 
-bool ncurses_is_initialized() {
-  return ncurses_initialized;
+bool tmcurses_is_initialized() {
+  return tmcurses_initialized;
 }
 
-void ncurses_uninit() {
-  if (!ncurses_initialized) return;
-  ncurses_initialized = false;
+void tmcurses_uninit() {
+  if (!tmcurses_initialized) return;
+  tmcurses_initialized = false;
   erase();
   refresh();
-  ncurses_uninit_color();
+  tmcurses_uninit_color();
   keypad(stdscr, false);
   nocbreak();
   echo();

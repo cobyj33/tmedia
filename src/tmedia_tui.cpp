@@ -167,7 +167,7 @@ std::string get_media_file_display_name(const std::string& abs_path, MetadataCac
 }
 
 void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map) {
-  if (!has_colors()) // if there are no colors, just don't print colors :)
+  if (!tmcurses_has_colors()) // if there are no colors, just don't print colors :)
     output_mode = VidOutMode::PLAIN;
 
   switch (output_mode) {
