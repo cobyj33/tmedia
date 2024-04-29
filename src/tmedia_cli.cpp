@@ -1,6 +1,6 @@
 #include <tmedia/tmedia.h>
 
-#include <tmedia/cli/cli_iter.h>
+#include <tmedia/cmdlpar/cmdlpar.h>
 #include <tmedia/media/playlist.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/version.h>
@@ -68,7 +68,7 @@ const char* TMEDIA_CONTROLS_USAGE = ""
   "- 'R' - Fully Refresh the Screen\n"
   "---------------------------------------------------------------------------";
 
-const char* TMEDIA_CLI_OPTIONS_DESC = ""
+const char* TMEDIA_CLI_ARGS_DESC = ""
   "-------------------------------CLI ARGUMENTS------------------------------\n"
   "\n"
   "  Positional arguments:\n"
@@ -411,7 +411,7 @@ const char* TMEDIA_CLI_OPTIONS_DESC = ""
   void print_help_text() {
     std::cout << "Usage: tmedia [OPTIONS] paths\n" << std::endl;
     std::cout << TMEDIA_CONTROLS_USAGE << '\n' << std::endl;
-    std::cout << TMEDIA_CLI_OPTIONS_DESC << std::endl;
+    std::cout << TMEDIA_CLI_ARGS_DESC << std::endl;
   }
 
   void cli_arg_help(CLIParseState& ps, const tmedia::CLIArg arg) {

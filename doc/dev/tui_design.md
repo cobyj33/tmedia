@@ -1,20 +1,21 @@
-tmedia TUI Design:
+# tmedia TUI Design
 
 This was the original first design document for the tmedia player tui. I decided
-to add it to source control just as a way to document the screen. It's not completely
-accurate to how the screen is actually implemented, but most of the same elements
-are still present
+to add it to source control just as a way to document how the screen behaves.
+It's not completely accurate to how the screen is actually implemented, but most
+of the same elements are still present.
 
-Some Geneneral Ideas
+```txt
+Some General Ideas
 
-The arrows/(Next/Previous) signs at the top are only rendered if there is actually
-a next or previous video queued up. For example, if the current media is the last media
-and there is no looping. 
+The arrows/(Next/Previous) signs at the top are only rendered if there is
+actually a next or previous video queued up. For example, if the current media
+is the last media and there is no looping. 
 
 Looping, Playing, and Shuffling only apply to Video/Audio
 
 
-Images strictly just go to the end or to the beginning, they don't loop at all\
+Images strictly just go to the end or to the beginning, they don't loop at all
 
 
 LINES < 10 or COLS 0-20 
@@ -73,6 +74,8 @@ M - Muted
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+
 Breakpoint: Width 80+ COLS (80 COLS 24 LINES shown here)
 
                                      01. Palace
@@ -124,6 +127,8 @@ VOLUME: MUTED
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 
 
 Breakpoint: Width 140+ COLS:
@@ -179,3 +184,4 @@ Previous: Image3.png                                                            
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 |OUTPUT: COLORED BACKGROUND (C/B/G)|                                          |F: Toggle Fullscreen|
+```txt
