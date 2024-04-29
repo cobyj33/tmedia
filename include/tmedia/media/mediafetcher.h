@@ -67,7 +67,6 @@ class MediaFetcher {
     
     std::atomic<bool> in_use;
     std::optional<std::string> error;
-    std::unique_ptr<Visualizer> audio_visualizer;
 
     int msg_video_jump_curr_time;
     std::mutex ex_noti_mtx;

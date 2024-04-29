@@ -6,7 +6,6 @@
 #include <tmedia/util/wmath.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/ffmpeg/audioresampler.h>
-#include <tmedia/audio/audio_visualizer.h>
 #include <tmedia/util/defines.h>
 
 #include <string>
@@ -32,7 +31,6 @@ MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::set<enu
     throw std::runtime_error(fmt::format("[{}] Could not find any media streams", FUNCDINFO));
 
   this->media_type = this->mdec->get_media_type();
-  this->audio_visualizer = std::make_unique<AmplitudeAbs>();
   this->msg_video_jump_curr_time = 0;
   this->msg_audio_jump_curr_time = 0;
 
