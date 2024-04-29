@@ -34,7 +34,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
     sleep_for_sec(adec.get_start_time(AVMEDIA_TYPE_AUDIO));
 
     while (!this->should_exit()) {
-      {
+      if (!this->is_playing()) {
         std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
         while (!this->is_playing() && !this->should_exit()) {
           this->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(AUDIO_THREAD_PAUSED_SLEEP_MS));
@@ -56,6 +56,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
         this->audio_buffer->clear(current_time);
         adec.jump_to_time(current_time);
         next_raw_audio_frames = adec.next_frames(AVMEDIA_TYPE_AUDIO);
+        
         std::scoped_lock<std::mutex> lock(this->alter_mutex);
         this->msg_audio_jump_curr_time--;
       }

@@ -90,7 +90,7 @@ void MediaFetcher::frame_video_fetching_func() {
   vdec.get_width(), vdec.get_height(), vdec.get_pix_fmt());
 
   while (!this->should_exit()) {
-    {
+    if (!this->is_playing()) {
       std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
       while (!this->is_playing() && !this->should_exit()) {
         this->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(PAUSED_SLEEP_TIME_MS));
@@ -140,11 +140,10 @@ void MediaFetcher::frame_video_fetching_func() {
       if (wait_duration > 0.0 || this->frame.get_width() * this->frame.get_height() == 0) { // or the current frame has no valid dimensions
         AVFrame* frame_image = vconv.convert_video_frame(dec_frames[0]);
         PixelData pix_data = PixelData(frame_image);
-        {
-          std::lock_guard<std::mutex> lock(this->alter_mutex);
-          this->frame = pix_data;
-        }
         av_frame_free(&frame_image);
+        
+        std::lock_guard<std::mutex> lock(this->alter_mutex);
+        this->frame = pix_data;
       }
       clear_avframe_list(dec_frames);
       std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
@@ -178,7 +177,7 @@ void MediaFetcher::frame_image_fetching_func() {
   vdec.get_pix_fmt());
 
   std::vector<AVFrame*> dec_frames = vdec.next_frames(AVMEDIA_TYPE_VIDEO);
-  if (dec_frames.size() > 0 && dec_frames[0] != nullptr) {
+  if (dec_frames.size() > 0) {
     AVFrame* frame_image = vconv.convert_video_frame(dec_frames[0]);
     PixelData frame_pixel_data = PixelData(frame_image);
     {
@@ -216,7 +215,7 @@ void MediaFetcher::frame_audio_fetching_func() {
   }
   
   while (!this->should_exit()) {
-    {
+    if (!this->is_playing()) {
       std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
       while (!this->is_playing() && !this->should_exit()) {
         this->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(PAUSED_SLEEP_TIME_MS));
