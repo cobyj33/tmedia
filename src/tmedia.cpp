@@ -45,7 +45,11 @@ static constexpr int MIN_RENDER_COLS = 2;
 static constexpr int MIN_RENDER_LINES = 2; 
 
 
+// Modify the tmcurses color palette to align with the next video output mode
+// and set the value at *current to the value of next*
 void set_global_vom(VidOutMode* current, VidOutMode next);
+
+// Modify the tmcurses color palette to align with the given video output mode
 void init_global_video_output_mode(VidOutMode mode);
 
 
@@ -81,23 +85,22 @@ int tmedia_main_loop(TMediaProgramState tmps) {
   tmrs.req_frame_dim = Dim2(COLS, LINES);
 
   while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.plist.size() > 0) {
+    // main loop setup phase. Sets up and begins MediaFetcher. Sets up
+    // and begins audio output (if applicable)
     PlaylistMvCmd move_cmd = PlaylistMvCmd::NEXT;
     std::unique_ptr<MediaFetcher> fetcher;
-    std::string currently_playing = tmps.plist.current();
-    std::string cmd_buf; // currently unused
+    const std::string currently_playing = tmps.plist.current();
 
     try {
       const std::set<enum AVMediaType> streams = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
       fetcher = std::make_unique<MediaFetcher>(tmps.plist.current(), streams);
     } catch (const std::runtime_error& err) {
-      std::size_t failed_plist_index = tmps.plist.index();
+      const std::size_t failed_plist_index = tmps.plist.index();
 
-      // force skip this current file. If the loop type was in repeat-one, then
-      // we might repeat it once we call move
-      if (move_cmd == PlaylistMvCmd::NEXT) move_cmd = PlaylistMvCmd::SKIP;
-      if (!tmps.plist.can_move(move_cmd)) break; // If we cannot move, we should just exit gracefully
-      tmps.plist.move(move_cmd);
-
+      // force skip this current file. If we cannot move, we should just
+      // exit gracefully
+      if (!tmps.plist.can_move(PlaylistMvCmd::SKIP)) break;
+      tmps.plist.move(PlaylistMvCmd::SKIP);
       tmps.plist.remove(failed_plist_index);
       continue;
     }
@@ -105,12 +108,13 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
     fetcher->req_dims = Dim2(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
     std::unique_ptr<MAAudioOut> audio_output;
-    fetcher->begin(sys_clk_sec());
+    fetcher->begin(sys_clk_sec()); // begin the MediaFetcher before beginning the
+    // audio playback. Some audio data should be available by then hopefully
 
     if (fetcher->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-      static constexpr int AUDIO_BUFFER_TRY_READ_MS = 5;
+      static constexpr int AUDIO_BUFFER_TRY_READ_MS = 2;
       audio_output = std::make_unique<MAAudioOut>(fetcher->mdec->get_nb_channels(), fetcher->mdec->get_sample_rate(), [&fetcher] (float* float_buffer, int nb_frames) {
-        bool success = fetcher->audio_buffer->try_read_into(nb_frames, float_buffer, AUDIO_BUFFER_TRY_READ_MS);
+        const bool success = fetcher->audio_buffer->try_read_into(nb_frames, float_buffer, AUDIO_BUFFER_TRY_READ_MS);
         if (!success)
           for (int i = 0; i < nb_frames * fetcher->mdec->get_nb_channels(); i++)
             float_buffer[i] = 0.0f;
@@ -123,6 +127,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     
 
     try {
+      // main playing loop
       while (!fetcher->should_exit() && !INTERRUPT_RECEIVED) { // never break without using dispatch_exit on fetcher to false
         PixelData frame;
         double curr_systime, req_jumptime, curr_medtime;
@@ -136,7 +141,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           req_jumptime = curr_medtime;
           frame = fetcher->frame;
           fetcher->req_dims = tmrs.req_frame_dim;
-          req_jump = fetcher->get_desync_time(curr_systime) > MAX_AUDIO_DESYNC_SECS;
+
+          // If the audio is desynced, we just try and jump to the current media
+          // time to resync it.
+          req_jump = fetcher->get_audio_desync_time(curr_systime) > MAX_AUDIO_DESYNC_SECS;
         }
 
         int input = ERR;
@@ -334,7 +342,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     erase();
     if (!tmps.plist.can_move(move_cmd)) break;
     tmps.plist.move(move_cmd);
-  }
+  } // end of main loop
 
   return EXIT_SUCCESS;
 }

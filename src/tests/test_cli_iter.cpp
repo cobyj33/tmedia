@@ -1,4 +1,4 @@
-#include <tmedia/cli/cli_iter.h>
+#include <tmedia/cmdlpar/cmdlpar.h>
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -37,7 +37,7 @@ class MockCLI {
   }
 };
 
-TEST_CASE("cli_iter", "[cli_iter]") {
+TEST_CASE("cmdlpar", "[cmdlpar]") {
 
   SECTION("Should Succeed") {
     SECTION("stringed shortopts") {

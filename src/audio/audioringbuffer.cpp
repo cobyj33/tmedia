@@ -15,7 +15,14 @@
 /**
  * Implementation details:
  * 
- * m_head and m_tail are INDEXES into the internal AudioRingBuffer vector.
+ * m_head and m_tail are INDEXES into the internal AudioRingBuffer vector. Since
+ * AudioRingBuffer is a circular buffer, m_head is not always less than m_tail.
+ * 
+ * I wrote that AudioRingBuffer exhibits "undefined behavior" in the header
+ * whenever we read or peak any frame count greater than get_frames_can_read
+ * or write any frame count greater than get_frames_can_write, but it'll
+ * actually just overwrite itself on the first call. After that, it'll
+ * just get confused on how big the buffer really is.
 */
 
 AudioRingBuffer::AudioRingBuffer(int frame_capacity, int nb_channels, int sample_rate, double playback_start_time) {
@@ -45,11 +52,11 @@ void AudioRingBuffer::clear(double new_start_time) {
 }
 
 double AudioRingBuffer::get_buffer_end_time() {
-  return this->m_start_time + ((double)(this->m_frames_read + (std::size_t)this->get_frames_can_read()) / (double)this->m_sample_rate);
+  return this->m_start_time + (static_cast<double>(this->m_frames_read + static_cast<std::size_t>(this->get_frames_can_read())) / static_cast<double>(this->m_sample_rate));
 }
 
 double AudioRingBuffer::get_buffer_current_time() {
-  return this->m_start_time + ((double)this->m_frames_read / (double)this->m_sample_rate);
+  return this->m_start_time + (static_cast<double>(this->m_frames_read) / static_cast<double>(this->m_sample_rate));
 }
 
 bool AudioRingBuffer::is_time_in_bounds(double playback_time) {
@@ -65,23 +72,14 @@ void AudioRingBuffer::set_time_in_bounds(double playback_time) {
 }
 
 int AudioRingBuffer::get_frames_can_read() {
-  #if 0
-  if (this->m_head < this->m_tail) return (this->m_tail - this->m_head) / this->m_nb_channels;
-  if (this->m_tail < this->m_head) return (this->m_size_samples - this->m_head + this->m_tail) / this->m_nb_channels;
-  return 0;
-  #endif
+  // Can you tell I just learned about branchless programming :o
+  // I don't even know if it's actually 'faster'
 
   return ((this->m_head < this->m_tail) * (this->m_tail - this->m_head) +
     (this->m_tail < this->m_head) * (this->m_size_samples - this->m_head + this->m_tail)) / this->m_nb_channels;
 }
 
 int AudioRingBuffer::get_frames_can_write() {
-  #if 0
-  if (this->m_head < this->m_tail) return (this->m_size_samples - this->m_tail + this->m_head) / this->m_nb_channels;
-  if (this->m_tail < this->m_head) return (this->m_head - this->m_tail) / this->m_nb_channels;
-  return 0;
-  #endif
-
   return ((this->m_head < this->m_tail) * (this->m_size_samples - this->m_tail + this->m_head) +
     (this->m_tail < this->m_head) * (this->m_head - this->m_tail)) / this->m_nb_channels;
 }

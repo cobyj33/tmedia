@@ -150,9 +150,14 @@ class MediaFetcher {
     }
 
     /**
+     * Returns the absolute difference between the current time of the audio
+     * buffer and the expected media time in order to determine the audio desync
+     * amount. If there is no audio handled by this MediaFetcher instance,
+     * then this function just returns 0.0
+     *
      * Not thread-safe, lock alter_mutex first
     */
-    double get_desync_time(double currsystime) const;
+    double get_audio_desync_time(double currsystime) const;
 
     /**
      * @brief Moves the MediaFetcher's playback to a certain time (including video and audio streams)

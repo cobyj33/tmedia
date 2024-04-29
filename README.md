@@ -1,6 +1,6 @@
 # tmedia
 
-C++ 17 Terminal Media Player
+Linux C++ 17 Filesystem Terminal Media Player
 
 ## Example Output
 
@@ -53,13 +53,64 @@ C++ 17 Terminal Media Player
   - 'P' - Rewind to Previous Media File
   - 'R' - Fully Refresh the Screen
 
+## CLI Arguments
+
+```txt
+Positional arguments:
+  paths                  The the paths to files or directories to be
+                         played. Multiple files will be played one
+                         after the other Directories will be expanded
+                         so any media files inside them will be played.
+
+
+Optional arguments:
+  Help and Versioning: 
+  -h, --help             shows help message and exits 
+  -v, --version          prints version information and exits 
+  --ffmpeg-version       Print the version of linked FFmpeg libraries 
+  --curses-version       Print the version of linked Curses libraries
+
+Video Output: 
+  -c, --color            Play the video with color 
+  -g, --gray             Play the video in grayscale 
+  -b, --background       Do not show characters, only the background 
+  -f, --fullscreen       Begin the player in fullscreen mode
+  --refresh-rate         Set the refresh rate of tmedia
+  --chars [STRING]       The displayed characters from darkest to lightest
+
+Audio Output: 
+  --volume [FLOAT] || [INT%] Set initial volume [0.0, 1.0] or [0%, 100%] 
+  -m, --mute, --muted        Mute the audio playback 
+Playlist Controls: 
+  --no-repeat            Do not repeat the playlist upon end
+  --repeat, --loop       Repeat the playlist upon playlist end
+  --repeat-one           Start the playlist looping the first media
+  -s, --shuffle          Shuffle the given playlist 
+
+File Searching: 
+  NOTE: all local (:) options override global options
+
+  -r, --recursive        Recurse child directories to find media files 
+  --ignore-images        Ignore image files while searching directories
+  --ignore-video         Ignore video files while searching directories
+  --ignore-audio         Ignore audio files while searching directories
+  --probe, --no-probe    (Don't) probe all files
+  --repeat-paths [UINT]    Repeat all cli path arguments n times
+  :r, :recursive         Recurse child directories of the last listed path 
+  :repeat-path [UINT]    Repeat the last given cli path argument n times
+  :ignore-images         Ignore image files when searching last listed path
+  :ignore-video          Ignore video files when searching last listed path
+  :ignore-audio          Ignore audio files when searching last listed path
+  :probe, :no-probe      (Don't) probe last file/directory
+```
+
 All of these controls can also be seen when calling tmedia with no args or
 with --help
 
 ## Installing
 
-See [BUILD.md](./BUILD.md) for information. Currently, Ubuntu 20.04 is the main
-tested 
+See [BUILD.md](./doc/BUILD.md) for information. Currently, Ubuntu 20.04
+is the main tested system for tmedia.
 
 ## Bug and Feature Reporting
 
@@ -71,10 +122,7 @@ and I'll be sure to help.
 
 ### Bundled 3rd-party libraries
 
-* [miniaudio](https://miniaud.io/) - Cross-platform audio playback ([github](https://github.com/mackron/miniaudio))
-* [Natural Sort](https://github.com/scopeInfinity/NaturalSort) - Natural Sorting and Comparison: For sorting directory files
-* [readerwriterqueue](https://github.com/cameron314/readerwriterqueue) - Lock free SPSC Circular Buffer for consistent realtime audio
-* [random](https://github.com/effolkronium/random) - "Random for modern C++ with convenient API" (README.md)
+See [lib/README.md](./lib/README.md)
 
 ### Inspiration and Resources
 

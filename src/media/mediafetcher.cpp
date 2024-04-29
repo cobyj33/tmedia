@@ -80,13 +80,15 @@ void MediaFetcher::resume(double currsystime) {
 /**
  * For threadsafety, alter_mutex must be locked
 */
-double MediaFetcher::get_desync_time(double currsystime) const {
+double MediaFetcher::get_audio_desync_time(double currsystime) const {
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     double playback_time = this->get_time(currsystime);
     double audio_time = this->audio_buffer->get_buffer_current_time();
     return std::abs(audio_time - playback_time);
   }
-  return 0.0; // Video doesn't really get desynced since the video thread syncs itself to the MediaClock
+  // Video itself doesn't really get desynced since the video thread syncs
+  // itself to the MediaClock (see video_thread.cpp)
+  return 0.0; 
 }
 
 /**

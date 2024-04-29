@@ -16,7 +16,7 @@
 #include <filesystem>
 
 extern const char* TMEDIA_CONTROLS_USAGE;
-extern const char* TMEDIA_CLI_OPTIONS_DESC;
+extern const char* TMEDIA_CLI_ARGS_DESC;
 
 enum class VidOutMode {
   PLAIN,

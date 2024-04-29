@@ -93,7 +93,7 @@ ${CMAKE_SOURCE_DIR}/src/audio/blocking_audioringbuffer.cpp
 ${CMAKE_SOURCE_DIR}/src/audio/maaudioout.cpp
 ${CMAKE_SOURCE_DIR}/src/audio/wminiaudio.cpp
 
-${CMAKE_SOURCE_DIR}/src/cli/cli_iter.cpp
+${CMAKE_SOURCE_DIR}/src/cmdlpar/cmdlpar.cpp
 
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/audioresampler.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/boiler.cpp
@@ -136,7 +136,7 @@ ${CMAKE_SOURCE_DIR}/src/tmedia_tui_elems.cpp
 
 set(TEST_SOURCE_FILES
 ${CMAKE_SOURCE_DIR}/src/tests/test_color.cpp
-${CMAKE_SOURCE_DIR}/src/tests/test_cli_iter.cpp
+${CMAKE_SOURCE_DIR}/src/tests/test_cmdlpar.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_formatting.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_mediaclock.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_pixeldata.cpp
@@ -147,42 +147,6 @@ ${CMAKE_SOURCE_DIR}/src/tests/test_wmath.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_playlist.cpp
 )
 
-# Default ncurses configure options if building with FIND_CURSES=OFF
-set(NCURSES_CONFIGURE_OPTIONS --prefix=${CMAKE_BINARY_DIR}
---datadir=${CMAKE_BINARY_DIR}/data
---without-tests
---without-manpages
---without-progs
---without-debug
---with-shared
---without-normal)
-
-# Default ffmpeg configure options if building with FIND_FFMPEG=OFF
-set(FFMPEG_CONFIGURE_OPTIONS --prefix=${CMAKE_BINARY_DIR}
---pkg-config-flags=--static
---extra-cflags=-I${CMAKE_BINARY_DIR}/include
---extra-ldflags=-L${CMAKE_BINARY_DIR}/lib
---extra-libs=-lpthread
---extra-libs=-lm
---enable-rpath
---enable-shared
---disable-static
---disable-network
---disable-encoders
---disable-muxers
---disable-programs
---disable-doc
---disable-filters
---disable-postproc
---disable-avfilter
---disable-avdevice
---disable-protocols
---disable-devices
---enable-nonfree
---enable-protocol=file,pipe)
-# --disable-autodetect might be wanted for builds for other systems as well
-# Note that this is automatically set to be nonfree license
-
 project(tmedia
 VERSION ${TMEDIA_VERSION}
 LANGUAGES ${TMEDIA_SUPPORTED_LANGUAGES}
@@ -192,12 +156,14 @@ configure_file(${CMAKE_SOURCE_DIR}/include/tmedia/version.h.in ${CMAKE_BINARY_DI
 add_executable(tmedia ${COMMON_SOURCE_FILES} ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/src/tmedia.cpp)
 include(${CMAKE_SOURCE_DIR}/lib/deps.cmake)
 
-message("\nThird Party Libs:")
-printlist("${TMEDIA_DEPS_LIBRARIES}")
-message("\nThird Party Includes:")
-printlist("${TMEDIA_DEPS_INCLUDE_DIRS}")
-message("\nTarget Dependencies:")
-printlist("${TMEDIA_TARGET_DEPENDENCIES}")
+message("+---TMEDIA-DEPENDENCY-CONFIG---------------------------------------")
+message("Third Party Libraries:")
+printlist("${TMEDIA_DEPS_LIBRARIES}\n")
+message("Third Party Includes:")
+printlist("${TMEDIA_DEPS_INCLUDE_DIRS}\n")
+message("Target Dependencies:")
+printlist("${TMEDIA_TARGET_DEPENDENCIES}\n")
+message("+------------------------------------------------------------------")
 
 target_compile_features(tmedia PRIVATE cxx_std_17)
 target_include_directories(tmedia PRIVATE ${TMEDIA_DEPS_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include )
