@@ -2,6 +2,7 @@
 #define TMEDIA_BLOCKING_AUDIO_RING_BUFFER_H
 
 #include <tmedia/audio/audioringbuffer.h>
+#include <tmedia/util/defines.h>
 
 #include <mutex>
 #include <condition_variable>
@@ -12,12 +13,11 @@
  * For multithreaded access handled through locks and conditional variables.
  * 
  * Note that this should not be used in real-time threads such as audio output 
- * callback threads, but rather for general audio buffers that communicate
- * between threads.
+ * callback threads, but rather for general audio buffes that communicate
+ * between non-real-time threads.
  * 
  * Generally, there should only be one producer and one consumer
- * for each BlockingAudioRingBuffer, but there being more threads doesn't cause
- * data races, it would probably just serve to be useless.
+ * for each BlockingAudioRingBuffer.
 */
 class BlockingAudioRingBuffer {
   private:
@@ -29,13 +29,13 @@ class BlockingAudioRingBuffer {
   public:
     BlockingAudioRingBuffer(int frame_capcity, int nb_channels, int sample_rate, double playback_start_time);
     
-    // Thread safe: nb_channels is read-only
-    inline int get_nb_channels() {
+    // Thread safe without locking: nb_channels is read-only
+    TMEDIA_ALWAYS_INLINE inline int get_nb_channels() {
       return this->rb->get_nb_channels();
     }
     
-    // Thread safe: nb_channels is read-only
-    inline int get_sample_rate() {
+    // Thread safe without locking: nb_channels is read-only
+    TMEDIA_ALWAYS_INLINE inline int get_sample_rate() {
       return this->rb->get_sample_rate();
     }
 

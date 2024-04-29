@@ -2,8 +2,8 @@
 
 This was the original first design document for the tmedia player tui. I decided
 to add it to source control just as a way to document how the screen behaves.
-It's not completely accurate to how the screen is actually implemented, but most
-of the same elements are still present.
+**It's not completely accurate to how the screen is actually implemented**,
+but most of the same elements are still present.
 
 ```txt
 Some General Ideas

@@ -239,6 +239,14 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     {"volume", "chars", "refresh-rate", "repeat-path", "repeat-paths"});
 
 
+    /*
+    Note that a lot of options have aliases that aren't necessarily documented
+    in the --help text and the doc/cli.md file, such as "--shuffled".
+    These mostly exist for a better user experience, as "--shuffled" obviously
+    means the same thing as "--shuffle" to a user. Another good example is 
+    --gray and --grey.
+    */
+
     static const ArgParseMap short_exiting_opt_map{
       {"h", cli_arg_help},
       {"v", cli_arg_version}
