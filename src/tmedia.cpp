@@ -78,7 +78,7 @@ int tmedia_run(TMediaStartupState& tmss) {
 }
 
 int tmedia_main_loop(TMediaProgramState tmps) {
-  TMediaCursesRenderer renderer;
+  TMediaRendererState tmrs;
   tmps.req_frame_dim = Dim2(COLS, LINES);
 
   while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.plist.size() > 0) {
@@ -311,7 +311,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         snapshot.media_duration_secs = fetcher->get_duration();
         snapshot.media_type = fetcher->media_type;
 
-        renderer.render(tmps, snapshot);
+        render_tui(tmps, snapshot, tmrs);
 
         refresh();
         sleep_for_sec(1.0 / static_cast<double>(tmps.refresh_rate_fps));
