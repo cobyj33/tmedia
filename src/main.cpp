@@ -9,6 +9,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <csignal>
+#include <clocale>
 
 extern "C" {
 #include <libavutil/log.h>
@@ -37,6 +38,8 @@ void on_terminate() {
 
 
 int main(int argc, char** argv) {
+  setlocale(LC_ALL, "");
+
   #if USE_AV_REGISTER_ALL
   av_register_all();
   #endif
@@ -47,7 +50,7 @@ int main(int argc, char** argv) {
   std::signal(SIGINT, interrupt_handler);
 	std::signal(SIGTERM, interrupt_handler);
 	std::signal(SIGABRT, interrupt_handler);
-  
+
   srand(time(nullptr));
   av_log_set_level(AV_LOG_QUIET);
   std::set_terminate(on_terminate);
