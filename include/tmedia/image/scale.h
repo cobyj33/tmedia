@@ -12,6 +12,7 @@
 
 #include <algorithm>
 
+// why c++ gotta have so much boiler plate
 struct Dim2 {
   int width;
   int height;
@@ -19,7 +20,12 @@ struct Dim2 {
   Dim2(int width, int height) : width(width), height(height) {}
   Dim2(const Dim2& o) : width(o.width), height(o.height) {}
   Dim2(Dim2&& o) : width(o.width), height(o.height) {}
+  void operator=(const Dim2& o) { this->width = o.width; this->height = o.height; }
   void operator=(Dim2&& o) { this->width = o.width; this->height = o.height; }
+  bool operator==(const Dim2& o) { return this->width == o.width && this->height == o.height; }
+  bool operator==(Dim2&& o) { return this->width == o.width && this->height == o.height; }
+  bool operator!=(const Dim2& o) { return this->width != o.width || this->height != o.height; }
+  bool operator!=(Dim2&& o) { return this->width != o.width || this->height != o.height; }
 };
 
 /**

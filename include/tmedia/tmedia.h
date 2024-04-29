@@ -59,7 +59,6 @@ struct TMediaProgramState {
   bool quit = false;
   bool fullscreen = false;
   int refresh_rate_fps = 24;
-  Dim2 req_frame_dim = Dim2(1, 1);
   ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
   VidOutMode vom = VidOutMode::PLAIN;
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
@@ -79,12 +78,13 @@ struct TMediaProgramSnapshot {
 
 struct TMediaRendererState {
   MetadataCache metadata_cache;
-  Dim2 last_frame_dims;
+  Dim2 last_frame_dims = Dim2(1, 1);
+  Dim2 req_frame_dim = Dim2(1, 1);
 };
 
-void render_tui_fullscreen(TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);
-void render_tui_compact(TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);
-void render_tui_large(TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);
-void render_tui(TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);
+void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);
+void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);
+void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);
+void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);
 
 #endif

@@ -18,10 +18,10 @@ const char* loop_type_cstr_short(LoopType loop_type);
 std::string get_media_file_display_name(const std::string& abs_path, MetadataCache& mchc);
 void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map);
 
-void render_tui(TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
+void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   static constexpr int MIN_RENDER_COLS = 2;
   static constexpr int MIN_RENDER_LINES = 2;
-  
+
   if (sshot.frame.get_width() != tmrs.last_frame_dims.width ||
       sshot.frame.get_height() != tmrs.last_frame_dims.height) {
     erase();
@@ -40,16 +40,16 @@ void render_tui(TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TM
   tmrs.last_frame_dims = Dim2(sshot.frame.get_width(), sshot.frame.get_height());
 }
 
-void render_tui_fullscreen(TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
+void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   render_pixel_data(sshot.frame, 0, 0, COLS, LINES, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
-  tmps.req_frame_dim = Dim2(COLS, LINES);
+  tmrs.req_frame_dim = Dim2(COLS, LINES);
   (void)tmrs;
 }
 
-void render_tui_compact(TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
+void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
   render_pixel_data(sshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
-  tmps.req_frame_dim = Dim2(COLS, LINES - 4);
+  tmrs.req_frame_dim = Dim2(COLS, LINES - 4);
 
   wfill_box(stdscr, 1, 0, COLS, 1, '~');
   werasebox(stdscr, 0, 0, COLS, 1);
@@ -91,10 +91,10 @@ void render_tui_compact(TMediaProgramState& tmps, const TMediaProgramSnapshot& s
 
 }
 
-void render_tui_large(TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
+void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
   render_pixel_data(sshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
-  tmps.req_frame_dim = Dim2(COLS, LINES - 4);
+  tmrs.req_frame_dim = Dim2(COLS, LINES - 4);
   
   werasebox(stdscr, 0, 0, COLS, 2);
   const std::string current_plist_index_str = fmt::format("({}/{})", tmps.plist.index() + 1, tmps.plist.size());
