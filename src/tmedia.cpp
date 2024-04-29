@@ -61,7 +61,6 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState& tmss) {
   tmps.volume = tmss.volume;
   tmps.vom = tmss.vom;
   tmps.quit = false;
-  tmps.req_frame_dim = Dim2(100, 100);
   return tmps;
 }
 
@@ -78,8 +77,8 @@ int tmedia_run(TMediaStartupState& tmss) {
 }
 
 int tmedia_main_loop(TMediaProgramState tmps) {
-  TMediaCursesRenderer renderer;
-  tmps.req_frame_dim = Dim2(COLS, LINES);
+  TMediaRendererState tmrs;
+  tmrs.req_frame_dim = Dim2(COLS, LINES);
 
   while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.plist.size() > 0) {
     PlaylistMvCmd move_cmd = PlaylistMvCmd::NEXT;
@@ -136,7 +135,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           curr_medtime = fetcher->get_time(curr_systime);
           req_jumptime = curr_medtime;
           frame = fetcher->frame;
-          fetcher->req_dims = tmps.req_frame_dim;
+          fetcher->req_dims = tmrs.req_frame_dim;
           req_jump = fetcher->get_desync_time(curr_systime) > MAX_AUDIO_DESYNC_SECS;
         }
 
@@ -153,10 +152,6 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               tmps.quit = true;
             } break;
             case KEY_RESIZE: {
-              if (COLS >= MIN_RENDER_COLS && LINES >= MIN_RENDER_LINES) {
-                std::lock_guard<std::mutex> alter_lock(fetcher->alter_mutex);
-                fetcher->req_dims = Dim2(COLS, LINES);
-              }
               erase();
             } break;
             case 'r':
@@ -311,7 +306,12 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         snapshot.media_duration_secs = fetcher->get_duration();
         snapshot.media_type = fetcher->media_type;
 
-        renderer.render(tmps, snapshot);
+        Dim2 req_frame_dims_before = tmrs.req_frame_dim;
+        render_tui(tmps, snapshot, tmrs);
+        if (req_frame_dims_before != tmrs.req_frame_dim) {
+          std::lock_guard<std::mutex> alter_lock(fetcher->alter_mutex);
+          fetcher->req_dims = Dim2(tmrs.req_frame_dim);
+        }
 
         refresh();
         sleep_for_sec(1.0 / static_cast<double>(tmps.refresh_rate_fps));
