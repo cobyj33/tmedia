@@ -75,6 +75,8 @@ the Help and Versioning commands to work.
   - Prints version information of the used ffmpeg libraries and exits.
 - --curses-version       
   - Prints version information of the used curses libraries and exits.
+- --lib-versions
+  - Prints the version information of all third-party libraries and exits.
 
 ### Video Output
 

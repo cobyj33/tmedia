@@ -43,6 +43,8 @@ namespace fs = std::filesystem;
 
 // namespace tmedia {
 
+// When editing this string, make sure to edit the corresponding text in the
+// top level README.md file
 const char* TMEDIA_CONTROLS_USAGE = ""
   "---------------------------------CONTROLS---------------------------------\n"
   "Labels for this document: \n"
@@ -68,6 +70,10 @@ const char* TMEDIA_CONTROLS_USAGE = ""
   "- 'R' - Fully Refresh the Screen\n"
   "---------------------------------------------------------------------------";
 
+// When editing this string, make sure to edit the corresponding text in the
+// top-level README.md file.
+// When documenting new CLI argument entries, make sure to also document the
+// new CLI argument in doc/cli.md and the top-level README.md file.
 const char* TMEDIA_CLI_ARGS_DESC = ""
   "-------------------------------CLI ARGUMENTS------------------------------\n"
   "\n"
@@ -84,6 +90,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   "    -v, --version          prints version information and exits \n"
   "    --ffmpeg-version       Print the version of linked FFmpeg libraries \n"
   "    --curses-version       Print the version of linked Curses libraries\n"
+  "    --lib-versions         Print the versions of third party libraries\n"
   "\n"
   "  Video Output: \n"
   "    -c, --color            Play the video with color \n"

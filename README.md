@@ -69,6 +69,7 @@ Optional arguments:
   -v, --version          prints version information and exits 
   --ffmpeg-version       Print the version of linked FFmpeg libraries 
   --curses-version       Print the version of linked Curses libraries
+  --lib-versions         Print the versions of third party libraries
 
 Video Output: 
   -c, --color            Play the video with color 
