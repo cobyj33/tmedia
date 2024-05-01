@@ -28,6 +28,7 @@
 
 extern "C" {
   #include <curses.h>
+  #include <miniaudio.h>
   #include <libavutil/log.h>
   #include <libavformat/version.h>
   #include <libavutil/version.h>
@@ -91,6 +92,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   "    --ffmpeg-version       Print the version of linked FFmpeg libraries \n"
   "    --curses-version       Print the version of linked Curses libraries\n"
   "    --fmt-version          Print the version of the fmt library\n"
+  "    --miniaudio-version    Print the version of the miniaudio library\n"
   "    --lib-versions         Print the versions of third party libraries\n"
   "\n"
   "  Video Output: \n"
@@ -199,6 +201,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_ffmpeg_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_curses_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_fmt_version(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_miniaudio_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_lib_versions(CLIParseState& ps, const tmedia::CLIArg arg);
 
   void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -271,6 +274,8 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"ffmpeg-version", cli_arg_ffmpeg_version},
       {"curses-version", cli_arg_curses_version},
       {"fmt-version", cli_arg_fmt_version},
+      {"miniaudio-version", cli_arg_miniaudio_version},
+      {"ma-version", cli_arg_miniaudio_version},
       {"dep-version", cli_arg_lib_versions},
       {"dep-versions", cli_arg_lib_versions},
       {"lib-version", cli_arg_lib_versions},
@@ -453,6 +458,10 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
               << TMEDIA_FMT_VERSION_PATCH << std::endl;
   }
 
+  void print_miniaudio_version() {
+    std::cout << "miniaudio version: " << MA_VERSION_STRING << std::endl;
+  }
+
   void print_ffmpeg_version() {
     std::cout << "libavformat: " << LIBAVFORMAT_VERSION_MAJOR << ":" <<
                                  LIBAVFORMAT_VERSION_MINOR << ":" <<
@@ -490,10 +499,16 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)ps; (void)arg;
   }
 
+  void cli_arg_miniaudio_version(CLIParseState& ps, const tmedia::CLIArg arg) {
+    print_miniaudio_version();
+    (void)ps; (void)arg;
+  }
+
   void cli_arg_lib_versions(CLIParseState& ps, const tmedia::CLIArg arg) {
     print_curses_version();
     print_ffmpeg_version();
     print_fmt_version();
+    print_miniaudio_version();
     (void)ps; (void)arg;
   }
 

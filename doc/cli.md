@@ -77,6 +77,8 @@ the Help and Versioning commands to work.
   - Prints version information of the used curses libraries and exits.
 - --fmt-version       
   - Prints version information of the used fmt library and exits.
+- --fmt-version       
+  - Prints version information of the used miniaudio library and exits.
 - --lib-versions
   - Prints the version information of all third-party libraries and exits.
 

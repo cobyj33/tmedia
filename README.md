@@ -70,6 +70,7 @@ Optional arguments:
   --ffmpeg-version       Print the version of linked FFmpeg libraries 
   --curses-version       Print the version of linked Curses libraries
   --fmt-version          Print the version of the fmt library
+  --miniaudio-version    Print the version of the miniaudio library
   --lib-versions         Print the versions of third party libraries
 
 Video Output: 
