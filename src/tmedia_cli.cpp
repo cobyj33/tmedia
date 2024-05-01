@@ -188,7 +188,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
                         std::vector<fs::path>& resolved_paths);
 
   typedef std::function<void(CLIParseState&, const tmedia::CLIArg arg)> ArgParseFunc;
-  typedef tmedia::ArrayPairMap<std::string_view, ArgParseFunc, 50, std::less<>> ArgParseMap;
+  typedef tmedia::ArrayPairMap<std::string_view, ArgParseFunc, 100, std::less<>> ArgParseMap;
 
   void print_help_text();
 
@@ -221,9 +221,13 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   // Global versions of options that are either local or global
   void cli_arg_ignore_video_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_ignore_video_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ignore_audio_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_ignore_audio_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ignore_images_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_ignore_images_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_recurse_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_recurse_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_probe_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_probe_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_repeat_paths_global(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -329,15 +333,31 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       // path searching opts
       {"ignore-audio", cli_arg_ignore_audio_global},
       {"ignore-audios", cli_arg_ignore_audio_global},
-
+      {"no-ignore-audio", cli_arg_no_ignore_audio_global},
+      {"no-ignore-audios", cli_arg_no_ignore_audio_global},
+      {"dont-ignore-audio", cli_arg_no_ignore_audio_global},
+      {"dont-ignore-audios", cli_arg_no_ignore_audio_global},
+      
       {"ignore-video", cli_arg_ignore_video_global},
       {"ignore-videos", cli_arg_ignore_video_global},
-
+      {"no-ignore-video", cli_arg_no_ignore_video_global},
+      {"no-ignore-videos", cli_arg_no_ignore_video_global},
+      {"dont-ignore-video", cli_arg_no_ignore_video_global},
+      {"dont-ignore-videos", cli_arg_no_ignore_video_global},
+      
       {"ignore-image", cli_arg_ignore_images_global},
       {"ignore-images", cli_arg_ignore_images_global},
+      {"no-ignore-image", cli_arg_no_ignore_images_global},
+      {"no-ignore-images", cli_arg_no_ignore_images_global},
+      {"dont-ignore-image", cli_arg_no_ignore_images_global},
+      {"dont-ignore-images", cli_arg_no_ignore_images_global},
 
       {"recurse", cli_arg_recurse_global},
       {"recursive", cli_arg_recurse_global},
+      {"no-recurse", cli_arg_no_recurse_global},
+      {"no-recursive", cli_arg_no_recurse_global},
+      {"dont-recurse", cli_arg_no_recurse_global},
+      {"dont-recursive", cli_arg_no_recurse_global},
 
       {"probe", cli_arg_probe_global},
       {"no-probe", cli_arg_no_probe_global},
@@ -634,8 +654,18 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)arg;
   }
 
+  void cli_arg_no_ignore_video_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.ignore_video = false;
+    (void)arg;
+  }
+
   void cli_arg_ignore_audio_global(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.srch_opts.ignore_audio = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_ignore_audio_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.ignore_audio = false;
     (void)arg;
   }
 
@@ -644,8 +674,19 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)arg;
   }
 
+  void cli_arg_no_ignore_images_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.ignore_images = false;
+    (void)arg;
+  }
+
+
   void cli_arg_recurse_global(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.srch_opts.recurse = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_recurse_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.recurse = false;
     (void)arg;
   }
 
