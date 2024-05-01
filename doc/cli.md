@@ -111,7 +111,10 @@ the Help and Versioning commands to work.
   between black and white. It's best to use characters which "fill" the font
   for blacker characters and characters which are mostly whitespace as whiter
   characters. Whitespace itself could also be included in the string for 
-  --chars.  
+  --chars.
+  - Note that listing characters inside a single-quoted string would be desired
+  for the parameter so that special characters like ```$``` and ```|```
+  don't get interpreted by the shell before reaching tmedia.
 
 ### Audio Output 
 - --volume [FLOAT] || [INT%]

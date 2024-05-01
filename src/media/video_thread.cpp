@@ -22,13 +22,18 @@ extern "C" {
 #include <libavutil/frame.h>
 }
 
+using namespace std::chrono_literals;
+
 /**
- * The purpose of the video thread is to update the current MediaFetcher's frame for rendering
+ * The purpose of the video thread is to update the current MediaFetcher's
+ * frame for rendering
  * 
- * This is done in different ways depending on if a video is available in the current media type or not
+ * This is done in different ways depending on if a video is available in the
+ * current media type or not:
  * 
  * If the currently attached media is a video:
- *  The video thread will update the current frame to be the correct frame according to the MediaFetcher's current
+ *  The video thread will update the current frame to be the correct frame
+ *  according to the MediaFetcher's current
  *  playback timestamp
  * 
  * If the currently attached media is an image:
@@ -38,26 +43,28 @@ extern "C" {
  *  If there is an attached cover art to the current audio file:
  *    The video thread will read the cover art and exit
  *  else:
- *    The video thread will update the current frame to be a snapshot of the wave of audio data currently being
- *    processed. 
+ *    The video thread will update the current frame to be a snapshot of the
+ *    wave of audio data currently being processed.
 */
 
- // Pixel Aspect Ratio - account for tall rectangular shape of terminal characters
-constexpr int PAR_WIDTH = 2;
-constexpr int PAR_HEIGHT = 5;
+// Pixel Aspect Ratio - account for tall rectangular shape of terminal
+//characters
+static constexpr int PAR_WIDTH = 2;
+static constexpr int PAR_HEIGHT = 5;
 
-constexpr int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PAR_HEIGHT;
-constexpr int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PAR_WIDTH;
-constexpr double MAX_FRAME_ASPECT_RATIO = static_cast<double>(MAX_FRAME_ASPECT_RATIO_WIDTH) / static_cast<double>(MAX_FRAME_ASPECT_RATIO_HEIGHT);
+static constexpr int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PAR_HEIGHT;
+static constexpr int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PAR_WIDTH;
+static constexpr double MAX_FRAME_ASPECT_RATIO = static_cast<double>(MAX_FRAME_ASPECT_RATIO_WIDTH) / static_cast<double>(MAX_FRAME_ASPECT_RATIO_HEIGHT);
 
 // I found that past a width of 640 characters,
-// the terminal starts to stutter terribly on most terminal emulators, so we just
-// bound the image to this amount
+// the terminal starts to stutter terribly on most terminal emulators, so we
+// just bound the image to this amount
 
-constexpr int MAX_FRAME_WIDTH = 640;
-constexpr int MAX_FRAME_HEIGHT = static_cast<int>(static_cast<double>(MAX_FRAME_WIDTH) / MAX_FRAME_ASPECT_RATIO);
-constexpr int PAUSED_SLEEP_TIME_MS = 100;
-constexpr double DEFAULT_AVGFTS = 1.0 / 24.0;
+static constexpr int MAX_FRAME_WIDTH = 640;
+static constexpr int MAX_FRAME_HEIGHT = static_cast<int>(static_cast<double>(MAX_FRAME_WIDTH) / MAX_FRAME_ASPECT_RATIO);
+static constexpr std::chrono::milliseconds PAUSED_SLEEP_TIME_MS = 100ms;
+static constexpr double DEFAULT_AVGFTS = 1.0 / 24.0;
+static constexpr std::chrono::nanoseconds DEFAULT_AVGFTS_NS = secs_to_chns(DEFAULT_AVGFTS);
 
 void MediaFetcher::video_fetching_thread_func() {
   // note that frame_audio_fetching_func can run even if there is no video data
@@ -93,7 +100,7 @@ void MediaFetcher::frame_video_fetching_func() {
     if (!this->is_playing()) {
       std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
       while (!this->is_playing() && !this->should_exit()) {
-        this->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(PAUSED_SLEEP_TIME_MS));
+        this->resume_cond.wait_for(resume_notify_lock, PAUSED_SLEEP_TIME_MS);
       }
     }
 
@@ -153,7 +160,7 @@ void MediaFetcher::frame_video_fetching_func() {
     } else { // no frame was found.
       std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
       if (!this->should_exit()) {
-        this->exit_cond.wait_for(exit_lock, secs_to_chns(DEFAULT_AVGFTS)); 
+        this->exit_cond.wait_for(exit_lock, DEFAULT_AVGFTS_NS);
       }
     }
 
@@ -213,12 +220,20 @@ void MediaFetcher::frame_audio_fetching_func() {
     MAX_FRAME_WIDTH,
     MAX_FRAME_HEIGHT);
   }
+
+  /**
+   * I had originally thought that maybe the audio visualizer could have it's
+   * own MediaDecoder decoding audio to visualize, but peeking into the
+   * MediaFetcher's buffer doesn't seem to cause any problems at all, and
+   * greatly simplifies syncing the visualization with actual audio output
+   * from the MediaFetcher.
+  */
   
   while (!this->should_exit()) {
     if (!this->is_playing()) {
       std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
       while (!this->is_playing() && !this->should_exit()) {
-        this->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(PAUSED_SLEEP_TIME_MS));
+        this->resume_cond.wait_for(resume_notify_lock, PAUSED_SLEEP_TIME_MS);
       }
     }
 
@@ -239,7 +254,7 @@ void MediaFetcher::frame_audio_fetching_func() {
 
     std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
     if (!this->should_exit()) {
-      this->exit_cond.wait_for(exit_lock, secs_to_chns(DEFAULT_AVGFTS)); 
+      this->exit_cond.wait_for(exit_lock, DEFAULT_AVGFTS_NS);
     }
   }
 }
