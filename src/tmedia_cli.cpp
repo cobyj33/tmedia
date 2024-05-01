@@ -90,6 +90,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   "    -v, --version          prints version information and exits \n"
   "    --ffmpeg-version       Print the version of linked FFmpeg libraries \n"
   "    --curses-version       Print the version of linked Curses libraries\n"
+  "    --fmt-version          Print the version of the fmt library\n"
   "    --lib-versions         Print the versions of third party libraries\n"
   "\n"
   "  Video Output: \n"
@@ -189,10 +190,15 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void print_help_text();
 
+  #define TMEDIA_FMT_VERSION_MAJOR (FMT_VERSION / 10000)
+  #define TMEDIA_FMT_VERSION_MINOR ((FMT_VERSION % 10000 - FMT_VERSION % 100) / 100)
+  #define TMEDIA_FMT_VERSION_PATCH (FMT_VERSION % 100)
+
   void cli_arg_help(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ffmpeg_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_curses_version(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_fmt_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_lib_versions(CLIParseState& ps, const tmedia::CLIArg arg);
 
   void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -264,6 +270,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"version", cli_arg_version},
       {"ffmpeg-version", cli_arg_ffmpeg_version},
       {"curses-version", cli_arg_curses_version},
+      {"fmt-version", cli_arg_fmt_version},
       {"dep-version", cli_arg_lib_versions},
       {"dep-versions", cli_arg_lib_versions},
       {"lib-version", cli_arg_lib_versions},
@@ -439,6 +446,13 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)ps; (void)arg;
   }
 
+  void print_fmt_version() {
+    std::cout << "{fmt} version: "
+              <<  TMEDIA_FMT_VERSION_MAJOR << "."
+              << TMEDIA_FMT_VERSION_MINOR << "."
+              << TMEDIA_FMT_VERSION_PATCH << std::endl;
+  }
+
   void print_ffmpeg_version() {
     std::cout << "libavformat: " << LIBAVFORMAT_VERSION_MAJOR << ":" <<
                                  LIBAVFORMAT_VERSION_MINOR << ":" <<
@@ -471,9 +485,15 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)ps; (void)arg;
   }
 
+  void cli_arg_fmt_version(CLIParseState& ps, const tmedia::CLIArg arg) {
+    print_fmt_version();
+    (void)ps; (void)arg;
+  }
+
   void cli_arg_lib_versions(CLIParseState& ps, const tmedia::CLIArg arg) {
     print_curses_version();
     print_ffmpeg_version();
+    print_fmt_version();
     (void)ps; (void)arg;
   }
 
