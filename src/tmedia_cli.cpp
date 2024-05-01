@@ -196,6 +196,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   #define TMEDIA_FMT_VERSION_MINOR ((FMT_VERSION % 10000 - FMT_VERSION % 100) / 100)
   #define TMEDIA_FMT_VERSION_PATCH (FMT_VERSION % 100)
 
+  // Early Exit Options
   void cli_arg_help(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ffmpeg_version(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -204,6 +205,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_miniaudio_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_lib_versions(CLIParseState& ps, const tmedia::CLIArg arg);
 
+  // Global only options
   void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_chars(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_color(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -217,6 +219,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_shuffle(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_volume(CLIParseState& ps, const tmedia::CLIArg arg);
 
+  // Global versions of options that are either local or global
   void cli_arg_ignore_video_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ignore_audio_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ignore_images_global(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -225,10 +228,15 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_no_probe_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_repeat_paths_global(CLIParseState& ps, const tmedia::CLIArg arg);
 
+  // Local versions of options that are either local or global
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ignore_audio_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_ignore_audio_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ignore_images_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_ignore_images_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_recurse_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_recurse_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_probe_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_probe_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_repeat_path_local(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -321,15 +329,20 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       // path searching opts
       {"ignore-audio", cli_arg_ignore_audio_global},
       {"ignore-audios", cli_arg_ignore_audio_global},
+
       {"ignore-video", cli_arg_ignore_video_global},
       {"ignore-videos", cli_arg_ignore_video_global},
+
       {"ignore-image", cli_arg_ignore_images_global},
       {"ignore-images", cli_arg_ignore_images_global},
+
       {"recurse", cli_arg_recurse_global},
       {"recursive", cli_arg_recurse_global},
+
       {"probe", cli_arg_probe_global},
       {"no-probe", cli_arg_no_probe_global},
       {"dont-probe", cli_arg_no_probe_global},
+      
       {"repeat-paths", cli_arg_repeat_paths_global},
       {"repeat-path", cli_arg_repeat_paths_global},
     };
@@ -341,15 +354,36 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     static const ArgParseMap long_local_argparse_map{
       {"ignore-audio", cli_arg_ignore_audio_local},
       {"ignore-audios", cli_arg_ignore_audio_local},
+      {"no-ignore-audio", cli_arg_no_ignore_audio_local},
+      {"no-ignore-audios", cli_arg_no_ignore_audio_local},
+      {"dont-ignore-audio", cli_arg_no_ignore_audio_local},
+      {"dont-ignore-audios", cli_arg_no_ignore_audio_local},
+      
       {"ignore-video", cli_arg_ignore_video_local},
       {"ignore-videos", cli_arg_ignore_video_local},
+      {"no-ignore-video", cli_arg_no_ignore_video_local},
+      {"no-ignore-videos", cli_arg_no_ignore_video_local},
+      {"dont-ignore-video", cli_arg_no_ignore_video_local},
+      {"dont-ignore-videos", cli_arg_no_ignore_video_local},
+      
       {"ignore-image", cli_arg_ignore_images_local},
       {"ignore-images", cli_arg_ignore_images_local},
+      {"no-ignore-image", cli_arg_no_ignore_images_local},
+      {"no-ignore-images", cli_arg_no_ignore_images_local},
+      {"dont-ignore-image", cli_arg_no_ignore_images_local},
+      {"dont-ignore-images", cli_arg_no_ignore_images_local},
+
       {"recurse", cli_arg_recurse_local},
       {"recursive", cli_arg_recurse_local},
+      {"no-recurse", cli_arg_no_recurse_local},
+      {"no-recursive", cli_arg_no_recurse_local},
+      {"dont-recurse", cli_arg_no_recurse_local},
+      {"dont-recursive", cli_arg_no_recurse_local},
+
       {"probe", cli_arg_probe_local},
       {"no-probe", cli_arg_no_probe_local},
       {"dont-probe", cli_arg_no_probe_local},
+
       {"repeat-path", cli_arg_repeat_path_local},
       {"repeat-paths", cli_arg_repeat_path_local},
     };
@@ -644,44 +678,62 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   }
 
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg) {
-    if (ps.paths.size() > 0UL) {
+    if (ps.paths.size() > 0UL)
       ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_video = InheritBool::TRUE;
-    }
+    (void)arg;
+  }
+
+  void cli_arg_no_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() > 0UL)
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_video = InheritBool::FALSE;
     (void)arg;
   }
 
   void cli_arg_ignore_audio_local(CLIParseState& ps, const tmedia::CLIArg arg) {
-    if (ps.paths.size() > 0UL) {
+    if (ps.paths.size() > 0UL)
       ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_audio = InheritBool::TRUE;
-    }
+    (void)arg;
+  }
+
+  void cli_arg_no_ignore_audio_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() > 0UL)
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_audio = InheritBool::FALSE;
     (void)arg;
   }
 
   void cli_arg_ignore_images_local(CLIParseState& ps, const tmedia::CLIArg arg) {
-    if (ps.paths.size() > 0UL) {
+    if (ps.paths.size() > 0UL)
       ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_images = InheritBool::TRUE;
-    }
+    (void)arg;
+  }
+
+  void cli_arg_no_ignore_images_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() > 0UL)
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_images = InheritBool::FALSE;
     (void)arg;
   }
 
   void cli_arg_recurse_local(CLIParseState& ps, const tmedia::CLIArg arg) {
-    if (ps.paths.size() > 0UL) {
+    if (ps.paths.size() > 0UL)
       ps.paths[ps.paths.size() - 1UL].srch_opts.recurse = InheritBool::TRUE;
-    }
+    (void)arg;
+  }
+
+  void cli_arg_no_recurse_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() > 0UL)
+      ps.paths[ps.paths.size() - 1UL].srch_opts.recurse = InheritBool::FALSE;
     (void)arg;
   }
 
   void cli_arg_probe_local(CLIParseState& ps, const tmedia::CLIArg arg) {
-    if (ps.paths.size() > 0UL) {
+    if (ps.paths.size() > 0UL)
       ps.paths[ps.paths.size() - 1UL].srch_opts.probe = InheritBool::TRUE;
-    }
     (void)arg;
   }
 
   void cli_arg_no_probe_local(CLIParseState& ps, const tmedia::CLIArg arg) {
-    if (ps.paths.size() > 0UL) {
+    if (ps.paths.size() > 0UL)
       ps.paths[ps.paths.size() - 1UL].srch_opts.probe = InheritBool::FALSE;
-    }
     (void)arg;
   }
 
