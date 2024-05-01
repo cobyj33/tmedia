@@ -57,7 +57,7 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState& tmss) {
   TMediaProgramState tmps;
   tmps.ascii_display_chars = tmss.ascii_display_chars;
   tmps.fullscreen = tmss.fullscreen;
-  tmps.muted = false;
+  tmps.muted = tmss.muted;
   tmps.plist = Playlist(tmss.media_files, tmss.loop_type);
   if (tmss.shuffled) tmps.plist.shuffle(false);
   tmps.refresh_rate_fps = tmss.refresh_rate_fps;
