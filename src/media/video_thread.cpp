@@ -44,7 +44,7 @@ using namespace std::chrono_literals;
  *    The video thread will read the cover art and exit
  *  else:
  *    The video thread will update the current frame to be a snapshot of the
- *    wave of audio data currently being processed.
+ *    wave of audio data currently being processed. 
 */
 
 // Pixel Aspect Ratio - account for tall rectangular shape of terminal
@@ -160,7 +160,7 @@ void MediaFetcher::frame_video_fetching_func() {
     } else { // no frame was found.
       std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
       if (!this->should_exit()) {
-        this->exit_cond.wait_for(exit_lock, DEFAULT_AVGFTS_NS);
+        this->exit_cond.wait_for(exit_lock, DEFAULT_AVGFTS_NS); 
       }
     }
 
@@ -222,7 +222,7 @@ void MediaFetcher::frame_audio_fetching_func() {
   }
 
   /**
-   * I had originally thought that maybe the audio visualizer could have it's
+   * I had originally thought that maybe the audio visualizer could have it's 
    * own MediaDecoder decoding audio to visualize, but peeking into the
    * MediaFetcher's buffer doesn't seem to cause any problems at all, and
    * greatly simplifies syncing the visualization with actual audio output
@@ -254,7 +254,7 @@ void MediaFetcher::frame_audio_fetching_func() {
 
     std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
     if (!this->should_exit()) {
-      this->exit_cond.wait_for(exit_lock, DEFAULT_AVGFTS_NS);
+      this->exit_cond.wait_for(exit_lock, DEFAULT_AVGFTS_NS); 
     }
   }
 }
