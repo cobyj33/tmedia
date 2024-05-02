@@ -13,6 +13,7 @@
 
 extern "C" {
 #include <libavutil/log.h>
+#include <unistd.h>
 }
 
 
@@ -38,6 +39,11 @@ void on_terminate() {
 
 
 int main(int argc, char** argv) {
+  if (!isatty(STDIN_FILENO)) {
+    std::cerr << "[tmedia]: stdin must be a tty. Exiting..." << std::endl;
+    return EXIT_FAILURE;
+  }
+
   setlocale(LC_ALL, "");
 
   #if USE_AV_REGISTER_ALL
