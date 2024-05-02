@@ -46,8 +46,7 @@ int tmedia_run(TMediaStartupState& tmpd);
 struct TMediaCLIParseRes {
   TMediaStartupState tmss;
   bool exited;
-  TMediaCLIParseRes(const TMediaStartupState& tmss, bool exited) : tmss(tmss), exited(exited) {}
-  TMediaCLIParseRes(TMediaStartupState&& tmss, bool exited) : tmss(std::move(tmss)), exited(exited) {}
+  std::vector<std::string> errors;
 };
 
 TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv);

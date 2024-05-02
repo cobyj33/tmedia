@@ -23,6 +23,7 @@
 #include <iostream>
 #include <charconv>
 #include <stack>
+#include <system_error>
 
 #include <fmt/format.h>
 
@@ -260,11 +261,18 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
     if (argc == 1) {
       print_help_text();
-      return { ps.tmss, true };
+      return { ps.tmss, true, ps.argerrs };
     }
 
-    std::vector<tmedia::CLIArg> parsed_cli = tmedia::cli_parse(argc, argv, "",
-    {"volume", "chars", "refresh-rate", "repeat-path", "repeat-paths"});
+    std::vector<tmedia::CLIArg> parsed_cli;
+
+    try {
+      parsed_cli = tmedia::cli_parse(argc, argv, "",
+      {"volume", "chars", "refresh-rate", "repeat-path", "repeat-paths"});
+    } catch (const std::runtime_error& err) {
+      ps.argerrs.push_back(fmt::format("[{}] Failed to parse CLI Arguments: {}", FUNCDINFO, err.what()));
+      return { ps.tmss, false, ps.argerrs };
+    }
 
 
     /*
@@ -411,6 +419,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     for (const tmedia::CLIArg& arg : parsed_cli) {
       switch (arg.arg_type) {
         case tmedia::CLIArgType::POSITIONAL: {
+
           try {
             ps.paths.push_back(MediaPath(arg.value));
           } catch (const std::exception& e) { // fs::path creation failed
@@ -418,67 +427,52 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
               "Path from cli argument #{} ({}): {}",
               FUNCDINFO, arg.argi, arg.value, e.what()));
           }
+
         } break;
         case tmedia::CLIArgType::OPTION: {
+
           if (arg.prefix == "-") {
+
             if (short_exiting_opt_map.count(arg.value)) {
               short_exiting_opt_map.at(arg.value)(ps, arg);
-              return { ps.tmss, true };
+              return { std::move(ps.tmss), true, std::move(ps.argerrs) };
             } else if (short_global_argparse_map.count(arg.value)) {
               short_global_argparse_map.at(arg.value)(ps, arg);
             } else {
-              throw std::runtime_error(fmt::format("[{}] Unrecognized "
+              ps.argerrs.push_back(fmt::format("[{}] Unrecognized "
               "short option: '{}'. Use the '{} --help' command to see all "
               "available cli options", FUNCDINFO, arg.value, argv[0]));
             }
+
           } else if (arg.prefix == "--") {
+
             if (long_exiting_opt_map.count(arg.value)) {
               long_exiting_opt_map.at(arg.value)(ps, arg);
-              return { ps.tmss, true };
+              return { std::move(ps.tmss), true, std::move(ps.argerrs) };
             } else if (long_global_argparse_map.count(arg.value)) {
               long_global_argparse_map.at(arg.value)(ps, arg);
             } else {
-              throw std::runtime_error(fmt::format("[{}] Unrecognized "
+              ps.argerrs.push_back(fmt::format("[{}] Unrecognized "
               "long option: '{}'. Use the '{} --help' command to see all "
               "available cli options", FUNCDINFO, arg.value, argv[0]));
             }
+
           } else if (arg.prefix == ":") {
+
             if (short_local_argparse_map.count(arg.value)) {
               short_local_argparse_map.at(arg.value)(ps, arg);
             } else if (long_local_argparse_map.count(arg.value)) {
               long_local_argparse_map.at(arg.value)(ps, arg);
             } else {
-              throw std::runtime_error(fmt::format("[{}] Unrecognized "
+              ps.argerrs.push_back(fmt::format("[{}] Unrecognized "
               "local option: '{}'. Use the '{} --help' command to see all "
               "available cli options", FUNCDINFO, arg.value, argv[0]));
             }
+
           }
+
         } break;
       }
-    }
-
-    if (ps.paths.size() == 0UL) {
-      ps.argerrs.push_back(fmt::format("[{}] No paths entered", FUNCDINFO));
-    }
-
-    if (ps.argerrs.size() > 0) {
-      std::stringstream ss;
-      for (std::size_t i = 0; i < ps.argerrs.size(); i++) {
-        ss << ps.argerrs[i];
-        if (i < ps.argerrs.size() - 1) ss << '\n'; 
-      }
-      throw std::runtime_error(ss.str());
-    }
-
-    for (const MediaPath& path : ps.paths) {
-      MediaPathSearchOptions resolved_srch_opts = resolve_path_search_options(ps.srch_opts, path.srch_opts);
-      for (unsigned int i = 0; i < resolved_srch_opts.num_reads; i++) {
-        resolve_cli_path(path.path, resolved_srch_opts, ps.tmss.media_files);
-      }
-    }
-
-    if (ps.tmss.media_files.size() == 0UL) {
-      throw std::runtime_error(fmt::format("[{}] No media files found.", FUNCDINFO));
     }
 
     if (ps.colored)
@@ -486,7 +480,31 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     else if (ps.grayscale)
       ps.tmss.vom = ps.background ? VidOutMode::GRAY_BG : VidOutMode::GRAY;
 
-    return TMediaCLIParseRes(ps.tmss, false);
+    if (ps.paths.size() == 0UL) {
+      ps.argerrs.push_back(fmt::format("[{}] No paths entered", FUNCDINFO));
+    }
+
+    for (const MediaPath& path : ps.paths) {
+      MediaPathSearchOptions resolved_srch_opts = resolve_path_search_options(ps.srch_opts, path.srch_opts);
+      for (unsigned int i = 0; i < resolved_srch_opts.num_reads; i++) {
+        try {
+          resolve_cli_path(path.path, resolved_srch_opts, ps.tmss.media_files);
+        } catch (const std::runtime_error& err) {
+          ps.argerrs.push_back(fmt::format("[{}] Failed to resolve CLI Path "
+          "{}: {}", FUNCDINFO, path.path.string(), err.what()));
+        }
+      }
+    }
+
+    if (ps.tmss.media_files.size() == 0UL) {
+      ps.argerrs.push_back(fmt::format("[{}] No media files found.", FUNCDINFO));
+    }
+    
+    TMediaCLIParseRes res;
+    res.tmss = std::move(ps.tmss);
+    res.exited = false;
+    res.errors = std::move(ps.argerrs);
+    return res;
   }
 
   void print_help_text() {
