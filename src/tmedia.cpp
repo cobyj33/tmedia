@@ -305,7 +305,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         }
 
         if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
-          if (toggle_playback) {WA_NORMAL
+          if (toggle_playback) {
             std::lock_guard<std::mutex> alter_lock(fetcher->alter_mutex);
             if (fetcher->is_playing()) {
               if (audio_output) audio_output->stop();
