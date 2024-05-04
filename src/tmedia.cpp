@@ -131,6 +131,12 @@ int tmedia_main_loop(TMediaProgramState tmps) {
       while (!fetcher->should_exit() && !INTERRUPT_RECEIVED) { // never break without using dispatch_exit on fetcher to false
         PixelData frame;
         double curr_systime, req_jumptime, curr_medtime;
+
+        // req_jump and req_jumptime are different, because when jumping to the
+        // current time to fix desyncing of audio playback to the media clock,
+        // we may jump to the current media time. Therefore, we can't use the
+        // current media time (curr_medtime) as a sort of sentinel value
+        // for denoting if we're trying to jump toward a timestamp
         bool req_jump = false;
 
         {
@@ -148,6 +154,16 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         }
 
         int input = ERR;
+        bool toggle_playback = false;
+        bool should_refresh = false;
+        bool toggle_shuffled = false;
+        bool toggle_fullscreen = false;
+        bool toggle_muted = false;
+        bool quit_program_command_received = false;
+        bool exit_current_player_command_received = false;
+        double toggled_volume = tmps.volume;
+        VidOutMode nextvom = tmps.vom;
+        
         while ((input = getch()) != ERR) { // Go through and process all the batched input
           switch (input) {
             case KEY_ESCAPE:
@@ -155,87 +171,56 @@ int tmedia_main_loop(TMediaProgramState tmps) {
             case 127:
             case '\b':
             case 'q':
-            case 'Q': {
-              fetcher->dispatch_exit();
-              tmps.quit = true;
-            } break;
-            case KEY_RESIZE: {
-              erase();
-            } break;
+            case 'Q': quit_program_command_received = true; break;
+            case KEY_RESIZE: erase(); break;
             case 'r':
-            case 'R': {
-              erase();
-              if (audio_output && audio_output->playing()) {
-                audio_output->stop();
-                audio_output->start();
-              } 
-            } break;
+            case 'R': should_refresh = !should_refresh; break;
             case 'c':
             case 'C': {
-              switch (tmps.vom) {
-                case VidOutMode::COLOR: set_global_vom(&tmps.vom, VidOutMode::PLAIN); break;
-                case VidOutMode::GRAY: set_global_vom(&tmps.vom, VidOutMode::COLOR); break;
-                case VidOutMode::COLOR_BG: set_global_vom(&tmps.vom, VidOutMode::PLAIN); break;
-                case VidOutMode::GRAY_BG: set_global_vom(&tmps.vom, VidOutMode::COLOR_BG); break;
-                case VidOutMode::PLAIN: set_global_vom(&tmps.vom, VidOutMode::COLOR); break;
+              switch (nextvom) {
+                case VidOutMode::COLOR: nextvom = VidOutMode::PLAIN; break;
+                case VidOutMode::GRAY: nextvom = VidOutMode::COLOR; break;
+                case VidOutMode::COLOR_BG: nextvom = VidOutMode::PLAIN; break;
+                case VidOutMode::GRAY_BG: nextvom = VidOutMode::COLOR_BG; break;
+                case VidOutMode::PLAIN: nextvom = VidOutMode::COLOR; break;
               }
             } break;
             case 'g':
             case 'G': {
-              switch (tmps.vom) {
-                case VidOutMode::COLOR: set_global_vom(&tmps.vom, VidOutMode::GRAY); break;
-                case VidOutMode::GRAY: set_global_vom(&tmps.vom, VidOutMode::PLAIN); break;
-                case VidOutMode::COLOR_BG: set_global_vom(&tmps.vom, VidOutMode::GRAY_BG); break;
-                case VidOutMode::GRAY_BG: set_global_vom(&tmps.vom, VidOutMode::PLAIN); break;
-                case VidOutMode::PLAIN: set_global_vom(&tmps.vom, VidOutMode::GRAY); break;
+              switch (nextvom) {
+                case VidOutMode::COLOR: nextvom = VidOutMode::GRAY; break;
+                case VidOutMode::GRAY: nextvom = VidOutMode::PLAIN; break;
+                case VidOutMode::COLOR_BG: nextvom = VidOutMode::GRAY_BG; break;
+                case VidOutMode::GRAY_BG: nextvom = VidOutMode::PLAIN; break;
+                case VidOutMode::PLAIN: nextvom = VidOutMode::GRAY; break;
               }
             } break;
             case 'b':
             case 'B': {
-              if (tmcurses_has_colors() && tmcurses_can_change_colors()) {
-                switch (tmps.vom) {
-                  case VidOutMode::COLOR: set_global_vom(&tmps.vom, VidOutMode::COLOR_BG); break;
-                  case VidOutMode::GRAY: set_global_vom(&tmps.vom, VidOutMode::GRAY_BG); break;
-                  case VidOutMode::COLOR_BG: set_global_vom(&tmps.vom, VidOutMode::COLOR); break;
-                  case VidOutMode::GRAY_BG: set_global_vom(&tmps.vom, VidOutMode::GRAY); break;
-                  case VidOutMode::PLAIN: break; //no-op
-                }
+              switch (nextvom) {
+                case VidOutMode::COLOR: nextvom = VidOutMode::COLOR_BG; break;
+                case VidOutMode::GRAY: nextvom = VidOutMode::GRAY_BG; break;
+                case VidOutMode::COLOR_BG: nextvom = VidOutMode::COLOR; break;
+                case VidOutMode::GRAY_BG: nextvom = VidOutMode::GRAY; break;
+                case VidOutMode::PLAIN: break; //no-op
               }
             } break;
             case 'n':
             case 'N': {
               move_cmd = PlaylistMvCmd::SKIP;
-              fetcher->dispatch_exit();
+              exit_current_player_command_received = true;
             } break;
             case 'p':
             case 'P': {
               move_cmd = PlaylistMvCmd::REWIND;
-              fetcher->dispatch_exit();
+              exit_current_player_command_received = true;
             } break;
             case 'f':
-            case 'F': {
-              erase();
-              tmps.fullscreen = !tmps.fullscreen;
-            } break;
-            case KEY_UP: {
-              if (audio_output) {
-                tmps.volume = clamp(tmps.volume + VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-                audio_output->set_volume(tmps.volume);
-              }
-            } break;
-            case KEY_DOWN: {
-              if (audio_output) {
-                tmps.volume = clamp(tmps.volume - VOLUME_CHANGE_AMOUNT, 0.0, 1.0);
-                audio_output->set_volume(tmps.volume);
-              }
-            } break;
+            case 'F': toggle_fullscreen = !toggle_fullscreen; break;
+            case KEY_UP: toggled_volume += VOLUME_CHANGE_AMOUNT; break;
+            case KEY_DOWN: toggled_volume -= VOLUME_CHANGE_AMOUNT; break;
             case 'm':
-            case 'M': {
-              if (audio_output) {
-                tmps.muted = !tmps.muted;
-                audio_output->set_muted(tmps.muted);
-              }
-            } break;
+            case 'M': toggle_muted = !toggle_muted; break;
             case 'l':
             case 'L': {
               if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
@@ -247,36 +232,15 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               }
             } break;
             case 's':
-            case 'S': {
-              if (!tmps.plist.shuffled()) {
-                tmps.plist.shuffle(true);
-              } else {
-                tmps.plist.unshuffle();
-              }
-            } break;
-            case ' ': {
-              if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
-                std::lock_guard<std::mutex> alter_lock(fetcher->alter_mutex); 
-                if (fetcher->is_playing())  {
-                  if (audio_output) audio_output->stop();
-                  fetcher->pause(curr_systime);
-                } else  {
-                  if (audio_output) audio_output->start();
-                  fetcher->resume(curr_systime);
-                }
-              }
-            } break;
+            case 'S': toggle_shuffled = !toggle_shuffled; break;
+            case ' ': toggle_playback = !toggle_playback; break;
             case KEY_LEFT: {
-              if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
-                req_jump = true;
-                req_jumptime -= 5.0;
-              }
+              req_jump = true;
+              req_jumptime -= 5.0;
             } break;
             case KEY_RIGHT: {
-              if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
-                req_jump = true;
-                req_jumptime += 5.0;
-              }
+              req_jump = true;
+              req_jumptime += 5.0;
             } break;
             case '0':
             case '1':
@@ -288,21 +252,78 @@ int tmedia_main_loop(TMediaProgramState tmps) {
             case '7':
             case '8':
             case '9': {
-              if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
-                req_jump = true;
-                req_jumptime = fetcher->get_duration() * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
-              }
+              req_jump = true;
+              req_jumptime = fetcher->get_duration() * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
             } break;
           }
         } // Ending of "while (input != ERR)"
 
-        if (req_jump) {
-          if (audio_output && fetcher->is_playing()) audio_output->stop();
-          {
-            std::scoped_lock<std::mutex> total_lock{fetcher->alter_mutex};
-            fetcher->jump_to_time(clamp(req_jumptime, 0.0, fetcher->get_duration()), sys_clk_sec());
+        if (exit_current_player_command_received) {
+          fetcher->dispatch_exit();
+        }
+
+        if (quit_program_command_received) {
+          fetcher->dispatch_exit();
+          tmps.quit = true;
+        }
+
+        if (nextvom != tmps.vom) {
+          set_global_vom(&tmps.vom, nextvom);
+        }
+
+        if (toggle_fullscreen) {
+          erase();
+          tmps.fullscreen = !tmps.fullscreen;
+        }
+
+        if (should_refresh) {
+          erase();
+          if (audio_output && audio_output->playing()) {
+            audio_output->stop();
+            audio_output->start();
           }
-          if (audio_output && fetcher->is_playing()) audio_output->start();
+        }
+
+        if (toggle_shuffled) {
+          if (!tmps.plist.shuffled()) {
+              tmps.plist.shuffle(true);
+            } else {
+              tmps.plist.unshuffle();
+            }
+        }
+
+        if (audio_output) {
+          if (toggled_volume != tmps.volume) {
+            tmps.volume = clamp(toggled_volume, 0.0, 1.0);
+            audio_output->set_volume(tmps.volume);
+          }
+
+          if (toggle_muted) {
+            tmps.muted = !tmps.muted;
+            audio_output->set_muted(tmps.muted);
+          }
+        }
+
+        if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
+          if (toggle_playback) {WA_NORMAL
+            std::lock_guard<std::mutex> alter_lock(fetcher->alter_mutex);
+            if (fetcher->is_playing()) {
+              if (audio_output) audio_output->stop();
+              fetcher->pause(curr_systime);
+            } else  {
+              if (audio_output) audio_output->start();
+              fetcher->resume(curr_systime);
+            }
+          }
+
+          if (req_jump) {
+            if (audio_output && fetcher->is_playing()) audio_output->stop();
+            {
+              std::scoped_lock<std::mutex> total_lock{fetcher->alter_mutex};
+              fetcher->jump_to_time(clamp(req_jumptime, 0.0, fetcher->get_duration()), sys_clk_sec());
+            }
+            if (audio_output && fetcher->is_playing()) audio_output->start();
+          }
         }
 
         TMediaProgramSnapshot snapshot;
