@@ -153,159 +153,160 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           req_jump = fetcher->get_audio_desync_time(curr_systime) > MAX_AUDIO_DESYNC_SECS;
         }
 
-        int input = ERR;
-        bool toggle_playback = false;
-        bool should_refresh = false;
-        bool toggle_shuffled = false;
-        bool toggle_fullscreen = false;
-        bool toggle_muted = false;
-        bool quit_program_command_received = false;
-        bool exit_current_player_command_received = false;
-        double toggled_volume = tmps.volume;
-        VidOutMode nextvom = tmps.vom;
-        
-        while ((input = getch()) != ERR) { // Go through and process all the batched input
-          switch (input) {
-            case KEY_ESCAPE:
-            case KEY_BACKSPACE:
-            case 127:
-            case '\b':
-            case 'q':
-            case 'Q': quit_program_command_received = true; break;
-            case KEY_RESIZE: erase(); break;
-            case 'r':
-            case 'R': should_refresh = !should_refresh; break;
-            case 'c':
-            case 'C': {
-              switch (nextvom) {
-                case VidOutMode::COLOR: nextvom = VidOutMode::PLAIN; break;
-                case VidOutMode::GRAY: nextvom = VidOutMode::COLOR; break;
-                case VidOutMode::COLOR_BG: nextvom = VidOutMode::PLAIN; break;
-                case VidOutMode::GRAY_BG: nextvom = VidOutMode::COLOR_BG; break;
-                case VidOutMode::PLAIN: nextvom = VidOutMode::COLOR; break;
-              }
-            } break;
-            case 'g':
-            case 'G': {
-              switch (nextvom) {
-                case VidOutMode::COLOR: nextvom = VidOutMode::GRAY; break;
-                case VidOutMode::GRAY: nextvom = VidOutMode::PLAIN; break;
-                case VidOutMode::COLOR_BG: nextvom = VidOutMode::GRAY_BG; break;
-                case VidOutMode::GRAY_BG: nextvom = VidOutMode::PLAIN; break;
-                case VidOutMode::PLAIN: nextvom = VidOutMode::GRAY; break;
-              }
-            } break;
-            case 'b':
-            case 'B': {
-              switch (nextvom) {
-                case VidOutMode::COLOR: nextvom = VidOutMode::COLOR_BG; break;
-                case VidOutMode::GRAY: nextvom = VidOutMode::GRAY_BG; break;
-                case VidOutMode::COLOR_BG: nextvom = VidOutMode::COLOR; break;
-                case VidOutMode::GRAY_BG: nextvom = VidOutMode::GRAY; break;
-                case VidOutMode::PLAIN: break; //no-op
-              }
-            } break;
-            case 'n':
-            case 'N': {
-              move_cmd = PlaylistMvCmd::SKIP;
-              exit_current_player_command_received = true;
-            } break;
-            case 'p':
-            case 'P': {
-              move_cmd = PlaylistMvCmd::REWIND;
-              exit_current_player_command_received = true;
-            } break;
-            case 'f':
-            case 'F': toggle_fullscreen = !toggle_fullscreen; break;
-            case KEY_UP: toggled_volume += VOLUME_CHANGE_AMOUNT; break;
-            case KEY_DOWN: toggled_volume -= VOLUME_CHANGE_AMOUNT; break;
-            case 'm':
-            case 'M': toggle_muted = !toggle_muted; break;
-            case 'l':
-            case 'L': {
-              if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
-                switch (tmps.plist.loop_type()) {
-                  case LoopType::NO_LOOP: tmps.plist.set_loop_type(LoopType::REPEAT); break;
-                  case LoopType::REPEAT: tmps.plist.set_loop_type(LoopType::REPEAT_ONE); break;
-                  case LoopType::REPEAT_ONE: tmps.plist.set_loop_type(LoopType::NO_LOOP); break;
+        int input = getch();
+        if (input != ERR) { // only process input if there is any input
+          bool toggle_playback = false;
+          bool should_refresh = false;
+          bool toggle_shuffled = false;
+          bool toggle_fullscreen = false;
+          bool toggle_muted = false;
+          bool quit_program_command_received = false;
+          bool exit_current_player_command_received = false;
+          double toggled_volume = tmps.volume;
+          VidOutMode nextvom = tmps.vom;
+          
+          while (input != ERR) { // Go through and process all the batched input
+            switch (input) {
+              case KEY_ESCAPE:
+              case KEY_BACKSPACE:
+              case 127:
+              case '\b':
+              case 'q':
+              case 'Q': quit_program_command_received = true; break;
+              case KEY_RESIZE: erase(); break;
+              case 'r':
+              case 'R': should_refresh = !should_refresh; break;
+              case 'c':
+              case 'C': {
+                switch (nextvom) {
+                  case VidOutMode::COLOR: nextvom = VidOutMode::PLAIN; break;
+                  case VidOutMode::GRAY: nextvom = VidOutMode::COLOR; break;
+                  case VidOutMode::COLOR_BG: nextvom = VidOutMode::PLAIN; break;
+                  case VidOutMode::GRAY_BG: nextvom = VidOutMode::COLOR_BG; break;
+                  case VidOutMode::PLAIN: nextvom = VidOutMode::COLOR; break;
                 }
-              }
-            } break;
-            case 's':
-            case 'S': toggle_shuffled = !toggle_shuffled; break;
-            case ' ': toggle_playback = !toggle_playback; break;
-            case KEY_LEFT: {
-              req_jump = true;
-              req_jumptime -= 5.0;
-            } break;
-            case KEY_RIGHT: {
-              req_jump = true;
-              req_jumptime += 5.0;
-            } break;
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9': {
-              req_jump = true;
-              req_jumptime = fetcher->get_duration() * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
-            } break;
-          }
-        } // Ending of "while (input != ERR)"
-
-        if (exit_current_player_command_received) {
-          fetcher->dispatch_exit();
-        }
-
-        if (quit_program_command_received) {
-          fetcher->dispatch_exit();
-          tmps.quit = true;
-        }
-
-        if (nextvom != tmps.vom) {
-          set_global_vom(&tmps.vom, nextvom);
-        }
-
-        if (toggle_fullscreen) {
-          erase();
-          tmps.fullscreen = !tmps.fullscreen;
-        }
-
-        if (should_refresh) {
-          erase();
-          if (audio_output && audio_output->playing()) {
-            audio_output->stop();
-            audio_output->start();
-          }
-        }
-
-        if (toggle_shuffled) {
-          if (!tmps.plist.shuffled()) {
-              tmps.plist.shuffle(true);
-            } else {
-              tmps.plist.unshuffle();
+              } break;
+              case 'g':
+              case 'G': {
+                switch (nextvom) {
+                  case VidOutMode::COLOR: nextvom = VidOutMode::GRAY; break;
+                  case VidOutMode::GRAY: nextvom = VidOutMode::PLAIN; break;
+                  case VidOutMode::COLOR_BG: nextvom = VidOutMode::GRAY_BG; break;
+                  case VidOutMode::GRAY_BG: nextvom = VidOutMode::PLAIN; break;
+                  case VidOutMode::PLAIN: nextvom = VidOutMode::GRAY; break;
+                }
+              } break;
+              case 'b':
+              case 'B': {
+                switch (nextvom) {
+                  case VidOutMode::COLOR: nextvom = VidOutMode::COLOR_BG; break;
+                  case VidOutMode::GRAY: nextvom = VidOutMode::GRAY_BG; break;
+                  case VidOutMode::COLOR_BG: nextvom = VidOutMode::COLOR; break;
+                  case VidOutMode::GRAY_BG: nextvom = VidOutMode::GRAY; break;
+                  case VidOutMode::PLAIN: break; //no-op
+                }
+              } break;
+              case 'n':
+              case 'N': {
+                move_cmd = PlaylistMvCmd::SKIP;
+                exit_current_player_command_received = true;
+              } break;
+              case 'p':
+              case 'P': {
+                move_cmd = PlaylistMvCmd::REWIND;
+                exit_current_player_command_received = true;
+              } break;
+              case 'f':
+              case 'F': toggle_fullscreen = !toggle_fullscreen; break;
+              case KEY_UP: toggled_volume += VOLUME_CHANGE_AMOUNT; break;
+              case KEY_DOWN: toggled_volume -= VOLUME_CHANGE_AMOUNT; break;
+              case 'm':
+              case 'M': toggle_muted = !toggle_muted; break;
+              case 'l':
+              case 'L': {
+                if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
+                  switch (tmps.plist.loop_type()) {
+                    case LoopType::NO_LOOP: tmps.plist.set_loop_type(LoopType::REPEAT); break;
+                    case LoopType::REPEAT: tmps.plist.set_loop_type(LoopType::REPEAT_ONE); break;
+                    case LoopType::REPEAT_ONE: tmps.plist.set_loop_type(LoopType::NO_LOOP); break;
+                  }
+                }
+              } break;
+              case 's':
+              case 'S': toggle_shuffled = !toggle_shuffled; break;
+              case ' ': toggle_playback = !toggle_playback; break;
+              case KEY_LEFT: {
+                req_jump = true;
+                req_jumptime -= 5.0;
+              } break;
+              case KEY_RIGHT: {
+                req_jump = true;
+                req_jumptime += 5.0;
+              } break;
+              case '0':
+              case '1':
+              case '2':
+              case '3':
+              case '4':
+              case '5':
+              case '6':
+              case '7':
+              case '8':
+              case '9': {
+                req_jump = true;
+                req_jumptime = fetcher->get_duration() * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
+              } break;
             }
-        }
+            input = getch();
+          } // Ending of "while (input != ERR)"
 
-        if (audio_output) {
-          if (toggled_volume != tmps.volume) {
-            tmps.volume = clamp(toggled_volume, 0.0, 1.0);
-            audio_output->set_volume(tmps.volume);
+          if (exit_current_player_command_received) {
+            fetcher->dispatch_exit();
           }
 
-          if (toggle_muted) {
-            tmps.muted = !tmps.muted;
-            audio_output->set_muted(tmps.muted);
+          if (quit_program_command_received) {
+            fetcher->dispatch_exit();
+            tmps.quit = true;
           }
-        }
 
-        if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
-          if (toggle_playback) {
+          if (nextvom != tmps.vom) {
+            set_global_vom(&tmps.vom, nextvom);
+          }
+
+          if (toggle_fullscreen) {
+            erase();
+            tmps.fullscreen = !tmps.fullscreen;
+          }
+
+          if (should_refresh) {
+            erase();
+            if (audio_output && audio_output->playing()) {
+              audio_output->stop();
+              audio_output->start();
+            }
+          }
+
+          if (toggle_shuffled) {
+            if (!tmps.plist.shuffled()) {
+                tmps.plist.shuffle(true);
+              } else {
+                tmps.plist.unshuffle();
+              }
+          }
+
+          if (audio_output) {
+            if (toggled_volume != tmps.volume) {
+              tmps.volume = clamp(toggled_volume, 0.0, 1.0);
+              audio_output->set_volume(tmps.volume);
+            }
+
+            if (toggle_muted) {
+              tmps.muted = !tmps.muted;
+              audio_output->set_muted(tmps.muted);
+            }
+          }
+
+          if (toggle_playback && (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO)) {
             std::lock_guard<std::mutex> alter_lock(fetcher->alter_mutex);
             if (fetcher->is_playing()) {
               if (audio_output) audio_output->stop();
@@ -315,15 +316,19 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               fetcher->resume(curr_systime);
             }
           }
+        } // end of input processing block ( if (input != ERR) )
 
-          if (req_jump) {
-            if (audio_output && fetcher->is_playing()) audio_output->stop();
-            {
-              std::scoped_lock<std::mutex> total_lock{fetcher->alter_mutex};
-              fetcher->jump_to_time(clamp(req_jumptime, 0.0, fetcher->get_duration()), sys_clk_sec());
-            }
-            if (audio_output && fetcher->is_playing()) audio_output->start();
+        // we can jump time even if no input is given, in the case that audio
+        // has become desynced and a jump was requested to resync all streams.
+        // therefore, this block has to stay outside of the input processing
+        // block
+        if (req_jump && (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO)) {
+          if (audio_output && fetcher->is_playing()) audio_output->stop();
+          {
+            std::scoped_lock<std::mutex> total_lock{fetcher->alter_mutex};
+            fetcher->jump_to_time(clamp(req_jumptime, 0.0, fetcher->get_duration()), sys_clk_sec());
           }
+          if (audio_output && fetcher->is_playing()) audio_output->start();
         }
 
         TMediaProgramSnapshot snapshot;
