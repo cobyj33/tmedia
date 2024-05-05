@@ -176,13 +176,19 @@ endif()
 
 if (TMEDIA_BUILD_TESTS)
   message("Configured to build testing executable")
-  FetchContent_Declare(
-    Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG    v3.0.1 # or a later release
-  )
-
-  FetchContent_MakeAvailable(Catch2)
+  
+  find_package(Catch2 3 QUIET)
+  if (TARGET Catch2::Catch2WithMain)
+    message("Using found Catch2 installation on system")
+  else()
+    message("Could not find Catch2 v3 installation on system, building Catch2 v3.0.1 with tests")
+    FetchContent_Declare(
+      Catch2
+      GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+      GIT_TAG    v3.0.1 # or a later release
+    )
+    FetchContent_MakeAvailable(Catch2)
+  endif()
 
   add_executable(tmedia_tests ${COMMON_SOURCE_FILES} ${TEST_SOURCE_FILES})
   target_compile_options(tmedia_tests PRIVATE ${TMEDIA_COMPILE_OPTIONS})
