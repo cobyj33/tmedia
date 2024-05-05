@@ -67,6 +67,7 @@ option(TMEDIA_BUILD_TESTS "Build Testing Executable for tmedia" OFF)
 option(FIND_FFMPEG "Find FFmpeg Libraries on system rather than build FFmpeg alongside tmedia. Default ON" ON)
 option(FIND_CURSES "Find Curses Libraries on system rather than build NCurses alongside tmedia. Default ON" ON)
 option(FIND_FMT "Find fmt library on system rather than build fmt alongside tmedia. Default OFF" OFF)
+option(FIND_CATCH2 "Find Catch2 library on system rather than build Catch2 alongside tmedia ** when configured for testing with TMEDIA_BUILD_TESTS=ON **. Default OFF" OFF)
 
 message("+---TMEDIA-BUILD-CONFIGURATION---------------------------------------")
 message("| Options: CMAKE_BUILD_TYPE: " ${CMAKE_BUILD_TYPE})
@@ -83,6 +84,7 @@ message("| Options: NCURSES_EXTRA_CONFIGURE_OPTIONS: " ${NCURSES_EXTRA_CONFIGURE
 endif()
 
 message("| Options: FIND_FMT: " ${FIND_FMT})
+message("| Options: FIND_CATCH2: " ${FIND_CATCH2})
 message("+--------------------------------------------------------------------")
 
 set(COMMON_SOURCE_FILES 
@@ -177,11 +179,13 @@ endif()
 if (TMEDIA_BUILD_TESTS)
   message("Configured to build testing executable")
   
-  find_package(Catch2 3 QUIET)
-  if (TARGET Catch2::Catch2WithMain)
-    message("Using found Catch2 installation on system")
+  if (FIND_CATCH2)
+    find_package(Catch2 3)
+    if (NOT TARGET Catch2::Catch2WithMain)
+      message(FATAL_ERROR "FIND_CATCH2 enabled but Catch2 v3 library could not be found on the system.")
+    endif()
   else()
-    message("Could not find Catch2 v3 installation on system, building Catch2 v3.0.1 with tests")
+    message("Building Catch2 v3.0.1 with tests")
     FetchContent_Declare(
       Catch2
       GIT_REPOSITORY https://github.com/catchorg/Catch2.git

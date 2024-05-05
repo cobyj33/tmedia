@@ -2,13 +2,8 @@
 
 if (FIND_FMT)
   find_package(fmt)
-  if (NOT TARGET fmt::fmt) 
-    message("FIND_FMT enabled but fmt library could not be found on the system")
-    message("If not targeting a system-wide installation of fmt, remember")
-    message("to set CMAKE_PREFIX_PATH to the installation directory where")
-    message("fmt is built")
-    message("using ```-DCMAKE_PREFIX_PATH=/path/to/fmt/installation``` ")
-    find_package(fmt REQUIRED) # Just to throw the actual find package error
+  if (NOT TARGET fmt::fmt)
+    message(FATAL_ERROR "FIND_FMT enabled but fmt library could not be found on the system")
   endif()
 
   list(APPEND TMEDIA_DEPS_LIBRARIES fmt::fmt)
