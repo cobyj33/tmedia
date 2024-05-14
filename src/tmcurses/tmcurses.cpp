@@ -175,7 +175,7 @@ bool no_color_is_set() {
   return no_color != nullptr && no_color[0] != '\0';
 }
 
-const char* tmcurses_color_palette_cstr(TMNCursesColorPalette colorPalette) {
+constexpr const char* tmcurses_color_palette_cstr(TMNCursesColorPalette colorPalette) {
   switch (colorPalette) {
     case TMNCursesColorPalette::RGB: return "rgb";
     case TMNCursesColorPalette::GRAYSCALE: return "grayscale";

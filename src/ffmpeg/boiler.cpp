@@ -99,7 +99,7 @@ std::optional<MediaType> media_type_from_mime_type(std::string_view mime_type) {
   return std::nullopt;
 }
 
-const char* media_type_cstr(MediaType media_type) {
+constexpr const char* media_type_cstr(MediaType media_type) {
   switch (media_type) {
     case MediaType::VIDEO: return "video";
     case MediaType::AUDIO: return "audio";

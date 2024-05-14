@@ -34,7 +34,7 @@ struct CursesColorPair {
   constexpr CursesColorPair(CursesColorPair&& cp) : fg(cp.fg), bg(cp.bg) {}
 };
 
-const char* tmcurses_color_palette_cstr(TMNCursesColorPalette colorPalette);
+constexpr const char* tmcurses_color_palette_cstr(TMNCursesColorPalette colorPalette);
 
 RGB24 tmcurses_get_color_number_content(curses_color_t);
 ColorPair tmcurses_get_pair_number_content(curses_color_pair_t);

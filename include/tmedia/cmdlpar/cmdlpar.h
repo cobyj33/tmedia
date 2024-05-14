@@ -57,11 +57,11 @@ namespace tmedia {
     int argi;
     std::string_view prefix;
     std::string_view param;
-    CLIArg() {}
-    CLIArg(std::string_view value, CLIArgType arg_type, int argi, std::string_view prefix, std::string_view param) : value(value), arg_type(arg_type), argi(argi), prefix(prefix), param(param) {}
-    CLIArg(std::string_view value, CLIArgType arg_type, int argi) : value(value), arg_type(arg_type), argi(argi), prefix(""), param("") {}
-    CLIArg(const CLIArg& o) : value(o.value), arg_type(o.arg_type), argi(o.argi), prefix(o.prefix), param(o.param) {}
-    CLIArg(CLIArg&& o) : value(o.value), arg_type(o.arg_type), argi(o.argi), prefix(o.prefix), param(o.param) {}
+    constexpr CLIArg() : value(""), arg_type(CLIArgType::POSITIONAL), argi(0), prefix(""), param("") {}
+    constexpr CLIArg(std::string_view value, CLIArgType arg_type, int argi, std::string_view prefix, std::string_view param) : value(value), arg_type(arg_type), argi(argi), prefix(prefix), param(param) {}
+    constexpr CLIArg(std::string_view value, CLIArgType arg_type, int argi) : value(value), arg_type(arg_type), argi(argi), prefix(""), param("") {}
+    constexpr CLIArg(const CLIArg& o) : value(o.value), arg_type(o.arg_type), argi(o.argi), prefix(o.prefix), param(o.param) {}
+    constexpr CLIArg(CLIArg&& o) : value(o.value), arg_type(o.arg_type), argi(o.argi), prefix(o.prefix), param(o.param) {}
   };
 
   /**
