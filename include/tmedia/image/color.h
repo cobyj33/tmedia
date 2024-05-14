@@ -36,11 +36,11 @@ class RGB24 {
     static RGB24 BLACK;
     static RGB24 WHITE; 
 
-    RGB24() : r(0), g(0), b(0) {}
-    RGB24(std::uint8_t gray) : r(gray), g(gray), b(gray) {}
-    RGB24(std::uint8_t r, std::uint8_t g, std::uint8_t b) : r(r), g(g), b(b) {}
-    RGB24(const RGB24& color) : r(color.r), g(color.g), b(color.b) {}
-    RGB24(RGB24&& color) : r(color.r), g(color.g), b(color.b) {}
+    constexpr RGB24() : r(0), g(0), b(0) {}
+    constexpr RGB24(std::uint8_t gray) : r(gray), g(gray), b(gray) {}
+    constexpr RGB24(std::uint8_t r, std::uint8_t g, std::uint8_t b) : r(r), g(g), b(b) {}
+    constexpr RGB24(const RGB24& color) : r(color.r), g(color.g), b(color.b) {}
+    constexpr RGB24(RGB24&& color) : r(color.r), g(color.g), b(color.b) {}
 
     TMEDIA_ALWAYS_INLINE inline void operator=(const RGB24& color) {
       this->r = color.r;
@@ -87,6 +87,11 @@ class RGB24 {
     }
 };
 
+constexpr RGB24 operator "" _rgb(unsigned long long val) {
+  return RGB24(static_cast<std::uint8_t>((val & 0x00FF0000) >> 16),
+    static_cast<std::uint8_t>((val & 0x0000FF00) >> 8),
+    static_cast<std::uint8_t>(val & 0x000000FF));
+}
 
 
 class RGBColorHashFunction {
