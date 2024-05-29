@@ -23,7 +23,7 @@ extern "C" {
   #include <libavformat/avformat.h>
 }
 
-MediaDecoder::MediaDecoder(const std::filesystem::path& path, const std::set<enum AVMediaType>& requested_streams) : path(path) {
+MediaDecoder::MediaDecoder(const std::filesystem::path& path, const std::array<bool, AVMEDIA_TYPE_NB>& requested_streams) : path(path) {
   try {
     this->fmt_ctx = open_format_context(path);
   } catch (std::runtime_error const& e) {
@@ -34,11 +34,15 @@ MediaDecoder::MediaDecoder(const std::filesystem::path& path, const std::set<enu
    
   this->media_type = media_type_from_avformat_context(this->fmt_ctx);
 
-  for (const enum AVMediaType& stream_type : requested_streams) {
-    try {
-      this->decs[stream_type] = std::make_unique<StreamDecoder>(fmt_ctx, stream_type);
-    } catch (std::runtime_error const& e) { } // no-op
+  for (std::size_t i = 0; i < requested_streams.size(); i++) {
+    if (requested_streams[i]) {
+      try {
+        enum AVMediaType stream_type = static_cast<enum AVMediaType>(i);
+        this->decs[stream_type] = std::make_unique<StreamDecoder>(fmt_ctx, stream_type);
+      } catch (std::runtime_error const& e) { } // no-op
+    }
   }
+
 }
 
 MediaDecoder::~MediaDecoder() {

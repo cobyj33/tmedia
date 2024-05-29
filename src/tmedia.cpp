@@ -92,7 +92,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     const std::string currently_playing = tmps.plist.current();
 
     try {
-      const std::set<enum AVMediaType> streams = { AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO };
+      std::array<bool, AVMEDIA_TYPE_NB> streams;
+      for (std::size_t i = 0; i < streams.size(); i++) streams[i] = false;
+      streams[AVMEDIA_TYPE_VIDEO] = true;
+      streams[AVMEDIA_TYPE_AUDIO] = true;
       fetcher = std::make_unique<MediaFetcher>(tmps.plist.current(), streams);
     } catch (const std::runtime_error& err) {
       const std::size_t failed_plist_index = tmps.plist.index();

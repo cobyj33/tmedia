@@ -13,6 +13,7 @@
 #include <string>
 #include <mutex>
 #include <atomic>
+#include <array>
 #include <thread>
 #include <optional>
 #include <condition_variable>
@@ -90,7 +91,7 @@ class MediaFetcher {
     static constexpr int IGNORE_ATTACHED_PIC = 1 << 1;
     std::atomic<int> flags;
 
-    MediaFetcher(const std::filesystem::path& path, const std::set<enum AVMediaType>& requested_streams);
+    MediaFetcher(const std::filesystem::path& path, const std::array<bool, AVMEDIA_TYPE_NB>& requested_streams);
 
     void begin(double currsystime); // Only to be called by owning thread
     void join(double currsystime); // Only to be called by owning thread after in_use is set to false

@@ -26,7 +26,10 @@ void MediaFetcher::audio_dispatch_thread_func() {
   static constexpr int AUDIO_BUFFER_TRY_WRITE_WAIT_MS = 25;
 
   try { // super try block :)
-    MediaDecoder adec(this->mdec->path, { AVMEDIA_TYPE_AUDIO });
+    std::array<bool, AVMEDIA_TYPE_NB> requested_streams;
+    for (std::size_t i = 0; i < requested_streams.size(); i++) requested_streams[i] = false;
+    requested_streams[AVMEDIA_TYPE_AUDIO] = true;
+    MediaDecoder adec(this->mdec->path, requested_streams);
     if (!adec.has_stream_decoder(AVMEDIA_TYPE_AUDIO)) return; // copy failed?
     AudioResampler audio_resampler(
     adec.get_ch_layout(), AV_SAMPLE_FMT_FLT, adec.get_sample_rate(),

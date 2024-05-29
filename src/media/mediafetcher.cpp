@@ -23,7 +23,7 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::set<enum AVMediaType>& requested_streams) :
+MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::array<bool, AVMEDIA_TYPE_NB>& requested_streams) :
   path(path), mdec(std::make_unique<MediaDecoder>(path, requested_streams)) {
   this->in_use = false;
 

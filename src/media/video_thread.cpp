@@ -84,7 +84,10 @@ void MediaFetcher::video_fetching_thread_func() {
 }
 
 void MediaFetcher::frame_video_fetching_func() {
-  MediaDecoder vdec(this->mdec->path, { AVMEDIA_TYPE_VIDEO });
+  std::array<bool, AVMEDIA_TYPE_NB> requested_streams;
+  for (std::size_t i = 0; i < requested_streams.size(); i++) requested_streams[i] = false;
+  requested_streams[AVMEDIA_TYPE_VIDEO] = true;
+  MediaDecoder vdec(this->mdec->path, requested_streams);
   if (!vdec.has_stream_decoder(AVMEDIA_TYPE_VIDEO)) return; // copy failed?
 
   const Dim2 def_outdim = bound_dims(vdec.get_width() * PAR_HEIGHT,
@@ -169,7 +172,10 @@ void MediaFetcher::frame_video_fetching_func() {
 }
 
 void MediaFetcher::frame_image_fetching_func() {
-  MediaDecoder vdec(this->mdec->path, { AVMEDIA_TYPE_VIDEO });
+  std::array<bool, AVMEDIA_TYPE_NB> requested_streams;
+  for (std::size_t i = 0; i < requested_streams.size(); i++) requested_streams[i] = false;
+  requested_streams[AVMEDIA_TYPE_VIDEO] = true;
+  MediaDecoder vdec(this->mdec->path, requested_streams);
 
   Dim2 outdim = bound_dims(vdec.get_width() * PAR_HEIGHT,
   vdec.get_height() * PAR_WIDTH,
