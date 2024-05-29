@@ -3,9 +3,6 @@ cmake could still build the library fairly easily. If there is any confusion,
 questions, or criticisms, please don't hesitate to leave an issue on Github at
 https://github.com/cobyj33/tmedia/issues with any questions
 
-
-This document serves as a simple way to 
-
 ### Dependencies (Handled by the user)
 
 * [curses**](https://invisible-island.net/ncurses/) - Terminal Output
