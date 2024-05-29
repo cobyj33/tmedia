@@ -235,9 +235,10 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_probe_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_probe_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_repeat_paths_global(CLIParseState& ps, const tmedia::CLIArg arg);
-
-  void cli_arg_no_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg);
-  void cli_arg_no_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_enable_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_enable_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_enable_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_enable_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg);
 
   // Local versions of options that are either local or global
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -251,6 +252,10 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_probe_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_probe_local(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_repeat_path_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_enable_video_stream_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_enable_audio_stream_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_enable_video_stream_local(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_enable_audio_stream_local(CLIParseState& ps, const tmedia::CLIArg arg);
 
 
   TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv) {
@@ -344,8 +349,12 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"fullscreen", cli_arg_fullscreen},
       {"fullscreened", cli_arg_fullscreen},
 
-      {"no-video-stream", cli_arg_no_video_stream_global},
-      {"no-audio-stream", cli_arg_no_audio_stream_global},
+      {"enable-video-stream", cli_arg_enable_video_stream_global},
+      {"enable-audio-stream", cli_arg_enable_audio_stream_global},
+      {"no-enable-video-stream", cli_arg_no_enable_video_stream_global},
+      {"no-enable-audio-stream", cli_arg_no_enable_audio_stream_global},
+      {"disable-video-stream", cli_arg_no_enable_video_stream_global},
+      {"disable-audio-stream", cli_arg_no_enable_audio_stream_global},
 
       // path searching opts
       {"ignore-audio", cli_arg_ignore_audio_global},
@@ -389,6 +398,13 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     };
 
     static const ArgParseMap long_local_argparse_map{
+      {"enable-video-stream", cli_arg_enable_video_stream_local},
+      {"enable-audio-stream", cli_arg_enable_audio_stream_local},
+      {"no-enable-video-stream", cli_arg_no_enable_video_stream_local},
+      {"no-enable-audio-stream", cli_arg_no_enable_audio_stream_local},
+      {"disable-video-stream", cli_arg_no_enable_video_stream_local},
+      {"disable-audio-stream", cli_arg_no_enable_audio_stream_local},
+
       {"ignore-audio", cli_arg_ignore_audio_local},
       {"ignore-audios", cli_arg_ignore_audio_local},
       {"no-ignore-audio", cli_arg_no_ignore_audio_local},
@@ -741,15 +757,26 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)arg;
   }
 
-  void cli_arg_no_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+  void cli_arg_enable_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = true;
+    (void)arg;
+  }
+
+  void cli_arg_enable_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = true;
+    (void)arg;
+  }
+  
+  void cli_arg_no_enable_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = false;
     (void)arg;
   }
 
-  void cli_arg_no_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+  void cli_arg_no_enable_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = false;
     (void)arg;
   }
+
 
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
@@ -808,6 +835,30 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_no_probe_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
       ps.paths[ps.paths.size() - 1UL].srch_opts.probe = InheritBool::FALSE;
+    (void)arg;
+  }
+
+  void cli_arg_enable_video_stream_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() > 0UL)
+      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] =InheritBool::TRUE;
+    (void)arg;
+  }
+
+  void cli_arg_enable_audio_stream_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() > 0UL)
+      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] =InheritBool::TRUE;
+    (void)arg;
+  }
+
+  void cli_arg_no_enable_video_stream_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() > 0UL)
+      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = InheritBool::FALSE;
+    (void)arg;
+  }
+
+  void cli_arg_no_enable_audio_stream_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() > 0UL)
+      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = InheritBool::FALSE;
     (void)arg;
   }
 

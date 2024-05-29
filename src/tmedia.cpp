@@ -90,7 +90,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     PlaylistMvCmd move_cmd = PlaylistMvCmd::NEXT;
     std::unique_ptr<MediaFetcher> fetcher;
     const PlaylistItem& pcurr = tmps.plist.current();
-    const std::string currently_playing = pcurr.path().string();
+    const std::string currently_playing = pcurr.path.string();
 
     try {
       fetcher = std::make_unique<MediaFetcher>(pcurr.path, pcurr.requested_streams);
