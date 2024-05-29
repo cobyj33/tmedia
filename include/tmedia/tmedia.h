@@ -28,7 +28,7 @@ enum class VidOutMode {
 
 
 struct TMediaStartupState {
-  std::vector<std::filesystem::path> media_files;
+  std::vector<PlaylistItem> media_files;
   LoopType loop_type = LoopType::NO_LOOP;
   bool shuffled = false;
   double volume = 1.0;

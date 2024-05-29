@@ -25,7 +25,7 @@ Playlist::Playlist() {
   this->m_shuffled = false;
 }
 
-Playlist::Playlist(const std::vector<std::filesystem::path>& entries, LoopType loop_type) {
+Playlist::Playlist(const std::vector<PlaylistItem>& entries, LoopType loop_type) {
   this->m_entries = entries;
   this->m_qi = entries.size() > 0 ? 0 : Playlist::npos;
   this->m_loop_type = loop_type;
@@ -52,7 +52,7 @@ int Playlist::index() const {
   return this->m_q[this->m_qi];
 }
 
-const std::filesystem::path& Playlist::current() const {
+const PlaylistItem& Playlist::current() const {
   if (this->empty()) {
     throw std::runtime_error(fmt::format("[{}] Cannot access current "
     "file of empty playlist", FUNCDINFO));
@@ -64,7 +64,7 @@ const std::filesystem::path& Playlist::current() const {
   return this->m_entries[this->index()];
 }
 
-void Playlist::insert(const std::filesystem::path& entry, std::size_t i) {
+void Playlist::insert(const PlaylistItem& entry, std::size_t i) {
   // note we don't have to handle the empty playlist case with
   // this guard clause as well.
   if (i >= this->m_q.size() || this->empty()) return this->push_back(entry);
@@ -81,7 +81,7 @@ void Playlist::insert(const std::filesystem::path& entry, std::size_t i) {
   this->m_qi += this->m_qi >= i;
 }
 
-void Playlist::push_back(const std::filesystem::path& entry) {
+void Playlist::push_back(const PlaylistItem& entry) {
   if (this->m_qi == Playlist::npos) {
     this->m_qi = 0;
   }
@@ -137,16 +137,16 @@ void Playlist::remove(std::size_t i) {
   this->remove_at_entry_idx(i);
 }
 
-void Playlist::remove(const std::filesystem::path& entry) {
+void Playlist::remove(const PlaylistItem& entry) {
   assert(this->m_q.size() == this->m_entries.size());
   
   for (std::size_t i = 0; i < this->m_entries.size(); i++) {
-    if (this->m_entries[i] == entry)
+    if (this->m_entries[i].path == entry.path)
       return (void)this->remove_at_entry_idx(i);
   }
 }
 
-const std::filesystem::path& Playlist::at(std::size_t i) const {
+const PlaylistItem& Playlist::at(std::size_t i) const {
   if (i > this->m_q.size() || this->empty()) {
     throw std::runtime_error(fmt::format("[{}] Attempted to get playlist item"
     "at index greater than the size of the playlist: {} from {}", FUNCDINFO, i,
@@ -156,16 +156,17 @@ const std::filesystem::path& Playlist::at(std::size_t i) const {
   return this->m_entries[i];
 }
 
-const std::filesystem::path& Playlist::operator[](std::size_t i) const {
+const PlaylistItem& Playlist::operator[](std::size_t i) const {
   return this->m_entries[i];
 }
 
-const std::vector<std::filesystem::path>& Playlist::view() const {
+const std::vector<PlaylistItem>& Playlist::view() const {
   return this->m_entries;
 }
 
-bool Playlist::has(const std::filesystem::path& entry) const {
-  return std::find(this->m_entries.begin(), this->m_entries.end(), entry) != this->m_entries.end();
+bool Playlist::has(const PlaylistItem& entry) const {
+  return std::find_if(this->m_entries.begin(), this->m_entries.end(),
+    [&entry](const PlaylistItem& item) { return item.path == entry.path; }) != this->m_entries.end();
 }
 
 void Playlist::move(PlaylistMvCmd move_cmd) {
@@ -196,7 +197,7 @@ void Playlist::move(PlaylistMvCmd move_cmd) {
   }
 }
 
-const std::filesystem::path& Playlist::peek_move(PlaylistMvCmd move_cmd) const {
+const PlaylistItem& Playlist::peek_move(PlaylistMvCmd move_cmd) const {
   if (this->empty()) {
     throw std::runtime_error(fmt::format("[{}] can not commit move on empty "
     "playlist {}.", FUNCDINFO, playlist_move_cmd_cstr(move_cmd))); 

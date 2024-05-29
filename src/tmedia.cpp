@@ -89,14 +89,11 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     // and begins audio output (if applicable)
     PlaylistMvCmd move_cmd = PlaylistMvCmd::NEXT;
     std::unique_ptr<MediaFetcher> fetcher;
-    const std::string currently_playing = tmps.plist.current();
+    const PlaylistItem& pcurr = tmps.plist.current();
+    const std::string currently_playing = pcurr.path().string();
 
     try {
-      std::array<bool, AVMEDIA_TYPE_NB> streams;
-      for (std::size_t i = 0; i < streams.size(); i++) streams[i] = false;
-      streams[AVMEDIA_TYPE_VIDEO] = true;
-      streams[AVMEDIA_TYPE_AUDIO] = true;
-      fetcher = std::make_unique<MediaFetcher>(tmps.plist.current(), streams);
+      fetcher = std::make_unique<MediaFetcher>(pcurr.path, pcurr.requested_streams);
     } catch (const std::runtime_error& err) {
       const std::size_t failed_plist_index = tmps.plist.index();
 

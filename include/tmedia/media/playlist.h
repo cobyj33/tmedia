@@ -10,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include <filesystem>
+#include <array>
 
 enum class PlaylistMvCmd {
   NEXT,
@@ -86,9 +87,20 @@ LoopType loop_type_from_str(std::string_view loop_type);
  *  loop->repeat_one:
 */
 
+struct PlaylistItem {
+  std::filesystem::path path;
+  std::array<bool, AVMEDIA_TYPE_NB> requested_streams = {true, true, false, false, false};
+  PlaylistItem() = default;
+  explicit PlaylistItem(std::filesystem::path _path) : path(_path) {}
+  explicit PlaylistItem(std::filesystem::path _path, std::array<bool, AVMEDIA_TYPE_NB>& _requested_streams) : path(_path) {
+    for (std::size_t i = 0; i < requested_streams.size(); i++)
+      this->requested_streams[i] = _requested_streams[i];
+  }
+};
+
 class Playlist {
   private:
-    std::vector<std::filesystem::path> m_entries;
+    std::vector<PlaylistItem> m_entries;
     std::vector<std::size_t> m_q;
     std::size_t m_qi;
 
@@ -100,7 +112,7 @@ class Playlist {
     static constexpr std::size_t npos = (std::size_t)-1;
 
     Playlist();
-    Playlist(const std::vector<std::filesystem::path>& entries, LoopType loop_type);
+    Playlist(const std::vector<PlaylistItem>& entries, LoopType loop_type);
 
     TMEDIA_ALWAYS_INLINE inline bool shuffled() const noexcept {
       return this->m_shuffled;
@@ -126,26 +138,26 @@ class Playlist {
     void unshuffle();
 
     int index() const;
-    const std::filesystem::path& current() const;
+    const PlaylistItem& current() const;
 
-    void insert(const std::filesystem::path& entry, std::size_t i);
-    void push_back(const std::filesystem::path& entry);
+    void insert(const PlaylistItem& entry, std::size_t i);
+    void push_back(const PlaylistItem& entry);
     void remove(std::size_t i);
-    void remove(const std::filesystem::path& entry);
-    bool has(const std::filesystem::path& entry) const;
+    void remove(const PlaylistItem& entry);
+    bool has(const PlaylistItem& entry) const;
     void clear();
 
-    const std::vector<std::filesystem::path>& view() const;
+    const std::vector<PlaylistItem>& view() const;
 
-    const std::filesystem::path& operator[](std::size_t i) const;
-    const std::filesystem::path& at(std::size_t i) const;
+    const PlaylistItem& operator[](std::size_t i) const;
+    const PlaylistItem& at(std::size_t i) const;
 
     /**
      * After a move, it is guaranteed that the next file will not be the
      * same as the previous file
     */
     void move(PlaylistMvCmd move_cmd);
-    const std::filesystem::path& peek_move(PlaylistMvCmd move_cmd) const;
+    const PlaylistItem& peek_move(PlaylistMvCmd move_cmd) const;
     bool can_move(PlaylistMvCmd move_cmd) const noexcept;
 };
 

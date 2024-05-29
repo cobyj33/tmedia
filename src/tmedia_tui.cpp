@@ -54,7 +54,7 @@ void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnaps
   wfill_box(stdscr, 1, 0, COLS, 1, '~');
   werasebox(stdscr, 0, 0, COLS, 1);
   const std::string current_plist_index_str = fmt::format("({}/{})", tmps.plist.index() + 1, tmps.plist.size());
-  const std::string current_plist_media_str = get_media_file_display_name(tmps.plist.current(), tmrs.metadata_cache);
+  const std::string current_plist_media_str = get_media_file_display_name(tmps.plist.current().path, tmrs.metadata_cache);
   const std::string current_plist_file_display = (tmps.plist.size() > 1 ? (current_plist_index_str + " ") : "") + current_plist_media_str;
   TMLabelStyle current_plist_display_style(0, 0, COLS, TMAlign::CENTER, CURRENT_FILE_NAME_MARGIN, CURRENT_FILE_NAME_MARGIN);
   tm_mvwaddstr_label(stdscr, current_plist_display_style, current_plist_file_display);
@@ -98,7 +98,7 @@ void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapsho
   
   werasebox(stdscr, 0, 0, COLS, 2);
   const std::string current_plist_index_str = fmt::format("({}/{})", tmps.plist.index() + 1, tmps.plist.size());
-  const std::string current_plist_media_str = get_media_file_display_name(tmps.plist.current(), tmrs.metadata_cache);
+  const std::string current_plist_media_str = get_media_file_display_name(tmps.plist.current().path, tmrs.metadata_cache);
   const std::string current_plist_file_display = (tmps.plist.size() > 1 ? (current_plist_index_str + " ") : "") + current_plist_media_str;
   TMLabelStyle current_plist_display_style(0, 0, COLS, TMAlign::CENTER, CURRENT_FILE_NAME_MARGIN, CURRENT_FILE_NAME_MARGIN);
   tm_mvwaddstr_label(stdscr, current_plist_display_style, current_plist_file_display);
@@ -110,7 +110,7 @@ void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapsho
     wfill_box(stdscr, 2, 0, COLS, 1, '~');
     if (tmps.plist.can_move(PlaylistMvCmd::REWIND)) {
       werasebox(stdscr, 1, 0, COLS / 2, 1);
-      const std::string rewind_media_file_display_string = get_media_file_display_name(tmps.plist.peek_move(PlaylistMvCmd::REWIND), tmrs.metadata_cache);
+      const std::string rewind_media_file_display_string = get_media_file_display_name(tmps.plist.peek_move(PlaylistMvCmd::REWIND).path, tmrs.metadata_cache);
       const std::string rewind_display_string = fmt::format("< {}", rewind_media_file_display_string);
       TMLabelStyle rewind_display_style(1, 0, COLS / 2, TMAlign::LEFT, 0, MOVE_FILE_NAME_MIDDLE_MARGIN);
       tm_mvwaddstr_label(stdscr, rewind_display_style, rewind_display_string);
@@ -119,7 +119,7 @@ void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapsho
     if (tmps.plist.can_move(PlaylistMvCmd::SKIP)) {
       static constexpr int RIGHT_ARROW_MARGIN = 3;
       werasebox(stdscr, 1, COLS / 2, COLS / 2, 1);
-      const std::string skip_display_string = get_media_file_display_name(tmps.plist.peek_move(PlaylistMvCmd::SKIP), tmrs.metadata_cache);
+      const std::string skip_display_string = get_media_file_display_name(tmps.plist.peek_move(PlaylistMvCmd::SKIP).path, tmrs.metadata_cache);
       TMLabelStyle skip_display_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, MOVE_FILE_NAME_MIDDLE_MARGIN, RIGHT_ARROW_MARGIN);
       TMLabelStyle right_arrow_string_style(1, COLS / 2, COLS / 2, TMAlign::RIGHT, 0, 0);
       tm_mvwaddstr_label(stdscr, skip_display_string_style, skip_display_string);

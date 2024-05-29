@@ -6,11 +6,11 @@ namespace fs = std::filesystem;
 
 TEST_CASE("playlist", "[playlist]") {
   Playlist playlist;
-  const fs::path video = fs::path("/home/user/.local/hidden/video.mp4");
-  const fs::path audio = fs::path("/home/user/directory/audio.mp3");
-  const fs::path image = fs::path("/home/user/Images/image.png");
-  const fs::path musicvideo = fs::path("/usr/local/musicvideo.png");
-  const fs::path favsong = fs::path("/Music/Albums/album/song.wav");
+  const PlaylistItem video = PlaylistItem("/home/user/.local/hidden/video.mp4");
+  const PlaylistItem audio = PlaylistItem("/home/user/directory/audio.mp3");
+  const PlaylistItem image = PlaylistItem("/home/user/Images/image.png");
+  const PlaylistItem musicvideo = PlaylistItem("/usr/local/musicvideo.png");
+  const PlaylistItem favsong = PlaylistItem("/Music/Albums/album/song.wav");
 
   SECTION("Initialization") {
     REQUIRE_THROWS(playlist.at(0));
@@ -32,7 +32,7 @@ TEST_CASE("playlist", "[playlist]") {
   }
 
   SECTION("Can Move: Single Element") {
-    playlist.push_back(fs::path("/home/user/media.heic"));
+    playlist.push_back(PlaylistItem("/home/user/media.heic"));
 
     REQUIRE_FALSE(playlist.can_move(PlaylistMvCmd::NEXT));
     REQUIRE_THROWS(playlist.move(PlaylistMvCmd::NEXT));
@@ -47,26 +47,26 @@ TEST_CASE("playlist", "[playlist]") {
     playlist.push_back(audio);
 
     REQUIRE(playlist.size() == 2); // video, audio
-    REQUIRE(playlist.at(0) == video);
-    REQUIRE(playlist.at(1) == audio);
+    REQUIRE(playlist.at(0).path == video.path);
+    REQUIRE(playlist.at(1).path == audio.path);
 
     playlist.push_back(video);
     playlist.push_back(image);
     REQUIRE(playlist.size() == 4);
-    REQUIRE(playlist.at(0) == video);
-    REQUIRE(playlist.at(1) == audio);
-    REQUIRE(playlist.at(2) == video);
-    REQUIRE(playlist.at(3) == image);
+    REQUIRE(playlist.at(0).path == video.path);
+    REQUIRE(playlist.at(1).path == audio.path);
+    REQUIRE(playlist.at(2).path == video.path);
+    REQUIRE(playlist.at(3).path == image.path);
 
     REQUIRE(playlist.index() == 0);
-    REQUIRE(playlist.current() == video);
+    REQUIRE(playlist.current().path == video.path);
   }
 
   SECTION("Empty Insert") {
     REQUIRE_NOTHROW(playlist.insert(image, 0));
     REQUIRE(playlist.size() == 1);
-    REQUIRE(playlist.at(0) == image);
-    REQUIRE(playlist.current() == image);
+    REQUIRE(playlist.at(0).path == image.path);
+    REQUIRE(playlist.current().path == image.path);
     REQUIRE(playlist.index() == 0);
   }
 
@@ -76,46 +76,46 @@ TEST_CASE("playlist", "[playlist]") {
     playlist.insert(image, 1); // video, image, audio
 
     REQUIRE(playlist.size() == 3);
-    REQUIRE(playlist.at(0) == video);
-    REQUIRE(playlist.at(1) == image);
-    REQUIRE(playlist.at(2) == audio);
+    REQUIRE(playlist.at(0).path == video.path);
+    REQUIRE(playlist.at(1).path == image.path);
+    REQUIRE(playlist.at(2).path == audio.path);
     playlist.insert(image, 1); // video, image, image, audio
 
     REQUIRE(playlist.size() == 4);
-    REQUIRE(playlist.at(0) == video);
-    REQUIRE(playlist.at(1) == image);
-    REQUIRE(playlist.at(2) == image);
-    REQUIRE(playlist.at(3) == audio);
+    REQUIRE(playlist.at(0).path == video.path);
+    REQUIRE(playlist.at(1).path == image.path);
+    REQUIRE(playlist.at(2).path == image.path);
+    REQUIRE(playlist.at(3).path == audio.path);
     playlist.insert(image, 1); // video, image, image, image, audio
 
     REQUIRE(playlist.size() == 5);
-    REQUIRE(playlist.at(0) == video);
-    REQUIRE(playlist.at(1) == image);
-    REQUIRE(playlist.at(2) == image);
-    REQUIRE(playlist.at(3) == image);
-    REQUIRE(playlist.at(4) == audio);
+    REQUIRE(playlist.at(0).path == video.path);
+    REQUIRE(playlist.at(1).path == image.path);
+    REQUIRE(playlist.at(2).path == image.path);
+    REQUIRE(playlist.at(3).path == image.path);
+    REQUIRE(playlist.at(4).path == audio.path);
 
     // backinsert
     playlist.insert(favsong, playlist.size()); // video, image, image, image, audio, favsong
     REQUIRE(playlist.size() == 6);
-    REQUIRE(playlist.at(0) == video);
-    REQUIRE(playlist.at(1) == image);
-    REQUIRE(playlist.at(2) == image);
-    REQUIRE(playlist.at(3) == image);
-    REQUIRE(playlist.at(4) == audio);
-    REQUIRE(playlist.at(5) == favsong);
+    REQUIRE(playlist.at(0).path == video.path);
+    REQUIRE(playlist.at(1).path == image.path);
+    REQUIRE(playlist.at(2).path == image.path);
+    REQUIRE(playlist.at(3).path == image.path);
+    REQUIRE(playlist.at(4).path == audio.path);
+    REQUIRE(playlist.at(5).path == favsong.path);
 
     SECTION("Deletion") {
       playlist.remove(0); // image, image, image, audio, favsong
       REQUIRE(playlist.size() == 5);
-      REQUIRE(playlist.at(0) == image);
+      REQUIRE(playlist.at(0).path == image.path);
 
       playlist.remove(3); // image, image, image, favsong
       REQUIRE(playlist.size() == 4);
-      REQUIRE(playlist.at(0) == image);
-      REQUIRE(playlist.at(1) == image);
-      REQUIRE(playlist.at(2) == image);
-      REQUIRE(playlist.at(3) == favsong);
+      REQUIRE(playlist.at(0).path == image.path);
+      REQUIRE(playlist.at(1).path == image.path);
+      REQUIRE(playlist.at(2).path == image.path);
+      REQUIRE(playlist.at(3).path == favsong.path);
 
       playlist.clear();
       REQUIRE(playlist.size() == 0);
@@ -142,21 +142,21 @@ TEST_CASE("playlist", "[playlist]") {
     playlist.remove(image);
 
     REQUIRE(playlist.size() == 3);
-    REQUIRE(playlist.at(0) == video);
-    REQUIRE(playlist.at(1) == audio);
-    REQUIRE(playlist.at(2) == image);
+    REQUIRE(playlist.at(0).path == video.path);
+    REQUIRE(playlist.at(1).path == audio.path);
+    REQUIRE(playlist.at(2).path == image.path);
 
     playlist.remove(image);
 
     REQUIRE(playlist.size() == 2);
-    REQUIRE(playlist.at(0) == video);
-    REQUIRE(playlist.at(1) == audio);
+    REQUIRE(playlist.at(0).path == video.path);
+    REQUIRE(playlist.at(1).path == audio.path);
 
     playlist.remove(image); // no-op
 
     REQUIRE(playlist.size() == 2);
-    REQUIRE(playlist.at(0) == video);
-    REQUIRE(playlist.at(1) == audio);
+    REQUIRE(playlist.at(0).path == video.path);
+    REQUIRE(playlist.at(1).path == audio.path);
   }
 
   SECTION("Clear") {
@@ -178,22 +178,22 @@ TEST_CASE("playlist", "[playlist]") {
 
     playlist.remove(favsong); // video, audio, image
     REQUIRE(playlist.size() == 3);
-    REQUIRE(playlist.at(0) == video);
-    REQUIRE(playlist.at(1) == audio);
-    REQUIRE(playlist.at(2) == image);
+    REQUIRE(playlist.at(0).path == video.path);
+    REQUIRE(playlist.at(1).path == audio.path);
+    REQUIRE(playlist.at(2).path == image.path);
 
     playlist.remove(audio); // video, image
     REQUIRE(playlist.size() == 2);
-    REQUIRE(playlist.at(0) == video);
-    REQUIRE(playlist.at(1) == image);
+    REQUIRE(playlist.at(0).path == video.path);
+    REQUIRE(playlist.at(1).path == image.path);
 
     playlist.remove(image); // video
     REQUIRE(playlist.size() == 1);
-    REQUIRE(playlist.at(0) == video);
+    REQUIRE(playlist.at(0).path == video.path);
 
     playlist.remove(image); // video (no-op)
     REQUIRE(playlist.size() == 1);
-    REQUIRE(playlist.at(0) == video);
+    REQUIRE(playlist.at(0).path == video.path);
 
     playlist.remove(video);
     REQUIRE(playlist.size() == 0);

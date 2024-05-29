@@ -150,6 +150,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     bool recurse = false;
     bool probe = false;
     unsigned int num_reads = 1;
+    std::array<bool, AVMEDIA_TYPE_NB> requested_streams = {true, true, false, false, false};
   };
 
   struct MediaPathLocalSearchOptions {
@@ -159,6 +160,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     InheritBool recurse = InheritBool::INHERIT;
     InheritBool probe = InheritBool::INHERIT;
     std::optional<unsigned int> num_reads = std::nullopt;
+    std::array<InheritBool, AVMEDIA_TYPE_NB> requested_streams = {InheritBool::INHERIT, InheritBool::INHERIT, InheritBool::INHERIT, InheritBool::INHERIT, InheritBool::INHERIT};
   };
 
   bool resolve_inheritable_bool(InheritBool ib, bool parent_bool);
@@ -167,6 +169,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   struct MediaPath {
     fs::path path;
     MediaPathLocalSearchOptions srch_opts;
+    MediaPath() = default;
     MediaPath(std::string_view strv_path) : path(fs::path(strv_path)) {} 
     MediaPath(const fs::path& path) : path(path) {} 
     MediaPath(const MediaPath& o) = default;
@@ -186,7 +189,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void resolve_cli_path(const fs::path& path,
                         MediaPathSearchOptions srch_opts,
-                        std::vector<fs::path>& resolved_paths);
+                        std::vector<PlaylistItem>& resolved_paths);
 
   typedef std::function<void(CLIParseState&, const tmedia::CLIArg arg)> ArgParseFunc;
   typedef tmedia::ArrayPairMap<std::string_view, ArgParseFunc, 100, std::less<>> ArgParseMap;
@@ -232,6 +235,9 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_probe_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_probe_global(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_repeat_paths_global(CLIParseState& ps, const tmedia::CLIArg arg);
+
+  void cli_arg_no_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg);
 
   // Local versions of options that are either local or global
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -338,6 +344,9 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"fullscreen", cli_arg_fullscreen},
       {"fullscreened", cli_arg_fullscreen},
 
+      {"no-video-stream", cli_arg_no_video_stream_global},
+      {"no-audio-stream", cli_arg_no_audio_stream_global},
+
       // path searching opts
       {"ignore-audio", cli_arg_ignore_audio_global},
       {"ignore-audios", cli_arg_ignore_audio_global},
@@ -419,7 +428,6 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     for (const tmedia::CLIArg& arg : parsed_cli) {
       switch (arg.arg_type) {
         case tmedia::CLIArgType::POSITIONAL: {
-
           try {
             ps.paths.push_back(MediaPath(arg.value));
           } catch (const std::exception& e) { // fs::path creation failed
@@ -427,12 +435,9 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
               "Path from cli argument #{} ({}): {}",
               FUNCDINFO, arg.argi, arg.value, e.what()));
           }
-
         } break;
         case tmedia::CLIArgType::OPTION: {
-
           if (arg.prefix == "-") {
-
             if (short_exiting_opt_map.count(arg.value)) {
               short_exiting_opt_map.at(arg.value)(ps, arg);
               return { std::move(ps.tmss), true, std::move(ps.argerrs) };
@@ -736,6 +741,16 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)arg;
   }
 
+  void cli_arg_no_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = false;
+    (void)arg;
+  }
+
+  void cli_arg_no_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = false;
+    (void)arg;
+  }
+
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
       ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_video = InheritBool::TRUE;
@@ -828,6 +843,10 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     res.recurse = resolve_inheritable_bool(local.recurse, global.recurse);
     res.probe = resolve_inheritable_bool(local.probe, global.probe);
     res.num_reads = local.num_reads.has_value() ? (*local.num_reads) : global.num_reads;
+    for (std::size_t i = 0; i < global.requested_streams.size(); i++) {
+      res.requested_streams[i] = resolve_inheritable_bool(local.requested_streams[i], global.requested_streams[i]);
+    }
+
     return res;
   }
 
@@ -850,7 +869,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   }
 
 
-  void resolve_cli_path(const fs::path& path, MediaPathSearchOptions srch_opts, std::vector<fs::path>& resolved_paths) {
+  void resolve_cli_path(const fs::path& path, MediaPathSearchOptions srch_opts, std::vector<PlaylistItem>& resolved_paths) {
     std::stack<fs::path> to_search;
     to_search.push(path);
     std::error_code ec;
@@ -877,10 +896,10 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
         SI::natural::sort(media_file_paths);
 
         for (auto&& media_file_path : media_file_paths) {
-          resolved_paths.push_back(std::move(media_file_path));
+          resolved_paths.push_back(PlaylistItem(std::move(media_file_path), srch_opts.requested_streams));
         }
       } else if (fs::is_regular_file(curr) && test_media_file(curr, srch_opts)) {
-        resolved_paths.push_back(curr);
+        resolved_paths.push_back(PlaylistItem(curr, srch_opts.requested_streams));
       }
     }
   }
