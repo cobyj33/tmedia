@@ -10,9 +10,10 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <vector>
 #include <stdexcept>
 #include <string>
+#include <cfloat>
+#include <cstdint>
 
 #include <fmt/format.h>
 #include <tmedia/util/defines.h>
@@ -21,7 +22,9 @@ extern "C" {
 #include <curses.h>
 }
 
-static constexpr int COLOR_MAP_SIDE = 7;
+static constexpr int COLOR_CUBE_SIDE_LENGTH = 255;
+static constexpr int COLOR_MAP_SIDE_NB_CELLS = 7;
+static constexpr int COLOR_MAP_CELL_WIDTH = COLOR_CUBE_SIDE_LENGTH / COLOR_MAP_SIDE_NB_CELLS;
 static constexpr int MAX_TERMINAL_COLORS = 256;
 static constexpr int MAX_TERMINAL_COLOR_PAIRS = 256;
 
@@ -57,12 +60,12 @@ static constexpr int COLOR_PALETTE_START = 16;
 bool curses_colors_initialized = false;
 
 /**
- * @brief A RGB mapping of NCURSES color pairs to a 3D Discrete Color space, where each side of the color space is COLOR_MAP_SIDE steps long
- * To index into the map, take each channel's ratio against 255 and multiply it against COLOR_MAP_SIDE (ex: (int)(red / 255.0 * COLOR_MAP_SIZE))
+ * @brief A RGB mapping of NCURSES color pairs to a 3D Discrete Color space, where each side of the color space is COLOR_MAP_SIDE_NB_CELLS steps long
+ * To index into the map, take each channel's ratio against 255 and multiply it against COLOR_MAP_SIDE_NB_CELLS (ex: (int)(red / 255.0 * COLOR_MAP_SIZE))
  * Additionally, the backgrounds of all colors should be a certain color, while the foreground is that color's complementary value
  */
-curses_color_pair_t color_pairs_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
-curses_color_t color_map[COLOR_MAP_SIDE][COLOR_MAP_SIDE][COLOR_MAP_SIDE];
+curses_color_pair_t color_pairs_map[COLOR_MAP_SIDE_NB_CELLS][COLOR_MAP_SIDE_NB_CELLS][COLOR_MAP_SIDE_NB_CELLS];
+curses_color_t color_map[COLOR_MAP_SIDE_NB_CELLS][COLOR_MAP_SIDE_NB_CELLS][COLOR_MAP_SIDE_NB_CELLS];
 
 int available_color_palette_colors = 0;
 int available_color_palette_color_pairs = 0;
@@ -148,17 +151,44 @@ void tmcurses_set_color_palette_custom(const Palette& colorPalette) {
 curses_color_t get_closest_tmcurses_color(const RGB24& input) {
   if (!curses_colors_initialized) return 0; // just return a default 0 to no-op
 
-  return color_map[static_cast<int>(input.r) * (COLOR_MAP_SIDE - 1) / 255]
-                  [static_cast<int>(input.g) * (COLOR_MAP_SIDE - 1) / 255]
-                  [static_cast<int>(input.b) * (COLOR_MAP_SIDE - 1) / 255];
+  /*
+    Divide by 256 is intentional here, although uint8_t's max is 255.
+
+    Beforehand, the mapping from an RGB unsigned 8-bit value to the color map
+    was done with (color channel) * (COLOR_MAP_SIDE_NB_CELLS - 1) / 255, which
+    intutively seems correct, since the maximum index of a side of the color
+    map is (COLOR_MAP_SIDE_NB_CELLS - 1) and uint8_t's max is 255, so when
+    a color channel equals 255, the expression evaluates to
+    (COLOR_MAP_SIDE_NB_CELLS) - 1 and is in bounds. However, This means that
+    intense red, green, and blue values were rarely accessed by
+    calls to get_closest_tmcurses_color except in cases of extreme saturation
+    where the r, g, or b channel was equal to 255. For example, if r equals 254,
+    254 * (COLOR_MAP_SIDE_NB_CELLS - 1) / 255 would truncate through integer
+    division, causing a linear distribution of the values of the channel
+    **except** for the final array index.
+
+    Instead, with the function (color channel) * COLOR_MAP_SIDE_NB_CELLS / 256
+    and 8-bit channel values, we can guarantee that the expression will never
+    actually equal COLOR_MAP_SIDE_NB_CELLS, since (color channel) < 256. Instead,
+    (in actual math terms) it would evaluate close to COLOR_MAP_SIDE_NB_CELLS in
+    saturated examples, but
+    would then be truncated down to COLOR_MAP_SIDE_NB_CELLS - 1 due to integer
+    divison, causing channels on the edge of the color map to be caught.
+
+    (I decided to write this comment since this seemed extremely non-intuitive)
+  */
+
+  return color_map[static_cast<int>(input.r) * COLOR_MAP_SIDE_NB_CELLS / 256]
+                  [static_cast<int>(input.g) * COLOR_MAP_SIDE_NB_CELLS / 256]
+                  [static_cast<int>(input.b) * COLOR_MAP_SIDE_NB_CELLS / 256];
 }
 
 curses_color_pair_t get_closest_tmcurses_color_pair(const RGB24& input) {
   if (!curses_colors_initialized) return 0; // just return a default 0 to no-op
 
-  return color_pairs_map[static_cast<int>(input.r) * (COLOR_MAP_SIDE - 1) / 255]
-                      [static_cast<int>(input.g) * (COLOR_MAP_SIDE - 1) / 255]
-                      [static_cast<int>(input.b) * (COLOR_MAP_SIDE - 1) / 255];
+  return color_pairs_map[static_cast<int>(input.r) * COLOR_MAP_SIDE_NB_CELLS / 256]
+                        [static_cast<int>(input.g) * COLOR_MAP_SIDE_NB_CELLS / 256]
+                        [static_cast<int>(input.b) * COLOR_MAP_SIDE_NB_CELLS / 256];
 }
 
 // --------------------------------------------------------------
@@ -186,7 +216,9 @@ constexpr const char* tmcurses_color_palette_cstr(TMNCursesColorPalette colorPal
 RGB24 tmcurses_get_color_number_content(curses_color_t color) {
   short r, g, b;
   color_content(color, &r, &g, &b);
-  return RGB24(r * 255 / 1000, g * 255 / 1000, b * 255 / 1000);
+  return RGB24(static_cast<std::uint8_t>(r * 255 / 1000),
+    static_cast<std::uint8_t>(g * 255 / 1000),
+    static_cast<std::uint8_t>(b * 255 / 1000));
 }
 
 ColorPair tmcurses_get_pair_number_content(curses_color_pair_t pair) {
@@ -201,15 +233,24 @@ int tmcurses_init_rgb_color_palette() {
   const short CHANGEABLE_COLORS = MAX_COLORS - COLOR_PALETTE_START;
   if (CHANGEABLE_COLORS <= 0) return 0;
 
-  const double BOX_SIZE = NCURSES_COLOR_COMPONENT_MAX / std::cbrt(CHANGEABLE_COLORS);
+  // simulates walking around a color cube with side length
+  // NCURSES_COLOR_COMPONENT_MAX and initializes colors from points along
+  // the walk
+
+  double STEPS_PER_COLOR_CUBE_SIDE = std::max(std::floor(std::cbrt(CHANGEABLE_COLORS)), 1.0);
+  STEPS_PER_COLOR_CUBE_SIDE -= STEPS_PER_COLOR_CUBE_SIDE > 1.0 ? 1.0 : 0.0;
+  const double BOX_SIZE = NCURSES_COLOR_COMPONENT_MAX / STEPS_PER_COLOR_CUBE_SIDE;
 
   int color_index = COLOR_PALETTE_START;
-  for (double r = 0; r < NCURSES_COLOR_COMPONENT_MAX; r += BOX_SIZE)
-    for (double g = 0; g < NCURSES_COLOR_COMPONENT_MAX; g += BOX_SIZE)
-      for (double b = 0; b < NCURSES_COLOR_COMPONENT_MAX; b += BOX_SIZE)
+  for (double r = 0; r <= NCURSES_COLOR_COMPONENT_MAX && color_index < MAX_COLORS; r += BOX_SIZE) {
+    for (double g = 0; g <= NCURSES_COLOR_COMPONENT_MAX && color_index < MAX_COLORS; g += BOX_SIZE) {
+      for (double b = 0; b <= NCURSES_COLOR_COMPONENT_MAX && color_index < MAX_COLORS; b += BOX_SIZE) {
         init_color(color_index++, static_cast<short>(r), static_cast<short>(g), static_cast<short>(b));
+      }
+    }
+  }
 
-  return color_index;
+  return color_index - COLOR_PALETTE_START;
 }
 
 
@@ -220,18 +261,21 @@ int tmcurses_init_grayscale_color_palette() {
   if (CHANGEABLE_COLORS <= 0) return 0;
 
   for (short i = 0; i < CHANGEABLE_COLORS; i++) {
+    // dividing by (CHANGEABLE_COLORS - 1), since the maximum for "i" is
+    // (CHANGEABLE_COLORS - 1), therefore we will get the full gray scale
+    // from black to white when (i / (CHANGEABLE_COLORS - 1) == 1)
     const short gray = i * NCURSES_COLOR_COMPONENT_MAX / (CHANGEABLE_COLORS - 1);
     init_color(i + COLOR_PALETTE_START, gray, gray, gray);
   }
 
-  return MAX_COLORS;
+  return CHANGEABLE_COLORS;
 }
 
 void tmcurses_init_color_pairs() {
   const int COLOR_PAIRS_TO_INIT = std::min(MAX_TERMINAL_COLOR_PAIRS, std::min(COLOR_PAIRS, available_color_palette_colors));
   for (int i = 0; i < COLOR_PAIRS_TO_INIT; i++) {
-    curses_color_pair_t color_pair_index = i;
-    curses_color_t color_index = i + COLOR_PALETTE_START;
+    const curses_color_pair_t color_pair_index = i;
+    const curses_color_t color_index = i + COLOR_PALETTE_START;
     const RGB24 color = tmcurses_get_color_number_content(color_index);
     const RGB24 complementary = color.get_comp();
     init_pair(color_pair_index, tmcurses_find_best_initialized_color_number(complementary), color_index);
@@ -241,10 +285,13 @@ void tmcurses_init_color_pairs() {
 }
 
 void tmcurses_init_color_maps() {
-  for (int r = 0; r < COLOR_MAP_SIDE; r++) {
-    for (int g = 0; g < COLOR_MAP_SIDE; g++) {
-      for (int b = 0; b < COLOR_MAP_SIDE; b++) {
-        const RGB24 color( r * 255 / (COLOR_MAP_SIDE - 1), g * 255 / (COLOR_MAP_SIDE - 1), b * 255 / (COLOR_MAP_SIDE - 1) );
+  for (int r = 0; r < COLOR_MAP_SIDE_NB_CELLS; r++) {
+    for (int g = 0; g < COLOR_MAP_SIDE_NB_CELLS; g++) {
+      for (int b = 0; b < COLOR_MAP_SIDE_NB_CELLS; b++) {
+        const RGB24 color(static_cast<std::uint8_t>(r * 255 / (COLOR_MAP_SIDE_NB_CELLS - 1)),
+           static_cast<std::uint8_t>(g * 255 / (COLOR_MAP_SIDE_NB_CELLS - 1)),
+           static_cast<std::uint8_t>(b * 255 / (COLOR_MAP_SIDE_NB_CELLS - 1)));
+
         color_map[r][g][b] = tmcurses_find_best_initialized_color_number(color);
         color_pairs_map[r][g][b] = tmcurses_find_best_initialized_color_pair(color);
       }
@@ -254,7 +301,7 @@ void tmcurses_init_color_maps() {
 
 curses_color_t tmcurses_find_best_initialized_color_number(const RGB24& input) {
   curses_color_t best_color_index = -1;
-  double best_distance = (double)INT32_MAX;
+  double best_distance = DBL_MAX;
   for (int i = 0; i < available_color_palette_colors; i++) {
     const curses_color_t color_index = i + COLOR_PALETTE_START;
     const RGB24 current_color = tmcurses_get_color_number_content(color_index);
@@ -270,7 +317,7 @@ curses_color_t tmcurses_find_best_initialized_color_number(const RGB24& input) {
 
 curses_color_pair_t tmcurses_find_best_initialized_color_pair(const RGB24& input) {
   curses_color_pair_t best_pair_index = -1;
-  double best_distance = (double)INT32_MAX;
+  double best_distance = DBL_MAX;
   for (int i = 0; i < available_color_palette_color_pairs; i++) {
     const curses_color_pair_t color_pair_index = i;
     const ColorPair color_pair = tmcurses_get_pair_number_content(color_pair_index);
