@@ -72,13 +72,13 @@ void MediaFetcher::video_fetching_thread_func() {
 
   try {
     if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
-      if (this->media_type == MediaType::IMAGE) {
-        (void)this->frame_image_fetching_func();
-      } else if (this->media_type == MediaType::VIDEO) {
-        (void)this->frame_video_fetching_func();
+      switch (this->media_type) {
+        case MediaType::IMAGE: this->frame_image_fetching_func(); break;
+        case MediaType::AUDIO: this->frame_audio_fetching_func(); break;
+        case MediaType::VIDEO: this->frame_video_fetching_func(); break;
       }
     } else if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-      (void)this->frame_audio_fetching_func();
+      this->frame_audio_fetching_func();
     }
   } catch (std::exception const& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);

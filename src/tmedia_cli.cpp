@@ -24,6 +24,7 @@
 #include <charconv>
 #include <stack>
 #include <system_error>
+#include <optional>
 
 #include <fmt/format.h>
 
@@ -137,11 +138,6 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
    * or videos). Therefore, when the inheritable boolean is INHERIT, we signal
    * to read the global value rather than any local value.
   */
-  enum class InheritBool {
-    FALSE = 0,
-    TRUE = 1,
-    INHERIT = -1
-  };
 
   struct MediaPathSearchOptions {
     bool ignore_audio = false;
@@ -153,17 +149,21 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     std::array<bool, AVMEDIA_TYPE_NB> requested_streams = {true, true, false, false, false};
   };
 
+  /**
+   * Mirrors MediaPathSearchOptions, but all values are std::nullopt by
+   * default and all values are compositions of std::optional
+  */
   struct MediaPathLocalSearchOptions {
-    InheritBool ignore_audio = InheritBool::INHERIT;
-    InheritBool ignore_video = InheritBool::INHERIT;
-    InheritBool ignore_images = InheritBool::INHERIT;
-    InheritBool recurse = InheritBool::INHERIT;
-    InheritBool probe = InheritBool::INHERIT;
+    std::optional<bool> ignore_audio = std::nullopt;
+    std::optional<bool> ignore_video = std::nullopt;
+    std::optional<bool> ignore_images = std::nullopt;
+    std::optional<bool> recurse = std::nullopt;
+    std::optional<bool> probe = std::nullopt;
     std::optional<unsigned int> num_reads = std::nullopt;
-    std::array<InheritBool, AVMEDIA_TYPE_NB> requested_streams = {InheritBool::INHERIT, InheritBool::INHERIT, InheritBool::INHERIT, InheritBool::INHERIT, InheritBool::INHERIT};
+    std::array<std::optional<bool>, AVMEDIA_TYPE_NB> requested_streams = {std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt};
   };
 
-  bool resolve_inheritable_bool(InheritBool ib, bool parent_bool);
+  bool resolve_inheritable_bool(std::optional<bool> ib, bool parent_bool);
   MediaPathSearchOptions resolve_path_search_options(MediaPathSearchOptions global, MediaPathLocalSearchOptions local);
 
   struct MediaPath {
@@ -780,85 +780,85 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_video = InheritBool::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_video = true;
     (void)arg;
   }
 
   void cli_arg_no_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_video = InheritBool::FALSE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_video = false;
     (void)arg;
   }
 
   void cli_arg_ignore_audio_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_audio = InheritBool::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_audio = true;
     (void)arg;
   }
 
   void cli_arg_no_ignore_audio_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_audio = InheritBool::FALSE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_audio = false;
     (void)arg;
   }
 
   void cli_arg_ignore_images_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_images = InheritBool::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_images = true;
     (void)arg;
   }
 
   void cli_arg_no_ignore_images_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_images = InheritBool::FALSE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.ignore_images = false;
     (void)arg;
   }
 
   void cli_arg_recurse_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.recurse = InheritBool::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.recurse = true;
     (void)arg;
   }
 
   void cli_arg_no_recurse_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.recurse = InheritBool::FALSE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.recurse = false;
     (void)arg;
   }
 
   void cli_arg_probe_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.probe = InheritBool::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.probe = true;
     (void)arg;
   }
 
   void cli_arg_no_probe_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.probe = InheritBool::FALSE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.probe = false;
     (void)arg;
   }
 
   void cli_arg_enable_video_stream_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] =InheritBool::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = true;
     (void)arg;
   }
 
   void cli_arg_enable_audio_stream_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] =InheritBool::TRUE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = true;
     (void)arg;
   }
 
   void cli_arg_no_enable_video_stream_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = InheritBool::FALSE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = false;
     (void)arg;
   }
 
   void cli_arg_no_enable_audio_stream_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = InheritBool::FALSE;
+      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = false;
     (void)arg;
   }
 
@@ -882,8 +882,8 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)arg;
   }
 
-  bool resolve_inheritable_bool(InheritBool ib, bool parent_bool) {
-    return ib == InheritBool::INHERIT ? parent_bool : (ib == InheritBool::TRUE);
+  bool resolve_inheritable_bool(std::optional<bool> ib, bool parent_bool) {
+    return ib == std::nullopt ? parent_bool : (ib.value() == true);
   }
 
   MediaPathSearchOptions resolve_path_search_options(MediaPathSearchOptions global, MediaPathLocalSearchOptions local) {
