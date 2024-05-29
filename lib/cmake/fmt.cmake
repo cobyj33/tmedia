@@ -2,6 +2,10 @@
 
 if (FIND_FMT)
   find_package(fmt)
+  if (NOT TARGET fmt::fmt)
+    message(FATAL_ERROR "FIND_FMT enabled but fmt library could not be found on the system")
+  endif()
+
   list(APPEND TMEDIA_DEPS_LIBRARIES fmt::fmt)
 else()
   set(TMEDIA_FMT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/lib/fmt)

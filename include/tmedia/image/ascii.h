@@ -1,12 +1,13 @@
 #ifndef TMEDIA_ASCII_H
 #define TMEDIA_ASCII_H
 
-class RGB24;
-
 #include <cstdint>
 #include <vector>
 #include <string>
 #include <string_view>
+
+#include <tmedia/util/defines.h>
+#include <tmedia/image/color.h>
 
 /**
  * @file tmedia/image/defines.h
@@ -28,11 +29,13 @@ class RGB24;
 
 extern const char* ASCII_STANDARD_CHAR_MAP;
 
-/**
- * Returns a character from a character
-*/
-char get_char_from_value(std::string_view characters, std::uint8_t value);
-char get_char_from_rgb(std::string_view characters, RGB24 color);
+TMEDIA_ALWAYS_INLINE inline constexpr char get_char_from_value(std::string_view characters, std::uint8_t value) {
+  return characters[ (std::size_t)value * (characters.length() - 1) / 255UL ];
+}
+
+TMEDIA_ALWAYS_INLINE inline constexpr char get_char_from_rgb(std::string_view characters, RGB24 color) {
+  return get_char_from_value(characters, get_gray8(color.r, color.g, color.b));
+}
 
 /**
  * 

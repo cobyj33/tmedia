@@ -11,21 +11,40 @@
  */
 
 #include <algorithm>
+#include <tmedia/util/defines.h>
 
 // why c++ gotta have so much boiler plate
 struct Dim2 {
   int width;
   int height;
-  Dim2() : width(0), height(0) {}
-  Dim2(int width, int height) : width(width), height(height) {}
-  Dim2(const Dim2& o) : width(o.width), height(o.height) {}
-  Dim2(Dim2&& o) : width(o.width), height(o.height) {}
-  void operator=(const Dim2& o) { this->width = o.width; this->height = o.height; }
-  void operator=(Dim2&& o) { this->width = o.width; this->height = o.height; }
-  bool operator==(const Dim2& o) { return this->width == o.width && this->height == o.height; }
-  bool operator==(Dim2&& o) { return this->width == o.width && this->height == o.height; }
-  bool operator!=(const Dim2& o) { return this->width != o.width || this->height != o.height; }
-  bool operator!=(Dim2&& o) { return this->width != o.width || this->height != o.height; }
+  constexpr Dim2() : width(0), height(0) {}
+  constexpr Dim2(int width, int height) : width(width), height(height) {}
+  constexpr Dim2(const Dim2& o) : width(o.width), height(o.height) {}
+  constexpr Dim2(Dim2&& o) : width(o.width), height(o.height) {}
+
+  TMEDIA_ALWAYS_INLINE constexpr void operator=(const Dim2& o) {
+    this->width = o.width; this->height = o.height;
+  }
+
+  TMEDIA_ALWAYS_INLINE constexpr void operator=(Dim2&& o) {
+    this->width = o.width; this->height = o.height;
+  }
+
+  TMEDIA_ALWAYS_INLINE constexpr bool operator==(const Dim2& o) {
+    return this->width == o.width && this->height == o.height;
+  }
+
+  TMEDIA_ALWAYS_INLINE constexpr bool operator==(Dim2&& o) {
+    return this->width == o.width && this->height == o.height;
+  }
+
+  TMEDIA_ALWAYS_INLINE constexpr bool operator!=(const Dim2& o) {
+    return this->width != o.width || this->height != o.height;
+  }
+
+  TMEDIA_ALWAYS_INLINE constexpr bool operator!=(Dim2&& o) {
+    return this->width != o.width || this->height != o.height;
+  }
 };
 
 /**
@@ -47,7 +66,7 @@ struct Dim2 {
  * @param max_height The height of the bounded box which the source will be fitted into
  * @return The size of the frame when it is bounded into the bounded dimensions. 
  */
-inline double get_scale_factor(int src_width, int src_height, int target_width, int target_height) {
+constexpr inline double get_scale_factor(int src_width, int src_height, int target_width, int target_height) {
   double width_scaler = static_cast<double>(target_width) / src_width; // > 1 if growing, < 1 if shrinking, ==1 if same
   double height_scaler = static_cast<double>(target_height) / src_height; // > 1 if growing, < 1 if shrinking, ==1 if same
   return std::min(width_scaler, height_scaler);
@@ -67,7 +86,7 @@ inline double get_scale_factor(int src_width, int src_height, int target_width, 
  * @param max_height The height of the bounded box which the source will be fitted into
  * @return The size of the frame when it is bounded into the bounded dimensions. 
  */
-inline Dim2 get_scale_size(int src_width, int src_height, int target_width, int target_height) { 
+constexpr inline Dim2 get_scale_size(int src_width, int src_height, int target_width, int target_height) { 
   double scale_factor = get_scale_factor(src_width, src_height, target_width, target_height);
   int width = static_cast<int>(src_width * scale_factor);
   int height = static_cast<int>(src_height * scale_factor);
@@ -89,7 +108,7 @@ inline Dim2 get_scale_size(int src_width, int src_height, int target_width, int 
  * @param max_height The height of the bounded box which the source will be fitted into
  * @return The size of the frame when it is bounded into the bounded dimensions. 
  */
-inline Dim2 bound_dims(int src_width, int src_height, int max_width, int max_height) {
+constexpr inline Dim2 bound_dims(int src_width, int src_height, int max_width, int max_height) {
   if (src_width <= max_width && src_height <= max_height) {
     return Dim2(src_width, src_height);
   } else {

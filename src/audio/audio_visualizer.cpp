@@ -18,7 +18,7 @@ PixelData visualize(float* frames, int nb_frames, int nb_channels, int width, in
   Canvas canvas(rows, cols);
   const float step_size = nb_samples / static_cast<float>(cols);
   for (int col = 0; col < cols; col++) {
-    std::size_t start = static_cast<std::size_t>(static_cast<float>(col) * step_size);
+    const std::size_t start = static_cast<std::size_t>(static_cast<float>(col) * step_size);
     float sample = 0.0;
     float count = 0.0;
     const std::size_t step_end = static_cast<std::size_t>(static_cast<float>(col + 1.0) * step_size);
