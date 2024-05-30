@@ -29,12 +29,40 @@ void MediaFetcher::audio_dispatch_thread_func() {
     std::array<bool, AVMEDIA_TYPE_NB> requested_streams;
     for (std::size_t i = 0; i < requested_streams.size(); i++) requested_streams[i] = false;
     requested_streams[AVMEDIA_TYPE_AUDIO] = true;
+
     MediaDecoder adec(this->mdec->path, requested_streams);
+
     if (!adec.has_stream_decoder(AVMEDIA_TYPE_AUDIO)) return; // copy failed?
+
     AudioResampler audio_resampler(
     adec.get_ch_layout(), AV_SAMPLE_FMT_FLT, adec.get_sample_rate(),
     adec.get_ch_layout(), adec.get_sample_fmt(), adec.get_sample_rate());
     sleep_for_sec(adec.get_start_time(AVMEDIA_TYPE_AUDIO));
+
+    /*
+      There was an issue in tmedia where at the end of an audio stream, CPU
+      Usage would spike up to 100% since the MediaFetcher would constantly
+      be trying to decode audio, but there was no more audio to decode, so
+      the decoded AVFrame vector kept having a size of zero. These variables
+      exist to throttle the amount of times no audio can
+      be decoded before the audio thread is forced to wait for a small timeout.
+
+      runs_w_fail increases everytime decoding AVFrames from the MediaDecoder
+      results in no decoded audio. and if runs_w_fail exceeds MAX_RUNS_W_FAIL,
+      the current thread is forced to sleep for MAX_RUNS_WAIT_TIME. Everytime
+      the current thread is forced to sleep due to
+      runs_w_fail > MAX_RUNS_W_FAIL, runs_w_fail is reset to 0. Additionally,
+      anytime any AVFrames are successfully decoded from the MediaDecoder,
+      runs_w_fail is reset to 0.
+
+      MAX_RUNS_WAIT_TIME shouldn't be too long, as the MediaFetcher could jump
+      times at any time, and the audio thread shouldn't be sleep for long
+      whenever that takes place.
+    */
+
+    static constexpr std::chrono::milliseconds MAX_RUNS_WAIT_TIME(25);
+    static constexpr unsigned int MAX_RUNS_W_FAIL = 5;
+    unsigned int runs_w_fail = 0;
 
     while (!this->should_exit()) {
       if (!this->is_playing()) {
@@ -56,22 +84,34 @@ void MediaFetcher::audio_dispatch_thread_func() {
       }
 
       if (msg_audio_jump_curr_time_cache > 0) {
-        this->audio_buffer->clear(current_time);
         adec.jump_to_time(current_time);
         next_raw_audio_frames = adec.next_frames(AVMEDIA_TYPE_AUDIO);
-        
+        // clear audio buffer **after** expensive time jumping functions and
+        // decoding functions
+        this->audio_buffer->clear(current_time);
         std::scoped_lock<std::mutex> lock(this->alter_mutex);
         this->msg_audio_jump_curr_time--;
       }
 
+      runs_w_fail += static_cast<unsigned int>(next_raw_audio_frames.size() == 0);
       for (std::size_t i = 0; i < next_raw_audio_frames.size(); i++) {
+        runs_w_fail = 0;
         AVFrame* frame = audio_resampler.resample_audio_frame(next_raw_audio_frames[i]);
         while (!this->audio_buffer->try_write_into(frame->nb_samples, (float*)(frame->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
           if (this->should_exit()) break;
         }
         av_frame_free(&frame);
       }
+
       clear_avframe_list(next_raw_audio_frames);
+
+      if (runs_w_fail >= MAX_RUNS_W_FAIL) {
+        runs_w_fail = 0;
+        std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
+        if (!this->should_exit()) {
+          this->exit_cond.wait_for(exit_lock, MAX_RUNS_WAIT_TIME);
+        }
+      }
     }
   } catch (std::exception const& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
