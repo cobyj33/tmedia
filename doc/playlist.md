@@ -33,6 +33,8 @@ sake of robustness:
     playlist is kicked out of the REPEAT-ONE looping state and put into the
     REPEAT looping state.  
 
+> **ASIDE**:
+>
 > Perhaps 'NO-LOOP' should be NO-REPEAT? Or maybe 'REPEAT' and 'REPEAT-ONE'
 > should be 'LOOP' and 'LOOP-ONE'? I'm not so sure, but there's definitely a
 > lack of consistency huh? I'm leaning toward the 'LOOP' and 'LOOP-ONE' side to

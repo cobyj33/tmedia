@@ -1,17 +1,20 @@
 # Is NCurses required?
 
+No, any general curses implementation should work to compile tmedia.
 I have made sure that no specific ncurses functionality is used anywhere within
 the code for tmedia at all, so that building with other curses implementations
 such as [PDCurses](https://github.com/wmcbrine/PDCurses) should be extremely
 trivial, as in you just point to the installation of another curses
-implementation with the cmake flag:
+implementation with the cmake flag
+[CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/latest/envvar/CMAKE_PREFIX_PATH.html):
 
 ```bash
 -DCMAKE_PREFIX_PATH=/path/to/curses/implementation
 ```
 
 The linked-to version of the curses library will be printed out in cmake's
-output when configuring the library.
+output when configuring the library, and can be found with
+```tmedia --curses-version``` from the command line.
 
 This is done with the hope that tmedia could one day run natively on a Windows
 machine, as running through a virtual layer like WSL or VirtualBox comes with
@@ -50,4 +53,4 @@ more than a few reasons to choose ncurses over other libraries.
 
 TLDR: tmedia is quite simple ui wise, I didn't want to make an entire app that
 would be difficult to maintain and reason about, and also difficult to make
-fast.
+fast as a result.

@@ -8,17 +8,32 @@ option works compared to the help text described by the top-level
 ## CLI Argument Format
 
 You can think of paths listed on the command line as having 'attributes' that
-are affected by the options listed. 
+are affected by the options listed. These attributes affect how a path is
+handled by tmedia, such as whether image files are processed or whether a
+directory is recursed for media files. This allows varying
+behavior of specific paths to be expressed on the command line.
+
+### Local Options
 
 Options that begin with the ```:``` character only apply to the previously
 listed path on the command line. These options are referred to as 'local' 
-options, as they are local to the previously listed path. Options that start
-with ```-``` or ```--``` are 'global' options and have effect over all paths on
+options, as they are local to the previously listed path. Additionally, options
+that start with ```-``` or ```--``` are 'global' options and have effect over
+all paths on
 the command line. If there is no previously mentioned path on the command line,
 'local' options have no effect. If a local option and its corresponding global
 option are both specified on the command line, such as ```:probe``` and
 ```--no-probe```, the local option will always take precedence
-over the global option. 
+over the global option.
+
+> **CLARIFICATION:**
+>
+> Note that a local option only has effect on the previous path, not all
+> preceding paths, so in 
+> ```tmedia ~/Music/song1.mp3 ~/Music/song2.mp3 :probe```
+> only ```~/Music/song2.mp3``` will be probed.
+
+#### !CAUTION: Local Options with Globbing
 
 Note that when reading files from
 [glob](https://en.wikipedia.org/wiki/Glob_(programming)) expressions, such as
@@ -28,8 +43,20 @@ itself expands the glob expression to all matching paths before tmedia is even
 called, so tmedia cannot tell whether filenames passed into tmedia are a result
 of a globbing expression or were listed explicitly on the command line.
 
+### Duplicate Files
+
 If a path is listed multiple times on the command line, it will simply be read
 multiple times by tmedia.
+
+> **CLARIFICATION:**
+>
+> A local option applies to a **path**, not a file. Therefore, if a file
+> is listed twice, such as
+> ```tmedia ~/Music/song1.mp3 ~/Music/song1.mp3 :probe```, the audio file
+> ```~/Music/song1.mp3``` is read in twice by tmedia and ```:probe``` is
+> only applied to the second path.
+
+### Path Searching
 
 Paths, unless specified by the options ```:probe``` and/or ```--probe```, are
 not opened to check if they are valid media files, but are instead assumed
@@ -37,13 +64,15 @@ to be a certain media type by the given file extension that they have. For
 example, ```image.jpeg``` would be assumed to be an image and ```dancing.mp4```
 would be assumed to be a video.
 
-> If a file is not what it claims to be, such as if a video file is not a video
-> file, it'll still be read as whatever it is upon playback. If it's not even
-> a media file, then it'll just be discarded from the playlist upon attempted
-> playbacj.
+> **CLARIFICATION:**
+> 
+> Concerning File Extensions and File Contents:
 >
-> This shouldn't actually happen ever with like 99.9% of people unless it
-> happens on purpose, but it is handled. 
+> If a file is not what its extension claims it to be, such as if a video file
+> is not a video file, it'll still be read as whatever it is upon playback.
+> If it's not even
+> a media file, then it'll just be discarded from the playlist upon attempted
+> playback.
 
 ## Positional arguments
 - paths
@@ -54,9 +83,19 @@ would be assumed to be a video.
     so any media files inside them will be played. Directories are traversed
     shallowly by default, a behavior which can be changed by the
     ```-r```, ```:r```, ```--recursive```, and ```:recursive``` flags detailed
-    under [File Searching](#file-searching).
+    under [File Searching](#file-searching). Directories are read in a 
+    breath-first search manner and file names within those directories are
+    sorted alphabetically while searching.
 
 ## Optional arguments
+
+Options are listed as their prefix and option name, followed by any aliases that
+they might have separated by commas.
+
+Aliases take exactly the same arguments
+and have exactly the same effects as their counterparts.
+
+
 
 ### Help and Versioning 
 
@@ -118,7 +157,9 @@ the Help and Versioning commands to work.
   for blacker characters and characters which are mostly whitespace as whiter
   characters. Whitespace itself could also be included in the string for 
   --chars.
-  - Note that listing characters inside a single-quoted string would be desired
+  - Note that listing characters inside a
+  [single-quoted string](https://www.gnu.org/software/bash/manual/bash.html#Single-Quotes)
+  would be desired
   for the parameter so that special characters like ```$``` and ```|```
   don't get interpreted by the shell before reaching tmedia.
 
@@ -134,7 +175,42 @@ the Help and Versioning commands to work.
   - Mute the audio output upon startup. This can be changed interactively
     during playback with the 'm' key.
 
-### Playlist Controls 
+### Stream Control Commands
+
+There's a common use case whenever a video file may want to be played
+with only its audio and no video playback or only its video with no audio
+playback. For controlling whether audio and video streams of a file are
+decoded and played/rendered, these options exist to toggle
+between whether certain streams are allowed to be decoded by tmedia.
+
+All options are
+enumerations of {--,:}{disable,enable}-{audio,video}-stream, listed explicitly
+below:
+
+- --enable-audio-stream (Default ON)
+- --enable-video-stream (Default ON)
+- --disable-audio-stream (Default OFF)
+- --disable-video-stream (Default OFF)
+- :enable-audio-stream
+- :enable-video-stream  
+- :disable-audio-stream 
+- :disable-video-stream 
+
+Local options (options preceded by ":")
+work exactly as described in the [Local Options](#local-options)
+section of this document.
+
+**Audio and Video streams are enabled by default.**
+
+> **NOTE:**
+>
+> Just because audio streams or video streams are "enabled" does not mean
+> that they must be found in given files. "Enabled" in this case rather
+> means that tmedia will **attempt** to decode the enabled stream. Think of
+> each media file as having an attribute which determines if its audio or
+> video stream will be attempted to be decoded.
+
+### Playlist Controls
 
 See [playlist.md](./playlist.md) for details about looping types, shuffling, 
 and the loaded media playlist in general. (Things work how you'd expect)
@@ -149,7 +225,6 @@ and the loaded media playlist in general. (Things work how you'd expect)
     that media file.
 - -s, --shuffle
   - Shuffle all inputted media files before first playback.
-
 
 ### File Searching
 > NOTE: all local (:) options override global options
@@ -198,11 +273,11 @@ command line multiple times.
 
 - :repeat-path [UINT]    Repeat the last given cli path argument n times
   - Repeatedly read the last given cli path n times. The given argument must
-    be an integer greater than 0. As an example, if 
-    ```:repeat-path 0``` is passed, then the last listed path is read once just
-    like the default behavior. If
+    be an integer greater than or equal to 0. As an example, if 
+    ```:repeat-path 0``` is passed, then the last listed
+    path is read once (default behavior). If
     ```:repeat-path 1``` is passed, then the last listed path is read twice.
-    This acts as a more readable option to listing a path multiple
+    This acts as a more readable and quicker option to listing a path multiple
     times explicitly.
   - ```:repeat-path``` and ```--repeat-paths``` do not stack. For example, if
     ```tmedia ~/Music/song.mp3 :repeat-path 2 ~/Videos/vid.mp4 --repeat-paths 3```

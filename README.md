@@ -88,7 +88,17 @@ Playlist Controls:
   --no-repeat            Do not repeat the playlist upon end
   --repeat, --loop       Repeat the playlist upon playlist end
   --repeat-one           Start the playlist looping the first media
-  -s, --shuffle          Shuffle the given playlist 
+  -s, --shuffle          Shuffle the given playlist \
+
+Stream Control Commands:
+  --enable-audio-stream  (Default) Enable playback of audio streams
+  --enable-video-stream  (Default) Enable playback of video streams
+  --disable-audio-stream  Disable playback of audio streams
+  --disable-video-stream  Disable playback of video streams
+  :enable-audio-stream    Enable playback of audio streams for last path
+  :enable-video-stream    Enable playback of video streams for last path
+  :disable-audio-stream   Disable playback of audio streams for last path
+  :disable-video-stream   Disable playback of video streams for last path
 
 File Searching: 
   NOTE: all local (:) options override global options
