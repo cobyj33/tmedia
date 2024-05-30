@@ -215,19 +215,23 @@ void MediaFetcher::frame_audio_fetching_func() {
     }
   }
 
-  static constexpr int AUDIO_PEEK_TRY_WAIT_MS = 100;
+  static constexpr std::chrono::milliseconds AUDIO_PEEK_TRY_WAIT_MS = 100ms;
   static constexpr int AUDIO_PEEK_MAX_SAMPLE_SIZE = 2048;
   float audbuf[AUDIO_PEEK_MAX_SAMPLE_SIZE];
 
   const int nb_ch = this->audio_buffer->get_nb_channels();
-  const int aubduf_sz = AUDIO_PEEK_MAX_SAMPLE_SIZE / nb_ch;
+  const int aubduf_nb_frames = AUDIO_PEEK_MAX_SAMPLE_SIZE / nb_ch;
   Dim2 visdim(MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
-  if (this->req_dims) {
-    visdim = bound_dims(
-    this->req_dims->width,
-    this->req_dims->height,
-    MAX_FRAME_WIDTH,
-    MAX_FRAME_HEIGHT);
+
+  {
+    std::scoped_lock<std::mutex> alter_lock(this->alter_mutex);
+    if (this->req_dims) {
+      visdim = bound_dims(
+        this->req_dims->width,
+        this->req_dims->height,
+        MAX_FRAME_WIDTH,
+        MAX_FRAME_HEIGHT);
+    }
   }
 
   /**
@@ -247,8 +251,8 @@ void MediaFetcher::frame_audio_fetching_func() {
     }
 
 
-    if (this->audio_buffer->try_peek_into(aubduf_sz, audbuf, AUDIO_PEEK_TRY_WAIT_MS)) {
-      PixelData frame = visualize(audbuf, aubduf_sz, nb_ch, visdim.width, visdim.height);
+    if (this->audio_buffer->try_peek_into(aubduf_nb_frames, audbuf, AUDIO_PEEK_TRY_WAIT_MS)) {
+      PixelData frame = visualize(audbuf, aubduf_nb_frames, nb_ch, visdim.width, visdim.height);
       std::scoped_lock<std::mutex> alter_lock(this->alter_mutex);
       this->frame = frame;
       if (this->req_dims) {

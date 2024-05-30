@@ -39,6 +39,8 @@ extern "C" {
   #include <miniaudio.h>
 }
 
+using namespace std::chrono_literals;
+
 static constexpr int KEY_ESCAPE = 27;
 static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
 static constexpr int MIN_RENDER_COLS = 2;
@@ -112,12 +114,14 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     // audio playback. Some audio data should be available by then hopefully
 
     if (fetcher->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-      static constexpr int AUDIO_BUFFER_TRY_READ_MS = 2;
+      static constexpr std::chrono::milliseconds AUDIO_BUFFER_TRY_READ_MS = 2ms;
       audio_output = std::make_unique<MAAudioOut>(fetcher->mdec->get_nb_channels(), fetcher->mdec->get_sample_rate(), [&fetcher] (float* float_buffer, int nb_frames) {
         const bool success = fetcher->audio_buffer->try_read_into(nb_frames, float_buffer, AUDIO_BUFFER_TRY_READ_MS);
-        if (!success)
-          for (int i = 0; i < nb_frames * fetcher->mdec->get_nb_channels(); i++)
+        if (!success) {
+          const int fb_sz = nb_frames * fetcher->mdec->get_nb_channels();
+          for (int i = 0; i < fb_sz; i++)
             float_buffer[i] = 0.0f;
+        }
       });
 
       audio_output->set_volume(tmps.volume);

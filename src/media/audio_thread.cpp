@@ -19,11 +19,13 @@ extern "C" {
 #include <libavutil/audio_fifo.h>
 }
 
+using namespace std::chrono_literals;
+
 void MediaFetcher::audio_dispatch_thread_func() {
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) return;
   
-  static constexpr int AUDIO_THREAD_PAUSED_SLEEP_MS = 25;
-  static constexpr int AUDIO_BUFFER_TRY_WRITE_WAIT_MS = 25;
+  static constexpr std::chrono::milliseconds AUDIO_THREAD_PAUSED_SLEEP_MS = 25ms;
+  static constexpr std::chrono::milliseconds AUDIO_BUFFER_TRY_WRITE_WAIT_MS = 25ms;
 
   try { // super try block :)
     std::array<bool, AVMEDIA_TYPE_NB> requested_streams;
@@ -68,7 +70,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
       if (!this->is_playing()) {
         std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
         while (!this->is_playing() && !this->should_exit()) {
-          this->resume_cond.wait_for(resume_notify_lock, std::chrono::milliseconds(AUDIO_THREAD_PAUSED_SLEEP_MS));
+          this->resume_cond.wait_for(resume_notify_lock, AUDIO_THREAD_PAUSED_SLEEP_MS);
         }
       }
 
