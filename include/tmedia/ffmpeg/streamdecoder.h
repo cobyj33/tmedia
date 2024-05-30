@@ -39,7 +39,7 @@ class StreamDecoder {
   public:
     StreamDecoder(AVFormatContext* fmt_ctx, enum AVMediaType media_type);
     void reset() noexcept;
-    std::vector<AVFrame*> decode_next();
+    void decode_next(std::vector<AVFrame*>& frame_buffer);
 
     TMEDIA_ALWAYS_INLINE inline double get_average_frame_rate_sec() const noexcept {
       return av_q2d(this->stream->avg_frame_rate);

@@ -65,6 +65,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
     static constexpr std::chrono::milliseconds MAX_RUNS_WAIT_TIME(25);
     static constexpr unsigned int MAX_RUNS_W_FAIL = 5;
     unsigned int runs_w_fail = 0;
+    std::vector<AVFrame*> next_raw_audio_frames;
 
     while (!this->should_exit()) {
       if (!this->is_playing()) {
@@ -74,12 +75,13 @@ void MediaFetcher::audio_dispatch_thread_func() {
         }
       }
 
-      std::vector<AVFrame*> next_raw_audio_frames;
       int msg_audio_jump_curr_time_cache = 0;
       double current_time = 0;
+      // next_raw_audio_frames is cleared already from botton of loop
 
       {
-        next_raw_audio_frames = adec.next_frames(AVMEDIA_TYPE_AUDIO);
+        clear_avframe_list(next_raw_audio_frames);
+        adec.next_frames(AVMEDIA_TYPE_AUDIO, next_raw_audio_frames);
         std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
         current_time = this->clock.get_time(sys_clk_sec());
         msg_audio_jump_curr_time_cache = this->msg_audio_jump_curr_time;
@@ -87,7 +89,8 @@ void MediaFetcher::audio_dispatch_thread_func() {
 
       if (msg_audio_jump_curr_time_cache > 0) {
         adec.jump_to_time(current_time);
-        next_raw_audio_frames = adec.next_frames(AVMEDIA_TYPE_AUDIO);
+        clear_avframe_list(next_raw_audio_frames);
+        adec.next_frames(AVMEDIA_TYPE_AUDIO, next_raw_audio_frames);
         // clear audio buffer **after** expensive time jumping functions and
         // decoding functions
         this->audio_buffer->clear(current_time);
@@ -106,7 +109,6 @@ void MediaFetcher::audio_dispatch_thread_func() {
       }
 
       clear_avframe_list(next_raw_audio_frames);
-
       if (runs_w_fail >= MAX_RUNS_W_FAIL) {
         runs_w_fail = 0;
         std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
@@ -119,5 +121,6 @@ void MediaFetcher::audio_dispatch_thread_func() {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
     this->dispatch_exit(err.what());
   }
+
 }
 

@@ -37,7 +37,7 @@ class MediaDecoder {
 
     MediaDecoder(const std::filesystem::path& file_path, const std::array<bool, AVMEDIA_TYPE_NB>& requested_streams);
 
-    std::vector<AVFrame*> next_frames(enum AVMediaType media_type); // Not Thread-Safe
+    void next_frames(enum AVMediaType media_type, std::vector<AVFrame*>& frame_buffer); // Not Thread-Safe
     int jump_to_time(double target_time); // Not Thread-Safe
     
     TMEDIA_ALWAYS_INLINE inline double get_duration() const noexcept {

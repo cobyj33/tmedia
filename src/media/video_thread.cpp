@@ -101,6 +101,7 @@ void MediaFetcher::frame_video_fetching_func() {
   const double avg_fts = vdec.get_avgfts(AVMEDIA_TYPE_VIDEO);
   VideoConverter vconv(def_outdim.width, def_outdim.height, AV_PIX_FMT_RGB24,
   vdec.get_width(), vdec.get_height(), vdec.get_pix_fmt());
+  std::vector<AVFrame*> dec_frames;
 
   while (!this->should_exit()) {
     if (!this->is_playing()) {
@@ -128,11 +129,12 @@ void MediaFetcher::frame_video_fetching_func() {
     }
     
     double wait_duration = avg_fts;
-    std::vector<AVFrame*> dec_frames;
     double current_time = 0.0;
     int msg_video_jump_curr_time_cache = 0;
+
     {
-      dec_frames = vdec.next_frames(AVMEDIA_TYPE_VIDEO);
+      clear_avframe_list(dec_frames);
+      vdec.next_frames(AVMEDIA_TYPE_VIDEO, dec_frames);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       current_time = this->get_time(sys_clk_sec());
       msg_video_jump_curr_time_cache = this->msg_video_jump_curr_time;
@@ -140,7 +142,8 @@ void MediaFetcher::frame_video_fetching_func() {
 
     if (msg_video_jump_curr_time_cache > 0) {
       vdec.jump_to_time(current_time);
-      dec_frames = vdec.next_frames(AVMEDIA_TYPE_VIDEO);
+      clear_avframe_list(dec_frames);
+      vdec.next_frames(AVMEDIA_TYPE_VIDEO, dec_frames);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       this->msg_video_jump_curr_time--;
     }
@@ -192,7 +195,8 @@ void MediaFetcher::frame_image_fetching_func() {
   vdec.get_height(),
   vdec.get_pix_fmt());
 
-  std::vector<AVFrame*> dec_frames = vdec.next_frames(AVMEDIA_TYPE_VIDEO);
+  std::vector<AVFrame*> dec_frames;
+  vdec.next_frames(AVMEDIA_TYPE_VIDEO, dec_frames);
   if (dec_frames.size() > 0) {
     AVFrame* frame_image = vconv.convert_video_frame(dec_frames[0]);
     PixelData frame_pixel_data = PixelData(frame_image);

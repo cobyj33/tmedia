@@ -48,7 +48,7 @@ void clear_avframe_list(std::vector<AVFrame*>& frame_list);
  * 
  * The caller is responsible for handling the returned AVFrame* allocated objects
 */
-std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet);
+void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet, std::vector<AVFrame*>& frame_buffer);
 
 /**
  * Decode a single audio packet given an AVCodecContext
@@ -64,7 +64,7 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
  * 
  * The caller is responsible for handling the returned AVFrame* allocated objects
 */
-std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet);
+void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet, std::vector<AVFrame*>& frame_buffer);
 
 /**
  * Reads packets from the given packet_queue until there is a successful
@@ -82,6 +82,6 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
  * 
  * The caller is responsible for handling the returned AVFrame* allocated objects
 */
-std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::deque<AVPacket*>& packet_queue, enum AVMediaType packet_type);
+void decode_packet_queue(AVCodecContext* codec_context, std::deque<AVPacket*>& packet_queue, enum AVMediaType packet_type, std::vector<AVFrame*>& frame_buffer);
 
 #endif

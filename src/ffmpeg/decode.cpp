@@ -24,8 +24,7 @@ void clear_avframe_list(std::vector<AVFrame*>& frame_list) {
 }
 
 
-std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet) {
-  std::vector<AVFrame*> video_frames;
+void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet, std::vector<AVFrame*>& frame_buffer) {
   int result;
 
   result = avcodec_send_packet(video_codec_context, video_packet);
@@ -43,10 +42,10 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
   while (result == 0) {
     result = avcodec_receive_frame(video_codec_context, video_frame);
     if (result < 0) {
-      if (result == AVERROR(EAGAIN) && !video_frames.empty()) break;
+      if (result == AVERROR(EAGAIN) && !frame_buffer.empty()) break;
 
       av_frame_free(&video_frame);
-      clear_avframe_list(video_frames);
+      clear_avframe_list(frame_buffer);
       throw ffmpeg_error(fmt::format("[{}] error while receiving video "
       "frames during decoding: ", FUNCDINFO), result);
     }
@@ -54,7 +53,7 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
     AVFrame* saved_frame = av_frame_alloc();
     if (unlikely(saved_frame == nullptr)) {
       av_frame_free(&video_frame);
-      clear_avframe_list(video_frames);
+      clear_avframe_list(frame_buffer);
       throw ffmpeg_error("[decode_video_packet] Could not allocate saved_frame, no memory", AVERROR(ENOMEM));
     }
 
@@ -62,24 +61,22 @@ std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, A
     if (unlikely(result < 0)) {
       av_frame_free(&saved_frame);
       av_frame_free(&video_frame);
-      clear_avframe_list(video_frames);
+      clear_avframe_list(frame_buffer);
       throw ffmpeg_error(fmt::format("[{}] error while referencing video "
       "frames during decoding: ", FUNCDINFO), result);
     }
 
     av_frame_unref(video_frame);
-    video_frames.push_back(saved_frame);
+    frame_buffer.push_back(saved_frame);
   }
   
   av_frame_free(&video_frame);
-  return video_frames;
 }
 
 
 
 
-std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet) {
-  std::vector<AVFrame*> audio_frames;
+void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet, std::vector<AVFrame*>& frame_buffer) {
   int result;
 
   result = avcodec_send_packet(audio_codec_context, audio_packet);
@@ -97,10 +94,10 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
   while (result == 0) {
     result = avcodec_receive_frame(audio_codec_context, audio_frame);
     if (result < 0) {
-      if (result == AVERROR(EAGAIN) && !audio_frames.empty()) break;
+      if (result == AVERROR(EAGAIN) && !frame_buffer.empty()) break;
 
       av_frame_free(&audio_frame);
-      clear_avframe_list(audio_frames);
+      clear_avframe_list(frame_buffer);
       throw ffmpeg_error(fmt::format("[{}] error while receiving audio "
       "frames during decoding: ", FUNCDINFO), result);
     }
@@ -108,14 +105,14 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
     AVFrame* saved_frame = av_frame_alloc();
     if (unlikely(saved_frame == nullptr)) {
       av_frame_free(&audio_frame);
-      clear_avframe_list(audio_frames);
+      clear_avframe_list(frame_buffer);
       throw ffmpeg_error("[decode_audio_packet] Could not allocate "
       "saved_frame, no memory", AVERROR(ENOMEM));
     } 
 
     result = av_frame_ref(saved_frame, audio_frame); 
     if (unlikely(result < 0)) {
-      clear_avframe_list(audio_frames);
+      clear_avframe_list(frame_buffer);
       av_frame_free(&saved_frame);
       av_frame_free(&audio_frame);
       throw ffmpeg_error(fmt::format("[{}] error while referencing audio "
@@ -123,14 +120,13 @@ std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, A
     }
 
     av_frame_unref(audio_frame);
-    audio_frames.push_back(saved_frame);
+    frame_buffer.push_back(saved_frame);
   }
 
   av_frame_free(&audio_frame);
-  return audio_frames;
 }
 
-std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::deque<AVPacket*>& packet_queue, enum AVMediaType packet_type) {
+void decode_packet_queue(AVCodecContext* codec_context, std::deque<AVPacket*>& packet_queue, enum AVMediaType packet_type, std::vector<AVFrame*>& frame_buffer) {
   while (!packet_queue.empty()) {
     AVPacket* packet = packet_queue.front();
     packet_queue.pop_front();
@@ -138,14 +134,14 @@ std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::de
     try {
       switch (packet_type) {
         case AVMEDIA_TYPE_AUDIO: {
-          std::vector<AVFrame*> dec_frames = decode_audio_packet(codec_context, packet);
+          decode_audio_packet(codec_context, packet, frame_buffer);
           av_packet_free(&packet);
-          return dec_frames;
+          return;
         } break;
         case AVMEDIA_TYPE_VIDEO: {
-          std::vector<AVFrame*> dec_frames = decode_video_packet(codec_context, packet);
+          decode_video_packet(codec_context, packet, frame_buffer);
           av_packet_free(&packet);
-          return dec_frames;
+          return;
         } break;
         default: throw std::runtime_error(fmt::format("[{}] Could not decode "
           "packet queue of unimplemented AVMediaType {}.",
@@ -160,6 +156,4 @@ std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::de
     
     av_packet_free(&packet);
   }
-
-  return {};
 }

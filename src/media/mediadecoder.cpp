@@ -49,22 +49,25 @@ MediaDecoder::~MediaDecoder() {
   avformat_close_input(&(this->fmt_ctx));
 }
 
-std::vector<AVFrame*> MediaDecoder::next_frames(enum AVMediaType media_type) {
+void MediaDecoder::next_frames(enum AVMediaType media_type, std::vector<AVFrame*>& frame_buffer) { // Not Thread-Safe
   assert(this->has_stream_decoder(media_type));
-  constexpr int NO_FETCH_MADE = -1;
+  static constexpr int NO_FETCH_MADE = -1;
 
   StreamDecoder& stream_decoder = *(this->decs[media_type]);
   int fetch_count = NO_FETCH_MADE; 
 
   do {
     fetch_count = !stream_decoder.has_packets() ? this->fetch_next(10) : NO_FETCH_MADE;
-    std::vector<AVFrame*> dec_frames = stream_decoder.decode_next();
-    if (dec_frames.size() > 0)
-      return dec_frames;
-    // no need to clear dec_frames, if the size of decoded frames is greater than 0, would have already returned
+    stream_decoder.decode_next(frame_buffer);
+
+    if (frame_buffer.size() > 0)
+      return;
+    // no need to clear dec_frames, if the size of decoded frames is greater
+    // than 0, would have already returned
   } while (fetch_count > 0 || fetch_count == NO_FETCH_MADE);
 
-  return {}; // no video frames could sadly be found. This should only really ever happen once the file ends
+  // If this line is reached, no video frames could be found.
+  // This should only really ever happen once the file ends
 }
 
 int MediaDecoder::fetch_next(int requested_packet_count) {
@@ -122,15 +125,17 @@ int MediaDecoder::jump_to_time(double target_time) {
     dec->reset();
   }
 
+  std::vector<AVFrame*> frames;
+
   for (int i = 0; i < AVMEDIA_TYPE_NB; i++) {
     std::unique_ptr<StreamDecoder>& dec = this->decs[i];
     if (!dec) continue;
-    std::vector<AVFrame*> frames;
+
     bool passed_target_time = false;
 
     do {
       clear_avframe_list(frames);
-      frames = this->next_frames((enum AVMediaType)i);
+      this->next_frames(static_cast<enum AVMediaType>(i), frames);
       for (std::size_t i = 0; i < frames.size(); i++) {
         if (frames[i]->pts * dec->get_time_base() >= target_time) {
           passed_target_time = true;
