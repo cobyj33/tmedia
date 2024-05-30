@@ -87,6 +87,8 @@ message("| Options: FIND_FMT: " ${FIND_FMT})
 message("| Options: FIND_CATCH2: " ${FIND_CATCH2})
 message("+--------------------------------------------------------------------")
 
+# Keep COMMON_SOURCE_FILES list in alphabetical order separated by
+# module
 set(COMMON_SOURCE_FILES 
 ${CMAKE_SOURCE_DIR}/src/audio/audio_visualizer.cpp
 ${CMAKE_SOURCE_DIR}/src/audio/audio.cpp
@@ -100,6 +102,7 @@ ${CMAKE_SOURCE_DIR}/src/cmdlpar/cmdlpar.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/audioresampler.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/boiler.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/decode.cpp
+${CMAKE_SOURCE_DIR}/src/ffmpeg/deleter.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/ffmpeg_error.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/probe.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/streamdecoder.cpp

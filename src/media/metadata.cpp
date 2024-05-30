@@ -40,9 +40,8 @@ std::string_view mchc_get(const std::string& file, const std::string& key, Metad
 
 
 Metadata get_file_metadata(const std::filesystem::path& path) {
-  AVFormatContext* fmt_ctx = open_format_context(path);
-  Metadata metadata = fmt_ctx_meta(fmt_ctx);
-  avformat_close_input(&fmt_ctx);
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_format_context(path);
+  Metadata metadata = fmt_ctx_meta(fmt_ctx.get());
   return metadata;
 }
 

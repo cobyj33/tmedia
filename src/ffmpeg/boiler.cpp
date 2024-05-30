@@ -25,40 +25,35 @@ extern "C" {
 #include <libavutil/avstring.h>
 }
 
-AVFormatContext* open_format_context(const std::filesystem::path& path) {
-  AVFormatContext* fmt_ctx = nullptr;
-  int result = avformat_open_input(&fmt_ctx, path.c_str(), nullptr, nullptr);
+std::unique_ptr<AVFormatContext, AVFormatContextDeleter> open_format_context(const std::filesystem::path& path) {
+  AVFormatContext* raw_fmt_ctx = nullptr;
+  int result = avformat_open_input(&raw_fmt_ctx, path.c_str(), nullptr, nullptr);
   if (result < 0) {
     throw ffmpeg_error(fmt::format("[{}] Failed to open format context input "
     "for {}", FUNCDINFO, path.string()), result);
   }
 
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx(raw_fmt_ctx);
+
   if (av_match_list(fmt_ctx->iformat->name, banned_iformat_names, ',')) {
-    std::string iformatname(fmt_ctx->iformat->name);
-    avformat_close_input(&fmt_ctx);
     throw std::runtime_error(fmt::format("[{}] Cannot open banned format type: "
-    "{}", FUNCDINFO, iformatname));
+    "{}", FUNCDINFO, fmt_ctx->iformat->name));
   }
 
-  result = avformat_find_stream_info(fmt_ctx, NULL);
+  result = avformat_find_stream_info(fmt_ctx.get(), NULL);
   if (result < 0) {
-    avformat_close_input(&fmt_ctx);
     throw ffmpeg_error(fmt::format("[{}] Failed to find stream info for {}.",
     FUNCDINFO, path.string()), result);
   }
 
-  if (fmt_ctx != nullptr) {
-    return fmt_ctx;
-  }
-
-  throw std::runtime_error(fmt::format("[{}] Failed to open format context "
-  "input, unknown error occured", FUNCDINFO));
+  // compiler gives a warning about copy elision. I'm pretty sure this
+  // is completely wrong, std::move is appropriate here
+  return std::move(fmt_ctx);
 }
 
 void dump_file_info(const std::filesystem::path& path) {
-  AVFormatContext* fmt_ctx = open_format_context(path);
-  dump_format_context(fmt_ctx);
-  avformat_close_input(&fmt_ctx);
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_format_context(path);
+  dump_format_context(fmt_ctx.get());
 }
 
 void dump_format_context(AVFormatContext* fmt_ctx) {
@@ -69,10 +64,9 @@ void dump_format_context(AVFormatContext* fmt_ctx) {
 }
 
 double get_file_duration(const std::filesystem::path& path) {
-  AVFormatContext* fmt_ctx = open_format_context(path);
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_format_context(path);
   int64_t duration = fmt_ctx->duration;
   double duration_seconds = (double)duration / AV_TIME_BASE;
-  avformat_close_input(&fmt_ctx);
   return duration_seconds;
 }
 

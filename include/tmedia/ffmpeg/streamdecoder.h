@@ -4,6 +4,9 @@
 #include <vector>
 #include <deque>
 #include <mutex>
+#include <memory>
+
+#include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/util/defines.h>
 
 extern "C" {
@@ -32,7 +35,7 @@ class StreamDecoder {
     enum AVMediaType media_type;
     AVStream* stream;
     const AVCodec* decoder;
-    AVCodecContext* codec_context;
+    std::unique_ptr<AVCodecContext, AVCodecContextDeleter> codec_context;
     std::deque<AVPacket*> packet_queue;
     std::mutex queue_mutex; // currently unused
 
@@ -66,7 +69,7 @@ class StreamDecoder {
     }
 
     TMEDIA_ALWAYS_INLINE inline AVCodecContext* get_codec_context() const noexcept {
-      return this->codec_context;
+      return this->codec_context.get();
     }
     
     TMEDIA_ALWAYS_INLINE inline bool has_packets() const {

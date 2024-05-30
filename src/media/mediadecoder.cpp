@@ -32,21 +32,16 @@ MediaDecoder::MediaDecoder(const std::filesystem::path& path, const std::array<b
     FUNCDINFO, path.c_str(), e.what()));
   }
    
-  this->media_type = media_type_from_avformat_context(this->fmt_ctx);
+  this->media_type = media_type_from_avformat_context(this->fmt_ctx.get());
 
   for (std::size_t i = 0; i < requested_streams.size(); i++) {
     if (requested_streams[i]) {
       try {
         enum AVMediaType stream_type = static_cast<enum AVMediaType>(i);
-        this->decs[stream_type] = std::make_unique<StreamDecoder>(fmt_ctx, stream_type);
+        this->decs[stream_type] = std::make_unique<StreamDecoder>(fmt_ctx.get(), stream_type);
       } catch (std::runtime_error const& e) { } // no-op
     }
   }
-
-}
-
-MediaDecoder::~MediaDecoder() {
-  avformat_close_input(&(this->fmt_ctx));
 }
 
 void MediaDecoder::next_frames(enum AVMediaType media_type, std::vector<AVFrame*>& frame_buffer) { // Not Thread-Safe
@@ -77,7 +72,7 @@ int MediaDecoder::fetch_next(int requested_packet_count) {
     throw ffmpeg_error(fmt::format("[{}] Failed to allocate AVPacket", FUNCDINFO), AVERROR(ENOMEM));
   }
 
-  while (av_read_frame(this->fmt_ctx, reading_packet) == 0) {
+  while (av_read_frame(this->fmt_ctx.get(), reading_packet) == 0) {
     for (auto &dec : this->decs) {
       if (!dec) continue;
       
@@ -113,7 +108,7 @@ int MediaDecoder::fetch_next(int requested_packet_count) {
 
 int MediaDecoder::jump_to_time(double target_time) {
   assert(target_time >= 0.0 && target_time <= this->get_duration());
-  int ret = avformat_seek_file(this->fmt_ctx, -1, 0.0,
+  int ret = avformat_seek_file(this->fmt_ctx.get(), -1, 0.0,
     target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
 
   if (ret < 0) {

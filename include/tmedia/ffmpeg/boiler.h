@@ -12,10 +12,12 @@
  */
 
 #include <tmedia/media/mediatype.h>
+#include <tmedia/ffmpeg/deleter.h>
 
 #include <string>
 #include <map>
 #include <optional>
+#include <memory>
 
 #include <filesystem>
 
@@ -35,7 +37,7 @@ extern "C" {
  * @param path The path of the file to open from the current working directory
  * @return An AVFormatContext pointer representing the opened media file
  */
-AVFormatContext* open_format_context(const std::filesystem::path& path);
+std::unique_ptr<AVFormatContext, AVFormatContextDeleter> open_format_context(const std::filesystem::path& path);
 
 /**
  * @brief Dump a media file's metadata into standard output.

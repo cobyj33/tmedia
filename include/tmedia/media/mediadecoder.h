@@ -27,7 +27,7 @@ extern "C" {
 */
 class MediaDecoder {
   private:
-    AVFormatContext* fmt_ctx;
+    std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx;
     std::array<std::unique_ptr<StreamDecoder>, AVMEDIA_TYPE_NB> decs;
     MediaType media_type;
 
@@ -114,8 +114,6 @@ class MediaDecoder {
     TMEDIA_ALWAYS_INLINE inline double get_avgfts(enum AVMediaType media_type) const {
       return this->decs[media_type]->get_avgfts();
     }    
-
-    ~MediaDecoder();
 };
 
 
