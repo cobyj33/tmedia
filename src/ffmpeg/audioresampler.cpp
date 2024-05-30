@@ -2,8 +2,10 @@
 
 #include <tmedia/ffmpeg/avguard.h>
 #include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/util/defines.h>
 
+#include <memory>
 #include <fmt/format.h>
 #include <stdexcept>
 
@@ -99,17 +101,13 @@ std::vector<AVFrame*> AudioResampler::resample_audio_frames(std::vector<AVFrame*
 
 AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
   int result;
-  AVFrame* resampled_frame = av_frame_alloc();
-  if (unlikely(resampled_frame == NULL)) {
-    throw std::runtime_error(fmt::format("[{}] Could not create AVFrame "
-    "audio frame for resampling", FUNCDINFO));
-  }
+  std::unique_ptr<AVFrame, AVFrameDeleter> resampled_frame(av_frame_allocx());
 
   resampled_frame->sample_rate = this->m_dst_sample_rate;
   resampled_frame->format = this->m_dst_sample_fmt;
   #if HAS_AVCHANNEL_LAYOUT
   result = av_channel_layout_copy(&resampled_frame->ch_layout, &this->m_dst_ch_layout);
-  if (result < 0) {
+  if (unlikely(result != 0)) {
     throw ffmpeg_error(fmt::format("[{}] Unable to copy destination audio "
     "channel layout", FUNCDINFO), result);
   }
@@ -122,25 +120,24 @@ AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
   resampled_frame->duration = original->duration;
   #endif
 
-  result = swr_convert_frame(this->m_context, resampled_frame, original);
+  result = swr_convert_frame(this->m_context, resampled_frame.get(), original);
 
-  // .wav files were having a weird glitch where swr_conver_frame returns AVERROR_INPUT_CHANGED
-  // on calling swr_convert_frame. This allows the SwrContext to "fix itself" (even though I think that's a bug)
+  // .wav files were having a weird glitch where swr_conver_frame returns
+  // AVERROR_INPUT_CHANGED on calling swr_convert_frame. This allows the
+  // SwrContext to "fix itself" (even though I think that's a bug)
   // whenever this happens.
   if (unlikely(result == AVERROR_INPUT_CHANGED)) {
-    result = swr_config_frame(this->m_context, resampled_frame, original);
+    result = swr_config_frame(this->m_context, resampled_frame.get(), original);
     if (result != 0) {
       throw ffmpeg_error(fmt::format("[{}] Unable to reconfigure "
       "resampling context", FUNCDINFO), result);
     }
-
-    result = swr_convert_frame(this->m_context, resampled_frame, original);
+    result = swr_convert_frame(this->m_context, resampled_frame.get(), original);
   }
 
-  if (result == 0) {
-    return resampled_frame;
+  if (result != 0) {
+    throw ffmpeg_error(fmt::format("[{}] Unable to resample audio frame", FUNCDINFO), result);
   }
 
-  av_frame_free(&resampled_frame);
-  throw ffmpeg_error(fmt::format("[{}] Unable to resample audio frame", FUNCDINFO), result);
+  return resampled_frame.release();
 }

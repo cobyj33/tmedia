@@ -67,42 +67,31 @@ void MediaDecoder::next_frames(enum AVMediaType media_type, std::vector<AVFrame*
 
 int MediaDecoder::fetch_next(int requested_packet_count) {
   int packets_read = 0;
-  AVPacket* reading_packet = av_packet_alloc();
-  if (unlikely(reading_packet == nullptr)) {
-    throw ffmpeg_error(fmt::format("[{}] Failed to allocate AVPacket", FUNCDINFO), AVERROR(ENOMEM));
-  }
+  std::unique_ptr<AVPacket, AVPacketDeleter> reading_packet(av_packet_allocx());
 
-  while (av_read_frame(this->fmt_ctx.get(), reading_packet) == 0) {
+  while (av_read_frame(this->fmt_ctx.get(), reading_packet.get()) == 0) {
     for (auto &dec : this->decs) {
       if (!dec) continue;
       
       if (dec->get_stream_index() == reading_packet->stream_index) {
-        AVPacket* saved_packet = av_packet_alloc();
-        if (unlikely(saved_packet == nullptr)) {
-          av_packet_free(&reading_packet);
-          throw ffmpeg_error(fmt::format("[{}] Failed to allocate "
-          "AVPacket", FUNCDINFO), AVERROR(ENOMEM));
-        }
+        std::unique_ptr<AVPacket, AVPacketDeleter> saved_packet(av_packet_allocx());
 
-        int res = av_packet_ref(saved_packet, reading_packet);
+        int res = av_packet_ref(saved_packet.get(), reading_packet.get());
         if (unlikely(res < 0)) {
-          av_packet_free(&reading_packet);
-          av_packet_free(&saved_packet);
           throw ffmpeg_error(fmt::format("[{}] Failed to reference "
           "frame from format context", FUNCDINFO), AVERROR(ENOMEM));
         }
         
-        dec->push_back(saved_packet);
+        dec->push_back(saved_packet.release());
         packets_read++;
         break;
       }
     }
 
-    av_packet_unref(reading_packet);
+    av_packet_unref(reading_packet.get());
     if (packets_read >= requested_packet_count) break;
   }
 
-  av_packet_free(&reading_packet);
   return packets_read;
 }
 

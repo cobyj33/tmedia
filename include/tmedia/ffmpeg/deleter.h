@@ -13,6 +13,9 @@ struct AVCodecContext;
  * Deleter FunctionObjects made to work with C++ STL smart pointers
 */
 
+AVPacket* av_packet_allocx();
+AVFrame* av_frame_allocx();
+
 class AVFormatContextDeleter {
   public:
     constexpr AVFormatContextDeleter() noexcept = default;

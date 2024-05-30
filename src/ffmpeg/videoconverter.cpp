@@ -1,10 +1,13 @@
 #include <tmedia/ffmpeg/videoconverter.h>
 
 #include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/ffmpeg/avguard.h>
 #include <tmedia/util/defines.h>
 
 #include <stdexcept>
+#include <memory>
+
 #include <fmt/format.h>
 
 extern "C" {
@@ -58,15 +61,18 @@ void VideoConverter::reset_dst_size(int dst_width, int dst_height) {
   if (dst_width == this->m_dst_width && dst_height == this->m_dst_height)
     return;
 
-  sws_freeContext(this->m_context);
-  this->m_context = sws_getContext(
+  SwsContext* new_context = sws_getContext(
       this->m_src_width, this->m_src_height, this->m_src_pix_fmt, 
       dst_width, dst_height, this->m_dst_pix_fmt, 
       SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
-  if (this->m_context == nullptr) {
+
+  if (new_context == nullptr) {
     throw std::runtime_error(fmt::format("[{}] Allocation of internal "
     "SwsContext of Video Converter failed", FUNCDINFO));
   }
+
+  sws_freeContext(this->m_context);
+  this->m_context = new_context;
 
   this->m_dst_width = dst_width;
   this->m_dst_height = dst_height;
@@ -77,11 +83,7 @@ VideoConverter::~VideoConverter() {
 }
 
 AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
-  AVFrame* resized_video_frame = av_frame_alloc();
-  if (unlikely(resized_video_frame == nullptr)) {
-    throw std::runtime_error(fmt::format("[{}] Could not allocate resized "
-    "frame for VideoConverter", FUNCDINFO));
-  }
+  AVFrame* resized_video_frame = av_frame_allocx();
 
   resized_video_frame->format = this->m_dst_pix_fmt;
   resized_video_frame->width = this->m_dst_width;
@@ -94,6 +96,7 @@ AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
   
   int err = av_frame_get_buffer(resized_video_frame, 1); //watch this alignment
   if (unlikely(err)) {
+    av_frame_free(&resized_video_frame);
     throw ffmpeg_error(fmt::format("[{}] Failure on "
     "allocating buffers for resized video frame", FUNCDINFO), err);
   }

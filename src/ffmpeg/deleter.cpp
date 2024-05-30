@@ -1,9 +1,25 @@
 #include <tmedia/ffmpeg/deleter.h>
 
+#include <tmedia/util/defines.h>
+
+#include <new>
+
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavutil/frame.h>
 #include <libavcodec/avcodec.h>
+}
+
+AVPacket* av_packet_allocx() {
+  AVPacket* packet = av_packet_alloc();
+  if (unlikely(packet == nullptr)) throw std::bad_alloc();
+  return packet;
+}
+
+AVFrame* av_frame_allocx() {
+  AVFrame* frame = av_frame_alloc();
+  if (unlikely(frame == nullptr)) throw std::bad_alloc();
+  return frame;
 }
 
 void AVFormatContextDeleter::operator()(AVFormatContext* ptr) const {

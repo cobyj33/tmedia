@@ -80,7 +80,7 @@ void StreamDecoder::decode_next(std::vector<AVFrame*>& frame_buffer) {
       return decode_packet_queue(this->codec_context.get(), this->packet_queue, this->media_type, frame_buffer);
     } catch (ffmpeg_error const& e) {
       decoding_error_thrown = true;
-    if (i >= ALLOWED_FAILURES) {
+      if (i >= ALLOWED_FAILURES) {
         throw std::runtime_error(fmt::format("[{}] Could not decode next {} "
         "packet: \n\t{}", FUNCDINFO, av_get_media_type_string(this->media_type),
          e.what()));

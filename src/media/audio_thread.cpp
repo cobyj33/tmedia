@@ -101,11 +101,10 @@ void MediaFetcher::audio_dispatch_thread_func() {
       runs_w_fail += static_cast<unsigned int>(next_raw_audio_frames.size() == 0);
       for (std::size_t i = 0; i < next_raw_audio_frames.size(); i++) {
         runs_w_fail = 0;
-        AVFrame* frame = audio_resampler.resample_audio_frame(next_raw_audio_frames[i]);
+        std::unique_ptr<AVFrame, AVFrameDeleter> frame(audio_resampler.resample_audio_frame(next_raw_audio_frames[i]));
         while (!this->audio_buffer->try_write_into(frame->nb_samples, (float*)(frame->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
           if (this->should_exit()) break;
         }
-        av_frame_free(&frame);
       }
 
       clear_avframe_list(next_raw_audio_frames);
