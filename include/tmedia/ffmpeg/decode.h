@@ -25,14 +25,15 @@ extern "C" {
 /**
  * Clears the AVFrame vector of all it's contents and frees all AVFrame's
  * contained within
- * 
- * @param frame_list 
- * @return void
  */
 void clear_avframe_list(std::vector<AVFrame*>& frame_list);
 
 /**
- * Decode a single video packet given an AVCodecContext
+ * Decode a single video packet given an AVCodecContext and places the values
+ * into frame_buffer vector
+ * 
+ * frame_buffer must be cleared to size 0 before it is passed into this
+ * function
  * 
  * throws ffmpeg_error if any error is detected while decoding the
  * given audio packet, including EAGAIN.
@@ -41,46 +42,54 @@ void clear_avframe_list(std::vector<AVFrame*>& frame_list);
  * this only means that the next video AVPacket must be inputted on the next
  * call to decode_video_packet.
  * 
- * Note that while a vector is returned, there should really only be one
+ * Note that while frame_buffer is filled, there should often only be one
  * AVFrame video packet returned if no error is thrown.
  * 
- * @returns a vector of the decoded video frames from the given video packet
- * 
- * The caller is responsible for handling the returned AVFrame* allocated objects
+ * The caller is responsible for handling the returned AVFrame* allocated
+ * objects, usually through clear_avframe_list
 */
 void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet, std::vector<AVFrame*>& frame_buffer);
 
 /**
- * Decode a single audio packet given an AVCodecContext
+ * Decode a single audio packet given an AVCodecContext and places the values
+ * into frame_buffer vector
+ * 
+ * frame_buffer must be cleared to size 0 before it is passed into this
+ * function
  * 
  * throws ffmpeg_error if any error is detected while decoding the
  * given audio packet, including EAGAIN.
  * 
  * Note that while EAGAIN may be thrown in an ffmpeg_error from this function,
- * this only means that the subsequent AVPacket must be inputted on the next
+ * this only means that the next audio AVPacket must be inputted on the next
  * call to decode_audio_packet.
  * 
- * @returns a vector of the decoded audio frames from the given audio packet
+ * Note that while frame_buffer is filled, there should often only be one
+ * AVFrame audio packet returned if no error is thrown.
  * 
- * The caller is responsible for handling the returned AVFrame* allocated objects
+ * The caller is responsible for handling the returned AVFrame* allocated
+ * objects, usually through clear_avframe_list
 */
 void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet, std::vector<AVFrame*>& frame_buffer);
 
 /**
  * Reads packets from the given packet_queue until there is a successful
- * decoding of frames of type packet_type
+ * decoding of frames of type packet_type, then place those frames
+ * into the buffer referenced by the frame_buffer parameter
+ * 
+ * frame_buffer must be cleared to size 0 before it is passed into this
+ * function
  * 
  * The packets in packet_queue must come from a stream of the type denoted
  * by the packet_type parameter.
  * 
  * Note that while decode_packet_queue can fail if there are unrecoverable
- * decoding errors, decode_packet_queue will just return an empty vector if 
- * the packet_queue is empty or the packet_queue runs out of packets without
- * yielding decoded frames
+ * decoding errors, decode_packet_queue will simply place no AVFrames into
+ * frame_buffer if  the packet_queue is empty or the packet_queue runs out of
+ * packets without yielding decoded frames
  * 
- * The frames returned from decode_packet_queue are of the type packet_type
- * 
- * The caller is responsible for handling the returned AVFrame* allocated objects
+ * The caller is responsible for handling the returned AVFrame* allocated
+ * objects, usually through clear_avframe_list
 */
 void decode_packet_queue(AVCodecContext* codec_context, std::deque<AVPacket*>& packet_queue, enum AVMediaType packet_type, std::vector<AVFrame*>& frame_buffer);
 
