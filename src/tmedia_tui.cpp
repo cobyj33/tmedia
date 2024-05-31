@@ -21,6 +21,7 @@ const char* loop_type_cstr_short(LoopType loop_type);
 std::string_view get_media_file_display_name(const std::filesystem::path& abs_path, MetadataCache& mchc);
 void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map);
 void render_bottom_bar(const TMediaProgramSnapshot& sshot, std::string_view playing_str, std::string_view loop_str, std::string_view volume_str, std::string_view shuffled_str);
+void render_current_filename(const TMediaProgramState& tmps, TMediaRendererState& tmrs);
 
 void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   if (sshot.frame.get_width() != tmrs.last_frame_dims.width ||
@@ -48,19 +49,12 @@ void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSn
 }
 
 void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
-  static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
   render_pixel_data(sshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
   tmrs.req_frame_dim = Dim2(COLS, LINES - 4);
 
-  wfill_box(stdscr, 1, 0, COLS, 1, '~');
-  werasebox(stdscr, 0, 0, COLS, 2);
-  std::array<std::string_view, 3> top_labels;
-  const std::string current_plist_file_display = fmt::format("({}/{})", tmps.plist.index() + 1, tmps.plist.size());
-  top_labels[0] = current_plist_file_display;
-  top_labels[1] = " ";
-  top_labels[2] = get_media_file_display_name(tmps.plist.current().path, tmrs.metadata_cache);
-  wprint_labels_middle(stdscr, top_labels.begin(), top_labels.size(), 0, CURRENT_FILE_NAME_MARGIN, COLS - CURRENT_FILE_NAME_MARGIN);
+  render_current_filename(tmps, tmrs);
 
+  wfill_box(stdscr, 1, 0, COLS, 1, '~');
   if (tmps.plist.size() > 1) {
     if (tmps.plist.can_move(PlaylistMvCmd::REWIND)) {
       tm_mvwaddstr_label(stdscr, TMLabelStyle(0, 0, COLS, TMAlign::LEFT, 0, 0), "<");
@@ -81,17 +75,10 @@ void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnaps
 }
 
 void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
-  static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
   render_pixel_data(sshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
   tmrs.req_frame_dim = Dim2(COLS, LINES - 4);
-  
-  werasebox(stdscr, 0, 0, COLS, 2);
-  std::array<std::string_view, 3> top_labels;
-  const std::string current_plist_file_display = fmt::format("({}/{})", tmps.plist.index() + 1, tmps.plist.size());
-  top_labels[0] = current_plist_file_display;
-  top_labels[1] = " ";
-  top_labels[2] = get_media_file_display_name(tmps.plist.current().path, tmrs.metadata_cache);
-  wprint_labels_middle(stdscr, top_labels.begin(), top_labels.size(), 0, 0, COLS);
+
+  render_current_filename(tmps, tmrs);
 
   if (tmps.plist.size() == 1) {
     wfill_box(stdscr, 1, 0, COLS, 1, '~');
@@ -127,15 +114,6 @@ void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapsho
     const std::string_view shuffled_str = tmps.plist.shuffled() ? "SHUFFLED" : "NOT SHUFFLED";
     render_bottom_bar(sshot, playing_str, shuffled_str, loop_str, volume_str);
   }
-}
-
-const char* loop_type_cstr_short(LoopType loop_type) {
-  switch (loop_type) {
-    case LoopType::NO_LOOP: return "NL";
-    case LoopType::REPEAT: return "R";
-    case LoopType::REPEAT_ONE: return "RO";
-  }
-  return "UNK";
 }
 
 std::string_view get_media_file_display_name(const std::filesystem::path& abs_path, MetadataCache& mchc) {
@@ -194,4 +172,24 @@ void render_bottom_bar(const TMediaProgramSnapshot& sshot, std::string_view play
 
   werasebox(stdscr, LINES - 1, 0, COLS, 1);
   wprint_labels(stdscr, bottom_labels.data(), nb_labels, LINES - 1, 0, COLS);
+}
+
+void render_current_filename(const TMediaProgramState& tmps, TMediaRendererState& tmrs) {
+  static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
+  werasebox(stdscr, 0, 0, COLS, 2);
+  std::array<std::string_view, 3> top_labels;
+  const std::string current_plist_file_display = fmt::format("({}/{})", tmps.plist.index() + 1, tmps.plist.size());
+  top_labels[0] = current_plist_file_display;
+  top_labels[1] = " ";
+  top_labels[2] = get_media_file_display_name(tmps.plist.current().path, tmrs.metadata_cache);
+  wprint_labels_middle(stdscr, top_labels.begin(), top_labels.size(), 0, CURRENT_FILE_NAME_MARGIN, COLS - (CURRENT_FILE_NAME_MARGIN * 2));
+}
+
+const char* loop_type_cstr_short(LoopType loop_type) {
+  switch (loop_type) {
+    case LoopType::NO_LOOP: return "NL";
+    case LoopType::REPEAT: return "R";
+    case LoopType::REPEAT_ONE: return "RO";
+  }
+  return "UNK";
 }
