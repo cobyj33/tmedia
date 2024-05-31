@@ -56,26 +56,26 @@ class AudioResampler {
     TMEDIA_ALWAYS_INLINE inline int get_dst_sample_fmt() { return this->m_dst_sample_fmt; } 
 
     /**
-     * @brief Resample an audio frame according to the initialized AudioResampler's parameters
+     * Resample an audio frame according to the initialized AudioResampler's
+     * parameters and place the result into the AVFrame pointed to by dest.
      * 
-     * @note The original audio frame is left unaltered.
-     * @note Don't forget to free any the original and returned frame after usage by using av_frame_free or another function that frees the data
+     * dest must have been allocated by av_frame_alloc already or a function
+     * which calls av_frame_alloc. dest's buffers will be unreferenced by
+     * av_frame_unref() whenever resample_audio_frame is called. The source
+     * AVFrame is left unaltered. The caller is responsible for freeing dest,
+     * just as it was responsible for allocating dest.
      * 
-     * @param originals The source frame to resample. This source frame is REQUIRED to have the same source channel layout, source sample format, and source sample rate as given to the AudioResampler upon construction
-     * @return AVFrame* The resampled frame. This frame WILL have the same destination channel layout, destination sample format, and destination sample rate as given to the AudioResampler upon construction
+     * The src AVFrame is REQUIRED to have the same source channel layout,
+     * source sample format, and source sample rate as given
+     * to the AudioResampler upon construction. Otherwise, resample_audio_frame
+     * will fail and throw an error.
+     * 
+     * After calling resample_audio_frame and upon success, dest have the same
+     * destination channel layout, destination sample format,
+     * and destination sample rate as given to the AudioResampler
+     * upon construction
      */
-    AVFrame* resample_audio_frame(AVFrame* original);
-
-    /**
-     * @brief Resample a vector of audio AVFrames and return a new set of resampled frames
-     * 
-     * @note The original list of audio frames is left unaltered.
-     * @note Don't forget to free any original or returned frames after resampling and finished
-     * 
-     * @param originals The AVFrames to resample
-     * @return std::vector<AVFrame*> The resampled frames
-     */
-    std::vector<AVFrame*> resample_audio_frames(std::vector<AVFrame*>& originals);
+    void resample_audio_frame(AVFrame* dest, AVFrame* src);
 
     ~AudioResampler();
 };
