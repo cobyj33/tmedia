@@ -6,6 +6,7 @@
 #include <tmedia/util/formatting.h>
 #include <tmedia/tmcurses/tmcurses.h>
 #include <tmedia/util/defines.h>
+#include <tmedia/util/wmath.h>
 
 #include <fmt/format.h>
 
@@ -13,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <cassert>
 
 extern "C" {
   #include <curses.h>
@@ -94,13 +96,41 @@ void render_pixel_data_color(const PixelData& pixel_data, int bounds_row, int bo
   }
 }
 
-void wprint_labels(WINDOW* window, std::vector<std::string_view>& labels, int y, int x, int width) {
+void wprint_labels(WINDOW* window, std::string_view* labels, std::size_t nb_labels, int y, int x, int width) {
   if (width <= 0)
     return;
 
-  int section_size = width / labels.size();
-  for (std::size_t i = 0; i < labels.size(); i++) {
+  int section_size = width / nb_labels;
+  for (std::size_t i = 0; i < nb_labels; i++) {
     TMLabelStyle label_style(y, x + section_size * static_cast<int>(i), section_size, TMAlign::CENTER, 0, 0);
     tm_mvwaddstr_label(window, label_style, labels[i]);
+  }
+}
+
+void wprint_labels_middle(WINDOW* window, std::string_view* labels, std::size_t nb_labels, int req_y, int req_x, int req_width) {
+  if (req_width <= 0) return;
+
+  int labels_len = 0;
+  for (std::size_t i = 0; i < nb_labels; i++) {
+    labels_len += static_cast<int>(labels[i].length());
+  }
+
+  const int real_len = std::min(req_width, labels_len);
+  if (real_len <= 0) return;
+
+
+  // center is defined as the center provided by the user
+  const int req_center = req_x + (req_width / 2);
+  const int real_y = clamp(req_y, 0, LINES - 1);
+
+  const int start_x = clamp(req_center - (real_len / 2), 0, COLS - 1);
+  const int end_x = clamp(start_x + real_len, 0, COLS - 1);
+
+  int walk_x = start_x;
+  for (std::size_t i = 0; i < nb_labels && walk_x <= end_x; i++) {
+    const int width_remaining = end_x - walk_x;
+    TMLabelStyle label_style(real_y, walk_x, width_remaining, TMAlign::LEFT, 0, 0);
+    tm_mvwaddstr_label(window, label_style, labels[i]);
+    walk_x += static_cast<int>(labels[i].length());
   }
 }
