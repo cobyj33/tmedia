@@ -65,7 +65,7 @@ struct TMediaProgramState {
 
 
 struct TMediaProgramSnapshot {
-  PixelData frame;
+  PixelData* frame;
   MediaType media_type;
   bool playing;
   double media_duration_secs;

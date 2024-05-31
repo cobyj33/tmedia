@@ -130,9 +130,9 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     
 
     try {
+      PixelData frame;
       // main playing loop
       while (!fetcher->should_exit() && !INTERRUPT_RECEIVED) { // never break without using dispatch_exit on fetcher to false
-        PixelData frame;
         double curr_systime, req_jumptime, curr_medtime;
 
         // req_jump and req_jumptime are different, because when jumping to the
@@ -335,7 +335,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         }
 
         TMediaProgramSnapshot snapshot;
-        snapshot.frame = frame;
+        snapshot.frame = &frame;
         snapshot.playing = fetcher->is_playing();
         snapshot.has_audio_output = audio_output ? true : false;
         snapshot.media_time_secs = curr_medtime;

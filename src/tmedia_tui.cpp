@@ -9,6 +9,7 @@
 #include <array>
 #include <stdexcept>
 #include <fmt/format.h>
+#include <cassert>
 
 extern "C" {
   #include <curses.h>
@@ -24,8 +25,9 @@ void render_bottom_bar(const TMediaProgramSnapshot& sshot, std::string_view play
 void render_current_filename(const TMediaProgramState& tmps, TMediaRendererState& tmrs);
 
 void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
-  if (sshot.frame.get_width() != tmrs.last_frame_dims.width ||
-      sshot.frame.get_height() != tmrs.last_frame_dims.height) {
+  assert(sshot.frame != nullptr);
+  if (sshot.frame->get_width() != tmrs.last_frame_dims.width ||
+      sshot.frame->get_height() != tmrs.last_frame_dims.height) {
     erase();
   }
 
@@ -39,17 +41,19 @@ void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& ssh
     render_tui_large(tmps, sshot, tmrs);
   }
 
-  tmrs.last_frame_dims = Dim2(sshot.frame.get_width(), sshot.frame.get_height());
+  tmrs.last_frame_dims = Dim2(sshot.frame->get_width(), sshot.frame->get_height());
 }
 
 void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
-  render_pixel_data(sshot.frame, 0, 0, COLS, LINES, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+  assert(sshot.frame != nullptr);
+  render_pixel_data(*(sshot.frame), 0, 0, COLS, LINES, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
   tmrs.req_frame_dim = Dim2(COLS, LINES);
   (void)tmrs;
 }
 
 void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
-  render_pixel_data(sshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+  assert(sshot.frame != nullptr);
+  render_pixel_data(*(sshot.frame), 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
   tmrs.req_frame_dim = Dim2(COLS, LINES - 4);
 
   render_current_filename(tmps, tmrs);
@@ -75,7 +79,8 @@ void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnaps
 }
 
 void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
-  render_pixel_data(sshot.frame, 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+  assert(sshot.frame != nullptr);
+  render_pixel_data(*(sshot.frame), 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
   tmrs.req_frame_dim = Dim2(COLS, LINES - 4);
 
   render_current_filename(tmps, tmrs);
