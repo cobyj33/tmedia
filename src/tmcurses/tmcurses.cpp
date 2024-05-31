@@ -148,7 +148,7 @@ void tmcurses_set_color_palette_custom(const Palette& colorPalette) {
 
 
 
-curses_color_t get_closest_tmcurses_color(const RGB24& input) {
+curses_color_t get_closest_tmcurses_color(RGB24 input) {
   if (!curses_colors_initialized) return 0; // just return a default 0 to no-op
 
   /*
@@ -183,7 +183,7 @@ curses_color_t get_closest_tmcurses_color(const RGB24& input) {
                   [static_cast<int>(input.b) * COLOR_MAP_SIDE_NB_CELLS / 256];
 }
 
-curses_color_pair_t get_closest_tmcurses_color_pair(const RGB24& input) {
+curses_color_pair_t get_closest_tmcurses_color_pair(RGB24 input) {
   if (!curses_colors_initialized) return 0; // just return a default 0 to no-op
 
   return color_pairs_map[static_cast<int>(input.r) * COLOR_MAP_SIDE_NB_CELLS / 256]
@@ -299,7 +299,7 @@ void tmcurses_init_color_maps() {
   }
 }
 
-curses_color_t tmcurses_find_best_initialized_color_number(const RGB24& input) {
+curses_color_t tmcurses_find_best_initialized_color_number(RGB24 input) {
   curses_color_t best_color_index = -1;
   double best_distance = DBL_MAX;
   for (int i = 0; i < available_color_palette_colors; i++) {
@@ -315,7 +315,7 @@ curses_color_t tmcurses_find_best_initialized_color_number(const RGB24& input) {
   return best_color_index;
 }
 
-curses_color_pair_t tmcurses_find_best_initialized_color_pair(const RGB24& input) {
+curses_color_pair_t tmcurses_find_best_initialized_color_pair(RGB24 input) {
   curses_color_pair_t best_pair_index = -1;
   double best_distance = DBL_MAX;
   for (int i = 0; i < available_color_palette_color_pairs; i++) {

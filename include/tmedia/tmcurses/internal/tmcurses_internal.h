@@ -45,7 +45,7 @@ int tmcurses_init_grayscale_color_palette();
 void tmcurses_init_color_pairs();
 void tmcurses_init_color_maps();
 
-curses_color_t tmcurses_find_best_initialized_color_number(const RGB24&);
-curses_color_pair_t tmcurses_find_best_initialized_color_pair(const RGB24&);
+curses_color_t tmcurses_find_best_initialized_color_number(RGB24);
+curses_color_pair_t tmcurses_find_best_initialized_color_pair(RGB24);
 
 #endif

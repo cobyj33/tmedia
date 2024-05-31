@@ -131,12 +131,12 @@ void tmcurses_set_color_palette_custom(const Palette&);
  * Color pairs are used to apply attributes to printed terminal colors
  * @returns The closest registered ncurses color pair attribute index
  */
-curses_color_pair_t get_closest_tmcurses_color_pair(const RGB24& input);
+curses_color_pair_t get_closest_tmcurses_color_pair(RGB24 input);
 
 /**
  * @brief Find the closest registered ncurses color integer to the inputted RGB24.
  * @returns The closest registered ncurses color pair attribute index
  */
-curses_color_t get_closest_tmcurses_color(const RGB24& input);
+curses_color_t get_closest_tmcurses_color(RGB24 input);
 
 #endif

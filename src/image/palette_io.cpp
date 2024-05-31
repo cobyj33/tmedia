@@ -75,7 +75,6 @@ Palette read_gimp_gpl_palette(std::istream& stream) {
     if (line[0] == '#') continue; // commented lines
     if (!std::isdigit(line[0])) continue; // something else line
 
-    RGB24 color;
     int r = 0;
     int g = 0;
     int b = 0;
