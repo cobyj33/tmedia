@@ -109,7 +109,6 @@ ${CMAKE_SOURCE_DIR}/src/ffmpeg/streamdecoder.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/videoconverter.cpp
 
 ${CMAKE_SOURCE_DIR}/src/image/ascii.cpp
-${CMAKE_SOURCE_DIR}/src/image/canvas.cpp
 ${CMAKE_SOURCE_DIR}/src/image/color.cpp
 ${CMAKE_SOURCE_DIR}/src/image/palette.cpp
 ${CMAKE_SOURCE_DIR}/src/image/palette_io.cpp
@@ -144,7 +143,6 @@ ${CMAKE_SOURCE_DIR}/src/tests/test_color.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_cmdlpar.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_formatting.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_mediaclock.cpp
-${CMAKE_SOURCE_DIR}/src/tests/test_pixeldata.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_scale.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_unitconvert.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_palette_io_gpl.cpp

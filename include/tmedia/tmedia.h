@@ -7,7 +7,7 @@
 #include <tmedia/media/metadata.h> // for MetadataCache
 #include <tmedia/image/scale.h> // for Dim2
 #include <tmedia/ffmpeg/boiler.h> // for MediaType
-#include <tmedia/image/pixeldata.h> // for PixelData and ScalingAlgo
+#include <tmedia/image/pixeldata.h> // for PixelData
 #include <tmedia/util/defines.h> // for ASCII_STANDARD_CHAR_MAP
 
 #include <optional>
@@ -35,7 +35,6 @@ struct TMediaStartupState {
   bool muted = false;
   int refresh_rate_fps = 24;
   VidOutMode vom = VidOutMode::PLAIN;
-  ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
   bool fullscreen = false;
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
 };
@@ -58,7 +57,6 @@ struct TMediaProgramState {
   bool quit = false;
   bool fullscreen = false;
   int refresh_rate_fps = 24;
-  ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
   VidOutMode vom = VidOutMode::PLAIN;
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
 };
@@ -75,6 +73,7 @@ struct TMediaProgramSnapshot {
 
 struct TMediaRendererState {
   MetadataCache metadata_cache;
+  PixelData scaling_buffer;
   Dim2 last_frame_dims = Dim2(1, 1);
   Dim2 req_frame_dim = Dim2(1, 1);
 };

@@ -33,7 +33,7 @@ MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::array<b
   this->media_type = this->mdec->get_media_type();
   this->msg_video_jump_curr_time = 0;
   this->msg_audio_jump_curr_time = 0;
-
+  pixdata_initzero(this->frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     static constexpr int INTERNAL_AUDIO_BUFFER_LENGTH_SECONDS = 5;

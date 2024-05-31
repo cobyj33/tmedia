@@ -48,6 +48,22 @@ enum class MediaFetcherFlags {
   IGNORE_ATTACHED_PIC = (1 << 1)
 };
 
+// Pixel Aspect Ratio - account for tall rectangular shape of terminal
+//characters
+static constexpr int PAR_WIDTH = 2;
+static constexpr int PAR_HEIGHT = 5;
+
+static constexpr int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PAR_HEIGHT;
+static constexpr int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PAR_WIDTH;
+static constexpr double MAX_FRAME_ASPECT_RATIO = static_cast<double>(MAX_FRAME_ASPECT_RATIO_WIDTH) / static_cast<double>(MAX_FRAME_ASPECT_RATIO_HEIGHT);
+
+// I found that past a width of 640 characters,
+// the terminal starts to stutter terribly on most terminal emulators, so we
+// just bound the image to this amount
+
+static constexpr int MAX_FRAME_WIDTH = 640;
+static constexpr int MAX_FRAME_HEIGHT = static_cast<int>(static_cast<double>(MAX_FRAME_WIDTH) / MAX_FRAME_ASPECT_RATIO);
+
 class MediaFetcher {
   private:
     std::thread video_thread;

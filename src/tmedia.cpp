@@ -63,7 +63,6 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState& tmss) {
   tmps.plist = Playlist(tmss.media_files, tmss.loop_type);
   if (tmss.shuffled) tmps.plist.shuffle(false);
   tmps.refresh_rate_fps = tmss.refresh_rate_fps;
-  tmps.scaling_algorithm = tmss.scaling_algorithm;
   tmps.volume = tmss.volume;
   tmps.vom = tmss.vom;
   tmps.quit = false;
@@ -84,9 +83,15 @@ int tmedia_run(TMediaStartupState& tmss) {
 
 int tmedia_main_loop(TMediaProgramState tmps) {
   TMediaRendererState tmrs;
+  pixdata_setnewdims(tmrs.scaling_buffer, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
   tmrs.req_frame_dim = Dim2(COLS, LINES);
 
+  PixelData frame;
+  pixdata_initzero(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+
   while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.plist.size() > 0) {
+    pixdata_initzero(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+
     // main loop setup phase. Sets up and begins MediaFetcher. Sets up
     // and begins audio output (if applicable)
     PlaylistMvCmd move_cmd = PlaylistMvCmd::NEXT;
@@ -130,7 +135,6 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     
 
     try {
-      PixelData frame;
       // main playing loop
       while (!fetcher->should_exit() && !INTERRUPT_RECEIVED) { // never break without using dispatch_exit on fetcher to false
         double curr_systime, req_jumptime, curr_medtime;
@@ -148,7 +152,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           curr_systime = sys_clk_sec(); // set in here, since locking the mutex could take an undetermined amount of time
           curr_medtime = fetcher->get_time(curr_systime);
           req_jumptime = curr_medtime;
-          frame = fetcher->frame;
+          pixdata_copy(frame, fetcher->frame);
           fetcher->req_dims = tmrs.req_frame_dim;
 
           // If the audio is desynced, we just try and jump to the current media
@@ -337,7 +341,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         TMediaProgramSnapshot snapshot;
         snapshot.frame = &frame;
         snapshot.playing = fetcher->is_playing();
-        snapshot.has_audio_output = audio_output ? true : false;
+        snapshot.has_audio_output = audio_output.get() != nullptr;
         snapshot.media_time_secs = curr_medtime;
         snapshot.media_duration_secs = fetcher->get_duration();
         snapshot.media_type = fetcher->media_type;

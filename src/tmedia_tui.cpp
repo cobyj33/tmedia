@@ -20,14 +20,14 @@ static constexpr int MIN_RENDER_LINES = 2;
 
 const char* loop_type_cstr_short(LoopType loop_type);
 std::string_view get_media_file_display_name(const std::filesystem::path& abs_path, MetadataCache& mchc);
-void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map);
+void render_pixel_data(PixelData& pixel_data, PixelData& scaling_buffer, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, std::string_view ascii_char_map);
 void render_bottom_bar(const TMediaProgramSnapshot& sshot, std::string_view playing_str, std::string_view loop_str, std::string_view volume_str, std::string_view shuffled_str);
 void render_current_filename(const TMediaProgramState& tmps, TMediaRendererState& tmrs);
 
 void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
-  if (sshot.frame->get_width() != tmrs.last_frame_dims.width ||
-      sshot.frame->get_height() != tmrs.last_frame_dims.height) {
+  if (sshot.frame->m_width != tmrs.last_frame_dims.width ||
+      sshot.frame->m_height != tmrs.last_frame_dims.height) {
     erase();
   }
 
@@ -41,19 +41,19 @@ void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& ssh
     render_tui_large(tmps, sshot, tmrs);
   }
 
-  tmrs.last_frame_dims = Dim2(sshot.frame->get_width(), sshot.frame->get_height());
+  tmrs.last_frame_dims = Dim2(sshot.frame->m_width, sshot.frame->m_height);
 }
 
 void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
-  render_pixel_data(*(sshot.frame), 0, 0, COLS, LINES, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+  render_pixel_data(*(sshot.frame), tmrs.scaling_buffer, 0, 0, COLS, LINES, tmps.vom, tmps.ascii_display_chars);
   tmrs.req_frame_dim = Dim2(COLS, LINES);
   (void)tmrs;
 }
 
 void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
-  render_pixel_data(*(sshot.frame), 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+  render_pixel_data(*(sshot.frame), tmrs.scaling_buffer, 2, 0, COLS, LINES - 4, tmps.vom, tmps.ascii_display_chars);
   tmrs.req_frame_dim = Dim2(COLS, LINES - 4);
 
   render_current_filename(tmps, tmrs);
@@ -80,7 +80,7 @@ void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnaps
 
 void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
-  render_pixel_data(*(sshot.frame), 2, 0, COLS, LINES - 4, tmps.vom, tmps.scaling_algorithm, tmps.ascii_display_chars);
+  render_pixel_data(*(sshot.frame), tmrs.scaling_buffer, 2, 0, COLS, LINES - 4, tmps.vom, tmps.ascii_display_chars);
   tmrs.req_frame_dim = Dim2(COLS, LINES - 4);
 
   render_current_filename(tmps, tmrs);
@@ -151,16 +151,16 @@ std::string_view get_media_file_display_name(const std::filesystem::path& abs_pa
   return mchc_add(abs_path.c_str(), TMEDIA_DISPLAY_CACHE_KEY, display_string, mchc);
 }
 
-void render_pixel_data(const PixelData& pixel_data, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, const ScalingAlgo scaling_algorithm, std::string_view ascii_char_map) {
+void render_pixel_data(PixelData& pixel_data, PixelData& scaling_buffer, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, std::string_view ascii_char_map) {
   if (!tmcurses_has_colors()) // if there are no colors, just don't print colors :)
     output_mode = VidOutMode::PLAIN;
 
   switch (output_mode) {
-    case VidOutMode::PLAIN: return render_pixel_data_plain(pixel_data, bounds_row, bounds_col, bounds_width, bounds_height, scaling_algorithm, ascii_char_map);
+    case VidOutMode::PLAIN: return render_pixel_data_plain(pixel_data, scaling_buffer, bounds_row, bounds_col, bounds_width, bounds_height, ascii_char_map);
     case VidOutMode::COLOR:
-    case VidOutMode::GRAY: return render_pixel_data_color(pixel_data, bounds_row, bounds_col, bounds_width, bounds_height, scaling_algorithm, ascii_char_map);
+    case VidOutMode::GRAY: return render_pixel_data_color(pixel_data, scaling_buffer, bounds_row, bounds_col, bounds_width, bounds_height, ascii_char_map);
     case VidOutMode::COLOR_BG:
-    case VidOutMode::GRAY_BG: return render_pixel_data_bg(pixel_data, bounds_row, bounds_col, bounds_width, bounds_height, scaling_algorithm);
+    case VidOutMode::GRAY_BG: return render_pixel_data_bg(pixel_data, scaling_buffer, bounds_row, bounds_col, bounds_width, bounds_height);
   }
 }
 

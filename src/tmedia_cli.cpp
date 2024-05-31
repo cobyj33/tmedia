@@ -272,7 +272,6 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     CLIParseState ps;
     ps.tmss.muted = false;
     ps.tmss.refresh_rate_fps = 24;
-    ps.tmss.scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
     ps.tmss.loop_type = LoopType::NO_LOOP;
     ps.tmss.vom = VidOutMode::PLAIN;
     ps.tmss.volume = 1.0;
