@@ -28,36 +28,36 @@ void clear_avframe_list(std::vector<AVFrame*>& frame_list) {
 
 
 void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet, std::vector<AVFrame*>& frame_buffer) {
-  int result;
-
-  result = avcodec_send_packet(video_codec_context, video_packet);
-  if (result < 0) {
+  int result = avcodec_send_packet(video_codec_context, video_packet);
+  if (result != 0) {
     throw ffmpeg_error(fmt::format("[{}] error while sending video packet: ",
                                     FUNCDINFO), result);
   }
 
-  std::unique_ptr<AVFrame, AVFrameDeleter> video_frame(av_frame_allocx());
-
   while (result == 0) {
+    // av_frame_alloc used here instead of av_frame_allocx, since if
+    // av_frame_alloc fails, we need to clear frame_buffer before throwing
+    // an error rather than throwing std::bad_alloc directly
+    
+    // std::unique_ptr used because video_frame needs to be freed
+    // in case frame_buffer.push_back fails for some reason
+
+    std::unique_ptr<AVFrame, AVFrameDeleter> video_frame(av_frame_alloc());
+    if (unlikely(video_frame.get() == nullptr)) {
+      clear_avframe_list(frame_buffer);
+      throw ffmpeg_error("Failed to allocate AVFrame", result);
+    }
+
     result = avcodec_receive_frame(video_codec_context, video_frame.get());
     if (result < 0) {
-      if (result == AVERROR(EAGAIN) && !frame_buffer.empty()) break;
+      if (result == AVERROR(EAGAIN) && !frame_buffer.empty())
+        return;
       clear_avframe_list(frame_buffer);
       throw ffmpeg_error(fmt::format("[{}] error while receiving video "
       "frames during decoding: ", FUNCDINFO), result);
     }
 
-    std::unique_ptr<AVFrame, AVFrameDeleter> saved_frame(av_frame_allocx());
-
-    result = av_frame_ref(saved_frame.get(), video_frame.get());
-    if (unlikely(result < 0)) {
-      clear_avframe_list(frame_buffer);
-      throw ffmpeg_error(fmt::format("[{}] error while referencing video "
-      "frames during decoding: ", FUNCDINFO), result);
-    }
-
-    av_frame_unref(video_frame.get());
-    frame_buffer.push_back(saved_frame.release());
+    frame_buffer.push_back(video_frame.release());
   }
 }
 
@@ -65,36 +65,32 @@ void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_pa
 
 
 void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet, std::vector<AVFrame*>& frame_buffer) {
-  int result;
-
-  result = avcodec_send_packet(audio_codec_context, audio_packet);
-  if (result < 0) {
+  int result = avcodec_send_packet(audio_codec_context, audio_packet);
+  if (result != 0) {
     throw ffmpeg_error(fmt::format("[{}] error while sending audio packet ",
                                     FUNCDINFO), result);
   }
 
-  std::unique_ptr<AVFrame, AVFrameDeleter> audio_frame(av_frame_allocx());
-
   while (result == 0) {
+    // av_frame_alloc used here instead of av_frame_allocx, since if
+    // av_frame_alloc fails, we need to clear frame_buffer before throwing
+    // an error rather than throwing std::bad_alloc directly
+    std::unique_ptr<AVFrame, AVFrameDeleter> audio_frame(av_frame_alloc());
+    if (unlikely(audio_frame.get() == nullptr)) {
+      clear_avframe_list(frame_buffer);
+      throw ffmpeg_error("Failed to allocate AVFrame", result);
+    }
+
     result = avcodec_receive_frame(audio_codec_context, audio_frame.get());
     if (result < 0) {
-      if (result == AVERROR(EAGAIN) && !frame_buffer.empty()) break;
-
+      if (result == AVERROR(EAGAIN) && !frame_buffer.empty())
+        return; // most common return path
       clear_avframe_list(frame_buffer);
       throw ffmpeg_error(fmt::format("[{}] error while receiving audio "
       "frames during decoding: ", FUNCDINFO), result);
     }
 
-    std::unique_ptr<AVFrame, AVFrameDeleter> saved_frame(av_frame_allocx());
-    result = av_frame_ref(saved_frame.get(), audio_frame.get());
-    if (unlikely(result < 0)) {
-      clear_avframe_list(frame_buffer);
-      throw ffmpeg_error(fmt::format("[{}] error while referencing audio "
-                                "frames during decoding ", FUNCDINFO), result);
-    }
-
-    av_frame_unref(audio_frame.get());
-    frame_buffer.push_back(saved_frame.release());
+    frame_buffer.push_back(audio_frame.release());
   }
 }
 
