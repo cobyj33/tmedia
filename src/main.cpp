@@ -38,6 +38,172 @@ void on_terminate() {
 }
 
 
+#undef NEWDELTRACKER_AT_OR_ABOVE_CXX17
+#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
+# define NEWDELTRACKER_AT_OR_ABOVE_CXX17 1
+#endif
+
+namespace newdelwatch {
+  std::size_t new_call_count = 0;
+  std::size_t new_array_call_count = 0;
+
+  std::size_t delete_call_count = 0;
+  std::size_t delete_sized_call_count = 0;
+  std::size_t delete_array_call_count = 0;
+  std::size_t delete_sized_array_call_count = 0;
+
+  #if defined(NEWDELTRACKER_AT_OR_ABOVE_CXX17)
+  std::size_t new_align_call_count = 0;
+  std::size_t new_array_align_call_count = 0;
+
+  std::size_t delete_align_call_count = 0;
+  std::size_t delete_sized_align_call_count = 0;
+  std::size_t delete_array_align_call_count = 0;
+  std::size_t delete_sized_array_align_call_count = 0;
+  #endif
+
+  void reset();
+  void report(std::ostream& ostream);
+
+  void reset() {
+    new_call_count = 0;
+    new_array_call_count = 0;
+
+    delete_call_count = 0;
+    delete_sized_call_count = 0;
+    delete_array_call_count = 0;
+    delete_sized_array_call_count = 0;
+
+    #if defined(NEWDELTRACKER_AT_OR_ABOVE_CXX17) || _MSVC_LANG >= 201703L
+    new_align_call_count = 0;
+    new_array_align_call_count = 0;
+
+    delete_align_call_count = 0;
+    delete_sized_align_call_count = 0;
+    delete_array_align_call_count = 0;
+    delete_sized_array_align_call_count = 0;
+    #endif
+  }
+
+  /**
+   * Utility function to print all allocation trackers to stdout
+   * @param ostream The output stream to print character data to for printing
+  */
+  void report(std::ostream& ostream) {
+    ostream << "\t" << new_call_count << " calls to new tracked" << std::endl;
+    ostream << "\t" << new_array_call_count << " calls to new[] tracked" << std::endl;
+
+    ostream << "\t" << delete_call_count << " calls to delete(void*) tracked" << std::endl;
+    ostream << "\t" << delete_sized_call_count << " calls to delete(void*, std::size_t) tracked" << std::endl;
+    ostream << "\t" << delete_array_call_count << " calls to delete[](void*) tracked" << std::endl;
+    ostream << "\t" << delete_sized_array_call_count << " calls to delete[](void*, std::size_t) tracked" << std::endl;
+
+
+    #if defined(NEWDELTRACKER_AT_OR_ABOVE_CXX17)
+    ostream << "\t" << new_align_call_count << " calls to aligned new tracked" << std::endl;
+    ostream << "\t" << new_array_align_call_count << " calls to aligned new[] tracked" << std::endl;
+
+    ostream << "\t" << delete_align_call_count << " calls to aligned delete(void*) tracked" << std::endl;
+    ostream << "\t" << delete_sized_align_call_count << " calls to aligned delete(void*, std::size_t) tracked" << std::endl;
+    ostream << "\t" << delete_array_align_call_count << " calls to aligned delete[](void*) tracked" << std::endl;
+    ostream << "\t" << delete_sized_array_align_call_count << " calls to aligned delete[](void*, std::size_t) tracked" << std::endl;
+    #endif
+  }
+}
+
+void* generic_new(const std::size_t sz) {
+  void *ptr = std::malloc(sz);
+  if (ptr) {
+    return ptr;
+  } else {
+    throw std::bad_alloc{};
+  }
+}
+
+// Unaligned New and Delete New Overrides
+
+void* operator new(const std::size_t sz) {
+  newdelwatch::new_call_count++;
+	return generic_new(sz);
+}
+
+void* operator new[](const std::size_t sz) {
+  newdelwatch::new_array_call_count++;
+	return generic_new(sz);
+}
+
+// Delete Overrides
+
+void operator delete(void * ptr) noexcept(true) {
+  newdelwatch::delete_call_count++;
+  std::free(ptr);
+}
+
+void operator delete(void * ptr, std::size_t sz) noexcept(true) {
+  newdelwatch::delete_sized_call_count++;
+  std::free(ptr);
+  (void)sz;
+}
+
+void operator delete[](void* ptr) noexcept{
+  newdelwatch::delete_array_call_count++;
+	std::free(ptr);
+}
+
+void operator delete[](void* ptr, std::size_t sz) noexcept{
+  newdelwatch::delete_sized_array_call_count++;
+	std::free(ptr);
+  (void)sz;
+}
+
+
+#if defined(NEWDELTRACKER_AT_OR_ABOVE_CXX17)
+// Aligned new and delete (C++17+)
+// (https://en.cppreference.com/w/cpp/memory/new/operator_new)
+// (https://en.cppreference.com/w/cpp/memory/new/operator_delete)
+
+// This'll probably break something because its not actually
+// aligning anything in memory... but whatever we'll see
+void* operator new(const std::size_t sz, std::align_val_t al) {
+  newdelwatch::new_align_call_count++;
+	return generic_new(sz);
+  (void)al;
+}
+
+void* operator new[](const std::size_t sz, std::align_val_t al) {
+  newdelwatch::new_array_align_call_count++;
+	return generic_new(sz);
+  (void)al;
+}
+
+void operator delete(void * ptr, std::align_val_t al) noexcept(true) {
+  newdelwatch::delete_align_call_count++;
+  std::free(ptr);
+  (void)al;
+}
+
+void operator delete(void * ptr, std::size_t sz, std::align_val_t al) noexcept(true) {
+  newdelwatch::delete_sized_align_call_count++;
+  std::free(ptr);
+  (void)sz;
+  (void)al;
+}
+
+void operator delete[](void* ptr, std::align_val_t al) noexcept{
+  newdelwatch::delete_array_align_call_count++;
+	std::free(ptr);
+  (void)al;
+}
+
+void operator delete[](void* ptr, std::size_t sz, std::align_val_t al) noexcept{
+  newdelwatch::delete_sized_array_align_call_count++;
+	std::free(ptr);
+  (void)sz;
+  (void)al;
+}
+#endif
+
+
 int main(int argc, char** argv) {
   if (!isatty(STDIN_FILENO)) {
     std::cerr << "[tmedia]: stdin must be a tty. Exiting..." << std::endl;
@@ -74,5 +240,8 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  return tmedia_run(res.tmss);
+  int exitcode = tmedia_run(res.tmss);
+  newdelwatch::report(std::cout);
+  newdelwatch::reset();
+  return exitcode;
 }
