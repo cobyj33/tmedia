@@ -45,42 +45,24 @@ class RGB24 {
     static RGB24 BLACK;
     static RGB24 WHITE; 
 
-    constexpr RGB24() : r(0), g(0), b(0) {}
+    RGB24() = default;
     constexpr RGB24(std::uint8_t gray) : r(gray), g(gray), b(gray) {}
     constexpr RGB24(std::uint8_t r, std::uint8_t g, std::uint8_t b) : r(r), g(g), b(b) {}
-    constexpr RGB24(const RGB24& color) : r(color.r), g(color.g), b(color.b) {}
-    constexpr RGB24(RGB24&& color) : r(color.r), g(color.g), b(color.b) {}
 
-    TMEDIA_ALWAYS_INLINE constexpr inline void operator=(const RGB24& color) {
-      this->r = color.r;
-      this->g = color.g;
-      this->b = color.b;
-    }
-
-    TMEDIA_ALWAYS_INLINE constexpr inline void operator=(RGB24&& color) {
-      this->r = color.r;
-      this->g = color.g;
-      this->b = color.b;
-    }
-
-    TMEDIA_ALWAYS_INLINE constexpr inline bool equals(const RGB24& other) const {
+    TMEDIA_ALWAYS_INLINE constexpr inline bool equals(RGB24 other) const {
       return this->r == other.r && this->g == other.g && this->b == other.b;
     }
 
-    TMEDIA_ALWAYS_INLINE constexpr inline bool operator==(const RGB24& other) const {
+    TMEDIA_ALWAYS_INLINE constexpr inline bool operator==(RGB24 other) const {
       return this->r == other.r && this->g == other.g && this->b == other.b;
     }
 
-    TMEDIA_ALWAYS_INLINE constexpr inline bool operator==(RGB24&& other) const {
-      return this->r == other.r && this->g == other.g && this->b == other.b;
-    }
-
-    double distance(const RGB24& other) const;
-    double dis_sq(const RGB24& other) const;
+    double distance(RGB24 other) const;
+    double dis_sq(RGB24 other) const;
 
     TMEDIA_ALWAYS_INLINE constexpr inline RGB24 get_comp() const {
       return RGB24(255 - this->r, 255 - this->g, 255 - this->b );
-    } 
+    }
 
     TMEDIA_ALWAYS_INLINE constexpr inline bool is_gray() const {
       return this->r == this->g && this->g == this->b;
@@ -106,7 +88,7 @@ constexpr RGB24 operator "" _rgb(unsigned long long val) {
 class RGBColorHashFunction {
 public:
     // Ripped from http://www.beosil.com/download/CollisionDetectionHashing_VMV03.pdf pg 666 sec 4.1 paragraph 2
-    std::size_t operator()(const RGB24& rgb) const {
+    std::size_t operator()(RGB24 rgb) const {
       return (73856093UL * static_cast<std::size_t>(rgb.r)) ^
             (19349663UL * static_cast<std::size_t>(rgb.g)) ^
             (83492791UL * static_cast<std::size_t>(rgb.b));
@@ -122,7 +104,7 @@ public:
  * @return The index of the closest color to **input** within the given color list
  * @throws std::runtime_error If the color list given is empty
  */
-int find_closest_color_index(RGB24& input, std::vector<RGB24>& colors);
+int find_closest_color_index(RGB24 input, std::vector<RGB24>& colors);
 
 /**
  * @brief Find the closest color within a group of colors to the given input 
@@ -132,7 +114,7 @@ int find_closest_color_index(RGB24& input, std::vector<RGB24>& colors);
  * @return The closest color to **input** within the given color list
  * @throws std::runtime_error If the color list given is empty
  */
-RGB24 find_closest_color(RGB24& input, std::vector<RGB24>& colors);
+RGB24 find_closest_color(RGB24 input, std::vector<RGB24>& colors);
 
 /**
  * @brief Find the average color within a list

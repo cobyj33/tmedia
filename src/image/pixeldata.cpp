@@ -46,25 +46,34 @@ bool is_rect_vec_mat(const std::vector<std::vector<T>>& vector_2d) {
 // remember to allocate this->pixels before calling init_from_avframe
 void PixelData::init_from_avframe(AVFrame* video_frame) {
   this->pixels->clear();
-  this->pixels->reserve(video_frame->width * video_frame->height);
+  this->pixels->resize(video_frame->width * video_frame->height);
   this->m_width = video_frame->width;
   this->m_height = video_frame->height;
+
+  const int area = this->m_width * this->m_height;
   const uint8_t* const data = video_frame->data[0];
   std::vector<RGB24>& pixels = *this->pixels;
 
   switch (static_cast<AVPixelFormat>(video_frame->format)) {
     case AV_PIX_FMT_GRAY8: {
       const int datalen = this->m_width * this->m_height;
-      for (int i = 0; i < datalen; i++) {
-        pixels[i] = RGB24(data[i]);
-      }
+      for (int i = 0; i < datalen; i++) pixels[i] = RGB24(data[i]);
     } break;
     case AV_PIX_FMT_RGB24: {
-      const int area = this->m_width * this->m_height;
-      int di = 0;
-      for (int i = 0; i < area; i++) {
-        pixels[i] = RGB24(data[di], data[di + 1], data[di + 2]);
-        di += 3;
+      // if our RGB24 compiles to 3 bytes (like it should)
+      // we can just memcpy in directly
+      if constexpr (sizeof(RGB24) == 3) {
+        // apparently you can't just assign to ranges outside of
+        // [vec.begin(), vec.begin() + vec.size()]
+        // https://stackoverflow.com/a/7689457
+        // also adjusts the pixel array's size() to be correct
+        std::memcpy(pixels.data(), data, area * 3);
+      } else { // this shouldn't really run on most systems
+        int di = 0;
+        for (int i = 0; i < area; i++) {
+          pixels[i] = { data[di], data[di + 1], data[di + 2] };
+          di += 3;
+        }
       }
     } break;
     default: throw std::runtime_error(fmt::format("[{}] Passed in AVFrame "
@@ -82,7 +91,7 @@ PixelData::PixelData(const std::vector<std::vector<RGB24>>& rgbm) {
   this->pixels = std::make_shared<std::vector<RGB24>>();
   this->m_height = rgbm.size();
   this->m_width = rgbm.size() > 0 ? rgbm[0].size() : 0;
-  this->pixels->reserve(this->m_height * this->m_width);
+  this->pixels->resize(this->m_height * this->m_width);
 
   for (int row = 0; row < this->m_height; row++) {
     for (int col = 0; col < this->m_width; col++) {
@@ -100,7 +109,7 @@ PixelData::PixelData(const std::vector<std::vector<uint8_t> >& graym) {
   this->pixels = std::make_shared<std::vector<RGB24>>();
   this->m_height = graym.size();
   this->m_width = graym.size() > 0 ? graym[0].size() : 0;
-  this->pixels->reserve(this->m_height * this->m_width);
+  this->pixels->resize(this->m_height * this->m_width);
 
   for (int row = 0; row < this->m_height; row++) {
     for (int col = 0; col < this->m_width; col++) {
@@ -116,7 +125,7 @@ PixelData::PixelData(const std::vector<RGB24>& flatrgb, int width, int height) {
     "given height: {}", FUNCDINFO, flatrgb.size(), width, height));
 
   this->pixels = std::make_shared<std::vector<RGB24>>();
-  this->pixels->reserve(width * height);
+  this->pixels->resize(width * height);
   this->m_width = width;
   this->m_height = height;
   const int area = width * height; 
@@ -183,23 +192,25 @@ PixelData PixelData::scale(double amount, ScalingAlgo scaling_algorithm) const {
   const int new_width = this->get_width() * amount;
   const int new_height = this->get_height() * amount;
   std::shared_ptr<std::vector<RGB24>> new_pixels = std::make_shared<std::vector<RGB24>>();
-  new_pixels->reserve(new_width * new_height);
+  new_pixels->resize(new_width * new_height);
 
   switch (scaling_algorithm) {
     case ScalingAlgo::BOX_SAMPLING: {
       double box_width = 1 / amount;
       double box_height = 1 / amount;
+      std::size_t pi = 0;
 
       for (double new_row = 0; new_row < new_height; new_row++) {
         for (double new_col = 0; new_col < new_width; new_col++) {
-          new_pixels->push_back(get_avg_color_from_area(*this, new_row * box_height, new_col * box_width, box_width, box_height ));
+          (*new_pixels)[pi++] = get_avg_color_from_area(*this, new_row * box_height, new_col * box_width, box_width, box_height );
         }
       }
     } break;
     case ScalingAlgo::NEAREST_NEIGHBOR: {
+      std::size_t pi = 0;
       for (double new_row = 0; new_row < new_height; new_row++) {
         for (double new_col = 0; new_col < new_width; new_col++) {
-          new_pixels->push_back((*this->pixels)[(int)(new_row / amount) * this->m_width + (int)(new_col / amount)]);
+          (*new_pixels)[pi++] = (*this->pixels)[(int)(new_row / amount) * this->m_width + (int)(new_col / amount)];
         }
       }
     } break;
