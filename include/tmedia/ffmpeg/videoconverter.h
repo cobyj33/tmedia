@@ -31,10 +31,26 @@ class VideoConverter {
             enum AVPixelFormat src_pix_fmt);
 
     /**
+     * Convert a video frame according to the initialized VideoConverter's
+     * parameters and place the result into the AVFrame pointed to by dest.
+     *
+     * dest must have been allocated by av_frame_alloc already or a function
+     * which calls av_frame_alloc. dest's buffers will be unreferenced by
+     * av_frame_unref() whenever convert_video_frame is called. The source
+     * AVFrame is left unaltered. The caller is responsible for freeing dest,
+     * just as it was responsible for allocating dest.
+     *
+     * The src AVFrame is REQUIRED to have the same source width,
+     * source height, and source pixel format as given
+     * to the VideoConverter upon construction. Otherwise, convert_video_frame
+     * will fail and throw an error.
      * 
-     * The returned video frame must be freed by the caller with av_frame_free.
+     * After calling convert_video_frame and upon success, dest have the same
+     * destination width, destination height,
+     * and destination pixel format as given to the VideoConverter
+     * upon construction
     */
-    AVFrame* convert_video_frame(AVFrame* original);
+    void convert_video_frame(AVFrame* dest, AVFrame* src);
 
     TMEDIA_ALWAYS_INLINE inline int get_src_width() { return this->m_src_width; }
     TMEDIA_ALWAYS_INLINE inline int get_src_height() { return this->m_src_height; }
@@ -44,6 +60,9 @@ class VideoConverter {
     TMEDIA_ALWAYS_INLINE inline enum AVPixelFormat get_dst_pix_fmt() { return this->m_dst_pix_fmt; }
 
     /**
+     * Reset the destination frame size to be equal to a new size. Useful
+     * for dynamically changing how large a frame should be rendered.
+     *
      * No-op if the current dst_width and dst_height equal to the passed in
      * dst_width and dst_height
     */

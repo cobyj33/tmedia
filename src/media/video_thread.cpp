@@ -103,6 +103,10 @@ void MediaFetcher::frame_video_fetching_func() {
   vdec.get_width(), vdec.get_height(), vdec.get_pix_fmt());
   std::vector<AVFrame*> dec_frames;
 
+  // single allocation of AVFrame buffer to use for the lifetime of the
+  // video thread as output from convert_video_frame
+  std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
+
   while (!this->should_exit()) {
     if (!this->is_playing()) {
       std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
@@ -154,8 +158,8 @@ void MediaFetcher::frame_video_fetching_func() {
       wait_duration = frame_pts_time_sec - current_time + extra_delay;
 
       if (wait_duration > 0.0 || this->frame.get_width() * this->frame.get_height() == 0) { // or the current frame has no valid dimensions
-        std::unique_ptr<AVFrame, AVFrameDeleter> frame_image(vconv.convert_video_frame(dec_frames[0]));
-        PixelData pix_data = PixelData(frame_image.get());
+        vconv.convert_video_frame(converted_frame.get(), dec_frames[0]);
+        PixelData pix_data = PixelData(converted_frame.get());
         {
           std::lock_guard<std::mutex> lock(this->alter_mutex);
           this->frame = pix_data;
@@ -195,11 +199,12 @@ void MediaFetcher::frame_image_fetching_func() {
   vdec.get_height(),
   vdec.get_pix_fmt());
 
+  std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
   std::vector<AVFrame*> dec_frames;
   vdec.next_frames(AVMEDIA_TYPE_VIDEO, dec_frames);
   if (dec_frames.size() > 0) {
-    std::unique_ptr<AVFrame, AVFrameDeleter> frame_image(vconv.convert_video_frame(dec_frames[0]));
-    PixelData pix_data = PixelData(frame_image.get());
+    vconv.convert_video_frame(converted_frame.get(), dec_frames[0]);
+    PixelData pix_data = PixelData(converted_frame.get());
     {
       std::lock_guard<std::mutex> lock(this->alter_mutex);
       this->frame = pix_data;

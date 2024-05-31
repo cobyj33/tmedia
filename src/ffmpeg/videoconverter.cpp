@@ -7,6 +7,7 @@
 
 #include <stdexcept>
 #include <memory>
+#include <cassert>
 
 #include <fmt/format.h>
 
@@ -17,6 +18,19 @@ extern "C" {
 }
 
 VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat dst_pix_fmt, int src_width, int src_height, enum AVPixelFormat src_pix_fmt) {
+  /**
+   * Note that there were bugs occasionally of src_width and src_height actually
+   * returning as negative or 0 from allocated AVFrames and AV_PIX_FMT_NONE
+   * resulting as well,
+   * so that's why all of these checks exist here. When these edge cases
+   * happened as well, FFmpeg aborted with assert(), which meant that I could
+   * do nothing except put enforced runtime checks on the constructor
+   * of VideoConverter.
+   *
+   * (This class is only actually ever used a grand total of once in tmedia
+   * though, so it should be fine)
+  */
+
   if (dst_width <= 0 || dst_height <= 0) {
     throw std::runtime_error(fmt::format("[{}] Video Converter must have "
     "non-zero destination dimensions: (got width of {} and height of {} )",
@@ -82,28 +96,32 @@ VideoConverter::~VideoConverter() {
   sws_freeContext(this->m_context);
 }
 
-AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
-  AVFrame* resized_video_frame = av_frame_allocx();
+void VideoConverter::convert_video_frame(AVFrame* dest, AVFrame* src) {
+  assert(dest != nullptr);
+  av_frame_unref(dest);
 
-  resized_video_frame->format = this->m_dst_pix_fmt;
-  resized_video_frame->width = this->m_dst_width;
-  resized_video_frame->height = this->m_dst_height;
-  resized_video_frame->pts = original->pts;
-  resized_video_frame->repeat_pict = original->repeat_pict;
+  dest->format = this->m_dst_pix_fmt;
+  dest->width = this->m_dst_width;
+  dest->height = this->m_dst_height;
+  dest->pts = src->pts;
+  dest->repeat_pict = src->repeat_pict;
   #if HAS_AVFRAME_DURATION
-  resized_video_frame->duration = original->duration;
+  dest->duration = src->duration;
   #endif
   
-  int err = av_frame_get_buffer(resized_video_frame, 1); //watch this alignment
+  /*
+    For any alignment besides 1, including the value 0 (although 0's what
+    ffmpeg documentation reccomends), the resampled frame always came out
+    a garbled mess. Perhaps an alignment of 1 is bad, but it works?
+  */
+  int err = av_frame_get_buffer(dest, 1); //watch this alignment
   if (unlikely(err)) {
-    av_frame_free(&resized_video_frame);
+    av_frame_unref(dest);
     throw ffmpeg_error(fmt::format("[{}] Failure on "
     "allocating buffers for resized video frame", FUNCDINFO), err);
   }
 
   (void)sws_scale(this->m_context,
-    (uint8_t const * const *)original->data, original->linesize, 0,
-    original->height, resized_video_frame->data, resized_video_frame->linesize);
-
-  return resized_video_frame;
+    static_cast<uint8_t const * const *>(src->data), src->linesize, 0,
+    src->height, dest->data, dest->linesize);
 }
