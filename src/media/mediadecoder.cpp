@@ -67,29 +67,23 @@ void MediaDecoder::next_frames(enum AVMediaType media_type, std::vector<AVFrame*
 
 int MediaDecoder::fetch_next(int requested_packet_count) {
   int packets_read = 0;
-  std::unique_ptr<AVPacket, AVPacketDeleter> reading_packet(av_packet_allocx());
+  int result = 0;
 
-  while (av_read_frame(this->fmt_ctx.get(), reading_packet.get()) == 0) {
+  while (packets_read < requested_packet_count) {
+    std::unique_ptr<AVPacket, AVPacketDeleter> reading_packet(av_packet_allocx());
+    result = av_read_frame(this->fmt_ctx.get(), reading_packet.get());
+
+    if (result != 0)
+      return packets_read; // this definitely needs better error handling negl
+
     for (auto &dec : this->decs) {
       if (!dec) continue;
-      
       if (dec->get_stream_index() == reading_packet->stream_index) {
-        std::unique_ptr<AVPacket, AVPacketDeleter> saved_packet(av_packet_allocx());
-
-        int res = av_packet_ref(saved_packet.get(), reading_packet.get());
-        if (unlikely(res < 0)) {
-          throw ffmpeg_error(fmt::format("[{}] Failed to reference "
-          "frame from format context", FUNCDINFO), AVERROR(ENOMEM));
-        }
-        
-        dec->push_back(saved_packet.release());
+        dec->push_back(reading_packet.release());
         packets_read++;
         break;
       }
     }
-
-    av_packet_unref(reading_packet.get());
-    if (packets_read >= requested_packet_count) break;
   }
 
   return packets_read;
