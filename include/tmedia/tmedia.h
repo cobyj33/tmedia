@@ -61,12 +61,10 @@ struct TMediaProgramState {
   ScalingAlgo scaling_algorithm = ScalingAlgo::BOX_SAMPLING;
   VidOutMode vom = VidOutMode::PLAIN;
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
-  
 };
 
 
 struct TMediaProgramSnapshot {
-  std::string currently_playing;
   PixelData frame;
   MediaType media_type;
   bool playing;
