@@ -15,7 +15,7 @@ void visualize(PixelData& dest, float* frames, int nb_frames, int nb_channels, i
 
   const std::size_t nb_samples = nb_frames * nb_channels;
   const int middle_row = height / 2;
-  pixdata_initzero(dest, width, height);
+  pixdata_initgray(dest, width, height, 0);
   
   const float step_size = nb_samples / static_cast<float>(width);
   for (int col = 0; col < width; col++) {

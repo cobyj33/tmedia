@@ -33,7 +33,13 @@ MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::array<b
   this->media_type = this->mdec->get_media_type();
   this->msg_video_jump_curr_time = 0;
   this->msg_audio_jump_curr_time = 0;
-  pixdata_initzero(this->frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+
+  // Actually important to initialize to 0, so that when the
+  // calling thread initially reads from the MediaFetcher frame, it does
+  // not read a full blank frame. This does mean that the first copy to this
+  // buffer will cause an allocation on the video_thread though, but
+  // this should be trivial.
+  pixdata_setnewdims(this->frame, 0, 0);
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     static constexpr int INTERNAL_AUDIO_BUFFER_LENGTH_SECONDS = 5;
@@ -107,13 +113,19 @@ int MediaFetcher::jump_to_time(double target_time, double currsystime) {
 void MediaFetcher::begin(double currsystime) {
   this->in_use = true;
   this->clock.init(currsystime);
-
-  std::thread idct(&MediaFetcher::duration_checking_thread_func, this);
-  this->duration_checking_thread.swap(idct);
+  
   std::thread ivt(&MediaFetcher::video_fetching_thread_func, this);
   this->video_thread.swap(ivt);
-  std::thread iat(&MediaFetcher::audio_dispatch_thread_func, this);
-  this->audio_thread.swap(iat);
+  
+  if (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO) {
+    std::thread idct(&MediaFetcher::duration_checking_thread_func, this);
+    this->duration_checking_thread.swap(idct);
+  }
+  
+  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    std::thread iat(&MediaFetcher::audio_dispatch_thread_func, this);
+    this->audio_thread.swap(iat);
+  }
 }
 
 void MediaFetcher::join(double currsystime) {

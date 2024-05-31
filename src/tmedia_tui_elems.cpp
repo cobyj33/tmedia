@@ -20,61 +20,40 @@ extern "C" {
   #include <curses.h>
 }
 
-RGB24 get_avg_color_from_area(const PixelData& pixel_data, double _row, double _col, double _width, double _height) {
-  const int row = static_cast<int>(std::floor(_row));
-  const int col = static_cast<int>(std::floor(_col));
-  const int width = static_cast<int>(std::ceil(_width));
-  const int height = static_cast<int>(std::ceil(_height));
-
-  assert(width * height > 0);
-  assert(row >= 0);
-  assert(col >= 0);
-
-
-  const int rowmax = std::min(pixel_data.m_width, row + height);
-  const int colmax = std::min(pixel_data.m_height, col + width);
-  int sums[3] = {0, 0, 0};
-  int colors = 0;
-
-  for (int curr_row = row; curr_row < rowmax; curr_row++) {
-    for (int curr_col = col; curr_col < colmax; curr_col++) {
-      RGB24 color = pixel_data.pixels[curr_row * pixel_data.m_width + curr_col];
-      sums[0] += color.r;
-      sums[1] += color.g;
-      sums[2] += color.b;
-      colors++;
-    }
-  }
-
-  colors = (colors == 0) ? 1 : colors; // prevent divide by 0
-  return RGB24((sums[0]/colors) & 0xFF, (sums[1]/colors) & 0xFF, (sums[2]/colors) & 0xFF);
-}
-
-void pixdata_scale(PixelData& dest, PixelData& src, double amount) {
-  assert(amount >= 0);
-  if (amount == 0) {
-    pixdata_setnewdims(dest, 0, 0);
-    return;
-  }
-
-  const int new_width = src.m_width * amount;
-  const int new_height = src.m_height * amount;
-  pixdata_setnewdims(dest, new_width, new_height);
-  std::size_t pi = 0;
-  for (double new_row = 0; new_row < new_height; new_row++) {
-    for (double new_col = 0; new_col < new_width; new_col++) {
-      dest.pixels[pi++] = src.pixels[(int)(new_row / amount) * src.m_width + (int)(new_col / amount)];
-    }
-  }
-}
-
+/**
+ * width and height can be equal to or less than 0. If width or height are
+ * equal to or less than 0, then a simple empty buffer is returned.
+*/
 PixelData& pixdata_bound(PixelData& buf, PixelData& src, int width, int height) {
+  if (width <= 0 || height <= 0) {  // handle invalid dimensions case. This allows calling code
+    pixdata_initgray(buf, 0, 0, 0);
+    return buf;
+  }
+
+  // quick exit if the source already fits into the bounds
   if (src.m_width <= width && src.m_height <= height) {
     return src;
   }
 
-  double scale_factor = get_scale_factor(src.m_width, src.m_height, width, height);
-  pixdata_scale(buf, src, scale_factor);
+  const double scale_factor = get_scale_factor(src.m_width, src.m_height, width, height);
+  const int new_width = src.m_width * scale_factor;
+  const int new_height = src.m_height * scale_factor;
+  pixdata_setnewdims(buf, new_width, new_height);
+  
+  // Simple Nearest-Neighbor algorithm.
+  // Since we render at such low resolutions anyway, I believe the performance
+  // gain of nearest neighbor makes up from its slightly worse results
+  // compared to an algorithm that would have to iterate over the entire
+  // source such as Box Sampling. Perhaps a Bilinear scaling algorithm would
+  // be interesting to implement later.
+
+  std::size_t pi = 0;
+  for (double new_row = 0; new_row < new_height; new_row++) {
+    for (double new_col = 0; new_col < new_width; new_col++) {
+      buf.pixels[pi++] = src.pixels[(int)(new_row / scale_factor) * src.m_width + (int)(new_col / scale_factor)];
+    }
+  }
+
   return buf;
 }
 

@@ -38,12 +38,12 @@ void pixdata_setnewdims(PixelData& dest, int width, int height) {
   dest.pixels.resize(width * height);
 }
 
-void pixdata_initzero(PixelData& dest, int width, int height) {
+void pixdata_initgray(PixelData& dest, int width, int height, std::uint8_t g) {
   assert(width > 0);
   assert(height > 0);
 
   pixdata_setnewdims(dest, width, height);
-  std::memset(dest.pixels.data(), 0, dest.pixels.size() * sizeof(RGB24));
+  std::memset(dest.pixels.data(), g, dest.pixels.size() * sizeof(RGB24));
 }
 
 void pixdata_copy(PixelData& dest, PixelData& src) {

@@ -236,7 +236,7 @@ void MediaFetcher::frame_audio_fetching_func() {
   */
 
   PixelData local_frame;
-  pixdata_initzero(local_frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+  pixdata_initgray(local_frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
   
   while (!this->should_exit()) {
     if (!this->is_playing()) {

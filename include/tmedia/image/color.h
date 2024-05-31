@@ -10,7 +10,6 @@ TMEDIA_ALWAYS_INLINE constexpr inline std::uint8_t get_gray8(std::uint8_t r, std
   return static_cast<std::uint8_t>(0.299 * static_cast<double>(r) + 0.587 * static_cast<double>(g) + 0.114 * static_cast<double>(b));
 }
 
-
 /**
  * @brief Get the grayscale value of 3 channels of rgb data.
  * 

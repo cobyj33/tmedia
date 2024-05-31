@@ -13,6 +13,7 @@
 #include <tmedia/image/color.h>
 
 #include <vector>
+#include <cstdint>
 
 extern "C" {
 #include <libavutil/frame.h>
@@ -28,7 +29,7 @@ class PixelData {
 };
 
 void pixdata_setnewdims(PixelData& dest, int width, int height);
-void pixdata_initzero(PixelData& dest, int width, int height);
+void pixdata_initgray(PixelData& dest, int width, int height, std::uint8_t g);
 void pixdata_copy(PixelData& dest, PixelData& src);
 void pixdata_from_avframe(PixelData& dest, AVFrame* src);
 void vertline(PixelData& dest, int row1, int row2, int col, const RGB24 color);

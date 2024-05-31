@@ -87,10 +87,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
   tmrs.req_frame_dim = Dim2(COLS, LINES);
 
   PixelData frame;
-  pixdata_initzero(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+  pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
 
   while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.plist.size() > 0) {
-    pixdata_initzero(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+    pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
 
     // main loop setup phase. Sets up and begins MediaFetcher. Sets up
     // and begins audio output (if applicable)
