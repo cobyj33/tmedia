@@ -224,7 +224,7 @@ RGB24 tmcurses_get_color_number_content(curses_color_t color) {
 ColorPair tmcurses_get_pair_number_content(curses_color_pair_t pair) {
   short fgi, bgi;
   pair_content(pair, &fgi, &bgi);
-  return ColorPair(tmcurses_get_color_number_content(fgi), tmcurses_get_color_number_content(bgi));
+  return { tmcurses_get_color_number_content(fgi), tmcurses_get_color_number_content(bgi) };
 }
 
 int tmcurses_init_rgb_color_palette() {
