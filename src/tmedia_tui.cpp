@@ -17,6 +17,7 @@ extern "C" {
 
 static constexpr int MIN_RENDER_COLS = 5;
 static constexpr int MIN_RENDER_LINES = 2;
+static constexpr std::size_t METADATA_CACHE_MAX_SIZE = 30;
 
 const char* loop_type_cstr_short(LoopType loop_type);
 std::string_view get_media_file_display_name(const std::filesystem::path& abs_path, MetadataCache& mchc);
@@ -29,6 +30,14 @@ void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& ssh
   if (sshot.frame->m_width != tmrs.last_frame_dims.width ||
       sshot.frame->m_height != tmrs.last_frame_dims.height) {
     erase();
+  }
+
+  // naive way to manage the metadata cache size.
+  // The metadata cache should only ever grow whenever listing
+  // If that happens to change anytime later in tmedia's development,
+  // then a better caching mechanism will of course have to be used.
+  if (tmrs.metadata_cache.size() > METADATA_CACHE_MAX_SIZE) {
+    tmrs.metadata_cache.clear();
   }
 
   if (COLS < MIN_RENDER_COLS || LINES < MIN_RENDER_LINES) {
