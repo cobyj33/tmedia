@@ -30,8 +30,8 @@ extern "C" {
 }
 
 void pixdata_setnewdims(PixelData& dest, int width, int height) {
-  assert(width > 0);
-  assert(height > 0);
+  assert(width >= 0);
+  assert(height >= 0);
 
   dest.m_width = width;
   dest.m_height = height;
@@ -39,8 +39,8 @@ void pixdata_setnewdims(PixelData& dest, int width, int height) {
 }
 
 void pixdata_initgray(PixelData& dest, int width, int height, std::uint8_t g) {
-  assert(width > 0);
-  assert(height > 0);
+  assert(width >= 0);
+  assert(height >= 0);
 
   pixdata_setnewdims(dest, width, height);
   std::memset(dest.pixels.data(), g, dest.pixels.size() * sizeof(RGB24));
