@@ -1,22 +1,13 @@
 #include <tmedia/tmcurses/tmcurses.h>
 
-#include <tmedia/util/formatting.h> 
+#include <tmedia/util/formatting.h>
+
 extern "C" {
   #include <curses.h>
 }
 
 #include <cstdarg>
 #include <string>
-
-  
-TMLabelStyle::TMLabelStyle() {
-  this->row = 0;
-  this->col = 0;
-  this->width = 0;
-  this->align = TMAlign::LEFT;
-  this->margin_left = 0;
-  this->margin_right = 0;
-}
 
 TMLabelStyle::TMLabelStyle(int row, int col, int width, TMAlign align, int margin_left, int margin_right) {
   this->row = row;

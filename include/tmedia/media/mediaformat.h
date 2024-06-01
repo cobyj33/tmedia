@@ -34,7 +34,6 @@ extern const char* container_iformat_exts;
 struct mext_mdata {
   const char* ext;
   MediaType type;
-  mext_mdata(const char* ext, MediaType type) : ext(ext), type(type) {} 
 };
 
 extern const mext_mdata mm_exts[];

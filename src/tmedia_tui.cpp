@@ -50,20 +50,20 @@ void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& ssh
     render_tui_large(tmps, sshot, tmrs);
   }
 
-  tmrs.last_frame_dims = Dim2(sshot.frame->m_width, sshot.frame->m_height);
+  tmrs.last_frame_dims = { sshot.frame->m_width, sshot.frame->m_height };
 }
 
 void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
   render_pixel_data(*(sshot.frame), tmrs.scaling_buffer, 0, 0, COLS, LINES, tmps.vom, tmps.ascii_display_chars);
-  tmrs.req_frame_dim = Dim2(COLS, LINES);
+  tmrs.req_frame_dim = { COLS, LINES };
   (void)tmrs;
 }
 
 void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
   render_pixel_data(*(sshot.frame), tmrs.scaling_buffer, 2, 0, COLS, LINES - 4, tmps.vom, tmps.ascii_display_chars);
-  tmrs.req_frame_dim = Dim2(COLS, LINES - 4);
+  tmrs.req_frame_dim = { COLS, LINES - 4 };
 
   render_current_filename(tmps, tmrs);
 
@@ -90,7 +90,7 @@ void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnaps
 void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
   render_pixel_data(*(sshot.frame), tmrs.scaling_buffer, 2, 0, COLS, LINES - 4, tmps.vom, tmps.ascii_display_chars);
-  tmrs.req_frame_dim = Dim2(COLS, LINES - 4);
+  tmrs.req_frame_dim = { COLS, LINES - 4 };
 
   render_current_filename(tmps, tmrs);
 
