@@ -113,7 +113,6 @@ ${CMAKE_SOURCE_DIR}/src/image/color.cpp
 ${CMAKE_SOURCE_DIR}/src/image/palette.cpp
 ${CMAKE_SOURCE_DIR}/src/image/palette_io.cpp
 ${CMAKE_SOURCE_DIR}/src/image/pixeldata.cpp
-${CMAKE_SOURCE_DIR}/src/image/scale.cpp
 
 ${CMAKE_SOURCE_DIR}/src/media/audio_thread.cpp
 ${CMAKE_SOURCE_DIR}/src/media/duration_checking.cpp

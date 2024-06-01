@@ -74,8 +74,8 @@ struct TMediaProgramSnapshot {
 struct TMediaRendererState {
   MetadataCache metadata_cache;
   PixelData scaling_buffer;
-  Dim2 last_frame_dims = Dim2(1, 1);
-  Dim2 req_frame_dim = Dim2(1, 1);
+  Dim2 last_frame_dims{1, 1};
+  Dim2 req_frame_dim{1, 1};
 };
 
 void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);

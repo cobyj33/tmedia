@@ -84,7 +84,7 @@ int tmedia_run(TMediaStartupState& tmss) {
 int tmedia_main_loop(TMediaProgramState tmps) {
   TMediaRendererState tmrs;
   pixdata_setnewdims(tmrs.scaling_buffer, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
-  tmrs.req_frame_dim = Dim2(COLS, LINES);
+  tmrs.req_frame_dim = { COLS, LINES };
 
   PixelData frame;
   pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
@@ -112,7 +112,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     }
 
 
-    fetcher->req_dims = Dim2(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
+    fetcher->req_dims = { std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES) };
     std::unique_ptr<MAAudioOut> audio_output;
     fetcher->begin(sys_clk_sec()); // begin the MediaFetcher before beginning the
     // audio playback. Some audio data should be available by then hopefully
@@ -350,7 +350,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         render_tui(tmps, snapshot, tmrs);
         if (req_frame_dims_before != tmrs.req_frame_dim) {
           std::lock_guard<std::mutex> alter_lock(fetcher->alter_mutex);
-          fetcher->req_dims = Dim2(tmrs.req_frame_dim);
+          fetcher->req_dims = tmrs.req_frame_dim;
         }
 
         refresh();

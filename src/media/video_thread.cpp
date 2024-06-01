@@ -214,7 +214,7 @@ void MediaFetcher::frame_audio_fetching_func() {
 
   const int nb_ch = this->audio_buffer->get_nb_channels();
   const int aubduf_nb_frames = AUDIO_PEEK_MAX_SAMPLE_SIZE / nb_ch;
-  Dim2 visdim(MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+  Dim2 visdim{MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT};
 
   {
     std::scoped_lock<std::mutex> alter_lock(this->alter_mutex);
