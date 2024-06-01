@@ -85,30 +85,17 @@ enum class TMAlign {
   CENTER
 };
 
-struct Style {
-  int row;
-  int col;
-  int width;
-  int height;
-  TMAlign align;
-  int padding_left;
-  int padding_right;
-  int padding_top;
-  int padding_bottom;
-};
-
 /**
  * Encapsulates the style guides for 
 */
 struct TMLabelStyle {
-  int row;
-  int col;
-  int width;
-  TMAlign align;
-  int margin_left;
-  int margin_right;
+  int row = 0;
+  int col = 0;
+  int width = 0;
+  TMAlign align = TMAlign::LEFT;
+  int margin_left = 0;
+  int margin_right = 0;
 
-  TMLabelStyle();
   TMLabelStyle(int row, int col, int width, TMAlign align, int margin_left, int margin_right);
 };
 
