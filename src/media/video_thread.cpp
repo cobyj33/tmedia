@@ -55,6 +55,7 @@ static constexpr std::chrono::nanoseconds DEFAULT_AVGFTS_NS = secs_to_chns(DEFAU
 void MediaFetcher::video_fetching_thread_func() {
   // note that frame_audio_fetching_func can run even if there is no video data
   // available. Therefore, we can't just guard from AVMEDIA_TYPE_VIDEO here.
+  name_current_thread("tmedia_vid_dec");
 
   try {
     if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {

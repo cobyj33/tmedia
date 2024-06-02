@@ -82,6 +82,7 @@ int tmedia_run(TMediaStartupState& tmss) {
 }
 
 int tmedia_main_loop(TMediaProgramState tmps) {
+  name_current_thread("tmedia_main_loop");
   TMediaRendererState tmrs;
   pixdata_setnewdims(tmrs.scaling_buffer, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
   tmrs.req_frame_dim = { COLS, LINES };

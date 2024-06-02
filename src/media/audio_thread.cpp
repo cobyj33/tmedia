@@ -23,6 +23,7 @@ using namespace std::chrono_literals;
 
 void MediaFetcher::audio_dispatch_thread_func() {
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) return;
+  name_current_thread("tmedia_aud_dec");
   
   static constexpr std::chrono::milliseconds AUDIO_THREAD_PAUSED_SLEEP_MS = 25ms;
   static constexpr std::chrono::milliseconds AUDIO_BUFFER_TRY_WRITE_WAIT_MS = 25ms;

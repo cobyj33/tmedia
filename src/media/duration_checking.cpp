@@ -13,6 +13,7 @@ using ms = std::chrono::milliseconds;
 void MediaFetcher::duration_checking_thread_func() {
   if (this->media_type == MediaType::IMAGE) return;
   constexpr ms DC_LOOP_TIME_MS = ms(100);
+  name_current_thread("tmedia_durcheck");
 
   while (!this->should_exit()) {
     {

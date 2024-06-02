@@ -3,6 +3,7 @@
 
 #include <tmedia/util/wmath.h>
 #include <tmedia/util/unitconvert.h>
+#include <tmedia/util/thread.h>
 
 #include <algorithm>
 #include <memory>
@@ -36,6 +37,7 @@ int MAAudioOut::get_data_req_size(int max_buffer_size) {
 #define SAMPLE(frame, channels, channel) (((frame) * (channels)) + (channel))
 
 void MAAudioOut::audio_queue_fill_thread_func() {
+  name_current_thread("tmedia_audqfill");
   static constexpr ms AUDBUF_READ_TRY_WAIT_CHRONO_MS = ms(10);
   static constexpr int RAMP_UP_TIME_MS = MINIAUDIO_PERIOD_SIZE_MS * MINIAUDIO_PERIODS * 2;
   static constexpr int RAMP_DOWN_TIME_MS = MINIAUDIO_PERIOD_SIZE_MS * MINIAUDIO_PERIODS * 2;

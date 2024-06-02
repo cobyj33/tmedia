@@ -1,8 +1,19 @@
 #ifndef  TMEDIA_UTIL_THREAD_H
 #define  TMEDIA_UTIL_THREAD_H
 
+#include <string_view>
+
 /**
- * Simple routines for sleeping the calling thread simply
+ * Way to set the system name of the calling thread.
+ * Often used so that thread usages can be observed through a system
+ * process viewer program such as top or htop.
+ *
+ * Currently only supported for running on linux.
+*/
+void name_current_thread(std::string_view name);
+
+/**
+ * Simple routines for sleeping the calling thread
 */
 
 /**
