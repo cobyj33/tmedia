@@ -9,7 +9,7 @@
 #include <tmedia/util/wmath.h>
 #include <tmedia/util/wtime.h>
 #include <tmedia/util/defines.h>
-#include <tmedia/util/sleep.h>
+#include <tmedia/util/thread.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/tmedia_tui_elems.h>
 #include <tmedia/audio/maaudioout.h>

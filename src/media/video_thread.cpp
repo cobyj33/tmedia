@@ -3,7 +3,7 @@
 #include <tmedia/ffmpeg/decode.h>
 #include <tmedia/audio/audio.h>
 #include <tmedia/audio/audio_visualizer.h>
-#include <tmedia/util/sleep.h>
+#include <tmedia/util/thread.h>
 #include <tmedia/image/scale.h>
 #include <tmedia/util/wtime.h>
 #include <tmedia/ffmpeg/videoconverter.h>

@@ -1,6 +1,6 @@
 #include <tmedia/media/mediafetcher.h>
 
-#include <tmedia/util/sleep.h>
+#include <tmedia/util/thread.h>
 #include <tmedia/util/wtime.h>
 
 #include <mutex>

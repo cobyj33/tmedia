@@ -129,7 +129,7 @@ ${CMAKE_SOURCE_DIR}/src/tmcurses/tmcurses_init.cpp
 ${CMAKE_SOURCE_DIR}/src/tmcurses/tmcurses.cpp
 
 ${CMAKE_SOURCE_DIR}/src/util/formatting.cpp
-${CMAKE_SOURCE_DIR}/src/util/sleep.cpp
+${CMAKE_SOURCE_DIR}/src/util/thread.cpp
 
 
 ${CMAKE_SOURCE_DIR}/src/tmedia_cli.cpp

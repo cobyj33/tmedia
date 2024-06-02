@@ -1,8 +1,8 @@
-#ifndef  TMEDIA_SLEEP_H
-#define  TMEDIA_SLEEP_H
+#ifndef  TMEDIA_UTIL_THREAD_H
+#define  TMEDIA_UTIL_THREAD_H
 
 /**
- * Simple routines for 
+ * Simple routines for sleeping the calling thread simply
 */
 
 /**
