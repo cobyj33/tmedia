@@ -945,18 +945,29 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
       if (fs::is_directory(curr, ec)) {
         std::vector<std::string> media_file_paths;
+        std::vector<std::string> directory_paths;
+
         for (const fs::directory_entry& entry : fs::directory_iterator(curr)) {
           if (fs::is_directory(entry.path(), ec) && srch_opts.recurse) {
-            to_search.push(std::move(entry.path()));
+            directory_paths.push_back(entry.path().string());
           } else if (fs::is_regular_file(entry.path()) && test_media_file(entry.path(), srch_opts)) {
             media_file_paths.push_back(entry.path().string());
           }
         }
 
         SI::natural::sort(media_file_paths);
+        SI::natural::sort(directory_paths);
 
         for (auto&& media_file_path : media_file_paths) {
           resolved_paths.push_back(PlaylistItem(std::move(media_file_path), srch_opts.requested_streams));
+        }
+
+        // Since we are pushing onto a stack for searching, where
+        // the first directory pushed will be read last, we have to push
+        // the sorted directories in the reverse order so that they are
+        // read in the correct order on later iterations.
+        for (auto it = directory_paths.rbegin(); it != directory_paths.rend(); it++) {
+          to_search.push(std::move(*it));
         }
       } else if (fs::is_regular_file(curr) && test_media_file(curr, srch_opts)) {
         resolved_paths.push_back(PlaylistItem(curr, srch_opts.requested_streams));
