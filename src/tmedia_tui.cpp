@@ -30,7 +30,6 @@ void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& ssh
   assert(sshot.frame != nullptr);
   if (sshot.frame->m_width != tmrs.last_frame_dims.width ||
       sshot.frame->m_height != tmrs.last_frame_dims.height) {
-    tmrs.should_render_frame = true;
     erase();
   }
 
@@ -43,7 +42,6 @@ void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& ssh
   }
 
   if (COLS < MIN_RENDER_COLS || LINES < MIN_RENDER_LINES) {
-    tmrs.should_render_frame = true;
     erase();
   } else if (COLS <= 20 || LINES < 10 || tmps.fullscreen) {
     render_tui_fullscreen(tmps, sshot, tmrs);
@@ -58,7 +56,7 @@ void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& ssh
 
 void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
-  if (tmrs.should_render_frame) {
+  if (sshot.should_render_frame) {
     render_pixel_data(*(sshot.frame), tmrs.scaling_buffer, 0, 0, COLS, LINES, tmps.vom, tmps.ascii_display_chars);
   }
   tmrs.req_frame_dim = { COLS, LINES };
@@ -67,7 +65,7 @@ void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSn
 
 void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
-  if (tmrs.should_render_frame) {
+  if (sshot.should_render_frame) {
     render_pixel_data(*(sshot.frame), tmrs.scaling_buffer, 2, 0, COLS, LINES - 4, tmps.vom, tmps.ascii_display_chars);
   }
   tmrs.req_frame_dim = { COLS, LINES - 4 };
@@ -96,7 +94,7 @@ void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnaps
 
 void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
-  if (tmrs.should_render_frame) {
+  if (sshot.should_render_frame) {
     render_pixel_data(*(sshot.frame), tmrs.scaling_buffer, 2, 0, COLS, LINES - 4, tmps.vom, tmps.ascii_display_chars);
   }
   tmrs.req_frame_dim = { COLS, LINES - 4 };

@@ -91,7 +91,26 @@ int tmedia_main_loop(TMediaProgramState tmps) {
   pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
 
   while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.plist.size() > 0) {
-    tmrs.should_render_frame = true; // render first frame in file
+    // should_render_frame determines whether the frame should be
+    // - the "frame" in should_render_frame refers to the actual PixelData frame
+    // returned from the MediaFetcher, not the entire terminal screen.
+    // 
+    // should_render_frame is set to true whenever some change to the screen
+    // happens that affects how the frame should be rendered. This includes
+    // - The frame sent by the MediaFetcher has changed, as determined
+    //   by MediaFetcher::frame_changed
+    // - The terminal screen was resized
+    // - The VidOutMode of tmedia has changed
+    // - The screen was erased from calling curses's "erase()" function
+    // - The screen has been toggled between fullscreen and not fullscreen
+    // - The screen has been forceably refreshed
+    // should_render_frame is declared as false on the beginning of initializing
+    // each playlist item so that the screen is rendered only when the first
+    // frame comes through the MediaFetcher
+    // ! should_render_frame should only be set to false at the end
+    // ! of each input loop.
+    bool should_render_frame = false;
+
     pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
 
     // main loop setup phase. Sets up and begins MediaFetcher. Sets up
@@ -160,7 +179,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           if (fetcher->frame_changed) {
             pixdata_copy(frame, fetcher->frame);
             fetcher->frame_changed = false;
-            tmrs.should_render_frame = true;
+            should_render_frame = true;
           }
 
           // If the audio is desynced, we just try and jump to the current media
@@ -189,7 +208,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               case 'q':
               case 'Q': quit_program_command_received = true; break;
               case KEY_RESIZE: {
-                tmrs.should_render_frame = true;
+                should_render_frame = true;
                 erase();
               } break;
               case 'r':
@@ -288,19 +307,19 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           }
 
           if (nextvom != tmps.vom) {
-            tmrs.should_render_frame = true;
+            should_render_frame = true;
             set_global_vom(&tmps.vom, nextvom);
           }
 
           if (toggle_fullscreen) {
             erase();
-            tmrs.should_render_frame = true;
+            should_render_frame = true;
             tmps.fullscreen = !tmps.fullscreen;
           }
 
           if (should_refresh) {
             erase();
-            tmrs.should_render_frame = true;
+            should_render_frame = true;
             if (audio_output && audio_output->playing()) {
               audio_output->stop();
               audio_output->start();
@@ -359,6 +378,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         snapshot.media_time_secs = curr_medtime;
         snapshot.media_duration_secs = fetcher->get_duration();
         snapshot.media_type = fetcher->media_type;
+        snapshot.should_render_frame = should_render_frame;
 
         Dim2 req_frame_dims_before = tmrs.req_frame_dim;
         render_tui(tmps, snapshot, tmrs);
@@ -367,7 +387,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           fetcher->req_dims = tmrs.req_frame_dim;
         }
 
-        tmrs.should_render_frame = false;
+        should_render_frame = false;
         refresh();
         sleep_for_sec(1.0 / static_cast<double>(tmps.refresh_rate_fps));
       }
