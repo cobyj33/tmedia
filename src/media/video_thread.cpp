@@ -150,6 +150,7 @@ void MediaFetcher::frame_video_fetching_func() {
         vconv.convert_video_frame(converted_frame.get(), dec_frames[0]);
         std::lock_guard<std::mutex> lock(this->alter_mutex);
         pixdata_from_avframe(this->frame, converted_frame.get());
+        this->frame_changed = true;
       }
 
       clear_avframe_list(dec_frames);
@@ -194,6 +195,7 @@ void MediaFetcher::frame_image_fetching_func() {
     vconv.convert_video_frame(converted_frame.get(), dec_frames[dec_frames.size() - 1]);
     std::lock_guard<std::mutex> lock(this->alter_mutex);
     pixdata_from_avframe(this->frame, converted_frame.get());
+    this->frame_changed = true;
   }
 
   clear_avframe_list(dec_frames);
@@ -252,6 +254,7 @@ void MediaFetcher::frame_audio_fetching_func() {
       visualize(local_frame, audbuf, aubduf_nb_frames, nb_ch, visdim.width, visdim.height);
       std::scoped_lock<std::mutex> alter_lock(this->alter_mutex);
       pixdata_copy(this->frame, local_frame);
+      this->frame_changed = true;
       if (this->req_dims) {
         visdim = bound_dims(
         this->req_dims->width,

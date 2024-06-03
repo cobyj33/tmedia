@@ -85,12 +85,13 @@ int tmedia_main_loop(TMediaProgramState tmps) {
   name_current_thread("tmedia_main_loop");
   TMediaRendererState tmrs;
   pixdata_setnewdims(tmrs.scaling_buffer, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
-  tmrs.req_frame_dim = { COLS, LINES };
+  tmrs.req_frame_dim = { std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES) };
 
   PixelData frame;
   pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
 
   while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.plist.size() > 0) {
+    tmrs.should_render_frame = true; // render first frame in file
     pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
 
     // main loop setup phase. Sets up and begins MediaFetcher. Sets up
@@ -113,7 +114,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     }
 
 
-    fetcher->req_dims = { std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES) };
+    fetcher->req_dims = tmrs.req_frame_dim;
     std::unique_ptr<MAAudioOut> audio_output;
     fetcher->begin(sys_clk_sec()); // begin the MediaFetcher before beginning the
     // audio playback. Some audio data should be available by then hopefully
@@ -147,14 +148,20 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         // for denoting if we're trying to jump toward a timestamp
         bool req_jump = false;
 
+
         {
           static constexpr double MAX_AUDIO_DESYNC_SECS = 0.6;  
           std::lock_guard<std::mutex> lock(fetcher->alter_mutex);
           curr_systime = sys_clk_sec(); // set in here, since locking the mutex could take an undetermined amount of time
           curr_medtime = fetcher->get_time(curr_systime);
           req_jumptime = curr_medtime;
-          pixdata_copy(frame, fetcher->frame);
           fetcher->req_dims = tmrs.req_frame_dim;
+
+          if (fetcher->frame_changed) {
+            pixdata_copy(frame, fetcher->frame);
+            fetcher->frame_changed = false;
+            tmrs.should_render_frame = true;
+          }
 
           // If the audio is desynced, we just try and jump to the current media
           // time to resync it.
@@ -181,7 +188,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               case '\b':
               case 'q':
               case 'Q': quit_program_command_received = true; break;
-              case KEY_RESIZE: erase(); break;
+              case KEY_RESIZE: {
+                tmrs.should_render_frame = true;
+                erase();
+              } break;
               case 'r':
               case 'R': should_refresh = !should_refresh; break;
               case 'c':
@@ -278,16 +288,19 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           }
 
           if (nextvom != tmps.vom) {
+            tmrs.should_render_frame = true;
             set_global_vom(&tmps.vom, nextvom);
           }
 
           if (toggle_fullscreen) {
             erase();
+            tmrs.should_render_frame = true;
             tmps.fullscreen = !tmps.fullscreen;
           }
 
           if (should_refresh) {
             erase();
+            tmrs.should_render_frame = true;
             if (audio_output && audio_output->playing()) {
               audio_output->stop();
               audio_output->start();
@@ -354,6 +367,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           fetcher->req_dims = tmrs.req_frame_dim;
         }
 
+        tmrs.should_render_frame = false;
         refresh();
         sleep_for_sec(1.0 / static_cast<double>(tmps.refresh_rate_fps));
       }

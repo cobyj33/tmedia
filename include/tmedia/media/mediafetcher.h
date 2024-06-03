@@ -99,6 +99,7 @@ class MediaFetcher {
     const std::unique_ptr<MediaDecoder> mdec;
     std::unique_ptr<BlockingAudioRingBuffer> audio_buffer;
     PixelData frame;
+    bool frame_changed;
 
     std::mutex alter_mutex;
     std::optional<Dim2> req_dims;

@@ -33,6 +33,7 @@ MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::array<b
   this->media_type = this->mdec->get_media_type();
   this->msg_video_jump_curr_time = 0;
   this->msg_audio_jump_curr_time = 0;
+  this->frame_changed = true; // read in the empty frame
 
   // Actually important to initialize to 0, so that when the
   // calling thread initially reads from the MediaFetcher frame, it does
