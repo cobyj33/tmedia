@@ -43,10 +43,12 @@ MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::array<b
   pixdata_setnewdims(this->frame, 0, 0);
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-    static constexpr int INTERNAL_AUDIO_BUFFER_LENGTH_SECONDS = 5;
+    static constexpr int MINIMUM_INTERNAL_AUDIO_BUFFER_SIZE_FRAMES = 4096;
+    static constexpr double INTERNAL_AUDIO_BUFFER_LENGTH_SECONDS = 0.1;
     const int sample_rate = this->mdec->get_sample_rate();
     const int nb_channels = this->mdec->get_nb_channels();
-    const int frame_capacity = sample_rate * INTERNAL_AUDIO_BUFFER_LENGTH_SECONDS;
+    const int requested_frame_capacity = sample_rate * nb_channels * INTERNAL_AUDIO_BUFFER_LENGTH_SECONDS;
+    const int frame_capacity = std::max(MINIMUM_INTERNAL_AUDIO_BUFFER_SIZE_FRAMES, requested_frame_capacity);
     this->audio_buffer = std::make_unique<BlockingAudioRingBuffer>(frame_capacity, nb_channels, sample_rate, 0.0);
   }
 }
