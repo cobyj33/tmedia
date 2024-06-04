@@ -34,13 +34,7 @@ MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::array<b
   this->msg_video_jump_curr_time = 0;
   this->msg_audio_jump_curr_time = 0;
   this->frame_changed = false;
-
-  // Actually important to initialize to 0, so that when the
-  // calling thread initially reads from the MediaFetcher frame, it does
-  // not read a full blank frame. This does mean that the first copy to this
-  // buffer will cause an allocation on the video_thread though, but
-  // this should be trivial.
-  pixdata_setnewdims(this->frame, 0, 0);
+  pixdata_setnewdims(this->frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
 
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     static constexpr int MINIMUM_INTERNAL_AUDIO_BUFFER_SIZE_FRAMES = 4096;
