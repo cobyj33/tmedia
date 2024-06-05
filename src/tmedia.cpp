@@ -140,10 +140,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
     if (fetcher->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
       static constexpr std::chrono::milliseconds AUDIO_BUFFER_TRY_READ_MS = 2ms;
-      audio_output = std::make_unique<MAAudioOut>(fetcher->mdec->get_nb_channels(), fetcher->mdec->get_sample_rate(), [&fetcher] (float* float_buffer, int nb_frames) {
+      audio_output = std::make_unique<MAAudioOut>(fetcher->nb_channels, fetcher->sample_rate, [&fetcher] (float* float_buffer, int nb_frames) {
         const bool success = fetcher->audio_buffer->try_read_into(nb_frames, float_buffer, AUDIO_BUFFER_TRY_READ_MS);
         if (!success) {
-          const int fb_sz = nb_frames * fetcher->mdec->get_nb_channels();
+          const int fb_sz = nb_frames * fetcher->nb_channels;
           for (int i = 0; i < fb_sz; i++)
             float_buffer[i] = 0.0f;
         }
@@ -291,7 +291,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               case '8':
               case '9': {
                 req_jump = true;
-                req_jumptime = fetcher->get_duration() * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
+                req_jumptime = fetcher->duration * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
               } break;
             }
             input = getch();
@@ -366,7 +366,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           if (audio_output && fetcher->is_playing()) audio_output->stop();
           {
             std::scoped_lock<std::mutex> total_lock{fetcher->alter_mutex};
-            fetcher->jump_to_time(clamp(req_jumptime, 0.0, fetcher->get_duration()), sys_clk_sec());
+            fetcher->jump_to_time(clamp(req_jumptime, 0.0, fetcher->duration), sys_clk_sec());
           }
           if (audio_output && fetcher->is_playing()) audio_output->start();
         }
@@ -376,7 +376,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         snapshot.playing = fetcher->is_playing();
         snapshot.has_audio_output = audio_output.get() != nullptr;
         snapshot.media_time_secs = curr_medtime;
-        snapshot.media_duration_secs = fetcher->get_duration();
+        snapshot.media_duration_secs = fetcher->duration;
         snapshot.media_type = fetcher->media_type;
         snapshot.should_render_frame = should_render_frame;
 

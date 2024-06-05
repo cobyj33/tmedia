@@ -18,7 +18,7 @@ void MediaFetcher::duration_checking_thread_func() {
   while (!this->should_exit()) {
     {
       std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
-      if (this->get_time(sys_clk_sec()) >= this->get_duration()) {
+      if (this->get_time(sys_clk_sec()) >= this->duration) {
         this->dispatch_exit();
         break;
       }

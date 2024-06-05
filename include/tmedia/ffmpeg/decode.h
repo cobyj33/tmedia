@@ -15,10 +15,14 @@
 #include <deque>
 
 extern "C" {
-#include <libavcodec/avcodec.h>
+struct AVFormatContext;
+struct AVFrame;
+struct AVPacket;
+struct AVCodecContext;
+struct AVStream;
+#undef __STDC_CONSTANT_MACROS
+#define __STDC_CONSTANT_MACROS 1 // avutil complains if I don't put this?
 #include <libavutil/avutil.h>
-#include <libswscale/swscale.h>
-#include <libswresample/swresample.h>
 }
 
 
@@ -92,5 +96,9 @@ void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_pa
  * objects, usually through clear_avframe_list
 */
 void decode_packet_queue(AVCodecContext* codec_context, std::deque<AVPacket*>& packet_queue, enum AVMediaType packet_type, std::vector<AVFrame*>& frame_buffer);
+
+int av_jump_time(AVFormatContext* fctx, AVCodecContext* cctx, AVStream* stream, AVPacket* reading_pkt, double target_time);
+void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<AVFrame*>& out_frames);
+
 
 #endif

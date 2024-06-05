@@ -7,7 +7,6 @@
 #include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/ffmpeg/videoconverter.h>
 #include <tmedia/ffmpeg/ffmpeg_error.h>
-#include <tmedia/ffmpeg/streamdecoder.h>
 
 #include <tmedia/util/defines.h>
 

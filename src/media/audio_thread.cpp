@@ -4,19 +4,22 @@
 #include <tmedia/util/thread.h>
 #include <tmedia/util/wtime.h>
 #include <tmedia/util/wmath.h>
+#include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/deleter.h>
+#include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/ffmpeg/decode.h>
 #include <tmedia/ffmpeg/audioresampler.h>
 
 #include <mutex>
 #include <chrono>
-#include <system_error>
+
+#include <fmt/format.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 #include <libswresample/swresample.h>
-#include <libavutil/audio_fifo.h>
 }
 
 using namespace std::chrono_literals;
@@ -29,18 +32,16 @@ void MediaFetcher::audio_dispatch_thread_func() {
   static constexpr std::chrono::milliseconds AUDIO_BUFFER_TRY_WRITE_WAIT_MS = 25ms;
 
   try { // super try block :)
-    std::array<bool, AVMEDIA_TYPE_NB> requested_streams;
-    for (std::size_t i = 0; i < requested_streams.size(); i++) requested_streams[i] = false;
-    requested_streams[AVMEDIA_TYPE_AUDIO] = true;
-
-    MediaDecoder adec(this->mdec->path, requested_streams);
-
-    if (!adec.has_stream_decoder(AVMEDIA_TYPE_AUDIO)) return; // copy failed?
+    std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fctx = open_fctx(this->path);
+    OpenCCTXRes cctxavstr = open_cctx(fctx.get(), AVMEDIA_TYPE_AUDIO);
+    AVCodecContext* cctx = cctxavstr.cctx.get();
+    AVStream* avstr = cctxavstr.avstr;
 
     AudioResampler audio_resampler(
-    adec.get_ch_layout(), AV_SAMPLE_FMT_FLT, adec.get_sample_rate(),
-    adec.get_ch_layout(), adec.get_sample_fmt(), adec.get_sample_rate());
-    sleep_for_sec(adec.get_start_time(AVMEDIA_TYPE_AUDIO));
+    cctx_get_ch_layout(cctx), AV_SAMPLE_FMT_FLT, cctx->sample_rate,
+    cctx_get_ch_layout(cctx), cctx->sample_fmt, cctx->sample_rate);
+
+    sleep_for_sec(avstr_get_start_time(avstr));
 
     /*
       There was an issue in tmedia where at the end of an audio stream, CPU
@@ -66,7 +67,9 @@ void MediaFetcher::audio_dispatch_thread_func() {
     static constexpr std::chrono::milliseconds MAX_RUNS_WAIT_TIME(25);
     static constexpr unsigned int MAX_RUNS_W_FAIL = 5;
     unsigned int runs_w_fail = 0;
+
     std::vector<AVFrame*> next_raw_audio_frames;
+    std::unique_ptr<AVPacket, AVPacketDeleter> packet(av_packet_allocx());
 
     // single resampled frame buffer to use for the lifetime of the
     // audio thread
@@ -86,16 +89,21 @@ void MediaFetcher::audio_dispatch_thread_func() {
 
       {
         clear_avframe_list(next_raw_audio_frames);
-        adec.next_frames(AVMEDIA_TYPE_AUDIO, next_raw_audio_frames);
+        decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames);
         std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
         current_time = this->clock.get_time(sys_clk_sec());
         msg_audio_jump_curr_time_cache = this->msg_audio_jump_curr_time;
       }
 
       if (msg_audio_jump_curr_time_cache > 0) {
-        adec.jump_to_time(current_time);
+        int ret = av_jump_time(fctx.get(), cctx, avstr, packet.get(), current_time);
+        if (unlikely(ret != 0)) {
+          throw ffmpeg_error(fmt::format("[{}] Failed to jump to time {}", FUNCDINFO, current_time), ret);
+        }
+
         clear_avframe_list(next_raw_audio_frames);
-        adec.next_frames(AVMEDIA_TYPE_AUDIO, next_raw_audio_frames);
+        decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames);
+
         // clear audio buffer **after** expensive time jumping functions and
         // decoding functions
         this->audio_buffer->clear(current_time);

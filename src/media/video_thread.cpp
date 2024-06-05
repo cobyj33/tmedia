@@ -1,6 +1,9 @@
 #include <tmedia/media/mediafetcher.h>
 
+#include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/ffmpeg/decode.h>
+#include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/audio/audio.h>
 #include <tmedia/audio/audio_visualizer.h>
 #include <tmedia/util/thread.h>
@@ -74,25 +77,24 @@ void MediaFetcher::video_fetching_thread_func() {
 }
 
 void MediaFetcher::frame_video_fetching_func() {
-  std::array<bool, AVMEDIA_TYPE_NB> requested_streams;
-  for (std::size_t i = 0; i < requested_streams.size(); i++) requested_streams[i] = false;
-  requested_streams[AVMEDIA_TYPE_VIDEO] = true;
-  MediaDecoder vdec(this->mdec->path, requested_streams);
-  if (!vdec.has_stream_decoder(AVMEDIA_TYPE_VIDEO)) return; // copy failed?
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fctx = open_fctx(this->path);
+  OpenCCTXRes cctxavstr = open_cctx(fctx.get(), AVMEDIA_TYPE_VIDEO);
+  AVCodecContext* cctx = cctxavstr.cctx.get();
+  AVStream* avstr = cctxavstr.avstr;
 
-  const Dim2 def_outdim = bound_dims(vdec.get_width() * PAR_HEIGHT,
-  vdec.get_height() * PAR_WIDTH,
+  const Dim2 def_outdim = bound_dims(cctx->width * PAR_HEIGHT,
+  cctx->height * PAR_WIDTH,
   MAX_FRAME_WIDTH,
   MAX_FRAME_HEIGHT);
 
-  const double avg_fts = vdec.get_avgfts(AVMEDIA_TYPE_VIDEO);
+  const double avg_fts =  1 / av_q2d(avstr->avg_frame_rate);
   VideoConverter vconv(def_outdim.width, def_outdim.height, AV_PIX_FMT_RGB24,
-  vdec.get_width(), vdec.get_height(), vdec.get_pix_fmt());
+  cctx->width, cctx->height, cctx->pix_fmt);
   std::vector<AVFrame*> dec_frames;
-
   // single allocation of AVFrame buffer to use for the lifetime of the
   // video thread as output from convert_video_frame
   std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
+  std::unique_ptr<AVPacket, AVPacketDeleter> packet(av_packet_allocx());
 
   while (!this->should_exit()) {
     if (!this->is_playing()) {
@@ -106,8 +108,8 @@ void MediaFetcher::frame_video_fetching_func() {
       std::lock_guard<std::mutex> alter_mutex_lock(this->alter_mutex);
       if (this->req_dims) {
         Dim2 req_dims_bounded = bound_dims(
-        vdec.get_width() * PAR_HEIGHT,
-        vdec.get_height() * PAR_WIDTH,
+        cctx->width * PAR_HEIGHT,
+        cctx->height * PAR_WIDTH,
         this->req_dims->width, this->req_dims->height);
 
         Dim2 out_dim = bound_dims(
@@ -126,7 +128,7 @@ void MediaFetcher::frame_video_fetching_func() {
 
     {
       clear_avframe_list(dec_frames);
-      vdec.next_frames(AVMEDIA_TYPE_VIDEO, dec_frames);
+      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       current_time = this->get_time(sys_clk_sec());
       msg_video_jump_curr_time_cache = this->msg_video_jump_curr_time;
@@ -134,15 +136,19 @@ void MediaFetcher::frame_video_fetching_func() {
     }
 
     if (msg_video_jump_curr_time_cache > 0) {
-      vdec.jump_to_time(current_time);
+      int ret = av_jump_time(fctx.get(), cctx, avstr, packet.get(), current_time);
+      if (unlikely(ret != 0)) {
+        throw ffmpeg_error(fmt::format("[{}] Failed to jump to time {}", FUNCDINFO, current_time), ret);
+      }
+
       clear_avframe_list(dec_frames);
-      vdec.next_frames(AVMEDIA_TYPE_VIDEO, dec_frames);
+      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       this->msg_video_jump_curr_time--;
     }
 
     if (dec_frames.size() > 0) {
-      const double frame_pts_time_sec = (double)dec_frames[0]->pts * vdec.get_time_base(AVMEDIA_TYPE_VIDEO);
+      const double frame_pts_time_sec = (double)dec_frames[0]->pts * av_q2d(avstr->time_base);
       const double extra_delay = (double)(dec_frames[0]->repeat_pict) / (2 * avg_fts);
       wait_duration = frame_pts_time_sec - current_time + extra_delay;
 
@@ -171,26 +177,27 @@ void MediaFetcher::frame_video_fetching_func() {
 }
 
 void MediaFetcher::frame_image_fetching_func() {
-  std::array<bool, AVMEDIA_TYPE_NB> requested_streams;
-  for (std::size_t i = 0; i < requested_streams.size(); i++) requested_streams[i] = false;
-  requested_streams[AVMEDIA_TYPE_VIDEO] = true;
-  MediaDecoder vdec(this->mdec->path, requested_streams);
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fctx = open_fctx(this->path);
+  OpenCCTXRes cctxavstr = open_cctx(fctx.get(), AVMEDIA_TYPE_VIDEO);
+  std::unique_ptr<AVPacket, AVPacketDeleter> packet(av_packet_allocx());
+  AVCodecContext* cctx = cctxavstr.cctx.get();
+  AVStream* avstr = cctxavstr.avstr;
 
-  Dim2 outdim = bound_dims(vdec.get_width() * PAR_HEIGHT,
-  vdec.get_height() * PAR_WIDTH,
+  Dim2 outdim = bound_dims(cctx->width * PAR_HEIGHT,
+  cctx->height * PAR_WIDTH,
   MAX_FRAME_WIDTH,
   MAX_FRAME_HEIGHT);
 
   VideoConverter vconv(outdim.width,
   outdim.height,
   AV_PIX_FMT_RGB24,
-  vdec.get_width(),
-  vdec.get_height(),
-  vdec.get_pix_fmt());
+  cctx->width,
+  cctx->height,
+  cctx->pix_fmt);
 
   std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
   std::vector<AVFrame*> dec_frames;
-  vdec.next_frames(AVMEDIA_TYPE_VIDEO, dec_frames);
+  decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames);
   if (dec_frames.size() > 0) {
     vconv.convert_video_frame(converted_frame.get(), dec_frames[dec_frames.size() - 1]);
     std::lock_guard<std::mutex> lock(this->alter_mutex);

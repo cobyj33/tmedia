@@ -105,7 +105,6 @@ ${CMAKE_SOURCE_DIR}/src/ffmpeg/decode.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/deleter.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/ffmpeg_error.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/probe.cpp
-${CMAKE_SOURCE_DIR}/src/ffmpeg/streamdecoder.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/videoconverter.cpp
 
 ${CMAKE_SOURCE_DIR}/src/image/ascii.cpp
@@ -117,7 +116,6 @@ ${CMAKE_SOURCE_DIR}/src/image/pixeldata.cpp
 ${CMAKE_SOURCE_DIR}/src/media/audio_thread.cpp
 ${CMAKE_SOURCE_DIR}/src/media/duration_checking.cpp
 ${CMAKE_SOURCE_DIR}/src/media/mediaclock.cpp
-${CMAKE_SOURCE_DIR}/src/media/mediadecoder.cpp
 ${CMAKE_SOURCE_DIR}/src/media/mediafetcher.cpp
 ${CMAKE_SOURCE_DIR}/src/media/mediaformat.cpp
 ${CMAKE_SOURCE_DIR}/src/media/metadata.cpp

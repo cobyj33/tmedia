@@ -63,7 +63,7 @@ std::optional<MediaType> media_type_probe(const std::filesystem::path& path) {
   } catch (const std::runtime_error& e) {} // no-op
 
   try {
-    std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_format_context(path);
+    std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_fctx(path);
     MediaType media_type = media_type_from_avformat_context(fmt_ctx.get());
     return media_type;
   } catch (const std::runtime_error& e) {} // no-op
@@ -81,7 +81,7 @@ bool is_valid_media_file_path(const std::filesystem::path& path) {
   } catch (const std::runtime_error& e) {} // no-op
 
   try {
-    std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_format_context(path);
+    std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_fctx(path);
     return true;
   } catch (const std::runtime_error& e) {
     return false;

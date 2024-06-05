@@ -19,7 +19,7 @@ void mchc_cache_file(const std::filesystem::path& file, MetadataCache& cache) {
   if (mchc_has_file(file.c_str(), cache)) return;
 
   MetadataCacheEntry cache_entry{ std::string(file), {} };
-  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_format_context(file);
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_fctx(file);
   fmt_ctx_meta(fmt_ctx.get(), cache_entry.value);
   cache.push_back(std::move(cache_entry));
 }

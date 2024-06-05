@@ -1,5 +1,6 @@
 #include <tmedia/ffmpeg/decode.h>
 
+#include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/ffmpeg/ffmpeg_error.h>
 #include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/util/defines.h>
@@ -11,6 +12,7 @@
 #include <deque>
 #include <stdexcept>
 #include <string>
+#include <cassert>
 
 
 extern "C" {
@@ -112,7 +114,69 @@ void decode_packet_queue(AVCodecContext* codec_context, std::deque<AVPacket*>& p
           FUNCDINFO, av_get_media_type_string(packet_type)));
       }
     } catch (ffmpeg_error const& e) {
-      if (e.get_averror() != AVERROR(EAGAIN)) throw e;
+      if (e.averror != AVERROR(EAGAIN)) throw e;
     }
   }
+}
+
+
+void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<AVFrame*>& out_frames) {
+  static constexpr int ALLOWED_DECODE_FAILURES = 5;
+  int nb_errors_thrown = 0;
+
+  int res = av_next_stream_packet(fctx, stream_idx, reading_pkt);
+  while (res == 0) {
+    try {
+      if (cctx->codec_type == AVMEDIA_TYPE_AUDIO) {
+        decode_audio_packet(cctx, reading_pkt, out_frames);
+        return;
+      } else if (cctx->codec_type == AVMEDIA_TYPE_VIDEO) {
+        decode_video_packet(cctx, reading_pkt, out_frames);
+        return;
+      } else {
+        throw std::runtime_error(fmt::format("[{}] Could not decode "
+        "packet queue of unimplemented AVMediaType {}.",
+        FUNCDINFO, av_get_media_type_string(cctx->codec_type)));
+      }
+    } catch (ffmpeg_error const& e) {
+      if (e.averror != AVERROR(EAGAIN)) {
+        nb_errors_thrown++;
+        if (nb_errors_thrown > ALLOWED_DECODE_FAILURES) {
+          throw std::runtime_error(fmt::format("[{}] Could not decode next {} "
+          "packet: \n\t{}", FUNCDINFO, av_get_media_type_string(cctx->codec_type),
+          e.what()));
+        }
+      }
+    }
+
+    res = av_next_stream_packet(fctx, stream_idx, reading_pkt);
+  }
+}
+
+int av_jump_time(AVFormatContext* fctx, AVCodecContext* cctx, AVStream* stream, AVPacket* reading_pkt, double target_time) {
+  assert(target_time >= 0.0 && target_time <= (fctx->duration / AV_TIME_BASE));
+
+  int ret = avformat_seek_file(fctx, -1, 0.0,
+    target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
+
+  if (ret < 0)
+    return ret;
+
+  avcodec_flush_buffers(cctx);
+  bool passed_target_time = false;
+  std::vector<AVFrame*> frames;
+
+  do {
+    clear_avframe_list(frames);
+    decode_next_stream_frames(fctx, cctx, stream->index, reading_pkt, frames);
+    for (std::size_t i = 0; i < frames.size(); i++) {
+      if (frames[i]->pts * av_q2d(stream->time_base) >= target_time) {
+        passed_target_time = true;
+        break;
+      }
+    }
+  } while (!passed_target_time && frames.size() > 0);
+
+  clear_avframe_list(frames);
+  return ret;
 }
