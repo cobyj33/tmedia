@@ -86,9 +86,8 @@ AudioResampler::~AudioResampler() {
 }
 
 void AudioResampler::resample_audio_frame(AVFrame* dest, AVFrame* src) {
+  // ! NOTE: src CAN BE NULL!!! Keep this in mind when writing code in this function
   int result;
-  av_frame_unref(dest);
-
   dest->sample_rate = this->m_dst_sample_rate;
   dest->format = this->m_dst_sample_fmt;
   #if HAS_AVCHANNEL_LAYOUT
@@ -101,10 +100,12 @@ void AudioResampler::resample_audio_frame(AVFrame* dest, AVFrame* src) {
   dest->channel_layout = this->m_dst_ch_layout;
   #endif
 
-  dest->pts = src->pts;
-  #if HAS_AVFRAME_DURATION
-  dest->duration = src->duration;
-  #endif
+  if (src) {
+    dest->pts = src->pts;
+    #if HAS_AVFRAME_DURATION
+    dest->duration = src->duration;
+    #endif
+  }
 
   result = swr_convert_frame(this->m_context, dest, src);
 

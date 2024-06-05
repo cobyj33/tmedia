@@ -120,6 +120,15 @@ void MediaFetcher::audio_dispatch_thread_func() {
         }
       }
 
+      // reading possible extra buffered data
+      audio_resampler.resample_audio_frame(resampled_frame.get(), nullptr);
+      while (resampled_frame->nb_samples > 0) {
+        while (!this->audio_buffer->try_write_into(resampled_frame->nb_samples, (float*)(resampled_frame->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
+          if (this->should_exit()) break;
+        }
+        audio_resampler.resample_audio_frame(resampled_frame.get(), nullptr);
+      }
+
       next_raw_audio_frames.clear();
       if (runs_w_fail >= MAX_RUNS_W_FAIL) {
         runs_w_fail = 0;
