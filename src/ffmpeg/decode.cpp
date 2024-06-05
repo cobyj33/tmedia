@@ -30,6 +30,11 @@ void av_frame_move_to_pool(std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>
   }
 }
 
+/**
+ * Note that it is possible for av_frame_alloc_from_pool to return a
+ * nullptr if av_frame_alloc fails. Make sure to check this from calling
+ * code.
+*/
 std::unique_ptr<AVFrame, AVFrameDeleter> av_frame_alloc_from_pool(std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
   if (!frame_pool.empty()) {
     AVFrame* pooled_frame = frame_pool.back().get();
@@ -42,37 +47,32 @@ std::unique_ptr<AVFrame, AVFrameDeleter> av_frame_alloc_from_pool(std::vector<st
 }
 
 
-void decode_packet(AVCodecContext* cctx, AVPacket* pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
+int decode_packet(AVCodecContext* cctx, AVPacket* pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
   int result = avcodec_send_packet(cctx, pkt);
   if (result != 0) {
-    throw ffmpeg_error(fmt::format("[{}] error while sending packet ",
-                                    FUNCDINFO), result);
+    return result;
   }
 
   while (result == 0) {
-    // av_frame_alloc used here instead of av_frame_allocx, since if
-    // av_frame_alloc fails, we need to clear frame_buffer before throwing
-    // an error rather than throwing std::bad_alloc directly
     std::unique_ptr<AVFrame, AVFrameDeleter> audio_frame = av_frame_alloc_from_pool(frame_pool);
     if (unlikely(audio_frame.get() == nullptr)) {
       av_frame_move_to_pool(frame_buffer, frame_pool);
-      throw ffmpeg_error("Failed to allocate AVFrame", result);
+      return AVERROR(ENOMEM);
     }
 
     result = avcodec_receive_frame(cctx, audio_frame.get());
     if (result < 0) {
-      if (result == AVERROR(EAGAIN) && !frame_buffer.empty())  {
-        av_frame_unref(audio_frame.get());
-        frame_pool.push_back(std::move(audio_frame));
-        return;
-      }
-      av_frame_move_to_pool(frame_buffer, frame_pool);
-      throw ffmpeg_error(fmt::format("[{}] error while receiving audio "
-      "frames during decoding: ", FUNCDINFO), result);
+      if (result != AVERROR(EAGAIN))
+        av_frame_move_to_pool(frame_buffer, frame_pool);
+      av_frame_unref(audio_frame.get());
+      frame_pool.push_back(std::move(audio_frame));
+      return result;
     }
 
     frame_buffer.push_back(std::move(audio_frame));
   }
+
+  return result;
 }
 
 void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& out_frames, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
@@ -83,17 +83,16 @@ void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int 
 
   int res = av_next_stream_packet(fctx, stream_idx, reading_pkt);
   while (res == 0) {
-    try {
-      decode_packet(cctx, reading_pkt, out_frames, frame_pool);
+    res = decode_packet(cctx, reading_pkt, out_frames, frame_pool);
+
+    if (res == 0 || (res == AVERROR(EAGAIN) && !out_frames.empty())) {
       return;
-    } catch (ffmpeg_error const& e) {
-      if (e.averror != AVERROR(EAGAIN)) {
-        nb_errors_thrown++;
-        if (nb_errors_thrown > ALLOWED_DECODE_FAILURES) {
-          throw std::runtime_error(fmt::format("[{}] Could not decode next {} "
-          "packet: \n\t{}", FUNCDINFO, av_get_media_type_string(cctx->codec_type),
-          e.what()));
-        }
+    } else if (res != AVERROR(EAGAIN)) {
+      nb_errors_thrown++;
+      if (nb_errors_thrown > ALLOWED_DECODE_FAILURES) {
+        throw std::runtime_error(fmt::format("[{}] Could not decode next {} "
+        "packet: \n\t{}", FUNCDINFO, av_get_media_type_string(cctx->codec_type),
+        res));
       }
     }
 

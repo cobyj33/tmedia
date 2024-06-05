@@ -31,9 +31,6 @@ struct AVStream;
  * frame_buffer must be cleared to size 0 before it is passed into this
  * function
  * 
- * throws ffmpeg_error if any error is detected while decoding the
- * given packet, including EAGAIN.
- * 
  * Note that while EAGAIN may be thrown in an ffmpeg_error from this function,
  * this only means that the next AVPacket must be inputted on the next
  * call to decode_packet.
@@ -41,7 +38,7 @@ struct AVStream;
  * Note that while frame_buffer is filled, there should often only be one
  * AVFrame packet returned if no error is thrown.
 */
-void decode_packet(AVCodecContext* cctx, AVPacket* pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool);
+int decode_packet(AVCodecContext* cctx, AVPacket* pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool);
 
 int av_jump_time(AVFormatContext* fctx, AVCodecContext* cctx, AVStream* stream, AVPacket* reading_pkt, double target_time);
 void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& out_frames, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool);
