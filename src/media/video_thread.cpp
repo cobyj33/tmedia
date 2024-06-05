@@ -91,7 +91,7 @@ void MediaFetcher::frame_video_fetching_func() {
   const double avg_fts =  1 / av_q2d(avstr->avg_frame_rate);
   VideoConverter vconv(def_outdim.width, def_outdim.height, AV_PIX_FMT_RGB24,
   cctx->width, cctx->height, cctx->pix_fmt);
-  std::vector<AVFrame*> dec_frames;
+  std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> dec_frames;
   // single allocation of AVFrame buffer to use for the lifetime of the
   // video thread as output from convert_video_frame
   std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
@@ -128,7 +128,7 @@ void MediaFetcher::frame_video_fetching_func() {
     bool saved_frame_is_empty = false; // set in critical section
 
     {
-      clear_avframe_list(dec_frames);
+      dec_frames.clear();
       decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       current_time = this->get_time(sys_clk_sec());
@@ -142,7 +142,7 @@ void MediaFetcher::frame_video_fetching_func() {
         throw ffmpeg_error(fmt::format("[{}] Failed to jump to time {}", FUNCDINFO, current_time), ret);
       }
 
-      clear_avframe_list(dec_frames);
+      dec_frames.clear();
       decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       this->msg_video_jump_curr_time--;
@@ -154,15 +154,15 @@ void MediaFetcher::frame_video_fetching_func() {
       wait_duration = frame_pts_time_sec - current_time + extra_delay;
 
       if (wait_duration > 0.0 || saved_frame_is_empty) {
-        vconv.convert_video_frame(converted_frame.get(), dec_frames[0]);
+        vconv.convert_video_frame(converted_frame.get(), dec_frames.back().get());
         std::lock_guard<std::mutex> lock(this->alter_mutex);
         pixdata_from_avframe(this->frame, converted_frame.get());
         this->frame_changed = true;
       }
 
-      clear_avframe_list(dec_frames);
-      std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
+      dec_frames.clear();
 
+      std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
       if (wait_duration > 0.0 && !this->should_exit()) {
         this->exit_cond.wait_for(exit_lock, secs_to_chns(wait_duration)); 
       }
@@ -197,16 +197,14 @@ void MediaFetcher::frame_image_fetching_func() {
   cctx->pix_fmt);
 
   std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
-  std::vector<AVFrame*> dec_frames;
+  std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> dec_frames;
   decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames);
   if (dec_frames.size() > 0) {
-    vconv.convert_video_frame(converted_frame.get(), dec_frames[dec_frames.size() - 1]);
+    vconv.convert_video_frame(converted_frame.get(), dec_frames.back().get());
     std::lock_guard<std::mutex> lock(this->alter_mutex);
     pixdata_from_avframe(this->frame, converted_frame.get());
     this->frame_changed = true;
   }
-
-  clear_avframe_list(dec_frames);
 }
 
 void MediaFetcher::frame_audio_fetching_func() {

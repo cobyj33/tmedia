@@ -68,7 +68,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
     static constexpr unsigned int MAX_RUNS_W_FAIL = 5;
     unsigned int runs_w_fail = 0;
 
-    std::vector<AVFrame*> next_raw_audio_frames;
+    std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> next_raw_audio_frames;
     std::unique_ptr<AVPacket, AVPacketDeleter> packet(av_packet_allocx());
 
     // single resampled frame buffer to use for the lifetime of the
@@ -88,7 +88,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
       // next_raw_audio_frames is cleared already from botton of loop
 
       {
-        clear_avframe_list(next_raw_audio_frames);
+        next_raw_audio_frames.clear();
         decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames);
         std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
         current_time = this->clock.get_time(sys_clk_sec());
@@ -101,7 +101,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
           throw ffmpeg_error(fmt::format("[{}] Failed to jump to time {}", FUNCDINFO, current_time), ret);
         }
 
-        clear_avframe_list(next_raw_audio_frames);
+        next_raw_audio_frames.clear();
         decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames);
 
         // clear audio buffer **after** expensive time jumping functions and
@@ -114,13 +114,13 @@ void MediaFetcher::audio_dispatch_thread_func() {
       runs_w_fail += static_cast<unsigned int>(next_raw_audio_frames.size() == 0);
       for (std::size_t i = 0; i < next_raw_audio_frames.size(); i++) {
         runs_w_fail = 0;
-        audio_resampler.resample_audio_frame(resampled_frame.get(), next_raw_audio_frames[i]);
+        audio_resampler.resample_audio_frame(resampled_frame.get(), next_raw_audio_frames[i].get());
         while (!this->audio_buffer->try_write_into(resampled_frame->nb_samples, (float*)(resampled_frame->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
           if (this->should_exit()) break;
         }
       }
 
-      clear_avframe_list(next_raw_audio_frames);
+      next_raw_audio_frames.clear();
       if (runs_w_fail >= MAX_RUNS_W_FAIL) {
         runs_w_fail = 0;
         std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);

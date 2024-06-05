@@ -21,15 +21,7 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-void clear_avframe_list(std::vector<AVFrame*>& frame_list) {
-  for (std::size_t i = 0; i < frame_list.size(); i++) {
-    av_frame_free(&(frame_list[i]));
-  }
-  frame_list.resize(0);
-}
-
-
-void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet, std::vector<AVFrame*>& frame_buffer) {
+void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer) {
   int result = avcodec_send_packet(video_codec_context, video_packet);
   if (result != 0) {
     throw ffmpeg_error(fmt::format("[{}] error while sending video packet: ",
@@ -46,7 +38,7 @@ void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_pa
 
     std::unique_ptr<AVFrame, AVFrameDeleter> video_frame(av_frame_alloc());
     if (unlikely(video_frame.get() == nullptr)) {
-      clear_avframe_list(frame_buffer);
+      frame_buffer.clear();
       throw ffmpeg_error("Failed to allocate AVFrame", result);
     }
 
@@ -54,19 +46,19 @@ void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_pa
     if (result < 0) {
       if (result == AVERROR(EAGAIN) && !frame_buffer.empty())
         return;
-      clear_avframe_list(frame_buffer);
+      frame_buffer.clear();
       throw ffmpeg_error(fmt::format("[{}] error while receiving video "
       "frames during decoding: ", FUNCDINFO), result);
     }
 
-    frame_buffer.push_back(video_frame.release());
+    frame_buffer.push_back(std::move(video_frame));
   }
 }
 
 
 
 
-void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet, std::vector<AVFrame*>& frame_buffer) {
+void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer) {
   int result = avcodec_send_packet(audio_codec_context, audio_packet);
   if (result != 0) {
     throw ffmpeg_error(fmt::format("[{}] error while sending audio packet ",
@@ -79,7 +71,7 @@ void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_pa
     // an error rather than throwing std::bad_alloc directly
     std::unique_ptr<AVFrame, AVFrameDeleter> audio_frame(av_frame_alloc());
     if (unlikely(audio_frame.get() == nullptr)) {
-      clear_avframe_list(frame_buffer);
+      frame_buffer.clear();
       throw ffmpeg_error("Failed to allocate AVFrame", result);
     }
 
@@ -87,16 +79,16 @@ void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_pa
     if (result < 0) {
       if (result == AVERROR(EAGAIN) && !frame_buffer.empty())
         return; // most common return path
-      clear_avframe_list(frame_buffer);
+      frame_buffer.clear();
       throw ffmpeg_error(fmt::format("[{}] error while receiving audio "
       "frames during decoding: ", FUNCDINFO), result);
     }
 
-    frame_buffer.push_back(audio_frame.release());
+    frame_buffer.push_back(std::move(audio_frame));
   }
 }
 
-void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<AVFrame*>& out_frames) {
+void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& out_frames) {
   static constexpr int ALLOWED_DECODE_FAILURES = 5;
   int nb_errors_thrown = 0;
 
@@ -140,10 +132,10 @@ int av_jump_time(AVFormatContext* fctx, AVCodecContext* cctx, AVStream* stream, 
 
   avcodec_flush_buffers(cctx);
   bool passed_target_time = false;
-  std::vector<AVFrame*> frames;
+  std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> frames;
 
   do {
-    clear_avframe_list(frames);
+    frames.clear();
     decode_next_stream_frames(fctx, cctx, stream->index, reading_pkt, frames);
     for (std::size_t i = 0; i < frames.size(); i++) {
       if (frames[i]->pts * av_q2d(stream->time_base) >= target_time) {
@@ -153,6 +145,5 @@ int av_jump_time(AVFormatContext* fctx, AVCodecContext* cctx, AVStream* stream, 
     }
   } while (!passed_target_time && frames.size() > 0);
 
-  clear_avframe_list(frames);
   return ret;
 }

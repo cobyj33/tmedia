@@ -11,7 +11,9 @@
  * @copyright Copyright (c) 2023
  */
 
+#include <tmedia/ffmpeg/deleter.h>
 #include <vector>
+#include <memory>
 
 extern "C" {
 struct AVFormatContext;
@@ -21,12 +23,6 @@ struct AVCodecContext;
 struct AVStream;
 }
 
-
-/**
- * Clears the AVFrame vector of all it's contents and frees all AVFrame's
- * contained within
- */
-void clear_avframe_list(std::vector<AVFrame*>& frame_list);
 
 /**
  * Decode a single video packet given an AVCodecContext and places the values
@@ -44,11 +40,8 @@ void clear_avframe_list(std::vector<AVFrame*>& frame_list);
  * 
  * Note that while frame_buffer is filled, there should often only be one
  * AVFrame video packet returned if no error is thrown.
- * 
- * The caller is responsible for handling the returned AVFrame* allocated
- * objects, usually through clear_avframe_list
 */
-void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet, std::vector<AVFrame*>& frame_buffer);
+void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer);
 
 /**
  * Decode a single audio packet given an AVCodecContext and places the values
@@ -66,14 +59,11 @@ void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_pa
  * 
  * Note that while frame_buffer is filled, there should often only be one
  * AVFrame audio packet returned if no error is thrown.
- * 
- * The caller is responsible for handling the returned AVFrame* allocated
- * objects, usually through clear_avframe_list
 */
-void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet, std::vector<AVFrame*>& frame_buffer);
+void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer);
 
 int av_jump_time(AVFormatContext* fctx, AVCodecContext* cctx, AVStream* stream, AVPacket* reading_pkt, double target_time);
-void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<AVFrame*>& out_frames);
+void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& out_frames);
 
 
 #endif
