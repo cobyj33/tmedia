@@ -91,7 +91,7 @@ void MediaFetcher::frame_video_fetching_func() {
   const double avg_fts =  1 / av_q2d(avstr->avg_frame_rate);
   VideoConverter vconv(def_outdim.width, def_outdim.height, AV_PIX_FMT_RGB24,
   cctx->width, cctx->height, cctx->pix_fmt);
-  std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> dec_frames;
+  std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> dec_frames, frame_pool;
   // single allocation of AVFrame buffer to use for the lifetime of the
   // video thread as output from convert_video_frame
   std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
@@ -131,8 +131,7 @@ void MediaFetcher::frame_video_fetching_func() {
     bool saved_frame_is_empty = false; // set in critical section
 
     {
-      dec_frames.clear();
-      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames);
+      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       current_time = this->get_time(sys_clk_sec());
       msg_video_jump_curr_time_cache = this->msg_video_jump_curr_time;
@@ -145,8 +144,7 @@ void MediaFetcher::frame_video_fetching_func() {
         throw ffmpeg_error(fmt::format("[{}] Failed to jump to time {}", FUNCDINFO, current_time), ret);
       }
 
-      dec_frames.clear();
-      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames);
+      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       this->msg_video_jump_curr_time--;
     }
@@ -162,8 +160,6 @@ void MediaFetcher::frame_video_fetching_func() {
         pixdata_from_avframe(this->frame, converted_frame.get());
         this->frame_changed = true;
       }
-
-      dec_frames.clear();
 
       std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
       if (wait_duration > 0.0 && !this->should_exit()) {
@@ -201,8 +197,8 @@ void MediaFetcher::frame_image_fetching_func() {
 
   std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
   vconv.configure_frame(converted_frame.get());
-  std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> dec_frames;
-  decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames);
+  std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> dec_frames, frame_pool;
+  decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
   if (dec_frames.size() > 0) {
     vconv.convert_video_frame(converted_frame.get(), dec_frames.back().get());
     std::lock_guard<std::mutex> lock(this->alter_mutex);

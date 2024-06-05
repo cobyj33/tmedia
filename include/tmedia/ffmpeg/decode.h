@@ -41,7 +41,7 @@ struct AVStream;
  * Note that while frame_buffer is filled, there should often only be one
  * AVFrame video packet returned if no error is thrown.
 */
-void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer);
+void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool);
 
 /**
  * Decode a single audio packet given an AVCodecContext and places the values
@@ -60,10 +60,10 @@ void decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_pa
  * Note that while frame_buffer is filled, there should often only be one
  * AVFrame audio packet returned if no error is thrown.
 */
-void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer);
+void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool);
 
 int av_jump_time(AVFormatContext* fctx, AVCodecContext* cctx, AVStream* stream, AVPacket* reading_pkt, double target_time);
-void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& out_frames);
+void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& out_frames, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool);
 
 
 #endif

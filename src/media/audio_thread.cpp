@@ -68,7 +68,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
     static constexpr unsigned int MAX_RUNS_W_FAIL = 5;
     unsigned int runs_w_fail = 0;
 
-    std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> next_raw_audio_frames;
+    std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> next_raw_audio_frames, frame_pool;
     std::unique_ptr<AVPacket, AVPacketDeleter> packet(av_packet_allocx());
 
     // single resampled frame buffer to use for the lifetime of the
@@ -85,11 +85,9 @@ void MediaFetcher::audio_dispatch_thread_func() {
 
       int msg_audio_jump_curr_time_cache = 0;
       double current_time = 0;
-      // next_raw_audio_frames is cleared already from botton of loop
 
       {
-        next_raw_audio_frames.clear();
-        decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames);
+        decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames, frame_pool);
         std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
         current_time = this->clock.get_time(sys_clk_sec());
         msg_audio_jump_curr_time_cache = this->msg_audio_jump_curr_time;
@@ -101,8 +99,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
           throw ffmpeg_error(fmt::format("[{}] Failed to jump to time {}", FUNCDINFO, current_time), ret);
         }
 
-        next_raw_audio_frames.clear();
-        decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames);
+        decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames, frame_pool);
 
         // clear audio buffer **after** expensive time jumping functions and
         // decoding functions
@@ -129,7 +126,6 @@ void MediaFetcher::audio_dispatch_thread_func() {
         audio_resampler.resample_audio_frame(resampled_frame.get(), nullptr);
       }
 
-      next_raw_audio_frames.clear();
       if (runs_w_fail >= MAX_RUNS_W_FAIL) {
         runs_w_fail = 0;
         std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
