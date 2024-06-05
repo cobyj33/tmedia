@@ -96,6 +96,7 @@ void MediaFetcher::frame_video_fetching_func() {
   // video thread as output from convert_video_frame
   std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
   std::unique_ptr<AVPacket, AVPacketDeleter> packet(av_packet_allocx());
+  vconv.configure_frame(converted_frame.get());
 
   while (!this->should_exit()) {
     if (!this->is_playing()) {
@@ -118,7 +119,9 @@ void MediaFetcher::frame_video_fetching_func() {
         req_dims_bounded.height,
         MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
         
-        vconv.reset_dst_size(out_dim.width, out_dim.height);
+        if (vconv.reset_dst_size(out_dim.width, out_dim.height)) {
+          vconv.configure_frame(converted_frame.get());
+        }
       }
     }
     
@@ -197,6 +200,7 @@ void MediaFetcher::frame_image_fetching_func() {
   cctx->pix_fmt);
 
   std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
+  vconv.configure_frame(converted_frame.get());
   std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> dec_frames;
   decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames);
   if (dec_frames.size() > 0) {

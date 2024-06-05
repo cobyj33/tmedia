@@ -13,6 +13,7 @@
 
 extern "C" {
   #include <libavutil/frame.h>
+  #include <libavutil/imgutils.h>
   #include <libswscale/swscale.h>
   #include <libavutil/version.h>
 }
@@ -71,9 +72,9 @@ VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat
   this->m_src_pix_fmt = src_pix_fmt;
 }
 
-void VideoConverter::reset_dst_size(int dst_width, int dst_height) {
+bool VideoConverter::reset_dst_size(int dst_width, int dst_height) {
   if (dst_width == this->m_dst_width && dst_height == this->m_dst_height)
-    return;
+    return false;
 
   SwsContext* new_context = sws_getContext(
       this->m_src_width, this->m_src_height, this->m_src_pix_fmt, 
@@ -90,36 +91,41 @@ void VideoConverter::reset_dst_size(int dst_width, int dst_height) {
 
   this->m_dst_width = dst_width;
   this->m_dst_height = dst_height;
+  return true;
 }
 
 VideoConverter::~VideoConverter() {
   sws_freeContext(this->m_context);
 }
 
-void VideoConverter::convert_video_frame(AVFrame* dest, AVFrame* src) {
+void VideoConverter::configure_frame(AVFrame* dest) {
   assert(dest != nullptr);
   av_frame_unref(dest);
-
   dest->format = this->m_dst_pix_fmt;
   dest->width = this->m_dst_width;
   dest->height = this->m_dst_height;
-  dest->pts = src->pts;
-  dest->repeat_pict = src->repeat_pict;
-  #if HAS_AVFRAME_DURATION
-  dest->duration = src->duration;
-  #endif
   
-  /*
-    For any alignment besides 1, including the value 0 (although 0's what
-    ffmpeg documentation reccomends), the resampled frame always came out
-    a garbled mess. Perhaps an alignment of 1 is bad, but it works?
-  */
-  int err = av_frame_get_buffer(dest, 1); //watch this alignment
+  int err = av_frame_get_buffer(dest, 0);
   if (unlikely(err)) {
     av_frame_unref(dest);
     throw ffmpeg_error(fmt::format("[{}] Failure on "
     "allocating buffers for resized video frame", FUNCDINFO), err);
   }
+}
+
+void VideoConverter::convert_video_frame(AVFrame* dest, AVFrame* src) {
+  assert(dest != nullptr);
+  assert(dest->format == this->m_dst_pix_fmt);
+  assert(dest->width == this->m_dst_width);
+  assert(dest->height == this->m_dst_height);
+
+  dest->pts = src->pts;
+  dest->repeat_pict = src->repeat_pict;
+  #if HAS_AVFRAME_DURATION
+  dest->duration = src->duration;
+  #endif
+
+  av_image_fill_linesizes(dest->linesize, static_cast<enum AVPixelFormat>(dest->format), dest->width);
 
   (void)sws_scale(this->m_context,
     static_cast<uint8_t const * const *>(src->data), src->linesize, 0,

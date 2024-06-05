@@ -30,6 +30,8 @@ class VideoConverter {
             int src_height,
             enum AVPixelFormat src_pix_fmt);
 
+    void configure_frame(AVFrame* dest);
+
     /**
      * Convert a video frame according to the initialized VideoConverter's
      * parameters and place the result into the AVFrame pointed to by dest.
@@ -66,7 +68,7 @@ class VideoConverter {
      * No-op if the current dst_width and dst_height equal to the passed in
      * dst_width and dst_height
     */
-    void reset_dst_size(int dst_width, int dst_height);
+    bool reset_dst_size(int dst_width, int dst_height);
 
     ~VideoConverter();
 };
