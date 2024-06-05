@@ -96,30 +96,6 @@ void decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_pa
   }
 }
 
-void decode_packet_queue(AVCodecContext* codec_context, std::deque<AVPacket*>& packet_queue, enum AVMediaType packet_type, std::vector<AVFrame*>& frame_buffer) {
-  while (!packet_queue.empty()) {
-    std::unique_ptr<AVPacket, AVPacketDeleter> packet(packet_queue.front());
-    packet_queue.pop_front();
-
-    try {
-      switch (packet_type) {
-        case AVMEDIA_TYPE_AUDIO:
-          decode_audio_packet(codec_context, packet.get(), frame_buffer);
-          return;
-        case AVMEDIA_TYPE_VIDEO:
-          decode_video_packet(codec_context, packet.get(), frame_buffer);
-          return;
-        default: throw std::runtime_error(fmt::format("[{}] Could not decode "
-          "packet queue of unimplemented AVMediaType {}.",
-          FUNCDINFO, av_get_media_type_string(packet_type)));
-      }
-    } catch (ffmpeg_error const& e) {
-      if (e.averror != AVERROR(EAGAIN)) throw e;
-    }
-  }
-}
-
-
 void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<AVFrame*>& out_frames) {
   static constexpr int ALLOWED_DECODE_FAILURES = 5;
   int nb_errors_thrown = 0;

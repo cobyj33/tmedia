@@ -5,8 +5,7 @@
 #include <tmedia/media/mediatype.h>
 #include <tmedia/image/pixeldata.h>
 #include <tmedia/audio/blocking_audioringbuffer.h>
-#include <tmedia/image/scale.h>
-#include <tmedia/audio/audio_visualizer.h>
+#include <tmedia/image/scale.h> // for Dim2
 #include <tmedia/util/defines.h>
 
 #include <memory>
@@ -20,9 +19,7 @@
 #include <filesystem>
 
 extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/avutil.h>
+#include <libavutil/avutil.h> // for enum AVMediaType
 }
 
 /**

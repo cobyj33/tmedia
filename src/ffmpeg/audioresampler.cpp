@@ -12,7 +12,8 @@
 extern "C" {
   #include <libswresample/swresample.h>
   #include <libavutil/frame.h>
-  #include <libavutil/version.h>
+  #include <libavutil/channel_layout.h>
+  #include <libavutil/samplefmt.h>
 }
 
 

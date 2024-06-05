@@ -4,6 +4,7 @@
 class PixelData;
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 extern "C" {

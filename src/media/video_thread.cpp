@@ -22,6 +22,7 @@
 extern "C" {
 #include <libavutil/version.h>
 #include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 #include <libavutil/frame.h>
 }
 

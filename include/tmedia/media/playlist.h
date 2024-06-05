@@ -12,6 +12,10 @@
 #include <filesystem>
 #include <array>
 
+extern "C" {
+#include <libavutil/avutil.h> // AVMEDIA_TYPE_NB
+}
+
 enum class PlaylistMvCmd {
   NEXT,
   SKIP,

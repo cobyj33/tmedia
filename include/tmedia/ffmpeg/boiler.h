@@ -15,10 +15,8 @@
 #include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/ffmpeg/avguard.h> // for HAS_AVCHANNEL_LAYOUT
 
-#include <string>
-#include <map>
 #include <optional>
-#include <memory>
+#include <memory> // std::unique_ptr
 
 #include <filesystem>
 

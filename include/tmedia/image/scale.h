@@ -10,8 +10,8 @@
  * @copyright Copyright (c) 2023
  */
 
-#include <algorithm>
 #include <tmedia/util/defines.h>
+#include <algorithm> // for std::min
 
 struct Dim2 {
   int width;

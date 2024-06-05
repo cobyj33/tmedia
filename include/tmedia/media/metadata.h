@@ -8,7 +8,7 @@
 #include <optional>
 
 extern "C" {
-  #include <libavformat/avformat.h>
+struct AVFormatContext;
 }
 
 struct MetadataEntry {

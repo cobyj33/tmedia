@@ -16,7 +16,7 @@
 #include <cstdint>
 
 extern "C" {
-#include <libavutil/frame.h>
+struct AVFrame;
 }
 
 typedef RGB24 FillFunction(int row, int col);

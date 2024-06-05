@@ -7,9 +7,11 @@
 #include <tmedia/util/defines.h>
 
 extern "C" {
-  #include <libavutil/frame.h>
-  #include <libswresample/swresample.h>
-  #include <libavutil/channel_layout.h>
+#include <libavutil/samplefmt.h> // for enum AVSampleFormat
+#include <libavutil/channel_layout.h> // for AVChannelLayout in field
+struct AVFrame;
+struct SwrContext;
+struct AVChannelLayout;
 }
 
 /**

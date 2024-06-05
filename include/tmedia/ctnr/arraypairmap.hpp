@@ -2,15 +2,12 @@
 #define TMEDIA_ARRAY_PAIR_MAP_H
 
 #include <array>
-#include <map>
 #include <cassert>
 #include <initializer_list>
 #include <stdexcept>
 #include <iterator>
 #include <tmedia/util/defines.h>
 #include <utility>
-
-#include <type_traits>
 
 namespace tmedia {
 

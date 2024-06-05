@@ -6,10 +6,7 @@
 
 #include <fmt/format.h>
 
-#include <stdexcept>
-#include <map>
 #include <string>
-#include <utility>
 
 extern "C" {
   #include <libavformat/avformat.h>

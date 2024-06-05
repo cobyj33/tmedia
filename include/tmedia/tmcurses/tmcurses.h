@@ -18,15 +18,14 @@
  * @copyright MIT License (c) 2023 (see LICENSE)
  */
 
+#include <tmedia/image/color.h>
 #include <tmedia/image/palette.h>
 #include <vector>
 #include <string>
 #include <string_view>
 
-class RGB24;
-
 extern "C" {
-  #include <curses.h>
+#include <curses.h>
 }
 
 /**
