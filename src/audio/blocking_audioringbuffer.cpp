@@ -8,7 +8,7 @@
 #include <chrono>
 
 BlockingAudioRingBuffer::BlockingAudioRingBuffer(int frame_capacity, int nb_channels, int sample_rate, double playback_start_time) {
-  this->rb = std::make_unique<AudioRingBuffer>(frame_capacity, nb_channels, sample_rate, playback_start_time);
+  this->rb = new AudioRingBuffer(frame_capacity, nb_channels, sample_rate, playback_start_time);
 }
 
 
@@ -120,4 +120,8 @@ bool BlockingAudioRingBuffer::try_write_into(int nb_frames, float* in, std::chro
     this->cond.notify_one();
     return false;
   }
+}
+
+BlockingAudioRingBuffer::~BlockingAudioRingBuffer() {
+  delete this->rb;
 }

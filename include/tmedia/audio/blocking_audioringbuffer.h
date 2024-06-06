@@ -6,7 +6,6 @@
 
 #include <mutex>
 #include <condition_variable>
-#include <memory>
 #include <chrono>
 
 /**
@@ -22,8 +21,7 @@
 */
 class BlockingAudioRingBuffer {
   private:
-    std::unique_ptr<AudioRingBuffer> rb;
-
+    AudioRingBuffer* rb;
     std::mutex mutex;
     std::condition_variable cond;
 
@@ -56,6 +54,8 @@ class BlockingAudioRingBuffer {
     
     void write_into(int nb_frames, float* in);
     bool try_write_into(int nb_frames, float* in, std::chrono::nanoseconds max_try_time);
+
+    ~BlockingAudioRingBuffer();
 };
 
 #endif
