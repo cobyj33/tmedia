@@ -3,7 +3,6 @@
 
 #include <cassert>
 #include <array>
-#include <tmedia/util/defines.h>
 
 namespace tmedia {
 

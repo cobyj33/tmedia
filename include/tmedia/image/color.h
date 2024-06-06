@@ -4,9 +4,8 @@
 #include <vector>
 #include <cstddef>
 #include <cstdint>
-#include <tmedia/util/defines.h>
 
-TMEDIA_ALWAYS_INLINE constexpr inline std::uint8_t get_gray8(std::uint8_t r, std::uint8_t g, std::uint8_t b) {
+[[gnu::always_inline]] constexpr inline std::uint8_t get_gray8(std::uint8_t r, std::uint8_t g, std::uint8_t b) {
   return static_cast<std::uint8_t>(0.299 * static_cast<double>(r) + 0.587 * static_cast<double>(g) + 0.114 * static_cast<double>(b));
 }
 
@@ -20,7 +19,7 @@ TMEDIA_ALWAYS_INLINE constexpr inline std::uint8_t get_gray8(std::uint8_t r, std
  * @param b The b channel of the rgb value
  * @return An integer representing the color channel value of all channels in the RGB grayscale representation of the inputted color
  */
-TMEDIA_ALWAYS_INLINE constexpr inline int get_grayint(int r, int g, int b) {
+[[gnu::always_inline]] constexpr inline int get_grayint(int r, int g, int b) {
   return static_cast<int>(0.299 * static_cast<double>(r) + 0.587 * static_cast<double>(g) + 0.114 * static_cast<double>(b));
 }
 
@@ -48,31 +47,31 @@ class RGB24 {
     constexpr RGB24(std::uint8_t gray) : r(gray), g(gray), b(gray) {}
     constexpr RGB24(std::uint8_t r, std::uint8_t g, std::uint8_t b) : r(r), g(g), b(b) {}
 
-    TMEDIA_ALWAYS_INLINE constexpr inline bool equals(RGB24 other) const {
+    [[gnu::always_inline]] constexpr inline bool equals(RGB24 other) const {
       return this->r == other.r && this->g == other.g && this->b == other.b;
     }
 
-    TMEDIA_ALWAYS_INLINE constexpr inline bool operator==(RGB24 other) const {
+    [[gnu::always_inline]] constexpr inline bool operator==(RGB24 other) const {
       return this->r == other.r && this->g == other.g && this->b == other.b;
     }
 
     double distance(RGB24 other) const;
     double dis_sq(RGB24 other) const;
 
-    TMEDIA_ALWAYS_INLINE constexpr inline RGB24 get_comp() const {
+    [[gnu::always_inline]] constexpr inline RGB24 get_comp() const {
       return RGB24(255 - this->r, 255 - this->g, 255 - this->b );
     }
 
-    TMEDIA_ALWAYS_INLINE constexpr inline bool is_gray() const {
+    [[gnu::always_inline]] constexpr inline bool is_gray() const {
       return this->r == this->g && this->g == this->b;
     }
 
 
-    TMEDIA_ALWAYS_INLINE constexpr inline RGB24 as_gray() const {
+    [[gnu::always_inline]] constexpr inline RGB24 as_gray() const {
       return RGB24(get_gray8(this->r, this->g, this->b));
     }
 
-    TMEDIA_ALWAYS_INLINE constexpr inline std::uint8_t gray_val() const {
+    [[gnu::always_inline]] constexpr inline std::uint8_t gray_val() const {
       return get_gray8(this->r, this->g, this->b);
     }
 };

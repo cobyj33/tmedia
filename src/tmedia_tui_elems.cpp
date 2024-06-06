@@ -5,7 +5,6 @@
 #include <tmedia/util/defines.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/tmcurses/tmcurses.h>
-#include <tmedia/util/defines.h>
 #include <tmedia/util/wmath.h>
 #include <tmedia/image/scale.h>
 

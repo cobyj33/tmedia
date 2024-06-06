@@ -5,8 +5,7 @@
 
 #include <fmt/format.h>
 
-
-#include <cmath>
+#include <cmath> // for std::sqrt
 #include <vector>
 #include <stdexcept>
 #include <cstdint>

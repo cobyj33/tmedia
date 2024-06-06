@@ -6,7 +6,6 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <iterator>
-#include <tmedia/util/defines.h>
 #include <utility>
 
 namespace tmedia {

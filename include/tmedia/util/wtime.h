@@ -2,7 +2,6 @@
 #define TMEDIA_W_TIME_H
 
 #include <tmedia/util/unitconvert.h>
-#include <tmedia/util/defines.h>
 
 #include <chrono>
 
@@ -16,11 +15,11 @@
  * Return the current system time in seconds from the system's
  * monotonic clock
 */
-TMEDIA_ALWAYS_INLINE inline double sys_clk_sec() {
+[[gnu::always_inline]] inline double sys_clk_sec() {
   return static_cast<double>(std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()).time_since_epoch().count()) * NANOSECONDS_TO_SECONDS;  
 }
 
-TMEDIA_ALWAYS_INLINE constexpr inline std::chrono::nanoseconds secs_to_chns(double seconds) {
+[[gnu::always_inline]] constexpr inline std::chrono::nanoseconds secs_to_chns(double seconds) {
   return std::chrono::nanoseconds(static_cast<long>(seconds * SECONDS_TO_NANOSECONDS));
 }
 
