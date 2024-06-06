@@ -12,7 +12,7 @@ about decoding video and audio are:
 The structure of the media module forms somewhat of a complexity stack up
 until the MediaFetcher interface. From simply reading and decoding packets
 to coordinating that reading with a current playing time, each part is made
-to take on a single responsibility along the 
+to take on a responsibility along the stack of multimedia concerns.
 
 ## MediaFetcher
 
@@ -58,7 +58,11 @@ to take on a single responsibility along the
   These functions abstract the steps to decode a video and audio packet
   respectively into a stream of AVFrame's, which contain the frame data from
   the media file being currently read. Note that since one packet can return
-  multiple AVFrames, each packet can return an std::vector of AVFrame pointers. 
+  multiple AVFrames, each packet can return an std::vector of AVFrame pointers.
+  These functions "return" their AVFrames through a referenced buffer passed in
+  by the caller, which must have a length of 0, so that the caller can
+  repeatedly fill AVFrames in a buffer without reallocating
+  the buffer each call.
 
 More specific information can be found on each layer in their respective
 .h and .cpp files.

@@ -87,7 +87,9 @@ message("| Options: FIND_FMT: " ${FIND_FMT})
 message("| Options: FIND_CATCH2: " ${FIND_CATCH2})
 message("+--------------------------------------------------------------------")
 
-set(COMMON_SOURCE_FILES 
+# Keep TMEDIA_COMMON_SOURCE_FILES list in alphabetical order separated by
+# module
+set(TMEDIA_COMMON_SOURCE_FILES
 ${CMAKE_SOURCE_DIR}/src/audio/audio_visualizer.cpp
 ${CMAKE_SOURCE_DIR}/src/audio/audio.cpp
 ${CMAKE_SOURCE_DIR}/src/audio/audioringbuffer.cpp
@@ -100,23 +102,20 @@ ${CMAKE_SOURCE_DIR}/src/cmdlpar/cmdlpar.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/audioresampler.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/boiler.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/decode.cpp
+${CMAKE_SOURCE_DIR}/src/ffmpeg/deleter.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/ffmpeg_error.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/probe.cpp
-${CMAKE_SOURCE_DIR}/src/ffmpeg/streamdecoder.cpp
 ${CMAKE_SOURCE_DIR}/src/ffmpeg/videoconverter.cpp
 
 ${CMAKE_SOURCE_DIR}/src/image/ascii.cpp
-${CMAKE_SOURCE_DIR}/src/image/canvas.cpp
 ${CMAKE_SOURCE_DIR}/src/image/color.cpp
 ${CMAKE_SOURCE_DIR}/src/image/palette.cpp
 ${CMAKE_SOURCE_DIR}/src/image/palette_io.cpp
 ${CMAKE_SOURCE_DIR}/src/image/pixeldata.cpp
-${CMAKE_SOURCE_DIR}/src/image/scale.cpp
 
 ${CMAKE_SOURCE_DIR}/src/media/audio_thread.cpp
 ${CMAKE_SOURCE_DIR}/src/media/duration_checking.cpp
 ${CMAKE_SOURCE_DIR}/src/media/mediaclock.cpp
-${CMAKE_SOURCE_DIR}/src/media/mediadecoder.cpp
 ${CMAKE_SOURCE_DIR}/src/media/mediafetcher.cpp
 ${CMAKE_SOURCE_DIR}/src/media/mediaformat.cpp
 ${CMAKE_SOURCE_DIR}/src/media/metadata.cpp
@@ -128,7 +127,7 @@ ${CMAKE_SOURCE_DIR}/src/tmcurses/tmcurses_init.cpp
 ${CMAKE_SOURCE_DIR}/src/tmcurses/tmcurses.cpp
 
 ${CMAKE_SOURCE_DIR}/src/util/formatting.cpp
-${CMAKE_SOURCE_DIR}/src/util/sleep.cpp
+${CMAKE_SOURCE_DIR}/src/util/thread.cpp
 
 
 ${CMAKE_SOURCE_DIR}/src/tmedia_cli.cpp
@@ -136,12 +135,16 @@ ${CMAKE_SOURCE_DIR}/src/tmedia_tui.cpp
 ${CMAKE_SOURCE_DIR}/src/tmedia_tui_elems.cpp
 )
 
-set(TEST_SOURCE_FILES
+set(TMEDIA_MAIN_SOURCE_FILES
+${CMAKE_SOURCE_DIR}/src/main.cpp
+${CMAKE_SOURCE_DIR}/src/tmedia.cpp
+)
+
+set(TMEDIA_TEST_SOURCE_FILES
 ${CMAKE_SOURCE_DIR}/src/tests/test_color.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_cmdlpar.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_formatting.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_mediaclock.cpp
-${CMAKE_SOURCE_DIR}/src/tests/test_pixeldata.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_scale.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_unitconvert.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_palette_io_gpl.cpp
@@ -154,8 +157,9 @@ VERSION ${TMEDIA_VERSION}
 LANGUAGES ${TMEDIA_SUPPORTED_LANGUAGES}
 DESCRIPTION "Terminal video media player")
 
+
 configure_file(${CMAKE_SOURCE_DIR}/include/tmedia/version.h.in ${CMAKE_BINARY_DIR}/include/tmedia/version.h @ONLY)
-add_executable(tmedia ${COMMON_SOURCE_FILES} ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/src/tmedia.cpp)
+add_executable(tmedia ${TMEDIA_MAIN_SOURCE_FILES})
 include(${CMAKE_SOURCE_DIR}/lib/deps.cmake)
 
 message("+---TMEDIA-DEPENDENCY-CONFIG---------------------------------------")
@@ -167,14 +171,18 @@ message("Target Dependencies:")
 printlist("${TMEDIA_TARGET_DEPENDENCIES}\n")
 message("+------------------------------------------------------------------")
 
-target_compile_features(tmedia PRIVATE cxx_std_17)
-target_include_directories(tmedia PRIVATE ${TMEDIA_DEPS_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include )
-target_link_libraries(tmedia PRIVATE ${TMEDIA_DEPS_LIBRARIES} ${CMAKE_DL_LIBS})
-target_compile_options(tmedia PRIVATE ${TMEDIA_COMPILE_OPTIONS})
+# Build common files between tmedia and tmedia_tests as a static library,
+# so that each file does not have to be compiled twice for each binary.
+add_library(tmedia_common STATIC ${TMEDIA_COMMON_SOURCE_FILES})
+target_compile_options(tmedia_common PUBLIC ${TMEDIA_COMPILE_OPTIONS})
+target_include_directories(tmedia_common PUBLIC ${TMEDIA_DEPS_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_link_libraries(tmedia_common PUBLIC ${TMEDIA_DEPS_LIBRARIES} ${CMAKE_DL_LIBS})
+target_compile_features(tmedia_common PUBLIC cxx_std_17)
 if (NOT TMEDIA_TARGET_DEPENDENCIES STREQUAL "")
-  add_dependencies(tmedia ${TMEDIA_TARGET_DEPENDENCIES})
+  add_dependencies(tmedia_common ${TMEDIA_TARGET_DEPENDENCIES})
 endif()
 
+target_link_libraries(tmedia PRIVATE tmedia_common)
 
 if (TMEDIA_BUILD_TESTS)
   message("Configured to build testing executable")
@@ -182,7 +190,10 @@ if (TMEDIA_BUILD_TESTS)
   if (FIND_CATCH2)
     find_package(Catch2 3)
     if (NOT TARGET Catch2::Catch2WithMain)
-      message(FATAL_ERROR "FIND_CATCH2 enabled but Catch2 v3 library could not be found on the system.")
+      message(FATAL_ERROR "FIND_CATCH2 enabled but Catch2 v3 library could "
+      "not be found on the system. Make Sure to set CMAKE_PREFIX_PATH to "
+      "point to a valid Catch2 installation. "
+      "(CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH})")
     endif()
   else()
     message("Building Catch2 v3.0.1 with tests")
@@ -194,13 +205,6 @@ if (TMEDIA_BUILD_TESTS)
     FetchContent_MakeAvailable(Catch2)
   endif()
 
-  add_executable(tmedia_tests ${COMMON_SOURCE_FILES} ${TEST_SOURCE_FILES})
-  target_compile_options(tmedia_tests PRIVATE ${TMEDIA_COMPILE_OPTIONS})
-  target_include_directories(tmedia_tests PRIVATE ${TMEDIA_DEPS_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include)
-  target_compile_features(tmedia_tests PRIVATE cxx_std_17)
-  target_link_libraries(tmedia_tests PRIVATE Catch2::Catch2WithMain ${TMEDIA_DEPS_LIBRARIES} ${CMAKE_DL_LIBS})
-
-  if (NOT TMEDIA_TARGET_DEPENDENCIES STREQUAL "")
-    add_dependencies(tmedia_tests ${TMEDIA_TARGET_DEPENDENCIES})
-  endif()
+  add_executable(tmedia_tests ${TMEDIA_TEST_SOURCE_FILES})
+  target_link_libraries(tmedia_tests PRIVATE tmedia_common Catch2::Catch2WithMain)
 endif()

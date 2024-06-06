@@ -1,19 +1,37 @@
 #include <tmedia/ffmpeg/videoconverter.h>
 
 #include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/ffmpeg/avguard.h>
 #include <tmedia/util/defines.h>
 
 #include <stdexcept>
+#include <memory>
+#include <cassert>
+
 #include <fmt/format.h>
 
 extern "C" {
   #include <libavutil/frame.h>
+  #include <libavutil/imgutils.h>
   #include <libswscale/swscale.h>
   #include <libavutil/version.h>
 }
 
 VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat dst_pix_fmt, int src_width, int src_height, enum AVPixelFormat src_pix_fmt) {
+  /**
+   * Note that there were bugs occasionally of src_width and src_height actually
+   * returning as negative or 0 from allocated AVFrames and AV_PIX_FMT_NONE
+   * resulting as well,
+   * so that's why all of these checks exist here. When these edge cases
+   * happened as well, FFmpeg aborted with assert(), which meant that I could
+   * do nothing except put enforced runtime checks on the constructor
+   * of VideoConverter.
+   *
+   * (This class is only actually ever used a grand total of once in tmedia
+   * though, so it should be fine)
+  */
+
   if (dst_width <= 0 || dst_height <= 0) {
     throw std::runtime_error(fmt::format("[{}] Video Converter must have "
     "non-zero destination dimensions: (got width of {} and height of {} )",
@@ -54,53 +72,62 @@ VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat
   this->m_src_pix_fmt = src_pix_fmt;
 }
 
-void VideoConverter::reset_dst_size(int dst_width, int dst_height) {
+bool VideoConverter::reset_dst_size(int dst_width, int dst_height) {
   if (dst_width == this->m_dst_width && dst_height == this->m_dst_height)
-    return;
+    return false;
 
-  sws_freeContext(this->m_context);
-  this->m_context = sws_getContext(
+  SwsContext* new_context = sws_getContext(
       this->m_src_width, this->m_src_height, this->m_src_pix_fmt, 
       dst_width, dst_height, this->m_dst_pix_fmt, 
       SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
-  if (this->m_context == nullptr) {
+
+  if (new_context == nullptr) {
     throw std::runtime_error(fmt::format("[{}] Allocation of internal "
     "SwsContext of Video Converter failed", FUNCDINFO));
   }
 
+  sws_freeContext(this->m_context);
+  this->m_context = new_context;
+
   this->m_dst_width = dst_width;
   this->m_dst_height = dst_height;
+  return true;
 }
 
 VideoConverter::~VideoConverter() {
   sws_freeContext(this->m_context);
 }
 
-AVFrame* VideoConverter::convert_video_frame(AVFrame* original) {
-  AVFrame* resized_video_frame = av_frame_alloc();
-  if (unlikely(resized_video_frame == nullptr)) {
-    throw std::runtime_error(fmt::format("[{}] Could not allocate resized "
-    "frame for VideoConverter", FUNCDINFO));
-  }
-
-  resized_video_frame->format = this->m_dst_pix_fmt;
-  resized_video_frame->width = this->m_dst_width;
-  resized_video_frame->height = this->m_dst_height;
-  resized_video_frame->pts = original->pts;
-  resized_video_frame->repeat_pict = original->repeat_pict;
-  #if HAS_AVFRAME_DURATION
-  resized_video_frame->duration = original->duration;
-  #endif
+void VideoConverter::configure_frame(AVFrame* dest) {
+  assert(dest != nullptr);
+  av_frame_unref(dest);
+  dest->format = this->m_dst_pix_fmt;
+  dest->width = this->m_dst_width;
+  dest->height = this->m_dst_height;
   
-  int err = av_frame_get_buffer(resized_video_frame, 1); //watch this alignment
+  int err = av_frame_get_buffer(dest, 0);
   if (unlikely(err)) {
+    av_frame_unref(dest);
     throw ffmpeg_error(fmt::format("[{}] Failure on "
     "allocating buffers for resized video frame", FUNCDINFO), err);
   }
+}
+
+void VideoConverter::convert_video_frame(AVFrame* dest, AVFrame* src) {
+  assert(dest != nullptr);
+  assert(dest->format == this->m_dst_pix_fmt);
+  assert(dest->width == this->m_dst_width);
+  assert(dest->height == this->m_dst_height);
+
+  dest->pts = src->pts;
+  dest->repeat_pict = src->repeat_pict;
+  #if HAS_AVFRAME_DURATION
+  dest->duration = src->duration;
+  #endif
+
+  av_image_fill_linesizes(dest->linesize, static_cast<enum AVPixelFormat>(dest->format), dest->width);
 
   (void)sws_scale(this->m_context,
-    (uint8_t const * const *)original->data, original->linesize, 0,
-    original->height, resized_video_frame->data, resized_video_frame->linesize);
-
-  return resized_video_frame;
+    static_cast<uint8_t const * const *>(src->data), src->linesize, 0,
+    src->height, dest->data, dest->linesize);
 }

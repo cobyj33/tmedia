@@ -6,7 +6,7 @@
 
 #include <mutex>
 #include <condition_variable>
-#include <memory>
+#include <chrono>
 
 /**
  * Blocking wrapper of the AudioRingBuffer class.
@@ -21,8 +21,7 @@
 */
 class BlockingAudioRingBuffer {
   private:
-    std::unique_ptr<AudioRingBuffer> rb;
-
+    AudioRingBuffer* rb;
     std::mutex mutex;
     std::condition_variable cond;
 
@@ -44,17 +43,19 @@ class BlockingAudioRingBuffer {
 
     double get_buffer_current_time();
     bool is_time_in_bounds(double playback_time);
-    bool try_set_time_in_bounds(double playback_time, int milliseconds);
+    bool try_set_time_in_bounds(double playback_time, std::chrono::nanoseconds max_try_time);
 
 
     void read_into(int nb_frames, float* out);
-    bool try_read_into(int nb_frames, float* out, int milliseconds);
+    bool try_read_into(int nb_frames, float* out, std::chrono::nanoseconds max_try_time);
 
     void peek_into(int nb_frames, float* out);
-    bool try_peek_into(int nb_frames, float* out, int milliseconds);
+    bool try_peek_into(int nb_frames, float* out, std::chrono::nanoseconds max_try_time);
     
     void write_into(int nb_frames, float* in);
-    bool try_write_into(int nb_frames, float* in, int milliseconds);
+    bool try_write_into(int nb_frames, float* in, std::chrono::nanoseconds max_try_time);
+
+    ~BlockingAudioRingBuffer();
 };
 
 #endif

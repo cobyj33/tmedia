@@ -12,16 +12,24 @@
  */
 
 #include <tmedia/media/mediatype.h>
+#include <tmedia/ffmpeg/deleter.h>
+#include <tmedia/ffmpeg/avguard.h> // for HAS_AVCHANNEL_LAYOUT
 
-#include <string>
-#include <map>
 #include <optional>
+#include <memory> // std::unique_ptr
 
 #include <filesystem>
 
 
 extern "C" {
-#include <libavformat/avformat.h>
+#include <libavutil/avutil.h> // for enum AVMediaType
+struct AVFormatContext;
+struct AVInputFormat;
+struct AVCodecContext;
+struct AVStream;
+#if HAS_AVCHANNEL_LAYOUT
+struct AVChannelLayout;
+#endif
 }
 
 /**
@@ -35,7 +43,30 @@ extern "C" {
  * @param path The path of the file to open from the current working directory
  * @return An AVFormatContext pointer representing the opened media file
  */
-AVFormatContext* open_format_context(const std::filesystem::path& path);
+std::unique_ptr<AVFormatContext, AVFormatContextDeleter> open_fctx(const std::filesystem::path& path);
+
+struct OpenCCTXRes {
+  std::unique_ptr<AVCodecContext, AVCodecContextDeleter> cctx;
+  AVStream* avstr;
+};
+
+OpenCCTXRes open_cctx(AVFormatContext* fmt_ctx, enum AVMediaType media_type);
+
+
+double avstr_get_start_time(AVStream* avstr);
+
+/**
+ * This function calls av_packet_unref on packet before doing anything
+*/
+int av_next_stream_packet(AVFormatContext* fctx, int stream_idx, AVPacket* pkt);
+
+#if HAS_AVCHANNEL_LAYOUT
+AVChannelLayout* cctx_get_ch_layout(AVCodecContext* cctx);
+#else
+int64_t cctx_get_ch_layout(AVCodecContext* cctx);
+#endif
+
+int cctx_get_nb_channels(AVCodecContext* cctx);
 
 /**
  * @brief Dump a media file's metadata into standard output.

@@ -3,11 +3,12 @@
 
 #include <cstdint>
 #include <vector>
-#include <string>
 #include <string_view>
+#include <cassert>
 
 #include <tmedia/util/defines.h>
 #include <tmedia/image/color.h>
+
 
 /**
  * @file tmedia/image/defines.h
@@ -30,6 +31,7 @@
 extern const char* ASCII_STANDARD_CHAR_MAP;
 
 TMEDIA_ALWAYS_INLINE inline constexpr char get_char_from_value(std::string_view characters, std::uint8_t value) {
+  assert(characters.length() > 0);
   return characters[ (std::size_t)value * (characters.length() - 1) / 255UL ];
 }
 

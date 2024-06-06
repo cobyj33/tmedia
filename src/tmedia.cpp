@@ -9,7 +9,7 @@
 #include <tmedia/util/wmath.h>
 #include <tmedia/util/wtime.h>
 #include <tmedia/util/defines.h>
-#include <tmedia/util/sleep.h>
+#include <tmedia/util/thread.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/tmedia_tui_elems.h>
 #include <tmedia/audio/maaudioout.h>
@@ -39,6 +39,8 @@ extern "C" {
   #include <miniaudio.h>
 }
 
+using namespace std::chrono_literals;
+
 static constexpr int KEY_ESCAPE = 27;
 static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
 static constexpr int MIN_RENDER_COLS = 2;
@@ -61,7 +63,6 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState& tmss) {
   tmps.plist = Playlist(tmss.media_files, tmss.loop_type);
   if (tmss.shuffled) tmps.plist.shuffle(false);
   tmps.refresh_rate_fps = tmss.refresh_rate_fps;
-  tmps.scaling_algorithm = tmss.scaling_algorithm;
   tmps.volume = tmss.volume;
   tmps.vom = tmss.vom;
   tmps.quit = false;
@@ -81,16 +82,42 @@ int tmedia_run(TMediaStartupState& tmss) {
 }
 
 int tmedia_main_loop(TMediaProgramState tmps) {
+  name_current_thread("tmedia_main_loop");
   TMediaRendererState tmrs;
-  tmrs.req_frame_dim = Dim2(COLS, LINES);
+  pixdata_setnewdims(tmrs.scaling_buffer, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
+  tmrs.req_frame_dim = { std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES) };
+
+  PixelData frame;
+  pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
 
   while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.plist.size() > 0) {
+    // should_render_frame determines whether the frame should be
+    // - the "frame" in should_render_frame refers to the actual PixelData frame
+    // returned from the MediaFetcher, not the entire terminal screen.
+    // 
+    // should_render_frame is set to true whenever some change to the screen
+    // happens that affects how the frame should be rendered. This includes
+    // - The frame sent by the MediaFetcher has changed, as determined
+    //   by MediaFetcher::frame_changed
+    // - The terminal screen was resized
+    // - The VidOutMode of tmedia has changed
+    // - The screen was erased from calling curses's "erase()" function
+    // - The screen has been toggled between fullscreen and not fullscreen
+    // - The screen has been forceably refreshed
+    // should_render_frame is declared as false on the beginning of initializing
+    // each playlist item so that the screen is rendered only when the first
+    // frame comes through the MediaFetcher
+    // ! should_render_frame should only be set to false at the end
+    // ! of each input loop.
+    bool should_render_frame = false;
+
+    pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
+
     // main loop setup phase. Sets up and begins MediaFetcher. Sets up
     // and begins audio output (if applicable)
     PlaylistMvCmd move_cmd = PlaylistMvCmd::NEXT;
     std::unique_ptr<MediaFetcher> fetcher;
     const PlaylistItem& pcurr = tmps.plist.current();
-    const std::string currently_playing = pcurr.path.string();
 
     try {
       fetcher = std::make_unique<MediaFetcher>(pcurr.path, pcurr.requested_streams);
@@ -106,18 +133,20 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     }
 
 
-    fetcher->req_dims = Dim2(std::max(COLS, MIN_RENDER_COLS), std::max(LINES, MIN_RENDER_LINES));
+    fetcher->req_dims = tmrs.req_frame_dim;
     std::unique_ptr<MAAudioOut> audio_output;
     fetcher->begin(sys_clk_sec()); // begin the MediaFetcher before beginning the
     // audio playback. Some audio data should be available by then hopefully
 
     if (fetcher->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
-      static constexpr int AUDIO_BUFFER_TRY_READ_MS = 2;
-      audio_output = std::make_unique<MAAudioOut>(fetcher->mdec->get_nb_channels(), fetcher->mdec->get_sample_rate(), [&fetcher] (float* float_buffer, int nb_frames) {
+      static constexpr std::chrono::milliseconds AUDIO_BUFFER_TRY_READ_MS = 2ms;
+      audio_output = std::make_unique<MAAudioOut>(fetcher->nb_channels, fetcher->sample_rate, [&fetcher] (float* float_buffer, int nb_frames) {
         const bool success = fetcher->audio_buffer->try_read_into(nb_frames, float_buffer, AUDIO_BUFFER_TRY_READ_MS);
-        if (!success)
-          for (int i = 0; i < nb_frames * fetcher->mdec->get_nb_channels(); i++)
+        if (!success) {
+          const int fb_sz = nb_frames * fetcher->nb_channels;
+          for (int i = 0; i < fb_sz; i++)
             float_buffer[i] = 0.0f;
+        }
       });
 
       audio_output->set_volume(tmps.volume);
@@ -129,7 +158,6 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     try {
       // main playing loop
       while (!fetcher->should_exit() && !INTERRUPT_RECEIVED) { // never break without using dispatch_exit on fetcher to false
-        PixelData frame;
         double curr_systime, req_jumptime, curr_medtime;
 
         // req_jump and req_jumptime are different, because when jumping to the
@@ -139,14 +167,20 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         // for denoting if we're trying to jump toward a timestamp
         bool req_jump = false;
 
+
         {
           static constexpr double MAX_AUDIO_DESYNC_SECS = 0.6;  
           std::lock_guard<std::mutex> lock(fetcher->alter_mutex);
           curr_systime = sys_clk_sec(); // set in here, since locking the mutex could take an undetermined amount of time
           curr_medtime = fetcher->get_time(curr_systime);
           req_jumptime = curr_medtime;
-          frame = fetcher->frame;
           fetcher->req_dims = tmrs.req_frame_dim;
+
+          if (fetcher->frame_changed) {
+            pixdata_copy(frame, fetcher->frame);
+            fetcher->frame_changed = false;
+            should_render_frame = true;
+          }
 
           // If the audio is desynced, we just try and jump to the current media
           // time to resync it.
@@ -173,7 +207,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               case '\b':
               case 'q':
               case 'Q': quit_program_command_received = true; break;
-              case KEY_RESIZE: erase(); break;
+              case KEY_RESIZE: {
+                should_render_frame = true;
+                erase();
+              } break;
               case 'r':
               case 'R': should_refresh = !should_refresh; break;
               case 'c':
@@ -254,7 +291,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               case '8':
               case '9': {
                 req_jump = true;
-                req_jumptime = fetcher->get_duration() * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
+                req_jumptime = fetcher->duration * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
               } break;
             }
             input = getch();
@@ -270,16 +307,19 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           }
 
           if (nextvom != tmps.vom) {
+            should_render_frame = true;
             set_global_vom(&tmps.vom, nextvom);
           }
 
           if (toggle_fullscreen) {
             erase();
+            should_render_frame = true;
             tmps.fullscreen = !tmps.fullscreen;
           }
 
           if (should_refresh) {
             erase();
+            should_render_frame = true;
             if (audio_output && audio_output->playing()) {
               audio_output->stop();
               audio_output->start();
@@ -326,27 +366,28 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           if (audio_output && fetcher->is_playing()) audio_output->stop();
           {
             std::scoped_lock<std::mutex> total_lock{fetcher->alter_mutex};
-            fetcher->jump_to_time(clamp(req_jumptime, 0.0, fetcher->get_duration()), sys_clk_sec());
+            fetcher->jump_to_time(clamp(req_jumptime, 0.0, fetcher->duration), sys_clk_sec());
           }
           if (audio_output && fetcher->is_playing()) audio_output->start();
         }
 
         TMediaProgramSnapshot snapshot;
-        snapshot.currently_playing = currently_playing;
-        snapshot.frame = frame;
+        snapshot.frame = &frame;
         snapshot.playing = fetcher->is_playing();
-        snapshot.has_audio_output = audio_output ? true : false;
+        snapshot.has_audio_output = audio_output.get() != nullptr;
         snapshot.media_time_secs = curr_medtime;
-        snapshot.media_duration_secs = fetcher->get_duration();
+        snapshot.media_duration_secs = fetcher->duration;
         snapshot.media_type = fetcher->media_type;
+        snapshot.should_render_frame = should_render_frame;
 
         Dim2 req_frame_dims_before = tmrs.req_frame_dim;
         render_tui(tmps, snapshot, tmrs);
         if (req_frame_dims_before != tmrs.req_frame_dim) {
           std::lock_guard<std::mutex> alter_lock(fetcher->alter_mutex);
-          fetcher->req_dims = Dim2(tmrs.req_frame_dim);
+          fetcher->req_dims = tmrs.req_frame_dim;
         }
 
+        should_render_frame = false;
         refresh();
         sleep_for_sec(1.0 / static_cast<double>(tmps.refresh_rate_fps));
       }

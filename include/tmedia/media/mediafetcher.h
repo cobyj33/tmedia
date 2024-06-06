@@ -2,11 +2,10 @@
 #define TMEDIA_MEDIA_FETCHER_H
 
 #include <tmedia/media/mediaclock.h>
+#include <tmedia/media/mediatype.h>
 #include <tmedia/image/pixeldata.h>
-#include <tmedia/media/mediadecoder.h>
 #include <tmedia/audio/blocking_audioringbuffer.h>
-#include <tmedia/image/scale.h>
-#include <tmedia/audio/audio_visualizer.h>
+#include <tmedia/image/scale.h> // for Dim2
 #include <tmedia/util/defines.h>
 
 #include <memory>
@@ -20,9 +19,7 @@
 #include <filesystem>
 
 extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/avutil.h>
+#include <libavutil/avutil.h> // for enum AVMediaType
 }
 
 /**
@@ -47,6 +44,22 @@ enum class MediaFetcherFlags {
   VISUALIZE_VIDEO = (1 << 0),
   IGNORE_ATTACHED_PIC = (1 << 1)
 };
+
+// Pixel Aspect Ratio - account for tall rectangular shape of terminal
+//characters
+static constexpr int PAR_WIDTH = 2;
+static constexpr int PAR_HEIGHT = 5;
+
+static constexpr int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PAR_HEIGHT;
+static constexpr int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PAR_WIDTH;
+static constexpr double MAX_FRAME_ASPECT_RATIO = static_cast<double>(MAX_FRAME_ASPECT_RATIO_WIDTH) / static_cast<double>(MAX_FRAME_ASPECT_RATIO_HEIGHT);
+
+// I found that past a width of 640 characters,
+// the terminal starts to stutter terribly on most terminal emulators, so we
+// just bound the image to this amount
+
+static constexpr int MAX_FRAME_WIDTH = 640;
+static constexpr int MAX_FRAME_HEIGHT = static_cast<int>(static_cast<double>(MAX_FRAME_WIDTH) / MAX_FRAME_ASPECT_RATIO);
 
 class MediaFetcher {
   private:
@@ -78,11 +91,14 @@ class MediaFetcher {
     int msg_audio_jump_curr_time;
 
   public:
-
     MediaType media_type;
-    const std::unique_ptr<MediaDecoder> mdec;
     std::unique_ptr<BlockingAudioRingBuffer> audio_buffer;
+    std::array<bool, AVMEDIA_TYPE_NB> available_streams;
     PixelData frame;
+    bool frame_changed;
+    int sample_rate;
+    int nb_channels;
+    double duration;
 
     std::mutex alter_mutex;
     std::optional<Dim2> req_dims;
@@ -100,16 +116,7 @@ class MediaFetcher {
      * Thread-Safe
     */
     TMEDIA_ALWAYS_INLINE inline bool has_media_stream(enum AVMediaType media_type) const {
-      return this->mdec->has_stream_decoder(media_type);
-    }
-
-    /**
-     * @brief Returns the duration in seconds of the currently playing media
-     * @return double 
-     * Thread Safe
-     */
-    TMEDIA_ALWAYS_INLINE inline double get_duration() const {
-      return this->mdec->get_duration();
+      return this->available_streams[media_type];
     }
 
 
@@ -163,7 +170,7 @@ class MediaFetcher {
     /**
      * @brief Moves the MediaFetcher's playback to a certain time (including video and audio streams)
      * @note The caller is responsible for making sure the time to jump to is in the bounds of the video's playtime. 
-     * The video's duration could be found with the MediaFetcher::get_duration() function
+     * The video's duration could be found with the MediaFetcher::duration
      * 
      * @param target_time The target time to jump the playback to (must be reachable)
      * @param currsystime The current system time

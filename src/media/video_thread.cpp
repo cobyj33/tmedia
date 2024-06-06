@@ -1,9 +1,12 @@
 #include <tmedia/media/mediafetcher.h>
 
+#include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/ffmpeg/decode.h>
+#include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/audio/audio.h>
 #include <tmedia/audio/audio_visualizer.h>
-#include <tmedia/util/sleep.h>
+#include <tmedia/util/thread.h>
 #include <tmedia/image/scale.h>
 #include <tmedia/util/wtime.h>
 #include <tmedia/ffmpeg/videoconverter.h>
@@ -19,6 +22,7 @@
 extern "C" {
 #include <libavutil/version.h>
 #include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 #include <libavutil/frame.h>
 }
 
@@ -47,21 +51,7 @@ using namespace std::chrono_literals;
  *    wave of audio data currently being processed. 
 */
 
-// Pixel Aspect Ratio - account for tall rectangular shape of terminal
-//characters
-static constexpr int PAR_WIDTH = 2;
-static constexpr int PAR_HEIGHT = 5;
 
-static constexpr int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PAR_HEIGHT;
-static constexpr int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PAR_WIDTH;
-static constexpr double MAX_FRAME_ASPECT_RATIO = static_cast<double>(MAX_FRAME_ASPECT_RATIO_WIDTH) / static_cast<double>(MAX_FRAME_ASPECT_RATIO_HEIGHT);
-
-// I found that past a width of 640 characters,
-// the terminal starts to stutter terribly on most terminal emulators, so we
-// just bound the image to this amount
-
-static constexpr int MAX_FRAME_WIDTH = 640;
-static constexpr int MAX_FRAME_HEIGHT = static_cast<int>(static_cast<double>(MAX_FRAME_WIDTH) / MAX_FRAME_ASPECT_RATIO);
 static constexpr std::chrono::milliseconds PAUSED_SLEEP_TIME_MS = 100ms;
 static constexpr double DEFAULT_AVGFTS = 1.0 / 24.0;
 static constexpr std::chrono::nanoseconds DEFAULT_AVGFTS_NS = secs_to_chns(DEFAULT_AVGFTS);
@@ -69,6 +59,7 @@ static constexpr std::chrono::nanoseconds DEFAULT_AVGFTS_NS = secs_to_chns(DEFAU
 void MediaFetcher::video_fetching_thread_func() {
   // note that frame_audio_fetching_func can run even if there is no video data
   // available. Therefore, we can't just guard from AVMEDIA_TYPE_VIDEO here.
+  name_current_thread("tmedia_vid_dec");
 
   try {
     if (this->has_media_stream(AVMEDIA_TYPE_VIDEO)) {
@@ -87,20 +78,25 @@ void MediaFetcher::video_fetching_thread_func() {
 }
 
 void MediaFetcher::frame_video_fetching_func() {
-  std::array<bool, AVMEDIA_TYPE_NB> requested_streams;
-  for (std::size_t i = 0; i < requested_streams.size(); i++) requested_streams[i] = false;
-  requested_streams[AVMEDIA_TYPE_VIDEO] = true;
-  MediaDecoder vdec(this->mdec->path, requested_streams);
-  if (!vdec.has_stream_decoder(AVMEDIA_TYPE_VIDEO)) return; // copy failed?
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fctx = open_fctx(this->path);
+  OpenCCTXRes cctxavstr = open_cctx(fctx.get(), AVMEDIA_TYPE_VIDEO);
+  AVCodecContext* cctx = cctxavstr.cctx.get();
+  AVStream* avstr = cctxavstr.avstr;
 
-  const Dim2 def_outdim = bound_dims(vdec.get_width() * PAR_HEIGHT,
-  vdec.get_height() * PAR_WIDTH,
+  const Dim2 def_outdim = bound_dims(cctx->width * PAR_HEIGHT,
+  cctx->height * PAR_WIDTH,
   MAX_FRAME_WIDTH,
   MAX_FRAME_HEIGHT);
 
-  const double avg_fts = vdec.get_avgfts(AVMEDIA_TYPE_VIDEO);
+  const double avg_fts =  1 / av_q2d(avstr->avg_frame_rate);
   VideoConverter vconv(def_outdim.width, def_outdim.height, AV_PIX_FMT_RGB24,
-  vdec.get_width(), vdec.get_height(), vdec.get_pix_fmt());
+  cctx->width, cctx->height, cctx->pix_fmt);
+  std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> dec_frames, frame_pool;
+  // single allocation of AVFrame buffer to use for the lifetime of the
+  // video thread as output from convert_video_frame
+  std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
+  std::unique_ptr<AVPacket, AVPacketDeleter> packet(av_packet_allocx());
+  vconv.configure_frame(converted_frame.get());
 
   while (!this->should_exit()) {
     if (!this->is_playing()) {
@@ -114,8 +110,8 @@ void MediaFetcher::frame_video_fetching_func() {
       std::lock_guard<std::mutex> alter_mutex_lock(this->alter_mutex);
       if (this->req_dims) {
         Dim2 req_dims_bounded = bound_dims(
-        vdec.get_width() * PAR_HEIGHT,
-        vdec.get_height() * PAR_WIDTH,
+        cctx->width * PAR_HEIGHT,
+        cctx->height * PAR_WIDTH,
         this->req_dims->width, this->req_dims->height);
 
         Dim2 out_dim = bound_dims(
@@ -123,42 +119,48 @@ void MediaFetcher::frame_video_fetching_func() {
         req_dims_bounded.height,
         MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
         
-        vconv.reset_dst_size(out_dim.width, out_dim.height);
+        if (vconv.reset_dst_size(out_dim.width, out_dim.height)) {
+          vconv.configure_frame(converted_frame.get());
+        }
       }
     }
     
     double wait_duration = avg_fts;
-    std::vector<AVFrame*> dec_frames;
     double current_time = 0.0;
     int msg_video_jump_curr_time_cache = 0;
+    bool saved_frame_is_empty = false; // set in critical section
+
     {
-      dec_frames = vdec.next_frames(AVMEDIA_TYPE_VIDEO);
+      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       current_time = this->get_time(sys_clk_sec());
       msg_video_jump_curr_time_cache = this->msg_video_jump_curr_time;
+      saved_frame_is_empty = this->frame.m_width == 0 || this->frame.m_height == 0;
     }
 
     if (msg_video_jump_curr_time_cache > 0) {
-      vdec.jump_to_time(current_time);
-      dec_frames = vdec.next_frames(AVMEDIA_TYPE_VIDEO);
+      int ret = av_jump_time(fctx.get(), cctx, avstr, packet.get(), current_time);
+      if (unlikely(ret != 0)) {
+        throw ffmpeg_error(fmt::format("[{}] Failed to jump to time {}", FUNCDINFO, current_time), ret);
+      }
+
+      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       this->msg_video_jump_curr_time--;
     }
 
     if (dec_frames.size() > 0) {
-      const double frame_pts_time_sec = (double)dec_frames[0]->pts * vdec.get_time_base(AVMEDIA_TYPE_VIDEO);
+      const double frame_pts_time_sec = (double)dec_frames[0]->pts * av_q2d(avstr->time_base);
       const double extra_delay = (double)(dec_frames[0]->repeat_pict) / (2 * avg_fts);
       wait_duration = frame_pts_time_sec - current_time + extra_delay;
 
-      if (wait_duration > 0.0 || this->frame.get_width() * this->frame.get_height() == 0) { // or the current frame has no valid dimensions
-        AVFrame* frame_image = vconv.convert_video_frame(dec_frames[0]);
-        PixelData pix_data = PixelData(frame_image);
-        av_frame_free(&frame_image);
-        
+      if (wait_duration > 0.0 || saved_frame_is_empty) {
+        vconv.convert_video_frame(converted_frame.get(), dec_frames.back().get());
         std::lock_guard<std::mutex> lock(this->alter_mutex);
-        this->frame = pix_data;
+        pixdata_from_avframe(this->frame, converted_frame.get());
+        this->frame_changed = true;
       }
-      clear_avframe_list(dec_frames);
+
       std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
       if (wait_duration > 0.0 && !this->should_exit()) {
         this->exit_cond.wait_for(exit_lock, secs_to_chns(wait_duration)); 
@@ -175,34 +177,34 @@ void MediaFetcher::frame_video_fetching_func() {
 }
 
 void MediaFetcher::frame_image_fetching_func() {
-  std::array<bool, AVMEDIA_TYPE_NB> requested_streams;
-  for (std::size_t i = 0; i < requested_streams.size(); i++) requested_streams[i] = false;
-  requested_streams[AVMEDIA_TYPE_VIDEO] = true;
-  MediaDecoder vdec(this->mdec->path, requested_streams);
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fctx = open_fctx(this->path);
+  OpenCCTXRes cctxavstr = open_cctx(fctx.get(), AVMEDIA_TYPE_VIDEO);
+  std::unique_ptr<AVPacket, AVPacketDeleter> packet(av_packet_allocx());
+  AVCodecContext* cctx = cctxavstr.cctx.get();
+  AVStream* avstr = cctxavstr.avstr;
 
-  Dim2 outdim = bound_dims(vdec.get_width() * PAR_HEIGHT,
-  vdec.get_height() * PAR_WIDTH,
+  Dim2 outdim = bound_dims(cctx->width * PAR_HEIGHT,
+  cctx->height * PAR_WIDTH,
   MAX_FRAME_WIDTH,
   MAX_FRAME_HEIGHT);
 
   VideoConverter vconv(outdim.width,
   outdim.height,
   AV_PIX_FMT_RGB24,
-  vdec.get_width(),
-  vdec.get_height(),
-  vdec.get_pix_fmt());
+  cctx->width,
+  cctx->height,
+  cctx->pix_fmt);
 
-  std::vector<AVFrame*> dec_frames = vdec.next_frames(AVMEDIA_TYPE_VIDEO);
+  std::unique_ptr<AVFrame, AVFrameDeleter> converted_frame(av_frame_allocx());
+  vconv.configure_frame(converted_frame.get());
+  std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> dec_frames, frame_pool;
+  decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
   if (dec_frames.size() > 0) {
-    AVFrame* frame_image = vconv.convert_video_frame(dec_frames[0]);
-    PixelData frame_pixel_data = PixelData(frame_image);
-    {
-      std::lock_guard<std::mutex> lock(this->alter_mutex);
-      this->frame = frame_pixel_data;
-    }
-    av_frame_free(&frame_image);
+    vconv.convert_video_frame(converted_frame.get(), dec_frames.back().get());
+    std::lock_guard<std::mutex> lock(this->alter_mutex);
+    pixdata_from_avframe(this->frame, converted_frame.get());
+    this->frame_changed = true;
   }
-  clear_avframe_list(dec_frames);
 }
 
 void MediaFetcher::frame_audio_fetching_func() {
@@ -215,19 +217,23 @@ void MediaFetcher::frame_audio_fetching_func() {
     }
   }
 
-  static constexpr int AUDIO_PEEK_TRY_WAIT_MS = 100;
+  static constexpr std::chrono::milliseconds AUDIO_PEEK_TRY_WAIT_MS = 100ms;
   static constexpr int AUDIO_PEEK_MAX_SAMPLE_SIZE = 2048;
   float audbuf[AUDIO_PEEK_MAX_SAMPLE_SIZE];
 
   const int nb_ch = this->audio_buffer->get_nb_channels();
-  const int aubduf_sz = AUDIO_PEEK_MAX_SAMPLE_SIZE / nb_ch;
-  Dim2 visdim(MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
-  if (this->req_dims) {
-    visdim = bound_dims(
-    this->req_dims->width,
-    this->req_dims->height,
-    MAX_FRAME_WIDTH,
-    MAX_FRAME_HEIGHT);
+  const int aubduf_nb_frames = AUDIO_PEEK_MAX_SAMPLE_SIZE / nb_ch;
+  Dim2 visdim{MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT};
+
+  {
+    std::scoped_lock<std::mutex> alter_lock(this->alter_mutex);
+    if (this->req_dims) {
+      visdim = bound_dims(
+        this->req_dims->width,
+        this->req_dims->height,
+        MAX_FRAME_WIDTH,
+        MAX_FRAME_HEIGHT);
+    }
   }
 
   /**
@@ -237,6 +243,9 @@ void MediaFetcher::frame_audio_fetching_func() {
    * greatly simplifies syncing the visualization with actual audio output
    * from the MediaFetcher.
   */
+
+  PixelData local_frame;
+  pixdata_initgray(local_frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
   
   while (!this->should_exit()) {
     if (!this->is_playing()) {
@@ -247,10 +256,11 @@ void MediaFetcher::frame_audio_fetching_func() {
     }
 
 
-    if (this->audio_buffer->try_peek_into(aubduf_sz, audbuf, AUDIO_PEEK_TRY_WAIT_MS)) {
-      PixelData frame = visualize(audbuf, aubduf_sz, nb_ch, visdim.width, visdim.height);
+    if (this->audio_buffer->try_peek_into(aubduf_nb_frames, audbuf, AUDIO_PEEK_TRY_WAIT_MS)) {
+      visualize(local_frame, audbuf, aubduf_nb_frames, nb_ch, visdim.width, visdim.height);
       std::scoped_lock<std::mutex> alter_lock(this->alter_mutex);
-      this->frame = frame;
+      pixdata_copy(this->frame, local_frame);
+      this->frame_changed = true;
       if (this->req_dims) {
         visdim = bound_dims(
         this->req_dims->width,

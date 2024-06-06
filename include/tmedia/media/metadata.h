@@ -1,34 +1,46 @@
 #ifndef TMEDIA_METADATA_H
 #define TMEDIA_METADATA_H
 
-#include <map>
 #include <string>
 #include <filesystem>
 #include <string_view>
+#include <vector>
+#include <optional>
 
 extern "C" {
-  #include <libavformat/avformat.h>
+struct AVFormatContext;
 }
 
-typedef std::map<std::string, std::string, std::less<>> Metadata;
+struct MetadataEntry {
+  std::string key;
+  std::string value;
+};
 
-Metadata get_file_metadata(const std::filesystem::path& path);
-Metadata fmt_ctx_meta(AVFormatContext* fmt_ctx);
+typedef std::vector<MetadataEntry> Metadata;
+
+void fmt_ctx_meta(AVFormatContext* fmt_ctx, Metadata& outdict);
+std::string_view metadata_add(std::string_view key, std::string_view value, Metadata& meta);
+std::optional<std::string_view> metadata_get(std::string_view key, Metadata& meta);
+
+struct MetadataCacheEntry {
+  std::string key;
+  std::vector<MetadataEntry> value;
+};
 
 /**
  * A general cache-type map between filenames or some other media id strings
  * and metadata maps.
 */
-typedef std::map<std::string, Metadata, std::less<>> MetadataCache;
+typedef std::vector<MetadataCacheEntry> MetadataCache;
 
-void mchc_cache(const std::string& file, MetadataCache& cache);
+void mchc_cache_file(const std::filesystem::path& file, MetadataCache& cache);
+std::string_view mchc_add(std::string_view file, std::string_view key, std::string_view val, MetadataCache& cache);
 
 /**
  * Check if the given metadata cache contains a file for
 */
 bool mchc_has_file(std::string_view file, MetadataCache& cache);
-bool mchc_has(const std::string& file, std::string_view key, MetadataCache& cache);
-std::string_view mchc_get(const std::string& file, const std::string& key, MetadataCache& cache);
+std::optional<std::string_view> mchc_get(std::string_view file, std::string_view key, MetadataCache& cache);
 
 
 #endif

@@ -2,15 +2,18 @@
 
 #include <tmedia/ffmpeg/avguard.h>
 #include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/util/defines.h>
 
+#include <memory>
 #include <fmt/format.h>
 #include <stdexcept>
 
 extern "C" {
   #include <libswresample/swresample.h>
   #include <libavutil/frame.h>
-  #include <libavutil/version.h>
+  #include <libavutil/channel_layout.h>
+  #include <libavutil/samplefmt.h>
 }
 
 
@@ -33,19 +36,15 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
   #endif
   
   if (result < 0) {
-    if (context != nullptr) swr_free(&context);
     throw ffmpeg_error(fmt::format("[{}] Allocation of internal SwrContext of "
     "AudioResampler failed. Aborting...", FUNCDINFO), result);
-  } else if (context == nullptr) {
-    throw std::runtime_error(fmt::format("[{}] Allocation of internal "
-    "SwrContext of AudioResampler failed. Aborting...", FUNCDINFO));
-  } else {
-    result = swr_init(context);
-    if (result < 0) {
-      if (context != nullptr) swr_free(&context);
-      throw ffmpeg_error(fmt::format("[{}] Initialization of internal "
-      "SwrContext of AudioResampler failed. Aborting...", FUNCDINFO), result);
-    }
+  }
+
+  result = swr_init(context);
+  if (result != 0) {
+    swr_free(&context);
+    throw ffmpeg_error(fmt::format("[{}] Initialization of internal "
+    "SwrContext of AudioResampler failed. Aborting...", FUNCDINFO), result);
   }
 
   this->m_context = context;
@@ -60,12 +59,14 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
 
   result = av_channel_layout_copy(&this->m_src_ch_layout, src_ch_layout);
   if (result < 0) {
+    swr_free(&context);
     throw ffmpeg_error(fmt::format("[{}] Failed to copy source "
     "AVChannelLayout data into internal field", FUNCDINFO), result);
   }
 
   result = av_channel_layout_copy(&this->m_dst_ch_layout, dst_ch_layout);
   if (result < 0) {
+    swr_free(&context);
     throw ffmpeg_error(fmt::format("[{}] Failed to copy "
     "destination AVChannelLayout data into internal field", FUNCDINFO), result);
   }
@@ -76,8 +77,6 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
 
 }
 
-
-
 AudioResampler::~AudioResampler() {
   swr_free(&(this->m_context));
   #if HAS_AVCHANNEL_LAYOUT
@@ -86,61 +85,44 @@ AudioResampler::~AudioResampler() {
   #endif
 }
 
-std::vector<AVFrame*> AudioResampler::resample_audio_frames(std::vector<AVFrame*>& originals) {
-  std::vector<AVFrame*> resampled_frames;
-  for (std::size_t i = 0; i < originals.size(); i++) {
-    AVFrame* resampled_frame = this->resample_audio_frame(originals[i]);
-    resampled_frames.push_back(resampled_frame);
-  }
-
-  return resampled_frames;
-}
-
-
-AVFrame* AudioResampler::resample_audio_frame(AVFrame* original) {
+void AudioResampler::resample_audio_frame(AVFrame* dest, AVFrame* src) {
+  // ! NOTE: src CAN BE NULL!!! Keep this in mind when writing code in this function
   int result;
-  AVFrame* resampled_frame = av_frame_alloc();
-  if (unlikely(resampled_frame == NULL)) {
-    throw std::runtime_error(fmt::format("[{}] Could not create AVFrame "
-    "audio frame for resampling", FUNCDINFO));
-  }
-
-  resampled_frame->sample_rate = this->m_dst_sample_rate;
-  resampled_frame->format = this->m_dst_sample_fmt;
+  dest->sample_rate = this->m_dst_sample_rate;
+  dest->format = this->m_dst_sample_fmt;
   #if HAS_AVCHANNEL_LAYOUT
-  result = av_channel_layout_copy(&resampled_frame->ch_layout, &this->m_dst_ch_layout);
-  if (result < 0) {
+  result = av_channel_layout_copy(&dest->ch_layout, &this->m_dst_ch_layout);
+  if (unlikely(result != 0)) {
     throw ffmpeg_error(fmt::format("[{}] Unable to copy destination audio "
     "channel layout", FUNCDINFO), result);
   }
   #else 
-  resampled_frame->channel_layout = this->m_dst_ch_layout;
+  dest->channel_layout = this->m_dst_ch_layout;
   #endif
 
-  resampled_frame->pts = original->pts;
-  #if HAS_AVFRAME_DURATION
-  resampled_frame->duration = original->duration;
-  #endif
+  if (src) {
+    dest->pts = src->pts;
+    #if HAS_AVFRAME_DURATION
+    dest->duration = src->duration;
+    #endif
+  }
 
-  result = swr_convert_frame(this->m_context, resampled_frame, original);
+  result = swr_convert_frame(this->m_context, dest, src);
 
-  // .wav files were having a weird glitch where swr_conver_frame returns AVERROR_INPUT_CHANGED
-  // on calling swr_convert_frame. This allows the SwrContext to "fix itself" (even though I think that's a bug)
+  // .wav files were having a weird glitch where swr_conver_frame returns
+  // AVERROR_INPUT_CHANGED on calling swr_convert_frame. This allows the
+  // SwrContext to "fix itself" (even though I think that's a bug)
   // whenever this happens.
   if (unlikely(result == AVERROR_INPUT_CHANGED)) {
-    result = swr_config_frame(this->m_context, resampled_frame, original);
+    result = swr_config_frame(this->m_context, dest, src);
     if (result != 0) {
       throw ffmpeg_error(fmt::format("[{}] Unable to reconfigure "
       "resampling context", FUNCDINFO), result);
     }
-
-    result = swr_convert_frame(this->m_context, resampled_frame, original);
+    result = swr_convert_frame(this->m_context, dest, src);
   }
 
-  if (result == 0) {
-    return resampled_frame;
+  if (result != 0) {
+    throw ffmpeg_error(fmt::format("[{}] Unable to resample audio frame", FUNCDINFO), result);
   }
-
-  av_frame_free(&resampled_frame);
-  throw ffmpeg_error(fmt::format("[{}] Unable to resample audio frame", FUNCDINFO), result);
 }

@@ -3,6 +3,7 @@
 
 #include <tmedia/ffmpeg/decode.h>
 #include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/ffmpeg/avguard.h>
 #include <tmedia/media/mediaformat.h>
@@ -13,52 +14,145 @@
 #include <string>
 #include <vector>
 #include <string_view>
-
 #include <filesystem>
 
 #include <fmt/format.h>
 
 extern "C" {
 #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
 #include <libavutil/log.h>
 #include <libavutil/dict.h>
 #include <libavutil/avstring.h>
 }
 
-AVFormatContext* open_format_context(const std::filesystem::path& path) {
-  AVFormatContext* fmt_ctx = nullptr;
-  int result = avformat_open_input(&fmt_ctx, path.c_str(), nullptr, nullptr);
+std::unique_ptr<AVFormatContext, AVFormatContextDeleter> open_fctx(const std::filesystem::path& path) {
+  AVFormatContext* raw_fmt_ctx = nullptr;
+  int result = avformat_open_input(&raw_fmt_ctx, path.c_str(), nullptr, nullptr);
   if (result < 0) {
     throw ffmpeg_error(fmt::format("[{}] Failed to open format context input "
     "for {}", FUNCDINFO, path.string()), result);
   }
 
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx(raw_fmt_ctx);
+
   if (av_match_list(fmt_ctx->iformat->name, banned_iformat_names, ',')) {
-    std::string iformatname(fmt_ctx->iformat->name);
-    avformat_close_input(&fmt_ctx);
     throw std::runtime_error(fmt::format("[{}] Cannot open banned format type: "
-    "{}", FUNCDINFO, iformatname));
+    "{}", FUNCDINFO, fmt_ctx->iformat->name));
   }
 
-  result = avformat_find_stream_info(fmt_ctx, NULL);
+  result = avformat_find_stream_info(fmt_ctx.get(), NULL);
   if (result < 0) {
-    avformat_close_input(&fmt_ctx);
     throw ffmpeg_error(fmt::format("[{}] Failed to find stream info for {}.",
     FUNCDINFO, path.string()), result);
   }
 
-  if (fmt_ctx != nullptr) {
-    return fmt_ctx;
+  // compiler gives a warning about copy elision. I'm pretty sure this
+  // is completely wrong, std::move is appropriate here
+  return std::move(fmt_ctx);
+}
+
+OpenCCTXRes open_cctx(AVFormatContext* fmt_ctx, enum AVMediaType media_type) {
+  #if AV_FIND_BEST_STREAM_CONST_DECODER
+  const AVCodec* decoder;
+  #else
+  AVCodec* decoder;
+  #endif
+
+  int stream_index = -1;
+  stream_index = av_find_best_stream(fmt_ctx, media_type, -1, -1, &decoder, 0);
+  if (stream_index < 0) {
+    throw ffmpeg_error(fmt::format("[{}] Cannot find media type for "
+    "type: {}", FUNCDINFO, av_get_media_type_string(media_type)), stream_index);
   }
 
-  throw std::runtime_error(fmt::format("[{}] Failed to open format context "
-  "input, unknown error occured", FUNCDINFO));
+  AVStream* stream = fmt_ctx->streams[stream_index];
+  std::unique_ptr<AVCodecContext, AVCodecContextDeleter> cctx;
+  {
+    AVCodecContext* raw_avcodec_ctx = avcodec_alloc_context3(decoder);
+    if (raw_avcodec_ctx == nullptr) {
+      throw std::runtime_error(fmt::format("[{}] Could not alloc codec context "
+      "from decoder: {}", FUNCDINFO, decoder->long_name));
+    }
+    cctx.reset(raw_avcodec_ctx);
+  }
+
+  int result = avcodec_parameters_to_context(cctx.get(), stream->codecpar);
+  if (result < 0) {
+    throw ffmpeg_error(fmt::format("[{}] Could not move AVCodec "
+    "parameters into context",
+    FUNCDINFO), result);
+  }
+
+  result = avcodec_open2(cctx.get(), decoder, NULL);
+  if (result < 0) {
+    throw ffmpeg_error(fmt::format("[{}] Could not initialize "
+    "AVCodecContext with AVCodec decoder",
+    FUNCDINFO), result);
+  }
+
+  return { std::move(cctx), stream };
+}
+
+double avstr_get_start_time(AVStream* avstr) {
+  if (avstr->start_time != AV_NOPTS_VALUE)
+    return 0.0;
+  return avstr->start_time * av_q2d(avstr->time_base);
+}
+
+#if HAS_AVCHANNEL_LAYOUT
+AVChannelLayout* cctx_get_ch_layout(AVCodecContext* cctx) {
+  return &(cctx->ch_layout);
+}
+#else
+int64_t cctx_get_ch_layout(AVCodecContext* cctx) {
+  int64_t channel_layout = cctx->channel_layout;
+  if (channel_layout != 0) return channel_layout;
+
+  int channels = cctx->channels;
+
+  /** There have actually been some videos that I've tried to decode
+   * that didn't have the channels variable set correctly...
+   * Perhaps this is a workaround and I should instead throw some
+   * sort of error, but as of now, just assume stereo
+  */
+
+  if (channels > 0) return av_get_default_channel_layout(channels);
+  return AV_CH_LAYOUT_STEREO;
+}
+#endif
+
+int cctx_get_nb_channels(AVCodecContext* cctx) {
+#if HAS_AVCHANNEL_LAYOUT
+  return cctx->ch_layout.nb_channels;
+#else
+  return cctx->channels;
+#endif
+}
+
+int av_next_stream_packet(AVFormatContext* fctx, int stream_idx, AVPacket* pkt) {
+  int result = 0;
+
+  av_packet_unref(pkt);
+  while (result == 0) {
+    result = av_read_frame(fctx, pkt);
+
+    if (result < 0)
+      return result;
+
+    if (pkt->stream_index == stream_idx)
+      return 0;
+
+    // if in a different stream, just keep reading
+    av_packet_unref(pkt);
+  }
+
+  return result;
 }
 
 void dump_file_info(const std::filesystem::path& path) {
-  AVFormatContext* fmt_ctx = open_format_context(path);
-  dump_format_context(fmt_ctx);
-  avformat_close_input(&fmt_ctx);
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_fctx(path);
+  dump_format_context(fmt_ctx.get());
 }
 
 void dump_format_context(AVFormatContext* fmt_ctx) {
@@ -69,10 +163,9 @@ void dump_format_context(AVFormatContext* fmt_ctx) {
 }
 
 double get_file_duration(const std::filesystem::path& path) {
-  AVFormatContext* fmt_ctx = open_format_context(path);
+  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_fctx(path);
   int64_t duration = fmt_ctx->duration;
   double duration_seconds = (double)duration / AV_TIME_BASE;
-  avformat_close_input(&fmt_ctx);
   return duration_seconds;
 }
 

@@ -1,165 +1,127 @@
 #include <tmedia/ffmpeg/decode.h>
 
+#include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/ffmpeg/ffmpeg_error.h>
+#include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/util/defines.h>
 
 #include <fmt/format.h>
+
+#include <memory>
 #include <vector>
 #include <deque>
 #include <stdexcept>
 #include <string>
-
+#include <cassert>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 }
+// std::ofstream pool_tracker("./pool_data.txt");
+// std::mutex ostream_mutex;
 
-void clear_avframe_list(std::vector<AVFrame*>& frame_list) {
-  for (std::size_t i = 0; i < frame_list.size(); i++) {
-    av_frame_free(&(frame_list[i]));
+void av_frame_move_to_pool(std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
+  while (!frame_buffer.empty()) {
+    av_frame_unref(frame_buffer.back().get());
+    frame_pool.push_back(std::move(frame_buffer.back()));
+    frame_buffer.pop_back();
   }
-  frame_list.resize(0);
+}
+
+/**
+ * Note that it is possible for av_frame_alloc_from_pool to return a
+ * nullptr if av_frame_alloc fails. Make sure to check this from calling
+ * code.
+*/
+std::unique_ptr<AVFrame, AVFrameDeleter> av_frame_alloc_from_pool(std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
+  if (!frame_pool.empty()) {
+    AVFrame* pooled_frame = frame_pool.back().get();
+    frame_pool.back().release();
+    frame_pool.pop_back();
+    return std::unique_ptr<AVFrame, AVFrameDeleter>(pooled_frame);
+  } else {
+    return std::unique_ptr<AVFrame, AVFrameDeleter>(av_frame_alloc());
+  }
 }
 
 
-std::vector<AVFrame*> decode_video_packet(AVCodecContext* video_codec_context, AVPacket* video_packet) {
-  std::vector<AVFrame*> video_frames;
-  int result;
-
-  result = avcodec_send_packet(video_codec_context, video_packet);
-  if (result < 0) {
-    throw ffmpeg_error(fmt::format("[{}] error while sending video packet: ",
-                                    FUNCDINFO), result);
-  }
-
-  AVFrame* video_frame = av_frame_alloc();
-  if (unlikely(video_frame == nullptr)) {
-    throw ffmpeg_error("[decode_video_packet] Could not allocate video_frame, "
-    "no memory", AVERROR(ENOMEM));
+int decode_packet(AVCodecContext* cctx, AVPacket* pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
+  int result = avcodec_send_packet(cctx, pkt);
+  if (result != 0) {
+    return result;
   }
 
   while (result == 0) {
-    result = avcodec_receive_frame(video_codec_context, video_frame);
+    std::unique_ptr<AVFrame, AVFrameDeleter> audio_frame = av_frame_alloc_from_pool(frame_pool);
+    if (unlikely(audio_frame.get() == nullptr)) {
+      av_frame_move_to_pool(frame_buffer, frame_pool);
+      return AVERROR(ENOMEM);
+    }
+
+    result = avcodec_receive_frame(cctx, audio_frame.get());
     if (result < 0) {
-      if (result == AVERROR(EAGAIN) && !video_frames.empty()) break;
-
-      av_frame_free(&video_frame);
-      clear_avframe_list(video_frames);
-      throw ffmpeg_error(fmt::format("[{}] error while receiving video "
-      "frames during decoding: ", FUNCDINFO), result);
+      if (result != AVERROR(EAGAIN))
+        av_frame_move_to_pool(frame_buffer, frame_pool);
+      av_frame_unref(audio_frame.get());
+      frame_pool.push_back(std::move(audio_frame));
+      return result;
     }
 
-    AVFrame* saved_frame = av_frame_alloc();
-    if (unlikely(saved_frame == nullptr)) {
-      av_frame_free(&video_frame);
-      clear_avframe_list(video_frames);
-      throw ffmpeg_error("[decode_video_packet] Could not allocate saved_frame, no memory", AVERROR(ENOMEM));
-    }
-
-    result = av_frame_ref(saved_frame, video_frame);
-    if (unlikely(result < 0)) {
-      av_frame_free(&saved_frame);
-      av_frame_free(&video_frame);
-      clear_avframe_list(video_frames);
-      throw ffmpeg_error(fmt::format("[{}] error while referencing video "
-      "frames during decoding: ", FUNCDINFO), result);
-    }
-
-    av_frame_unref(video_frame);
-    video_frames.push_back(saved_frame);
+    frame_buffer.push_back(std::move(audio_frame));
   }
-  
-  av_frame_free(&video_frame);
-  return video_frames;
+
+  return result;
 }
 
+void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& out_frames, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
+  static constexpr int ALLOWED_DECODE_FAILURES = 5;
+  int nb_errors_thrown = 0;
 
+  av_frame_move_to_pool(out_frames, frame_pool);
 
+  int res = av_next_stream_packet(fctx, stream_idx, reading_pkt);
+  while (res == 0) {
+    res = decode_packet(cctx, reading_pkt, out_frames, frame_pool);
 
-std::vector<AVFrame*> decode_audio_packet(AVCodecContext* audio_codec_context, AVPacket* audio_packet) {
-  std::vector<AVFrame*> audio_frames;
-  int result;
-
-  result = avcodec_send_packet(audio_codec_context, audio_packet);
-  if (result < 0) {
-    throw ffmpeg_error(fmt::format("[{}] error while sending audio packet ",
-                                    FUNCDINFO), result);
-  }
-
-  AVFrame* audio_frame = av_frame_alloc();
-  if (unlikely(audio_frame == nullptr)) {
-    throw ffmpeg_error("[decode_audio_packet] Could not allocate audio_frame, "
-    "no memory", AVERROR(ENOMEM));
-  }
-
-  while (result == 0) {
-    result = avcodec_receive_frame(audio_codec_context, audio_frame);
-    if (result < 0) {
-      if (result == AVERROR(EAGAIN) && !audio_frames.empty()) break;
-
-      av_frame_free(&audio_frame);
-      clear_avframe_list(audio_frames);
-      throw ffmpeg_error(fmt::format("[{}] error while receiving audio "
-      "frames during decoding: ", FUNCDINFO), result);
+    if (res == 0 || (res == AVERROR(EAGAIN) && !out_frames.empty())) {
+      return;
+    } else if (res != AVERROR(EAGAIN)) {
+      nb_errors_thrown++;
+      if (nb_errors_thrown > ALLOWED_DECODE_FAILURES) {
+        throw std::runtime_error(fmt::format("[{}] Could not decode next {} "
+        "packet: \n\t{}", FUNCDINFO, av_get_media_type_string(cctx->codec_type),
+        res));
+      }
     }
 
-    AVFrame* saved_frame = av_frame_alloc();
-    if (unlikely(saved_frame == nullptr)) {
-      av_frame_free(&audio_frame);
-      clear_avframe_list(audio_frames);
-      throw ffmpeg_error("[decode_audio_packet] Could not allocate "
-      "saved_frame, no memory", AVERROR(ENOMEM));
-    } 
-
-    result = av_frame_ref(saved_frame, audio_frame); 
-    if (unlikely(result < 0)) {
-      clear_avframe_list(audio_frames);
-      av_frame_free(&saved_frame);
-      av_frame_free(&audio_frame);
-      throw ffmpeg_error(fmt::format("[{}] error while referencing audio "
-                                "frames during decoding ", FUNCDINFO), result);
-    }
-
-    av_frame_unref(audio_frame);
-    audio_frames.push_back(saved_frame);
+    res = av_next_stream_packet(fctx, stream_idx, reading_pkt);
   }
-
-  av_frame_free(&audio_frame);
-  return audio_frames;
 }
 
-std::vector<AVFrame*> decode_packet_queue(AVCodecContext* codec_context, std::deque<AVPacket*>& packet_queue, enum AVMediaType packet_type) {
-  while (!packet_queue.empty()) {
-    AVPacket* packet = packet_queue.front();
-    packet_queue.pop_front();
+int av_jump_time(AVFormatContext* fctx, AVCodecContext* cctx, AVStream* stream, AVPacket* reading_pkt, double target_time) {
+  assert(target_time >= 0.0 && target_time <= (fctx->duration / AV_TIME_BASE));
 
-    try {
-      switch (packet_type) {
-        case AVMEDIA_TYPE_AUDIO: {
-          std::vector<AVFrame*> dec_frames = decode_audio_packet(codec_context, packet);
-          av_packet_free(&packet);
-          return dec_frames;
-        } break;
-        case AVMEDIA_TYPE_VIDEO: {
-          std::vector<AVFrame*> dec_frames = decode_video_packet(codec_context, packet);
-          av_packet_free(&packet);
-          return dec_frames;
-        } break;
-        default: throw std::runtime_error(fmt::format("[{}] Could not decode "
-          "packet queue of unimplemented AVMediaType {}.",
-          FUNCDINFO, av_get_media_type_string(packet_type)));
-      }
-    } catch (ffmpeg_error const& e) {
-      if (e.get_averror() != AVERROR(EAGAIN)) { // if error is fatal, or the packet list is empty
-        av_packet_free(&packet);
-        throw e;
+  int ret = avformat_seek_file(fctx, -1, 0.0,
+    target_time * AV_TIME_BASE, target_time * AV_TIME_BASE, 0);
+
+  if (ret < 0)
+    return ret;
+
+  avcodec_flush_buffers(cctx);
+  bool passed_target_time = false;
+  std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> frames, frame_pool;
+
+  do {
+    decode_next_stream_frames(fctx, cctx, stream->index, reading_pkt, frames, frame_pool);
+    for (std::size_t i = 0; i < frames.size(); i++) {
+      if (frames[i]->pts * av_q2d(stream->time_base) >= target_time) {
+        passed_target_time = true;
+        break;
       }
     }
-    
-    av_packet_free(&packet);
-  }
+  } while (!passed_target_time && frames.size() > 0);
 
-  return {};
+  return ret;
 }

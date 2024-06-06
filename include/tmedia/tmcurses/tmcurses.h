@@ -18,15 +18,14 @@
  * @copyright MIT License (c) 2023 (see LICENSE)
  */
 
+#include <tmedia/image/color.h>
 #include <tmedia/image/palette.h>
 #include <vector>
 #include <string>
 #include <string_view>
 
-class RGB24;
-
 extern "C" {
-  #include <curses.h>
+#include <curses.h>
 }
 
 /**
@@ -85,30 +84,17 @@ enum class TMAlign {
   CENTER
 };
 
-struct Style {
-  int row;
-  int col;
-  int width;
-  int height;
-  TMAlign align;
-  int padding_left;
-  int padding_right;
-  int padding_top;
-  int padding_bottom;
-};
-
 /**
  * Encapsulates the style guides for 
 */
 struct TMLabelStyle {
-  int row;
-  int col;
-  int width;
-  TMAlign align;
-  int margin_left;
-  int margin_right;
+  int row = 0;
+  int col = 0;
+  int width = 0;
+  TMAlign align = TMAlign::LEFT;
+  int margin_left = 0;
+  int margin_right = 0;
 
-  TMLabelStyle();
   TMLabelStyle(int row, int col, int width, TMAlign align, int margin_left, int margin_right);
 };
 
@@ -131,12 +117,12 @@ void tmcurses_set_color_palette_custom(const Palette&);
  * Color pairs are used to apply attributes to printed terminal colors
  * @returns The closest registered ncurses color pair attribute index
  */
-curses_color_pair_t get_closest_tmcurses_color_pair(const RGB24& input);
+curses_color_pair_t get_closest_tmcurses_color_pair(RGB24 input);
 
 /**
  * @brief Find the closest registered ncurses color integer to the inputted RGB24.
  * @returns The closest registered ncurses color pair attribute index
  */
-curses_color_t get_closest_tmcurses_color(const RGB24& input);
+curses_color_t get_closest_tmcurses_color(RGB24 input);
 
 #endif

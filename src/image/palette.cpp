@@ -8,7 +8,7 @@ bool palette_equals(Palette& first, Palette& second) {
     return false;
   }
 
-  for (const RGB24& color : first) {
+  for (RGB24 color : first) {
     if (second.count(color) != 1) {
       return false;
     }
@@ -21,7 +21,7 @@ std::string palette_str(Palette& palette) {
   if (palette.size() == 0) return "{}";
   std::stringstream buf;
   buf << "{\n";
-  for (const RGB24& color : palette) {
+  for (RGB24 color : palette) {
     buf << "\t{" << "r: " << color.r << ", g: " << color.g << " b: " <<
       color.b << "}\n";
   }
