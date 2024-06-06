@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <iterator>
 #include <utility>
+#include <algorithm>
 
 namespace tmedia {
 

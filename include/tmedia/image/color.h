@@ -18,8 +18,8 @@
  * @return An integer representing the color channel value of all channels in
  * the RGB grayscale representation of the inputted color
  */
-[[gnu::always_inline]] constexpr inline int get_grayint(int r, int g, int b) {
-  return static_cast<int>(0.299 * static_cast<double>(r) + 0.587 * static_cast<double>(g) + 0.114 * static_cast<double>(b));
+[[gnu::always_inline]] constexpr inline std::uint8_t get_gray8(std::uint8_t r, std::uint8_t g, std::uint8_t b) {
+  return static_cast<std::uint8_t>(0.299 * static_cast<double>(r) + 0.587 * static_cast<double>(g) + 0.114 * static_cast<double>(b));
 }
 
 /**
