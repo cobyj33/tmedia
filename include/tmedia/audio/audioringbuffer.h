@@ -2,7 +2,6 @@
 #define TMEDIA_AUDIO_RING_BUFFER_H
 
 #include <cstddef>
-#include <tmedia/util/defines.h>
 
 /**
  * Constant-Sized Non-Self-Overwriting Ring Buffer for audio. 
@@ -49,11 +48,11 @@ class AudioRingBuffer {
 
     AudioRingBuffer(int frame_capacity, int nb_channels, int sample_rate, double playback_start_time);
 
-    TMEDIA_ALWAYS_INLINE inline int get_nb_channels() {
+    [[gnu::always_inline]] inline int get_nb_channels() {
       return this->m_nb_channels;
     }
 
-    TMEDIA_ALWAYS_INLINE inline int get_sample_rate() {
+    [[gnu::always_inline]] inline int get_sample_rate() {
       return this->m_sample_rate;
     }
 

@@ -1,8 +1,7 @@
 #include <tmedia/ffmpeg/deleter.h>
 
-#include <tmedia/util/defines.h>
-
-#include <new>
+#include <tmedia/util/defines.h> // for unlikely()
+#include <new> // for std::bad_alloc
 
 extern "C" {
 #include <libavformat/avformat.h>

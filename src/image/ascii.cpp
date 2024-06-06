@@ -1,4 +1,4 @@
-#include <tmedia/util/defines.h> 
+#include <tmedia/image/ascii.h> 
 
 #include <tmedia/image/pixeldata.h>
 #include <tmedia/util/defines.h>

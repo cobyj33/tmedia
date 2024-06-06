@@ -2,7 +2,12 @@
 #define TMEDIA_DEFINES_H
 
 
-/* Branch prediction */
+/* Branch prediction
+
+Cannot use C++20 [[likely]] and [[unlikely]] syntax since tmedia
+runs on C++17
+*/
+
 #if (defined(__GNUC__) && __GNUC__ >= 3) || defined(__clang__)
 # define likely(p)     __builtin_expect(!!(p), 1)
 # define unlikely(p)   __builtin_expect(!!(p), 0)

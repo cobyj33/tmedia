@@ -2,7 +2,6 @@
 #define TMEDIA_BLOCKING_AUDIO_RING_BUFFER_H
 
 #include <tmedia/audio/audioringbuffer.h>
-#include <tmedia/util/defines.h>
 
 #include <mutex>
 #include <condition_variable>
@@ -29,12 +28,12 @@ class BlockingAudioRingBuffer {
     BlockingAudioRingBuffer(int frame_capcity, int nb_channels, int sample_rate, double playback_start_time);
     
     // Thread safe without locking: nb_channels is read-only
-    TMEDIA_ALWAYS_INLINE inline int get_nb_channels() {
+    [[gnu::always_inline]] inline int get_nb_channels() {
       return this->rb->get_nb_channels();
     }
     
     // Thread safe without locking: nb_channels is read-only
-    TMEDIA_ALWAYS_INLINE inline int get_sample_rate() {
+    [[gnu::always_inline]] inline int get_sample_rate() {
       return this->rb->get_sample_rate();
     }
 

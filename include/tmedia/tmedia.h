@@ -8,7 +8,6 @@
 #include <tmedia/image/scale.h> // for Dim2
 #include <tmedia/ffmpeg/boiler.h> // for MediaType
 #include <tmedia/image/pixeldata.h> // for PixelData
-#include <tmedia/util/defines.h> // for ASCII_STANDARD_CHAR_MAP
 
 #include <optional>
 #include <vector>

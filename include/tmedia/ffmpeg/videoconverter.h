@@ -1,9 +1,6 @@
 #ifndef TMEDIA_VIDEO_CONVERTER_H
 #define TMEDIA_VIDEO_CONVERTER_H
 
-
-#include <tmedia/util/defines.h>
-
 extern "C" {
   #include <libavutil/frame.h>
   #include <libswscale/swscale.h>
@@ -54,12 +51,12 @@ class VideoConverter {
     */
     void convert_video_frame(AVFrame* dest, AVFrame* src);
 
-    TMEDIA_ALWAYS_INLINE inline int get_src_width() { return this->m_src_width; }
-    TMEDIA_ALWAYS_INLINE inline int get_src_height() { return this->m_src_height; }
-    TMEDIA_ALWAYS_INLINE inline enum AVPixelFormat get_src_pix_fmt() { return this->m_src_pix_fmt; }
-    TMEDIA_ALWAYS_INLINE inline int get_dst_width() { return this->m_dst_width; }
-    TMEDIA_ALWAYS_INLINE inline int get_dst_height() { return this->m_dst_height; }
-    TMEDIA_ALWAYS_INLINE inline enum AVPixelFormat get_dst_pix_fmt() { return this->m_dst_pix_fmt; }
+    [[gnu::always_inline]] inline int get_src_width() { return this->m_src_width; }
+    [[gnu::always_inline]] inline int get_src_height() { return this->m_src_height; }
+    [[gnu::always_inline]] inline enum AVPixelFormat get_src_pix_fmt() { return this->m_src_pix_fmt; }
+    [[gnu::always_inline]] inline int get_dst_width() { return this->m_dst_width; }
+    [[gnu::always_inline]] inline int get_dst_height() { return this->m_dst_height; }
+    [[gnu::always_inline]] inline enum AVPixelFormat get_dst_pix_fmt() { return this->m_dst_pix_fmt; }
 
     /**
      * Reset the destination frame size to be equal to a new size. Useful

@@ -10,18 +10,17 @@
  * @copyright Copyright (c) 2023
  */
 
-#include <tmedia/util/defines.h>
 #include <algorithm> // for std::min
 
 struct Dim2 {
   int width;
   int height;
 
-  TMEDIA_ALWAYS_INLINE constexpr bool operator==(Dim2 o) {
+  [[gnu::always_inline]] constexpr bool operator==(Dim2 o) {
     return this->width == o.width && this->height == o.height;
   }
 
-  TMEDIA_ALWAYS_INLINE constexpr bool operator!=(Dim2 o) {
+  [[gnu::always_inline]] constexpr bool operator!=(Dim2 o) {
     return this->width != o.width || this->height != o.height;
   }
 };

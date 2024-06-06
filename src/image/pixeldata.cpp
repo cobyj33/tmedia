@@ -8,18 +8,8 @@
 #include <tmedia/ffmpeg/videoconverter.h>
 #include <tmedia/ffmpeg/ffmpeg_error.h>
 
-#include <tmedia/util/defines.h>
-
-#include <stdexcept>
-#include <cstdio>
 #include <cstdint>
 #include <cstring>
-#include <cstdlib>
-#include <memory>
-#include <functional>
-#include <utility>
-#include <memory>
-
 #include <cassert>
 
 #include <fmt/format.h>

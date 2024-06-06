@@ -14,7 +14,6 @@
 #include <tmedia/tmedia_tui_elems.h>
 #include <tmedia/audio/maaudioout.h>
 #include <tmedia/image/palette.h>
-#include <tmedia/util/defines.h>
 
 #include <readerwritercircularbuffer.h>
 #include <fmt/format.h>

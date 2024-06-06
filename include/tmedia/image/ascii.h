@@ -2,16 +2,14 @@
 #define TMEDIA_ASCII_H
 
 #include <cstdint>
-#include <vector>
 #include <string_view>
 #include <cassert>
 
-#include <tmedia/util/defines.h>
 #include <tmedia/image/color.h>
 
 
 /**
- * @file tmedia/image/defines.h
+ * @file tmedia/image/ascii.h
  * @author Jacoby Johnson (jacobyajohnson@gmail.com)
  * @brief Common functions for converting from colors to ascii characters
  * @version 0.1
@@ -30,12 +28,12 @@
 
 extern const char* ASCII_STANDARD_CHAR_MAP;
 
-TMEDIA_ALWAYS_INLINE inline constexpr char get_char_from_value(std::string_view characters, std::uint8_t value) {
+[[gnu::always_inline]] inline constexpr char get_char_from_value(std::string_view characters, std::uint8_t value) {
   assert(characters.length() > 0);
   return characters[ (std::size_t)value * (characters.length() - 1) / 255UL ];
 }
 
-TMEDIA_ALWAYS_INLINE inline constexpr char get_char_from_rgb(std::string_view characters, RGB24 color) {
+[[gnu::always_inline]] inline constexpr char get_char_from_rgb(std::string_view characters, RGB24 color) {
   return get_char_from_value(characters, get_gray8(color.r, color.g, color.b));
 }
 

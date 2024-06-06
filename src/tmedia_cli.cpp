@@ -9,7 +9,6 @@
 #include <tmedia/ffmpeg/probe.h>
 #include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/image/pixeldata.h>
-#include <tmedia/util/defines.h>
 
 #include <tmedia/ctnr/arraypairmap.hpp>
 

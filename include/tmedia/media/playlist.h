@@ -4,7 +4,6 @@
 #include <cstddef>
 
 #include <tmedia/media/metadata.h>
-#include <tmedia/util/defines.h>
 
 #include <vector>
 #include <string>
@@ -118,23 +117,23 @@ class Playlist {
     Playlist();
     Playlist(const std::vector<PlaylistItem>& entries, LoopType loop_type);
 
-    TMEDIA_ALWAYS_INLINE inline bool shuffled() const noexcept {
+    [[gnu::always_inline]] inline bool shuffled() const noexcept {
       return this->m_shuffled;
     }
 
-    TMEDIA_ALWAYS_INLINE inline LoopType loop_type() const noexcept {
+    [[gnu::always_inline]] inline LoopType loop_type() const noexcept {
       return this->m_loop_type;
     }
 
-    TMEDIA_ALWAYS_INLINE inline void set_loop_type(LoopType loop_type) noexcept {
+    [[gnu::always_inline]] inline void set_loop_type(LoopType loop_type) noexcept {
       this->m_loop_type = loop_type;
     }
 
-    TMEDIA_ALWAYS_INLINE inline std::size_t size() const noexcept {
+    [[gnu::always_inline]] inline std::size_t size() const noexcept {
       return this->m_entries.size();
     }
 
-    TMEDIA_ALWAYS_INLINE bool empty() const noexcept {
+    [[gnu::always_inline]] bool empty() const noexcept {
       return this->size() == 0;
     }
 
