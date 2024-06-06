@@ -40,10 +40,18 @@ extern "C" {
 
 namespace fs = std::filesystem;
 
+// curses really thought it was a good idea
+// to create macros named TRUE and FALSE...
 #undef TRUE
 #undef FALSE
 
 // namespace tmedia {
+
+// Perhaps the controls usage and help text could be generated dynamically
+// later, so that the usage, help_text, and actual functionality are never
+// out of sync.  
+// as of now, I'd rather not write more code for something that's doable by
+// hand.
 
 // When editing this string, make sure to edit the corresponding text in the
 // top level README.md file
@@ -72,10 +80,10 @@ const char* TMEDIA_CONTROLS_USAGE = ""
   "- 'R' - Fully Refresh the Screen\n"
   "---------------------------------------------------------------------------";
 
-// When editing this string, make sure to edit the corresponding text in the
-// top-level README.md file.
-// When documenting new CLI argument entries, make sure to also document the
-// new CLI argument in doc/cli.md and the top-level README.md file.
+// ! When editing this string, make sure to edit the corresponding text in the
+// ! top-level README.md file.
+// ! When documenting new CLI argument entries, make sure to also document the
+// ! new CLI argument in doc/cli.md and the top-level README.md file.
 const char* TMEDIA_CLI_ARGS_DESC = ""
   "-------------------------------CLI ARGUMENTS------------------------------\n"
   "\n"
@@ -142,10 +150,12 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   "---------------------------------------------------------------------------";
 
   /**
-   * The idea of inheritable boolean is that each media item will either have
-   * global or local values assigned to it (such as configuring to ignore images
-   * or videos). Therefore, when the inheritable boolean is INHERIT, we signal
+   * The idea of MediaPathSearchOptions and MediaPathLocalSearchOptions is that
+   * each media item will either have global or local values assigned to it
+   * (such as configuring to ignore images or videos).
+   * Therefore, when the inheritable boolean is std::nullopt, we signal
    * to read the global value rather than any local value.
+   * 
   */
 
   struct MediaPathSearchOptions {
@@ -160,7 +170,9 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   /**
    * Mirrors MediaPathSearchOptions, but all values are std::nullopt by
-   * default and all values are compositions of std::optional
+   * default and all values are compositions of std::optional. This
+   * semantically means that all paths inherit global properties of the
+   * command line by default.
   */
   struct MediaPathLocalSearchOptions {
     std::optional<bool> ignore_audio = std::nullopt;

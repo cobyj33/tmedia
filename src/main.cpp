@@ -55,8 +55,20 @@ int main(int argc, char** argv) {
 
   std::signal(SIGINT, interrupt_handler);
 	std::signal(SIGTERM, interrupt_handler);
+
+  /*
+  Otherwise, it would be difficult to justify using C's assert macro in code to
+  handle logical errors, as we could not guarantee that every abort would
+  exit the program and every abort would uninitialize curses beforehand, leading
+  to returning the calling terminal into its normal state.
+  Source: (https://www.man7.org/linux/man-pages/man3/abort.3.html)
+  */
 	std::signal(SIGABRT, interrupt_handler);
 
+  // I honestly forgot why I did this, but I'll just leave it as is for now.
+  // (no, srand() is not called to randomize the seed for shuffling the
+  // playlist, as https://github.com/ilqvya/random is used for that
+  // funcitonality)
   srand(time(nullptr));
   av_log_set_level(AV_LOG_QUIET);
   std::set_terminate(on_terminate);

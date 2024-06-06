@@ -10,8 +10,6 @@
  * @copyright Copyright (c) 2023
  */
 
-#include <algorithm> // for std::min
-
 struct Dim2 {
   int width;
   int height;
@@ -47,7 +45,7 @@ struct Dim2 {
 constexpr inline double get_scale_factor(int src_width, int src_height, int target_width, int target_height) {
   double width_scaler = static_cast<double>(target_width) / src_width; // > 1 if growing, < 1 if shrinking, ==1 if same
   double height_scaler = static_cast<double>(target_height) / src_height; // > 1 if growing, < 1 if shrinking, ==1 if same
-  return std::min(width_scaler, height_scaler);
+  return width_scaler < height_scaler ? width_scaler : height_scaler;
 }
 
 /**

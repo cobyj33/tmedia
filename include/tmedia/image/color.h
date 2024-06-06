@@ -5,24 +5,22 @@
 #include <cstddef>
 #include <cstdint>
 
-[[gnu::always_inline]] constexpr inline std::uint8_t get_gray8(std::uint8_t r, std::uint8_t g, std::uint8_t b) {
-  return static_cast<std::uint8_t>(0.299 * static_cast<double>(r) + 0.587 * static_cast<double>(g) + 0.114 * static_cast<double>(b));
-}
 
 /**
  * @brief Get the grayscale value of 3 channels of rgb data.
  * 
- * @note This function should work for r >= 0, g >= 0, b >= 0, no matter the bounds of the channels, whether that be 0-255 or 0-1000
+ * @note This function should work for r >= 0, g >= 0, b >= 0, no matter
+ * the bounds of the channels, whether that be 0-255 or 0-1000
  * 
  * @param r The r channel of the rgb value
  * @param g The g channel of the rgb value
  * @param b The b channel of the rgb value
- * @return An integer representing the color channel value of all channels in the RGB grayscale representation of the inputted color
+ * @return An integer representing the color channel value of all channels in
+ * the RGB grayscale representation of the inputted color
  */
 [[gnu::always_inline]] constexpr inline int get_grayint(int r, int g, int b) {
   return static_cast<int>(0.299 * static_cast<double>(r) + 0.587 * static_cast<double>(g) + 0.114 * static_cast<double>(b));
 }
-
 
 /**
  * @brief A representation of an RGB Color with R, G, and B channels in the
