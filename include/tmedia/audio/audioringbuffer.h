@@ -1,7 +1,6 @@
 #ifndef TMEDIA_AUDIO_RING_BUFFER_H
 #define TMEDIA_AUDIO_RING_BUFFER_H
 
-#include <vector>
 #include <cstddef>
 #include <tmedia/util/defines.h>
 
@@ -33,7 +32,7 @@
 */
 class AudioRingBuffer {
   private: 
-    std::vector<float> rb;
+    float* rb;
     int m_size_frames;
     int m_size_samples;
     int m_nb_channels;
@@ -74,9 +73,9 @@ class AudioRingBuffer {
     void read_into(int nb_frames, float* out);
 
     void peek_into(int nb_frames, float* out);
-    std::vector<float> peek_into(int nb_frames);
 
     void write_into(int nb_frames, float* in);
+    ~AudioRingBuffer();
 };
 
 #endif

@@ -36,7 +36,7 @@ AudioRingBuffer::AudioRingBuffer(int frame_capacity, int nb_channels, int sample
   this->m_tail = 1;
   this->m_size_frames = frame_capacity;
   this->m_size_samples = frame_capacity * nb_channels;
-  this->rb.reserve(this->m_size_samples);
+  this->rb = new float[frame_capacity * nb_channels];
 
   this->m_start_time = playback_start_time;
   this->m_sample_rate = sample_rate;
@@ -106,18 +106,6 @@ void AudioRingBuffer::peek_into(int nb_frames, float* out) {
   this->m_frames_read -= nb_frames;
 }
 
-std::vector<float> AudioRingBuffer::peek_into(int nb_frames) {
-  const int nb_samples = nb_frames * this->m_nb_channels;
-
-  float* temp = new float[nb_samples];
-  this->peek_into(nb_frames, temp);
-  std::vector<float> res;
-  for (int i = 0; i < nb_samples; i++) res.push_back(temp[i]);
-
-  delete[] temp;
-  return res;
-}
-
 void AudioRingBuffer::write_into(int nb_frames, float* in) {
   assert(this->get_frames_can_write() >= nb_frames);
 
@@ -129,3 +117,6 @@ void AudioRingBuffer::write_into(int nb_frames, float* in) {
   }
 }
 
+AudioRingBuffer::~AudioRingBuffer() {
+  delete[] this->rb;
+}
