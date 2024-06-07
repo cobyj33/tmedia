@@ -513,6 +513,15 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       ps.argerrs.push_back(fmt::format("[{}] No paths entered", FUNCDINFO));
     }
 
+    if (ps.srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] == false &&
+        ps.srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] == false) {
+      ps.argerrs.push_back(fmt::format("[{}] Disabled both audio and video "
+        "streams globally, effectively disabling all media files from being "
+        "read. Please make sure that not both --disable-video-stream and "
+        "--disable-audio-stream are present at once on the "
+        "command line.", FUNCDINFO));
+    }
+
     for (const MediaPath& path : ps.paths) {
       MediaPathSearchOptions resolved_srch_opts = resolve_path_search_options(ps.srch_opts, path.srch_opts);
       for (unsigned int i = 0; i < resolved_srch_opts.num_reads; i++) {
@@ -918,13 +927,17 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     
     if (media_type) {
       switch (*media_type) {
-        case MediaType::VIDEO: return !search_opts.ignore_video;
-        case MediaType::AUDIO: return !search_opts.ignore_audio;
-        case MediaType::IMAGE: return !search_opts.ignore_images;
+        case MediaType::VIDEO: return !search_opts.ignore_video &&
+          (search_opts.requested_streams[AVMEDIA_TYPE_VIDEO] ||
+          search_opts.requested_streams[AVMEDIA_TYPE_AUDIO]);
+        case MediaType::AUDIO: return !search_opts.ignore_audio &&
+          search_opts.requested_streams[AVMEDIA_TYPE_AUDIO];
+        case MediaType::IMAGE: return !search_opts.ignore_images &&
+          search_opts.requested_streams[AVMEDIA_TYPE_VIDEO];
       }
     }
 
-    return false;
+    return false; // unreachable
   }
 
 
