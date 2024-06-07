@@ -30,12 +30,17 @@ MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::array<b
   this->in_use = false;
   std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fctx = open_fctx(this->path);
 
+  bool any_stream_found = false;
   for (unsigned int i = 0; i < fctx->nb_streams; i++) {
     if (requested_streams[fctx->streams[i]->codecpar->codec_type]) {
+      any_stream_found = true;
       this->available_streams[fctx->streams[i]->codecpar->codec_type] = true;
     }
   }
 
+  if (!any_stream_found) {
+    throw std::runtime_error(fmt::format("[{}] Could not find any available streams to decode", FUNCDINFO));
+  }
 
   this->media_type = media_type_from_avformat_context(fctx.get());
   this->msg_video_jump_curr_time = 0;
