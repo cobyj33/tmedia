@@ -17,6 +17,11 @@ void visualize(PixelData& dest, float* frames, int nb_frames, int nb_channels, i
   pixdata_initgray(dest, width, height, 0);
 
   const float step_size = nb_samples / static_cast<float>(width);
+
+  // While this iteration technically isn't correct, since we should probabl
+  // consider
+  // each audio channel separately, we are rendering this to usually a very
+  // small terminal and it really doesn't matter from what I see.
   for (int col = 0; col < width; col++) {
     const std::size_t start = static_cast<std::size_t>(static_cast<float>(col) * step_size);
     float sample = 0.0;

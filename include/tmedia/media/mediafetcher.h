@@ -102,7 +102,14 @@ class MediaFetcher {
 
     MediaFetcher(const std::filesystem::path& path, const std::array<bool, AVMEDIA_TYPE_NB>& requested_streams);
 
+    /**
+     * Must only be called by the owning thread.
+     */
     void begin(double currsystime); // Only to be called by owning thread
+    
+    /**
+     * Must only be called by the owning thread.
+     */
     void join(double currsystime); // Only to be called by owning thread after in_use is set to false
     
     /**
@@ -142,9 +149,10 @@ class MediaFetcher {
      * skipping, etc... and calculates the time according to the
      * current system time given.
      * 
-     * Not thread-safe, lock alter_mutex first
-     * 
      * @return The current time of playback since 0:00 in seconds
+     * 
+     * NOTE:
+     * Not thread-safe, lock alter_mutex first
      */
     [[gnu::always_inline]] inline double get_time(double currsystime) const {
       return this->clock.get_time(currsystime);
@@ -155,20 +163,29 @@ class MediaFetcher {
      * buffer and the expected media time in order to determine the audio desync
      * amount. If there is no audio handled by this MediaFetcher instance,
      * then this function just returns 0.0
-     *
-     * Not thread-safe, lock alter_mutex first
+     * 
+     * NOTE:
+     * alter_mutex must be locked first before calling for thread safety
     */
     double get_audio_desync_time(double currsystime) const;
 
     /**
-     * @brief Moves the MediaFetcher's playback to a certain time (including video and audio streams)
-     * @note The caller is responsible for making sure the time to jump to is in the bounds of the video's playtime. 
+     * @brief Moves the MediaFetcher's playback to a certain time
+     * (including video and audio streams)
+     * 
+     * @note The caller is responsible for making sure the time to jump to is
+     * in the bounds of the video's playtime.
+     * 
      * The video's duration could be found with the MediaFetcher::duration
      * 
-     * @param target_time The target time to jump the playback to (must be reachable)
+     * @param target_time The target time to jump the playback to (must be reachable).
+     * It is recommended to simply clamp the requested time between 0 and
+     * MediaFetcher::duration whenever calling this function for guaranteed
+     * safety.
      * @param currsystime The current system time
      * @throws If the target time is not in the boudns of the video's playtime
      * 
+     * NOTE:
      * alter_mutex must be locked first before calling for thread safety
      */
     int jump_to_time(double target_time, double currsystime);

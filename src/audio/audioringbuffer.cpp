@@ -1,17 +1,6 @@
 #include <tmedia/audio/audioringbuffer.h>
 
-#include <tmedia/util/formatting.h>
-#include <tmedia/util/defines.h>
-
-#include <fmt/format.h>
-
-#include <vector>
-#include <stdexcept>
-#include <system_error>
-#include <cstddef>
-
 #include <cassert>
-
 /**
  * Implementation details:
  * 
@@ -52,7 +41,7 @@ void AudioRingBuffer::clear(double new_start_time) {
 }
 
 double AudioRingBuffer::get_buffer_end_time() {
-  return this->m_start_time + (static_cast<double>(this->m_frames_read + static_cast<std::size_t>(this->get_frames_can_read())) / static_cast<double>(this->m_sample_rate));
+  return this->m_start_time + (static_cast<double>(this->m_frames_read + static_cast<unsigned long long>(this->get_frames_can_read())) / static_cast<double>(this->m_sample_rate));
 }
 
 double AudioRingBuffer::get_buffer_current_time() {

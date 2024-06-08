@@ -14,6 +14,10 @@
  * @param b The b channel of the rgb value
  * @return An integer representing the color channel value of all channels in
  * the RGB grayscale representation of the inputted color
+ * 
+ * NOTE:
+ * Equation to convert from RGB to grayscale is taken from:
+ * https://goodcalculators.com/rgb-to-grayscale-conversion-calculator/
  */
 [[gnu::always_inline]] constexpr inline std::uint8_t get_gray8(std::uint8_t r, std::uint8_t g, std::uint8_t b) {
   return static_cast<std::uint8_t>(0.299 * static_cast<double>(r) + 0.587 * static_cast<double>(g) + 0.114 * static_cast<double>(b));

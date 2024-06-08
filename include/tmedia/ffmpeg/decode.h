@@ -23,6 +23,11 @@ struct AVCodecContext;
 struct AVStream;
 }
 
+/**
+ * 
+ * The decoding API is made simple with only three exposed
+ * functions matching the needs of tmedia. 
+ */
 
 /**
  * Decode a single packet given an AVCodecContext and places the values
@@ -41,6 +46,11 @@ struct AVStream;
 int decode_packet(AVCodecContext* cctx, AVPacket* pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool);
 
 int av_jump_time(AVFormatContext* fctx, AVCodecContext* cctx, AVStream* stream, AVPacket* reading_pkt, double target_time);
+
+/**
+ * 
+ * Decodes the next AVFrame's available in the given stream
+ */
 void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& out_frames, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool);
 
 

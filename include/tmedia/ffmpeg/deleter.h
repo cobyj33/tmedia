@@ -10,7 +10,12 @@ struct AVCodecContext;
 }
 
 /**
- * Deleter FunctionObjects made to work with C++ STL smart pointers
+ * Deleter FunctionObjects made to work with C++ STL smart pointers.
+ * 
+ * These are largely necessary for guaranteeing that allocated FFmpeg structs
+ * will never leak data even in scopes in which exceptions may be thrown. This
+ * is especially true for many STL functions which can reallocate and therefore
+ * call std::bad_alloc, causing a memory leak if that were to happen.
 */
 
 AVPacket* av_packet_allocx();

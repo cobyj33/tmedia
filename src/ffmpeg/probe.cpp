@@ -6,16 +6,13 @@
 #include <tmedia/util/formatting.h>
 #include <tmedia/util/defines.h>
 
-#include <string>
 #include <stdexcept>
 #include <filesystem>
-#include <cstring>
 
 #include <fmt/format.h>
 
 extern "C" {
 #include <libavformat/avformat.h>
-#include <libavutil/avstring.h>
 }
 
 

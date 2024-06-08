@@ -9,7 +9,6 @@ extern "C" {
 struct AVInputFormat;
 }
 
-#include <string>
 #include <optional>
 #include <filesystem>
 

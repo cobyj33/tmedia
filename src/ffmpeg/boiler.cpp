@@ -15,6 +15,7 @@
 #include <vector>
 #include <string_view>
 #include <filesystem>
+#include <cassert>
 
 #include <fmt/format.h>
 
@@ -53,6 +54,7 @@ std::unique_ptr<AVFormatContext, AVFormatContextDeleter> open_fctx(const std::fi
 }
 
 OpenCCTXRes open_cctx(AVFormatContext* fmt_ctx, enum AVMediaType media_type) {
+  assert(fmt_ctx != nullptr);
   #if AV_FIND_BEST_STREAM_CONST_DECODER
   const AVCodec* decoder;
   #else
@@ -131,6 +133,8 @@ int cctx_get_nb_channels(AVCodecContext* cctx) {
 }
 
 int av_next_stream_packet(AVFormatContext* fctx, int stream_idx, AVPacket* pkt) {
+  assert(fctx != nullptr);
+  assert(pkt != nullptr);
   int result = 0;
 
   av_packet_unref(pkt);
@@ -148,25 +152,6 @@ int av_next_stream_packet(AVFormatContext* fctx, int stream_idx, AVPacket* pkt) 
   }
 
   return result;
-}
-
-void dump_file_info(const std::filesystem::path& path) {
-  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_fctx(path);
-  dump_format_context(fmt_ctx.get());
-}
-
-void dump_format_context(AVFormatContext* fmt_ctx) {
-  const int saved_avlog_level = av_log_get_level();
-  av_log_set_level(AV_LOG_INFO);
-  av_dump_format(fmt_ctx, 0, fmt_ctx->url, 0);
-  av_log_set_level(saved_avlog_level);
-}
-
-double get_file_duration(const std::filesystem::path& path) {
-  std::unique_ptr<AVFormatContext, AVFormatContextDeleter> fmt_ctx = open_fctx(path);
-  int64_t duration = fmt_ctx->duration;
-  double duration_seconds = (double)duration / AV_TIME_BASE;
-  return duration_seconds;
 }
 
 

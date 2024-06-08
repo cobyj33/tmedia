@@ -111,14 +111,18 @@ double MediaFetcher::get_audio_desync_time(double currsystime) const {
   return 0.0; 
 }
 
-/**
- * alter_mutex must be locked
-*/
 int MediaFetcher::jump_to_time(double target_time, double currsystime) {
   assert(target_time >= 0.0 && target_time <= this->duration);
   const double original_time = this->get_time(currsystime);
   this->msg_audio_jump_curr_time++;
   this->msg_video_jump_curr_time++;
+
+/**
+ * Notice how within MediaFetcher::jump_to_time we do no real work on the
+ * calling thread, we simply signal to the decoding threads that they have
+ * to resync to the current media time. This makes jumping time an extremely
+ * cheap operation for the calling thread.
+*/
   
   this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time
   return 0; // assume success
@@ -143,7 +147,9 @@ void MediaFetcher::begin(double currsystime) {
 }
 
 void MediaFetcher::join(double currsystime) {
-  this->in_use = false; // the user can set this as well if they want, but this is to make sure that the threads WILL end regardless
+  // the user can set this as well if they want,
+  // but this is to make sure that the threads WILL end regardless
+  this->in_use = false;
   
   if (this->media_type != MediaType::IMAGE && this->is_playing())
     this->pause(currsystime);

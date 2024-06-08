@@ -19,8 +19,6 @@ extern "C" {
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 }
-// std::ofstream pool_tracker("./pool_data.txt");
-// std::mutex ostream_mutex;
 
 void av_frame_move_to_pool(std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
   while (!frame_buffer.empty()) {
@@ -33,7 +31,14 @@ void av_frame_move_to_pool(std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>
 /**
  * Note that it is possible for av_frame_alloc_from_pool to return a
  * nullptr if av_frame_alloc fails. Make sure to check this from calling
- * code.
+ * code for safety concerns.
+ * 
+ * DESIGN_NOTE:
+ * Since av_frame_alloc_from_pool is only
+ * called from decode_packet, I designed av_frame_alloc_from_pool to possibly
+ * return nullptr rather than throw an exception so that any possible AVFrame's
+ * in the frame buffer could be moved to the frame pool before returning an
+ * error.
 */
 std::unique_ptr<AVFrame, AVFrameDeleter> av_frame_alloc_from_pool(std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
   if (!frame_pool.empty()) {
@@ -76,9 +81,12 @@ int decode_packet(AVCodecContext* cctx, AVPacket* pkt, std::vector<std::unique_p
 }
 
 void decode_next_stream_frames(AVFormatContext* fctx, AVCodecContext* cctx, int stream_idx, AVPacket* reading_pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& out_frames, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
+  assert(fctx != nullptr);
+  assert(cctx != nullptr);
+  assert(reading_pkt != nullptr);
+
   static constexpr int ALLOWED_DECODE_FAILURES = 5;
   int nb_errors_thrown = 0;
-
   av_frame_move_to_pool(out_frames, frame_pool);
 
   int res = av_next_stream_packet(fctx, stream_idx, reading_pkt);
@@ -111,6 +119,10 @@ int av_jump_time(AVFormatContext* fctx, AVCodecContext* cctx, AVStream* stream, 
 
   avcodec_flush_buffers(cctx);
   bool passed_target_time = false;
+
+  // We just make a local frame pool for decoding up to the desired timestamp.
+  // I guess we could pass it in? But I don't see a point since jumping time
+  // is such a rare operation
   std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>> frames, frame_pool;
 
   do {

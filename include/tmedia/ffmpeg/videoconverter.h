@@ -62,8 +62,10 @@ class VideoConverter {
      * Reset the destination frame size to be equal to a new size. Useful
      * for dynamically changing how large a frame should be rendered.
      *
-     * No-op if the current dst_width and dst_height equal to the passed in
-     * dst_width and dst_height
+     * No-op and return false if the current dst_width and dst_height equal
+     * to the passed in dst_width and dst_height
+     * 
+     * @returns Whether the destination frame size was reconfigured or not
     */
     bool reset_dst_size(int dst_width, int dst_height);
 

@@ -1,8 +1,6 @@
 #ifndef TMEDIA_AUDIO_RING_BUFFER_H
 #define TMEDIA_AUDIO_RING_BUFFER_H
 
-#include <cstddef>
-
 /**
  * Constant-Sized Non-Self-Overwriting Ring Buffer for audio. 
  * 
@@ -38,7 +36,7 @@ class AudioRingBuffer {
 
     int m_sample_rate;
     double m_start_time;
-    std::size_t m_frames_read;
+    unsigned long long m_frames_read;
 
     int m_head;
     int m_tail;
