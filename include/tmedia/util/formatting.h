@@ -9,12 +9,6 @@
  * tmedia general string formatting and manipulation routines.
 */
 
-typedef struct DurationData {
-  int hours;
-  int minutes;
-  int seconds;
-} DurationData;
-
 /**
  * vsprintf adopted to fill a std::string buffer.
  * See C standard vsprintf documentation for more details!

@@ -4,17 +4,17 @@
 
 TEST_CASE("Testing Wrapper Math Functions", "[wrapper]") {
   SECTION("clamp") {
-    REQUIRE( clamp(2, 0, 5) == 2 );
-    REQUIRE( clamp(-1, 0, 5) == 0 );
-    REQUIRE( clamp(6, 0, 5) == 5  );
-    REQUIRE( clamp(5, 0, 5) == 5);
-    REQUIRE( clamp(0, 0, 5) == 0);
+    REQUIRE( clamp<int>(2, 0, 5) == 2 );
+    REQUIRE( clamp<int>(-1, 0, 5) == 0 );
+    REQUIRE( clamp<int>(6, 0, 5) == 5  );
+    REQUIRE( clamp<int>(5, 0, 5) == 5);
+    REQUIRE( clamp<int>(0, 0, 5) == 0);
     
-    REQUIRE( clamp(2, 5, 0) == 2 );
-    REQUIRE( clamp(-1, 5, 0) == 0 );
-    REQUIRE( clamp(6, 5, 0) == 5  );
-    REQUIRE( clamp(5, 5, 0) == 5);
-    REQUIRE( clamp(0, 5, 0) == 0);
+    REQUIRE( clamp<int>(2, 5, 0) == 2 );
+    REQUIRE( clamp<int>(-1, 5, 0) == 0 );
+    REQUIRE( clamp<int>(6, 5, 0) == 5  );
+    REQUIRE( clamp<int>(5, 5, 0) == 5);
+    REQUIRE( clamp<int>(0, 5, 0) == 0);
   }
 
   SECTION("In range") {

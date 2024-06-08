@@ -10,7 +10,6 @@
 #include <stdexcept>
 #include <fmt/format.h>
 #include <cassert>
-#include <fstream>
 
 extern "C" {
   #include <curses.h>
@@ -25,6 +24,10 @@ std::string_view get_media_file_display_name(const std::filesystem::path& abs_pa
 void render_pixel_data(PixelData& pixel_data, PixelData& scaling_buffer, int bounds_row, int bounds_col, int bounds_width, int bounds_height, VidOutMode output_mode, std::string_view ascii_char_map);
 void render_bottom_bar(const TMediaProgramSnapshot& sshot, std::string_view playing_str, std::string_view loop_str, std::string_view volume_str, std::string_view shuffled_str);
 void render_current_filename(const TMediaProgramState& tmps, TMediaRendererState& tmrs);
+
+void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);
+void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);
+void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs);
 
 void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);

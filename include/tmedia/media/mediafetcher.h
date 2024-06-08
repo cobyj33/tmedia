@@ -39,11 +39,6 @@ extern "C" {
    * 
 */
 
-enum class MediaFetcherFlags {
-  VISUALIZE_VIDEO = (1 << 0),
-  IGNORE_ATTACHED_PIC = (1 << 1)
-};
-
 // Pixel Aspect Ratio - account for tall rectangular shape of terminal
 //characters
 static constexpr int PAR_WIDTH = 2;
@@ -104,7 +99,6 @@ class MediaFetcher {
 
     static constexpr int VISUALIZE_VIDEO = 1 << 0;
     static constexpr int IGNORE_ATTACHED_PIC = 1 << 1;
-    std::atomic<int> flags;
 
     MediaFetcher(const std::filesystem::path& path, const std::array<bool, AVMEDIA_TYPE_NB>& requested_streams);
 

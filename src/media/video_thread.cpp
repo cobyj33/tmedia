@@ -4,7 +4,6 @@
 #include <tmedia/ffmpeg/deleter.h>
 #include <tmedia/ffmpeg/decode.h>
 #include <tmedia/ffmpeg/boiler.h>
-#include <tmedia/audio/audio.h>
 #include <tmedia/audio/audio_visualizer.h>
 #include <tmedia/util/thread.h>
 #include <tmedia/image/scale.h>

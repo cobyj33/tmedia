@@ -1,14 +1,5 @@
 #ifndef TMEDIA_PIXEL_DATA_H
 #define TMEDIA_PIXEL_DATA_H
-/**
- * @file tmedia/audio/audio.h
- * @author Jacoby Johnson (jacobyajohnson@gmail.com)
- * @brief Common functions for audio manipulation in tmedia
- * @version 0.1
- * @date 2023-01-24
- * 
- * @copyright Copyright (c) 2023
- */
 
 #include <tmedia/image/color.h>
 
@@ -18,8 +9,6 @@
 extern "C" {
 struct AVFrame;
 }
-
-typedef RGB24 FillFunction(int row, int col);
 
 class PixelData {
   public:

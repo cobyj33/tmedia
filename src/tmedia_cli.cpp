@@ -9,10 +9,7 @@
 #include <tmedia/ffmpeg/probe.h>
 #include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/image/pixeldata.h>
-
 #include <tmedia/ctnr/arraypairmap.hpp>
-
-#include <natural_sort.hpp>
 
 #include <vector>
 #include <cstddef>
@@ -26,6 +23,7 @@
 #include <optional>
 
 #include <fmt/format.h>
+#include <natural_sort.hpp>
 
 extern "C" {
   #include <curses.h>

@@ -20,8 +20,6 @@
 
 #include <tmedia/image/color.h>
 #include <tmedia/image/palette.h>
-#include <vector>
-#include <string>
 #include <string_view>
 
 extern "C" {

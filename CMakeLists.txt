@@ -91,7 +91,6 @@ message("+--------------------------------------------------------------------")
 # module
 set(TMEDIA_COMMON_SOURCE_FILES
 ${CMAKE_SOURCE_DIR}/src/audio/audio_visualizer.cpp
-${CMAKE_SOURCE_DIR}/src/audio/audio.cpp
 ${CMAKE_SOURCE_DIR}/src/audio/audioringbuffer.cpp
 ${CMAKE_SOURCE_DIR}/src/audio/blocking_audioringbuffer.cpp
 ${CMAKE_SOURCE_DIR}/src/audio/maaudioout.cpp

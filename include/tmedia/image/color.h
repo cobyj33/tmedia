@@ -1,10 +1,7 @@
 #ifndef TMEDIA_COLOR_H
 #define TMEDIA_COLOR_H
 
-#include <vector>
-#include <cstddef>
 #include <cstdint>
-
 
 /**
  * @brief Get the grayscale value of 3 channels of rgb data.
@@ -79,45 +76,5 @@ constexpr RGB24 operator "" _rgb(unsigned long long val) {
     static_cast<std::uint8_t>((val & 0x0000FF00) >> 8),
     static_cast<std::uint8_t>(val & 0x000000FF));
 }
-
-
-class RGBColorHashFunction {
-public:
-    // Ripped from http://www.beosil.com/download/CollisionDetectionHashing_VMV03.pdf pg 666 sec 4.1 paragraph 2
-    std::size_t operator()(RGB24 rgb) const {
-      return (73856093UL * static_cast<std::size_t>(rgb.r)) ^
-            (19349663UL * static_cast<std::size_t>(rgb.g)) ^
-            (83492791UL * static_cast<std::size_t>(rgb.b));
-    }
-};
-
-
-/**
- * @brief Find the index of the closest color within a group of colors to the given input 
- * 
- * @param input The color to check against the color list
- * @param colors The color list to check for the closest color
- * @return The index of the closest color to **input** within the given color list
- * @throws std::runtime_error If the color list given is empty
- */
-int find_closest_color_index(RGB24 input, std::vector<RGB24>& colors);
-
-/**
- * @brief Find the closest color within a group of colors to the given input 
- * 
- * @param input The color to check against the color list
- * @param colors The color list to check for the closest color
- * @return The closest color to **input** within the given color list
- * @throws std::runtime_error If the color list given is empty
- */
-RGB24 find_closest_color(RGB24 input, std::vector<RGB24>& colors);
-
-/**
- * @brief Find the average color within a list
- * @param colors The colors to compile into one average color
- * @return The average color of all of the given colors.
- * @throws std::runtime_error if the given color list is empty
- */
-RGB24 get_average_color(std::vector<RGB24>& colors);
 
 #endif

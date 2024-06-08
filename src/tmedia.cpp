@@ -335,7 +335,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
           if (audio_output) {
             if (toggled_volume != tmps.volume) {
-              tmps.volume = clamp(toggled_volume, 0.0, 1.0);
+              tmps.volume = clamp<double>(toggled_volume, 0.0, 1.0);
               audio_output->set_volume(tmps.volume);
             }
 
@@ -365,7 +365,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           if (audio_output && fetcher->is_playing()) audio_output->stop();
           {
             std::scoped_lock<std::mutex> total_lock{fetcher->alter_mutex};
-            fetcher->jump_to_time(clamp(req_jumptime, 0.0, fetcher->duration), sys_clk_sec());
+            fetcher->jump_to_time(clamp<double>(req_jumptime, 0.0, fetcher->duration), sys_clk_sec());
           }
           if (audio_output && fetcher->is_playing()) audio_output->start();
         }

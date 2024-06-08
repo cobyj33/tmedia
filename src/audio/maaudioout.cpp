@@ -1,5 +1,4 @@
 #include <tmedia/audio/maaudioout.h>
-#include <tmedia/audio/audioout.h>
 
 #include <tmedia/util/wmath.h>
 #include <tmedia/util/unitconvert.h>
@@ -213,7 +212,7 @@ bool MAAudioOut::muted() const {
 }
 
 void MAAudioOut::set_volume(double volume) {
-  this->m_audio_device->set_volume(clamp(volume, 0.0, 1.0));
+  this->m_audio_device->set_volume(clamp<double>(volume, 0.0, 1.0));
 }
 
 void MAAudioOut::set_muted(bool muted) {

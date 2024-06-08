@@ -1,6 +1,5 @@
 #include <tmedia/audio/audio_visualizer.h>
 
-#include <tmedia/audio/audio.h>
 #include <tmedia/image/pixeldata.h>
 #include <tmedia/util/wmath.h>
 
@@ -31,6 +30,6 @@ void visualize(PixelData& dest, float* frames, int nb_frames, int nb_channels, i
     if (count != 0)
       sample /= count;
     const int line_size = height * sample;
-    vertline(dest, clamp(middle_row - (line_size / 2), 0, height - 1), clamp(middle_row + (line_size / 2), 0, height - 1), col, RGB24::WHITE);
+    vertline(dest, clamp<int>(middle_row - (line_size / 2), 0, height - 1), clamp<int>(middle_row + (line_size / 2), 0, height - 1), col, RGB24::WHITE);
   }
 }

@@ -13,7 +13,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <vector>
 #include <cassert>
 
 extern "C" {
@@ -150,10 +149,10 @@ void wprint_labels_middle(WINDOW* window, std::string_view* labels, std::size_t 
 
   // center is defined as the center provided by the user
   const int req_center = req_x + (req_width / 2);
-  const int real_y = clamp(req_y, 0, LINES - 1);
+  const int real_y = clamp<int>(req_y, 0, LINES - 1);
 
-  const int start_x = clamp(req_center - (real_len / 2), 0, COLS - 1);
-  const int end_x = clamp(start_x + real_len, 0, COLS - 1);
+  const int start_x = clamp<int>(req_center - (real_len / 2), 0, COLS - 1);
+  const int end_x = clamp<int>(start_x + real_len, 0, COLS - 1);
 
   int walk_x = start_x;
   for (std::size_t i = 0; i < nb_labels && walk_x <= end_x; i++) {

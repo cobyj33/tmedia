@@ -69,7 +69,7 @@ bool ma_device_w::playing() const {
 }
 
 void ma_device_w::set_volume(double volume) {
-  double clamped_volume = clamp(volume, 0.0, 1.0);
+  double clamped_volume = clamp<double>(volume, 0.0, 1.0);
   ma_device_set_master_volume(&this->device, clamped_volume);
   this->volume_cache = clamped_volume;
 }
