@@ -96,7 +96,7 @@ void AudioResampler::resample_audio_frame(AVFrame* dest, AVFrame* src) {
     throw ffmpeg_error(fmt::format("[{}] Unable to copy destination audio "
     "channel layout", FUNCDINFO), result);
   }
-  #else 
+  #else
   dest->channel_layout = this->m_dst_ch_layout;
   #endif
 
@@ -113,7 +113,8 @@ void AudioResampler::resample_audio_frame(AVFrame* dest, AVFrame* src) {
   // AVERROR_INPUT_CHANGED on calling swr_convert_frame. This allows the
   // SwrContext to "fix itself" (even though I think that's a bug)
   // whenever this happens.
-  if (unlikely(result == AVERROR_INPUT_CHANGED)) {
+  // This is a trashy solution... :(
+  if (unlikely(result == AVERROR_INPUT_CHANGED || result == AVERROR_OUTPUT_CHANGED)) {
     result = swr_config_frame(this->m_context, dest, src);
     if (result != 0) {
       throw ffmpeg_error(fmt::format("[{}] Unable to reconfigure "
