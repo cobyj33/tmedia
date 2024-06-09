@@ -16,6 +16,9 @@ void MediaFetcher::duration_checking_thread_func() {
   name_current_thread("tmedia_durcheck");
 
   while (!this->should_exit()) {
+    // since this thread is so simple, don't even bother with checking if
+    // paused or not
+
     {
       std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
       if (this->get_time(sys_clk_sec()) >= this->duration) {

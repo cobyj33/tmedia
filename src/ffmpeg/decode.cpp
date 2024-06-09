@@ -20,6 +20,12 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
+/**
+ * While object pooling was definitely unneccesary to implement,
+ * I've also never implemented it so this was a cool little thing to do. That
+ * is my justification.
+*/
+
 void av_frame_move_to_pool(std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
   while (!frame_buffer.empty()) {
     av_frame_unref(frame_buffer.back().get());
@@ -36,9 +42,9 @@ void av_frame_move_to_pool(std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>
  * DESIGN_NOTE:
  * Since av_frame_alloc_from_pool is only
  * called from decode_packet, I designed av_frame_alloc_from_pool to possibly
- * return nullptr rather than throw an exception so that any possible AVFrame's
- * in the frame buffer could be moved to the frame pool before returning an
- * error.
+ * return nullptr rather than throw an exception, so that in decode_packet
+ * any AVFrame's in the frame buffer could be moved to the frame
+ * pool before returning an error.
 */
 std::unique_ptr<AVFrame, AVFrameDeleter> av_frame_alloc_from_pool(std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool) {
   if (!frame_pool.empty()) {
