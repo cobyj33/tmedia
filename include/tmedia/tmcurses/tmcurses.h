@@ -110,16 +110,27 @@ void tmcurses_set_color_palette(TMNCursesColorPalette);
 void tmcurses_set_color_palette_custom(const Palette&);
 
 /**
- * @brief Find the closest registered ncurses color pair integer to the inputted RGB24.
+ * @brief Find the closest registered ncurses color pair integer to the
+ * inputted RGB24.
  * 
  * Color pairs are used to apply attributes to printed terminal colors
+ * 
  * @returns The closest registered ncurses color pair attribute index
+ * 
+ * NOTE:
+ * This function internally simply indexes into an array with all of the
+ * registered ncurses color pairs, which makes this an extremely cheap
+ * operation.
  */
 curses_color_pair_t get_closest_tmcurses_color_pair(RGB24 input);
 
 /**
  * @brief Find the closest registered ncurses color integer to the inputted RGB24.
  * @returns The closest registered ncurses color pair attribute index
+ * 
+ * NOTE:
+ * This function internally simply indexes into an array with all of the
+ * registered ncurses colors, which makes this an extremely cheap operation
  */
 curses_color_t get_closest_tmcurses_color(RGB24 input);
 

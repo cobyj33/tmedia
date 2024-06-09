@@ -57,6 +57,7 @@ void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& ssh
   tmrs.last_frame_dims = { sshot.frame->m_width, sshot.frame->m_height };
 }
 
+// As expected, just blits the entire frame onto the full terminal window.
 void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
   if (sshot.should_render_frame) {
@@ -66,6 +67,17 @@ void render_tui_fullscreen(const TMediaProgramState& tmps, const TMediaProgramSn
   (void)tmrs;
 }
 
+// Design: (see tui_design.md in the doc/ folder for all designs)
+// <              01. Palace             >
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//
+//
+//        VIDEO/AUDIO VISUALIZATION
+//
+//
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// 00:00 / 26:54 @@@----------------------
+// >          NL          NS          50%
 void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
   if (sshot.should_render_frame) {
@@ -95,6 +107,26 @@ void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnaps
   }
 }
 
+// Large Design: (see tui_design.md in the doc/ folder for all designs)
+//                                01. Palace
+// < 01. Palace                                                    02. Peso >
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//
+//
+//
+//
+//
+//
+//                         VIDEO/AUDIO VISUALIZATION
+//
+//
+//
+//
+//
+//
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// 00:00 / 26:54 | @@@@------------------------------------------------------
+// PLAYING           NOT LOOPED            SHUFFLE                VOLUME: 50%
 void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   assert(sshot.frame != nullptr);
   if (sshot.should_render_frame) {
@@ -146,9 +178,12 @@ std::string_view get_media_file_display_name(const std::filesystem::path& abs_pa
   // TMEDIA_DISPLAY_CACHE_KEY is the key used specifically by
   // get_media_file_display_name to cache the display name used by tmedia.
 
-  // A call to get_media_file_display_name is guaranteed to cache
+  // A call to get_media_file_display_name is **guaranteed** to cache
   // TMEDIA_DISPLAY_CACHE_KEY in the metadata cache for the file
-  // abs_path
+  // abs_path. this means that on subsequent calls to
+  // get_media_file_display_name, get_media_file_display_name will always prefer
+  // the TMEDIA_DISPLAY_CACHE_KEY value on the abs_path as the pre-calculated
+  // display name.
 
   static constexpr std::string_view TMEDIA_DISPLAY_CACHE_KEY = "tmedia_disp";
   std::optional<std::string_view> display_name = mchc_get(abs_path.c_str(), TMEDIA_DISPLAY_CACHE_KEY, mchc);

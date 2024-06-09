@@ -72,7 +72,7 @@ void MediaFetcher::video_fetching_thread_func() {
     }
   } catch (std::exception const& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
-    this->dispatch_exit(err.what());
+    this->dispatch_exit_err(err.what());
   }
 }
 

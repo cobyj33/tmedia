@@ -4,12 +4,14 @@
 #include <atomic>
 
 /**
- * Timestamp driven media clock which calculates elapsed time based on changes
- * in timestamps. 
+ * Timestamp driven media clock: calculates elapsed time based on changes
+ * in timestamps. The MediaClock is not based on any actual system clock by
+ * design, but trusts the caller to provide valid times for how time is
+ * progressing on the system.
  * 
  * When using a system clock, a monotonic clock should be used to track media
  * playblack, as constant forward clock motion will best model the movement of
- * media playback
+ * media playback.
 */
 class MediaClock {
   private:

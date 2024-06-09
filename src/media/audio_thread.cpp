@@ -24,6 +24,13 @@ extern "C" {
 
 using namespace std::chrono_literals;
 
+/**
+ * Note that the audio thread has no notion of automatically adjusting the
+ * current time of the audio stream besides the sample rate and how many samples
+ * have been consumed. It is up to the MediaFetcher's user to consume audio
+ * samples at the sample rate specified by the MediaFetcher in
+ * MediaFetcher::sample_rate.
+ */
 void MediaFetcher::audio_dispatch_thread_func() {
   if (!this->has_media_stream(AVMEDIA_TYPE_AUDIO)) return;
   name_current_thread("tmedia_aud_dec");
@@ -75,6 +82,14 @@ void MediaFetcher::audio_dispatch_thread_func() {
     // audio thread
     std::unique_ptr<AVFrame, AVFrameDeleter> resampled_frame(av_frame_allocx());
 
+    /**
+     * The audio thread greedily processes audio frames and fills them into
+     * the MediaFetcher's audio buffer as fast as possible, only blocking either
+     * when the audio buffer is full and cannot take in anymore audio frames,
+     * or there is currently no more audio data to decode and the thread must
+     * pause for a short interval determined by MAX_RUNS_WAIT_TIME to avoid
+     * high CPU usage.
+     */
     while (!this->should_exit()) {
       if (!this->is_playing()) {
         std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
@@ -113,6 +128,8 @@ void MediaFetcher::audio_dispatch_thread_func() {
         runs_w_fail = 0;
         audio_resampler.resample_audio_frame(resampled_frame.get(), next_raw_audio_frames[i].get());
         while (!this->audio_buffer->try_write_into(resampled_frame->nb_samples, (float*)(resampled_frame->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
+          // ensure that the audio thread does not become stuck in an infinite
+          // loop trying to write frames into the audio buffer.
           if (this->should_exit()) break;
         }
       }
@@ -121,6 +138,8 @@ void MediaFetcher::audio_dispatch_thread_func() {
       audio_resampler.resample_audio_frame(resampled_frame.get(), nullptr);
       while (resampled_frame->nb_samples > 0) {
         while (!this->audio_buffer->try_write_into(resampled_frame->nb_samples, (float*)(resampled_frame->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
+          // ensure that the audio thread does not become stuck in an infinite
+          // loop trying to write frames into the audio buffer.
           if (this->should_exit()) break;
         }
         audio_resampler.resample_audio_frame(resampled_frame.get(), nullptr);
@@ -136,7 +155,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
     }
   } catch (std::exception const& err) {
     std::lock_guard<std::mutex> lock(this->alter_mutex);
-    this->dispatch_exit(err.what());
+    this->dispatch_exit_err(err.what());
   }
 
 }

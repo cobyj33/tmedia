@@ -4,7 +4,7 @@
 #include <tmedia/util/wtime.h>
 
 #include <mutex>
-using ms = std::chrono::milliseconds;
+using namespace std::chrono_literals;
 
 /**
  * Simple MediaFetcher thread that constantly polls the media clock to check
@@ -12,7 +12,7 @@ using ms = std::chrono::milliseconds;
 */
 void MediaFetcher::duration_checking_thread_func() {
   if (this->media_type == MediaType::IMAGE) return;
-  constexpr ms DC_LOOP_TIME_MS = ms(100);
+  constexpr std::chrono::milliseconds DC_LOOP_TIME_MS = 100ms;
   name_current_thread("tmedia_durcheck");
 
   while (!this->should_exit()) {

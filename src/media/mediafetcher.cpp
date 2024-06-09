@@ -64,7 +64,7 @@ MediaFetcher::MediaFetcher(const std::filesystem::path& path, const std::array<b
   }
 }
 
-void MediaFetcher::dispatch_exit(std::string_view err) {
+void MediaFetcher::dispatch_exit_err(std::string_view err) {
   this->error = std::string(err);
   this->dispatch_exit();
 }
@@ -148,8 +148,8 @@ void MediaFetcher::begin(double currsystime) {
 
 void MediaFetcher::join(double currsystime) {
   // the user can set this as well if they want,
-  // but this is to make sure that the threads WILL end regardless
-  this->in_use = false;
+  // but this is to make sure that the threads WILL end regardless.
+  this->dispatch_exit();
   
   if (this->media_type != MediaType::IMAGE && this->is_playing())
     this->pause(currsystime);

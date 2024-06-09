@@ -64,7 +64,6 @@ TMediaProgramState tmss_to_tmps(TMediaStartupState& tmss) {
   tmps.refresh_rate_fps = tmss.refresh_rate_fps;
   tmps.volume = tmss.volume;
   tmps.vom = tmss.vom;
-  tmps.quit = false;
   return tmps;
 }
 
@@ -89,7 +88,11 @@ int tmedia_main_loop(TMediaProgramState tmps) {
   PixelData frame;
   pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
 
-  while (!INTERRUPT_RECEIVED && !tmps.quit && tmps.plist.size() > 0) {
+  bool should_quit = false;
+
+  // This outer-most loop corresponds to the playback of a single item out
+  // of the given media playlist.
+  while (!INTERRUPT_RECEIVED && !should_quit && tmps.plist.size() > 0) {
     // should_render_frame determines whether the frame should be
     // - the "frame" in should_render_frame refers to the actual PixelData frame
     // returned from the MediaFetcher, not the entire terminal screen.
@@ -110,10 +113,13 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     // ! of each input loop.
     bool should_render_frame = false;
 
+    // initialize the pixeldata to all black and the maximum size that
+    // could possibly be returned by a MediaFetcher instance
     pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
 
     // main loop setup phase. Sets up and begins MediaFetcher. Sets up
     // and begins audio output (if applicable)
+
     PlaylistMvCmd move_cmd = PlaylistMvCmd::NEXT;
     std::unique_ptr<MediaFetcher> fetcher;
     const PlaylistItem& pcurr = tmps.plist.current();
@@ -125,6 +131,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
       // force skip this current file. If we cannot move, we should just
       // exit gracefully
+
+      // TODO: This should somehow be loggable to the user, so that
+      // the user can see which files fail to load and for what reason.
+
       if (!tmps.plist.can_move(PlaylistMvCmd::SKIP)) break;
       tmps.plist.move(PlaylistMvCmd::SKIP);
       tmps.plist.remove(failed_plist_index);
@@ -156,7 +166,8 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
     try {
       // main playing loop
-      while (!fetcher->should_exit() && !INTERRUPT_RECEIVED) { // never break without using dispatch_exit on fetcher to false
+      // ! never break without using dispatch_exit on fetcher to false
+      while (!fetcher->should_exit() && !INTERRUPT_RECEIVED) {
         double curr_systime, req_jumptime, curr_medtime;
 
         // req_jump and req_jumptime are different, because when jumping to the
@@ -168,9 +179,11 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
 
         {
-          static constexpr double MAX_AUDIO_DESYNC_SECS = 0.6;  
+          // arbitrary value. I think after 0.6 seconds then audio desync becomes extremely noticeable.
+          static constexpr double MAX_AUDIO_DESYNC_SECS = 0.6;
           std::lock_guard<std::mutex> lock(fetcher->alter_mutex);
-          curr_systime = sys_clk_sec(); // set in here, since locking the mutex could take an undetermined amount of time
+          // set in here, since locking the mutex could take an undetermined amount of time,
+          curr_systime = sys_clk_sec();
           curr_medtime = fetcher->get_time(curr_systime);
           req_jumptime = curr_medtime;
           fetcher->req_dims = tmrs.req_frame_dim;
@@ -183,6 +196,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
           // If the audio is desynced, we just try and jump to the current media
           // time to resync it.
+          // This is actually the entirety of the resyncing mechanism. It is
+          // common if profiling with valgrind or some other tool that slows
+          // down tmedia tremendously to just comment out this line to try and
+          // mitigate constant resyncing.
           req_jump = fetcher->get_audio_desync_time(curr_systime) > MAX_AUDIO_DESYNC_SECS;
         }
 
@@ -302,7 +319,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
           if (quit_program_command_received) {
             fetcher->dispatch_exit();
-            tmps.quit = true;
+            should_quit = true;
           }
 
           if (nextvom != tmps.vom) {
@@ -392,10 +409,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
       }
     } catch (const std::exception& err) {
       std::lock_guard<std::mutex> lock(fetcher->alter_mutex);
-      fetcher->dispatch_exit(err.what());
+      fetcher->dispatch_exit_err(err.what());
     }
 
-    fetcher->dispatch_exit();
+    fetcher->dispatch_exit(); // ensure that the fetcher exists.
     if (audio_output) audio_output->stop();
     fetcher->join(sys_clk_sec());
     if (fetcher->has_error()) {

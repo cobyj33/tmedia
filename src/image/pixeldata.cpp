@@ -18,16 +18,16 @@ extern "C" {
   #include <libavutil/frame.h>
 }
 
-/*
-Notice how resizing of the PixelData instance is also done through
-std::vector<T>::resize and not std::vector<T>::reserve. This is by design,
-so that the vector follows its standard growth policy
-whenever it is resized. Therefore, if some situation, such as the vector
-repeatedly being requested a larger size occurs, the PixelData's pixels vector
-will not constantly relocate on every new maximum requested size. As a result
-too though, whenever a PixelData instance
-has a certain size, it's pixel capacity is likely to be larger
-than the area requested.
+/**
+* Notice how resizing of the PixelData instance is done through
+* std::vector<T>::resize and not std::vector<T>::reserve. This is by design,
+* so that the vector follows its standard growth policy
+* whenever it is resized. Therefore, if some situation, such as the vector
+* repeatedly being requested a larger size occurs, the PixelData's pixels vector
+* will not constantly relocate on every new maximum requested size. As a result
+* too though, whenever a PixelData instance
+* has a certain size, it's pixel capacity is likely to be larger
+* than the area requested.
 */
 
 void pixdata_setnewdims(PixelData& dest, int width, int height) {
@@ -55,6 +55,9 @@ void pixdata_copy(PixelData& dest, PixelData& src) {
 void vertline(PixelData& dest, int row1, int row2, int col, const RGB24 color) {
   const int rowmin = std::min(row1, row2);
   const int rowmax = std::max(row1, row2);
+  assert(rowmin >= 0 && rowmin < dest.m_height);
+  assert(rowmax >= 0 && rowmax < dest.m_height);
+  assert(col >= 0 && col < dest.m_width);
 
   for (int row = rowmin; row <= rowmax; row++) {
     dest.pixels[row * dest.m_width + col] = color;

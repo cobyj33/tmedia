@@ -48,78 +48,128 @@ static constexpr int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PAR_HEIGHT;
 static constexpr int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PAR_WIDTH;
 static constexpr double MAX_FRAME_ASPECT_RATIO = static_cast<double>(MAX_FRAME_ASPECT_RATIO_WIDTH) / static_cast<double>(MAX_FRAME_ASPECT_RATIO_HEIGHT);
 
-// I found that past a width of 640 characters,
-// the terminal starts to stutter terribly on most terminal emulators, so we
-// just bound the image to this amount
-
+/**
+ * A width of 640 at a 4:3 aspect ratio ends up around 480p. Additionally,
+ * I find that past a width of 640 characters,
+ * the terminal starts to stutter terribly on most terminal emulators, and CPU
+ * usage becomes extremely high, so we
+ * just bound the image to this amount.
+ * 
+ * This number can just be configured to any maximum amount wanted during
+ * compilation. Currently, this value is not changeable at runtime, but there
+ * are considerations for allowing that behavior. 
+ */
 static constexpr int MAX_FRAME_WIDTH = 640;
 static constexpr int MAX_FRAME_HEIGHT = static_cast<int>(static_cast<double>(MAX_FRAME_WIDTH) / MAX_FRAME_ASPECT_RATIO);
 
+static_assert(MAX_FRAME_WIDTH > 0);
+static_assert(MAX_FRAME_HEIGHT > 0);
+static_assert(PAR_WIDTH > 0);
+static_assert(PAR_HEIGHT > 0);
+static_assert(MAX_FRAME_ASPECT_RATIO_WIDTH > 0);
+static_assert(MAX_FRAME_ASPECT_RATIO_HEIGHT > 0);
+static_assert(MAX_FRAME_ASPECT_RATIO > 0.0);
+
+/**
+ * The MediaFetcher is the main class to coordinate media playback in tmedia.
+ * 
+ * 
+ * Simply, the usage of the MediaFetcher consists of initializing
+ * the MediaFetcher in its constructor, calling begin() to fire the threads,
+ * looping until MediaFetcher::should_exit() becomes true, calling join()
+ * to join all of the finished threads to the main thread, 
+ * 
+ * A MediaFetcher can only be configured to fetch and playback a single
+ * media file instance, it cannot be reconfigured to be used again for playing
+ * back multiple different files. A different MediaFetcher instance must
+ * be initialized and used in such a case.
+ */
 class MediaFetcher {
   private:
     std::thread video_thread;
     std::thread audio_thread;
     std::thread duration_checking_thread;
-    void video_fetching_thread_func();
-    void audio_dispatch_thread_func();
-    void duration_checking_thread_func();
+    void video_fetching_thread_func(); // only for use by video_thread
+    void audio_dispatch_thread_func(); // only for use by audio_thread
+    void duration_checking_thread_func(); // only for use by duration_checking_thread
 
-    void frame_video_fetching_func();
-    void frame_image_fetching_func();
-    void frame_audio_fetching_func();
+    /**
+     * Separate functions for processing different types of media owned
+     * by the MediaFetcher instance. These functions are used in the
+     * video thread to process frames to MediaFetcher::frame.
+     */
 
-    void audio_fetching_thread_func();
+    void frame_video_fetching_func(); // only for use by video_thread
+    void frame_image_fetching_func(); // only for use by video_thread
+    void frame_audio_fetching_func(); // only for use by video_thread
 
-    MediaClock clock;
-    const std::filesystem::path path;
+    void audio_fetching_thread_func(); // only for use by audio_thread
+
+    MediaClock clock; // Not thread safe, lock alter_mutex first before access
+    const std::filesystem::path path; // Thread Safe, immutable
     
+    /**
+     * Thread Safe, Atomic
+     * 
+     * A flag denoting if the MediaFetcher instance is still in use or if all
+     * threads should exit operating on it.
+     */
     std::atomic<bool> in_use;
-    std::optional<std::string> error;
+    std::optional<std::string> error; // Thread Safe, immutable
 
-    int msg_video_jump_curr_time;
+    int msg_video_jump_curr_time; // Not thread safe, lock alter_mutex first before access
     std::mutex ex_noti_mtx;
     std::condition_variable exit_cond;
 
     std::mutex resume_notify_mutex;
     std::condition_variable resume_cond;
-    int msg_audio_jump_curr_time;
+    int msg_audio_jump_curr_time; // Not thread safe, lock alter_mutex first before access
 
   public:
-    MediaType media_type;
-    std::unique_ptr<BlockingAudioRingBuffer> audio_buffer;
-    std::array<bool, AVMEDIA_TYPE_NB> available_streams;
-    PixelData frame;
-    bool frame_changed;
-    int sample_rate;
-    int nb_channels;
-    double duration;
+    MediaType media_type; // Thread Safe, immutable
+    std::unique_ptr<BlockingAudioRingBuffer> audio_buffer; // Thread Safe, uses internal locks
+    std::array<bool, AVMEDIA_TYPE_NB> available_streams; // Thread Safe, immutable
+    PixelData frame; // Not thread safe, lock alter_mutex first before access
+    bool frame_changed; // Not thread safe, lock alter_mutex first before access
 
+
+    int sample_rate; // Thread Safe, immutable
+    int nb_channels; // Thread Safe, immutable
+    double duration; // Thread Safe, immutable
+
+    /**
+     * Main mutex to share 
+     */
     std::mutex alter_mutex;
     std::optional<Dim2> req_dims;
-
-    static constexpr int VISUALIZE_VIDEO = 1 << 0;
-    static constexpr int IGNORE_ATTACHED_PIC = 1 << 1;
 
     MediaFetcher(const std::filesystem::path& path, const std::array<bool, AVMEDIA_TYPE_NB>& requested_streams);
 
     /**
+     * Begin the threads of the MediaFetcher, tracking the current system time
+     * as the beginning of playback.
      * Must only be called by the owning thread.
      */
     void begin(double currsystime); // Only to be called by owning thread
     
     /**
+     * Join all spawned threads by the MediaFetcher back to the calling thread.
+     * This should only be called whenever media playback has finished, signaled
+     * through MediaFetcher::should_exit() returning true.
      * Must only be called by the owning thread.
-     */
+     */ 
     void join(double currsystime); // Only to be called by owning thread after in_use is set to false
     
     /**
-     * Thread-Safe
+     * Thread-Safe: Immutable
     */
     [[gnu::always_inline]] inline bool has_media_stream(enum AVMediaType media_type) const {
       return this->available_streams[media_type];
     }
 
-
+    /**
+     * Not Thread-Safe: Lock alter_mutex first.
+    */
     [[gnu::always_inline]] inline bool has_error() const noexcept {
       return this->error.has_value();
     }
@@ -135,11 +185,47 @@ class MediaFetcher {
       return !this->in_use;
     }
 
-    void dispatch_exit();
-    void dispatch_exit(std::string_view err);
+    /**
+     * Thread-Safe
+     * 
+     * ! DO NOT CALL WITH ex_noti_mtx or resume_notify_mutex locked!
+     * This function locks both, and if they are already locked it will cause
+     * undefined behavior.
+     * Since ex_noti_mtx and resume_notify_mutex are private, this is not an
+     * issue for the owner of a MediaFetcher object, but rather the
+     * implementation of the MediaFetcher
+     */
+    void dispatch_exit(); // Thread-Safe
 
-    bool is_playing();
+    /**
+     * Not Thread Safe: Lock alter_mutex
+     * 
+     * ! DO NOT CALL WITH ex_noti_mtx or resume_notify_mutex locked!
+     * This function locks both, and if they are already locked it will cause
+     * undefined behavior.
+     * Since ex_noti_mtx and resume_notify_mutex are private, this is not an
+     * issue for the owner of a MediaFetcher object, but rather the
+     * implementation of the MediaFetcher
+     * 
+     * NOTE:
+     * alter_mutex must be locked first before calling for thread safety
+     */
+    void dispatch_exit_err(std::string_view err); // Not Thread Safe: Lock alter_mutex
+
+    bool is_playing(); // Thread-Safe: Atomic
+
+    /**
+     * Not Thread Safe: Lock alter_mutex
+     * 
+     * Pauses playback of the current media streams.
+     */
     void pause(double currsystime);
+
+    /**
+     * Not Thread Safe: Lock alter_mutex
+     * 
+     * Resumes playback if paused
+     */
     void resume(double currsystime);
 
 
@@ -178,7 +264,8 @@ class MediaFetcher {
      * 
      * The video's duration could be found with the MediaFetcher::duration
      * 
-     * @param target_time The target time to jump the playback to (must be reachable).
+     * @param target_time The target time to jump the playback to
+     * (must be reachable).
      * It is recommended to simply clamp the requested time between 0 and
      * MediaFetcher::duration whenever calling this function for guaranteed
      * safety.

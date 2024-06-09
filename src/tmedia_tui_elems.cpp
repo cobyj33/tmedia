@@ -22,9 +22,17 @@ extern "C" {
 /**
  * width and height can be equal to or less than 0. If width or height are
  * equal to or less than 0, then a simple empty buffer is returned.
+ * 
+ * @returns A reference to the PixelData instance which contains the bounded
+ * src image. If the source image is already bounded within the given dimensions,
+ * then a reference to the source image will be returned. If the source image
+ * must be bounded inside of the given dimensions, then "buf" will be altered
+ * to contain the bounded image data and be returned as its reference.
 */
 PixelData& pixdata_bound(PixelData& buf, PixelData& src, int width, int height) {
-  if (width <= 0 || height <= 0) {  // handle invalid dimensions case. This allows calling code
+  // handle invalid dimensions case. This allows calling code to not have
+  // to worry about width and height being non-negative
+  if (width <= 0 || height <= 0) {
     pixdata_initgray(buf, 0, 0, 0);
     return buf;
   }
@@ -64,7 +72,7 @@ void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, do
 }
 
 void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in_seconds, double duration_in_seconds) {
-  constexpr int PADDING_BETWEEN_ELEMENTS = 2;
+  static constexpr int PADDING_BETWEEN_ELEMENTS = 2;
 
   const std::string formatted_passed_time = format_duration(time_in_seconds);
   const std::string formatted_duration = format_duration(duration_in_seconds);

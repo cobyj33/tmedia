@@ -20,7 +20,7 @@ void mchc_cache_file(const std::filesystem::path& file, MetadataCache& cache) {
   cache.push_back(std::move(cache_entry));
 }
 
-bool mchc_has_file(std::string_view file, MetadataCache& cache) {
+bool mchc_has_file(std::string_view file, const MetadataCache& cache) {
   for (std::size_t i = 0; i < cache.size(); i++) {
     if (cache[i].key == file) return true;
   }
@@ -35,11 +35,11 @@ std::string_view mchc_add(std::string_view file, std::string_view key, std::stri
   }
 
   cache.push_back({ std::string(file), {} });
-  return metadata_add(key, val, cache[cache.size() - 1].value);
+  return metadata_add(key, val, cache.back().value);
 }
 
 
-std::optional<std::string_view> mchc_get(std::string_view file, std::string_view key, MetadataCache& cache) {
+std::optional<std::string_view> mchc_get(std::string_view file, std::string_view key, const MetadataCache& cache) {
   for (std::size_t i = 0; i < cache.size(); i++) {
     if (cache[i].key == file) {
       return metadata_get(key, cache[i].value);
@@ -60,10 +60,10 @@ std::string_view metadata_add(std::string_view key, std::string_view val, Metada
 
   // no metadata entry for [key] found, add an entry
   meta.push_back({ std::string(key), std::string(val) });
-  return meta[meta.size() - 1].value;
+  return meta.back().value;
 }
 
-std::optional<std::string_view> metadata_get(std::string_view key, Metadata& meta) {
+std::optional<std::string_view> metadata_get(std::string_view key, const Metadata& meta) {
   for (std::size_t i = 0; i < meta.size(); i++) {
     if (meta[i].key == key) {
       return meta[i].value;
