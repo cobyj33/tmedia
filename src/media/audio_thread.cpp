@@ -97,6 +97,8 @@ void MediaFetcher::audio_dispatch_thread_func() {
         }
       }
 
+      // caching the current jump time means that we can perform the time jump
+      // without locking the alter_mutex for an extended period of time.
       int msg_audio_jump_curr_time_cache = 0;
       double current_time = 0;
 
@@ -119,7 +121,9 @@ void MediaFetcher::audio_dispatch_thread_func() {
         // decoding functions
         this->audio_buffer->clear(current_time);
         std::scoped_lock<std::mutex> lock(this->alter_mutex);
-        this->msg_audio_jump_curr_time--;
+        // check comment in frame_video_fetching_func in video_thread.cpp for
+        // explanation of subtracting by msg_audio_jump_curr_time_cache
+        this->msg_audio_jump_curr_time -= msg_audio_jump_curr_time_cache;
       }
 
       runs_w_fail += static_cast<unsigned int>(next_raw_audio_frames.size() == 0);

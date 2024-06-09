@@ -126,8 +126,11 @@ void MediaFetcher::frame_video_fetching_func() {
     
     double wait_duration = avg_fts;
     double current_time = 0.0;
+
+    // caching the current jump time means that we can perform the time jump
+      // without locking the alter_mutex for an extended period of time.
     int msg_video_jump_curr_time_cache = 0;
-    bool saved_frame_is_empty = false; // set in critical section
+    bool saved_frame_is_empty = false;
 
     {
       decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
@@ -145,7 +148,15 @@ void MediaFetcher::frame_video_fetching_func() {
 
       decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
-      this->msg_video_jump_curr_time--;
+      // note how we subtract by the stored cache. This is because, jumping to
+      // the current time is the exact same operation on every iteration as
+      // long as the current time is not jumping around.
+      // However, we cannot just set msg_video_jump_curr_time to 0, since
+      // msg_video_jump_curr_time may have incremented since we have
+      // last cached it, which would suggest that the media time has changed
+      // once again. This increment of msg_video_jump_curr_time will then be
+      // caught on the next iteration of the video thread.
+      this->msg_video_jump_curr_time -= msg_video_jump_curr_time_cache;
     }
 
     if (dec_frames.size() > 0) {

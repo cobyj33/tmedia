@@ -135,6 +135,7 @@ int cctx_get_nb_channels(AVCodecContext* cctx) {
 int av_next_stream_packet(AVFormatContext* fctx, int stream_idx, AVPacket* pkt) {
   assert(fctx != nullptr);
   assert(pkt != nullptr);
+  assert(stream_idx >= 0 && stream_idx < fctx->nb_streams);
   int result = 0;
 
   av_packet_unref(pkt);

@@ -150,6 +150,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
       static constexpr std::chrono::milliseconds AUDIO_BUFFER_TRY_READ_MS = 2ms;
       audio_output = std::make_unique<MAAudioOut>(fetcher->nb_channels, fetcher->sample_rate, [&fetcher] (float* float_buffer, int nb_frames) {
         const bool success = fetcher->audio_buffer->try_read_into(nb_frames, float_buffer, AUDIO_BUFFER_TRY_READ_MS);
+        /**
+         * We cannot loop until try_read_into works inside this callback,
+         * since this callback will be fired on the final
+         */
         if (!success) {
           const int fb_sz = nb_frames * fetcher->nb_channels;
           for (int i = 0; i < fb_sz; i++)
@@ -165,7 +169,6 @@ int tmedia_main_loop(TMediaProgramState tmps) {
 
     try {
       // main playing loop
-      // ! never break without using dispatch_exit on fetcher to false
       while (!fetcher->should_exit() && !INTERRUPT_RECEIVED) {
         double curr_systime, req_jumptime, curr_medtime;
 
@@ -411,8 +414,8 @@ int tmedia_main_loop(TMediaProgramState tmps) {
       fetcher->dispatch_exit_err(err.what());
     }
 
-    fetcher->dispatch_exit(); // ensure that the fetcher exists.
-    if (audio_output) audio_output->stop();
+    fetcher->dispatch_exit(); // ensure that the fetcher exits.
+    if (audio_output.get() != nullptr) audio_output->stop();
     fetcher->join(sys_clk_sec());
     if (fetcher->has_error()) {
       throw std::runtime_error(fmt::format("[{}]: Media Fetcher Error: {}",

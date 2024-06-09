@@ -233,6 +233,10 @@ void render_bottom_bar(const TMediaProgramSnapshot& sshot, std::string_view play
   wprint_labels(stdscr, bottom_labels.data(), nb_labels, LINES - 1, 0, COLS);
 }
 
+/**
+ * Renders the current filename at the middle of the top line of the terminal
+ * screen.
+ */
 void render_current_filename(const TMediaProgramState& tmps, TMediaRendererState& tmrs) {
   static constexpr int CURRENT_FILE_NAME_MARGIN = 5;
   werasebox(stdscr, 0, 0, COLS, 2);

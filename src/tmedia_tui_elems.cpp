@@ -20,14 +20,19 @@ extern "C" {
 }
 
 /**
- * width and height can be equal to or less than 0. If width or height are
- * equal to or less than 0, then a simple empty buffer is returned.
+ * 
  * 
  * @returns A reference to the PixelData instance which contains the bounded
  * src image. If the source image is already bounded within the given dimensions,
- * then a reference to the source image will be returned. If the source image
+ * then a reference to the source image will be returned, and the buf PixelData
+ * instance will not be modified. If the source image
  * must be bounded inside of the given dimensions, then "buf" will be altered
- * to contain the bounded image data and be returned as its reference.
+ * to contain the bounded image data and a reference to buf will be returned.
+ * 
+ * NOTE:
+ * width and height can be equal to or less than 0. If width or height are
+ * equal to or less than 0, then buf is modified to have a width and height
+ * of 0 and a reference to buf is returned.
 */
 PixelData& pixdata_bound(PixelData& buf, PixelData& src, int width, int height) {
   // handle invalid dimensions case. This allows calling code to not have
@@ -82,7 +87,7 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in
 
   const int progress_bar_width = width - current_time_string.length() - PADDING_BETWEEN_ELEMENTS;
 
-  if (progress_bar_width > 0) 
+  if (progress_bar_width > 0)
     wprint_progress_bar(window, y, x + current_time_string.length() + PADDING_BETWEEN_ELEMENTS, progress_bar_width, 1,time_in_seconds / duration_in_seconds);
 }
 
