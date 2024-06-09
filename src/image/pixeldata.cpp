@@ -1,7 +1,6 @@
 #include <tmedia/image/pixeldata.h>
 
 #include <tmedia/image/color.h>
-#include <tmedia/util/wmath.h>
 #include <tmedia/image/scale.h>
 #include <tmedia/ffmpeg/decode.h>
 #include <tmedia/ffmpeg/boiler.h>

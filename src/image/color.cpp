@@ -1,6 +1,5 @@
 #include <tmedia/image/color.h>
 
-#include <tmedia/util/wmath.h>
 #include <tmedia/util/defines.h>
 
 #include <fmt/format.h>

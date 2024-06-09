@@ -1,12 +1,12 @@
 #include <tmedia/audio/audio_visualizer.h>
 
 #include <tmedia/image/pixeldata.h>
-#include <tmedia/util/wmath.h>
 
 #include <memory>
 #include <utility>
 #include <vector>
 #include <cassert>
+#include <algorithm>
 
 void visualize(PixelData& dest, float* frames, int nb_frames, int nb_channels, int width, int height) {
   assert(width >= 0);
@@ -35,6 +35,6 @@ void visualize(PixelData& dest, float* frames, int nb_frames, int nb_channels, i
     if (count != 0)
       sample /= count;
     const int line_size = height * sample;
-    vertline(dest, clamp<int>(middle_row - (line_size / 2), 0, height - 1), clamp<int>(middle_row + (line_size / 2), 0, height - 1), col, RGB24::WHITE);
+    vertline(dest, std::clamp<int>(middle_row - (line_size / 2), 0, height - 1), std::clamp<int>(middle_row + (line_size / 2), 0, height - 1), col, RGB24::WHITE);
   }
 }

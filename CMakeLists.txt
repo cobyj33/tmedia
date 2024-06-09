@@ -147,7 +147,6 @@ ${CMAKE_SOURCE_DIR}/src/tests/test_mediaclock.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_scale.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_unitconvert.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_palette_io_gpl.cpp
-${CMAKE_SOURCE_DIR}/src/tests/test_wmath.cpp
 ${CMAKE_SOURCE_DIR}/src/tests/test_playlist.cpp
 )
 

@@ -1,7 +1,6 @@
 #include <tmedia/tmcurses/tmcurses.h>
 
 #include <tmedia/image/color.h>
-#include <tmedia/util/wmath.h>
 #include <tmedia/image/palette.h>
 #define TMEDIA_TMCURSES_INTERNAL_IMPLEMENTATION
 #include <tmedia/tmcurses/internal/tmcurses_internal.h>
