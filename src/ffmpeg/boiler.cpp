@@ -48,9 +48,9 @@ std::unique_ptr<AVFormatContext, AVFormatContextDeleter> open_fctx(const std::fi
     FUNCDINFO, path.string()), result);
   }
 
-  // compiler gives a warning about copy elision. I'm pretty sure this
-  // is completely wrong, std::move is appropriate here
-  return std::move(fmt_ctx);
+  // Apparently I can just return directly, as the fmt_ctx automatically gets
+  // either move or copy-elided: https://stackoverflow.com/a/46571941
+  return fmt_ctx;
 }
 
 OpenCCTXRes open_cctx(AVFormatContext* fmt_ctx, enum AVMediaType media_type) {
