@@ -66,6 +66,8 @@ Positional arguments:
 Optional arguments:
   Help and Versioning: 
   -h, --help             shows help message and exits 
+  --help-cli             shows help message for cli options and exits
+  --help-controls        shows help message for tmedia controls and exits
   -v, --version          prints version information and exits 
   --ffmpeg-version       Print the version of linked FFmpeg libraries 
   --curses-version       Print the version of linked Curses libraries

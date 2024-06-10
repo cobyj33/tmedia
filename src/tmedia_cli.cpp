@@ -51,6 +51,9 @@ namespace fs = std::filesystem;
 // as of now, I'd rather not write more code for something that's doable by
 // hand.
 
+const char* TMEDIA_CLI_USAGE = ""
+"Usage: tmedia [OPTIONS] paths";
+
 // When editing this string, make sure to edit the corresponding text in the
 // top level README.md file
 const char* TMEDIA_CONTROLS_USAGE = ""
@@ -95,6 +98,8 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   "Optional arguments:\n"
   "  Help and Versioning: \n"
   "  -h, --help             shows help message and exits \n"
+  "  --help-cli             shows help message for cli options and exits \n"
+  "  --help-controls        shows help message for tmedia controls and exits \n"
   "  -v, --version          prints version information and exits \n"
   "  --ffmpeg-version       Print the version of linked FFmpeg libraries \n"
   "  --curses-version       Print the version of linked Curses libraries\n"
@@ -214,6 +219,8 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   typedef tmedia::ArrayPairMap<std::string_view, ArgParseFunc, 100, std::less<>> ArgParseMap;
 
   void print_help_text();
+  void print_help_cli();
+  void print_help_controls();
 
   #define TMEDIA_FMT_VERSION_MAJOR (FMT_VERSION / 10000)
   #define TMEDIA_FMT_VERSION_MINOR ((FMT_VERSION % 10000 - FMT_VERSION % 100) / 100)
@@ -221,6 +228,8 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   // Early Exit Options
   void cli_arg_help(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_help_cli(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_help_controls(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_ffmpeg_version(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_curses_version(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -319,6 +328,8 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
     static const ArgParseMap long_exiting_opt_map{
       {"help", cli_arg_help},
+      {"help-cli", cli_arg_help_cli},
+      {"help-controls", cli_arg_help_controls},
       {"version", cli_arg_version},
       {"ffmpeg-version", cli_arg_ffmpeg_version},
       {"curses-version", cli_arg_curses_version},
@@ -556,13 +567,23 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   }
 
   void print_help_text() {
-    std::cout << "Usage: tmedia [OPTIONS] paths\n" << std::endl;
+    std::cout << TMEDIA_CLI_USAGE << '\n' << std::endl;
     std::cout << TMEDIA_CONTROLS_USAGE << '\n' << std::endl;
     std::cout << TMEDIA_CLI_ARGS_DESC << std::endl;
   }
 
   void cli_arg_help(CLIParseState& ps, const tmedia::CLIArg arg) {
     print_help_text();
+    (void)ps; (void)arg;
+  }
+
+  void cli_arg_help_controls(CLIParseState& ps, const tmedia::CLIArg arg) {
+    std::cout << TMEDIA_CONTROLS_USAGE << std::endl;
+    (void)ps; (void)arg;
+  }
+
+  void cli_arg_help_cli(CLIParseState& ps, const tmedia::CLIArg arg) {
+    std::cout << TMEDIA_CLI_ARGS_DESC << std::endl;
     (void)ps; (void)arg;
   }
 

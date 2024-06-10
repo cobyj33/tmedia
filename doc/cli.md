@@ -108,6 +108,12 @@ the Help and Versioning commands to work.
     about the in-player controls and short explanations of each command line
     option. This option can also be emulated if no arguments at all are given
     to the tmedia executable.
+- --help-cli
+  - Displays help information only about the cli options available to use
+    with tmedia and exits.
+- --help-controls
+  - Displays help information about the in-player interactive controls
+    available within tmedia and exits.
 - -v, --version
   - Prints version information in the form MAJOR.MINOR.PATH and exits.  
 - --ffmpeg-version
