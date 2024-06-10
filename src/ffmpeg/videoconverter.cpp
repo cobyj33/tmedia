@@ -125,8 +125,6 @@ void VideoConverter::convert_video_frame(AVFrame* dest, AVFrame* src) {
   dest->duration = src->duration;
   #endif
 
-  av_image_fill_linesizes(dest->linesize, static_cast<enum AVPixelFormat>(dest->format), dest->width);
-
   (void)sws_scale(this->m_context,
     static_cast<uint8_t const * const *>(src->data), src->linesize, 0,
     src->height, dest->data, dest->linesize);

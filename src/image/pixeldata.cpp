@@ -75,6 +75,7 @@ void horzline(PixelData& dest, int col1, int col2, int row, const RGB24 color) {
 void pixdata_from_avframe(PixelData& dest, AVFrame* src) {
   assert(src != nullptr);
   assert(static_cast<AVPixelFormat>(src->format) == AV_PIX_FMT_RGB24);
+  assert(src->linesize[0] >= src->width);
   pixdata_setnewdims(dest, src->width, src->height);
 
   // if our RGB24 compiles to 3 bytes (like it should)
@@ -85,13 +86,14 @@ void pixdata_from_avframe(PixelData& dest, AVFrame* src) {
     // https://stackoverflow.com/a/7689457
     // also adjusts the pixel array's size() to be correct
 
-    // TODO: Note that this does not take into account the linesize of the array
     // We need to take into account the linesize of the array, as the size
     // of each picture line in an AVFrame is not guaranteed to be the size of
     // the AVFrame's width
-
-    const uint8_t* const data = src->data[0];
-    std::memcpy(dest.pixels.data(), data, dest.m_width * dest.m_height * 3);
+    int offset = 0;
+    for (int row = 0; row < src->height; row++) {
+      std::memcpy(dest.pixels.data() + (row * dest.m_width), src->data[0] + offset, src->width * 3);
+      offset += src->linesize[0];
+    }
   } else {
     // this shouldn't really run on most systems. It's moreso here as
     // a backup safety
