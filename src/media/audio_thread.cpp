@@ -103,7 +103,6 @@ void MediaFetcher::audio_dispatch_thread_func() {
       double current_time = 0;
 
       {
-        decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames, frame_pool);
         std::lock_guard<std::mutex> alter_lock(this->alter_mutex);
         current_time = this->clock.get_time(sys_clk_sec());
         msg_audio_jump_curr_time_cache = this->msg_audio_jump_curr_time;
@@ -115,8 +114,6 @@ void MediaFetcher::audio_dispatch_thread_func() {
           throw ffmpeg_error(fmt::format("[{}] Failed to jump to time {}", FUNCDINFO, current_time), ret);
         }
 
-        decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames, frame_pool);
-
         // clear audio buffer **after** expensive time jumping functions and
         // decoding functions
         this->audio_buffer->clear(current_time);
@@ -125,6 +122,8 @@ void MediaFetcher::audio_dispatch_thread_func() {
         // explanation of subtracting by msg_audio_jump_curr_time_cache
         this->msg_audio_jump_curr_time -= msg_audio_jump_curr_time_cache;
       }
+
+        decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames, frame_pool);
 
       runs_w_fail += static_cast<unsigned int>(next_raw_audio_frames.size() == 0);
       for (std::size_t i = 0; i < next_raw_audio_frames.size(); i++) {

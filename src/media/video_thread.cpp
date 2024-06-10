@@ -133,7 +133,6 @@ void MediaFetcher::frame_video_fetching_func() {
     bool saved_frame_is_empty = false;
 
     {
-      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       current_time = this->get_time(sys_clk_sec());
       msg_video_jump_curr_time_cache = this->msg_video_jump_curr_time;
@@ -146,7 +145,6 @@ void MediaFetcher::frame_video_fetching_func() {
         throw ffmpeg_error(fmt::format("[{}] Failed to jump to time {}", FUNCDINFO, current_time), ret);
       }
 
-      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
       std::scoped_lock<std::mutex> lock(this->alter_mutex);
       // note how we subtract by the stored cache. This is because, jumping to
       // the current time is the exact same operation on every iteration as
@@ -158,6 +156,8 @@ void MediaFetcher::frame_video_fetching_func() {
       // caught on the next iteration of the video thread.
       this->msg_video_jump_curr_time -= msg_video_jump_curr_time_cache;
     }
+
+      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
 
     if (dec_frames.size() > 0) {
       const double frame_pts_time_sec = (double)dec_frames[0]->pts * av_q2d(avstr->time_base);
