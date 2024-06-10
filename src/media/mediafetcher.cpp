@@ -122,6 +122,10 @@ int MediaFetcher::jump_to_time(double target_time, double currsystime) {
  * cheap operation for the calling thread.
 */
   
+  if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
+    this->audio_buffer->clear(currsystime);
+  }
+
   this->clock.skip(target_time - original_time); // Update the playback to account for the skipped time
   return 0; // assume success
 }
