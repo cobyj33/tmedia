@@ -44,4 +44,4 @@ limitations, but the task as of right now far exceeds the reward.
 > [Time scaling](https://en.wikipedia.org/wiki/Audio_time_stretching_and_pitch_scaling)
 > without affecting pitch often requires computationally expensive operations like
 > the FFT and STFT, and I definitely don't understand those concepts enough
-> to implement them in a package I intend for others to use. 
+> to implement them in a package I intend for others to use.
