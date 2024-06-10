@@ -12,6 +12,7 @@
 #include <tmedia/ctnr/arraypairmap.hpp>
 
 #include <vector>
+#include <array>
 #include <cstddef>
 #include <map>
 #include <functional>
@@ -218,6 +219,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   typedef std::function<void(CLIParseState&, const tmedia::CLIArg arg)> ArgParseFunc;
   typedef tmedia::ArrayPairMap<std::string_view, ArgParseFunc, 100, std::less<>> ArgParseMap;
 
+
+  std::string missed_opt_err(tmedia::CLIArg arg, std::string_view invokation);
+  template <typename BeginItr, typename EndItr>
+  std::string missed_longopt_err(tmedia::CLIArg arg, std::string_view invokation, BeginItr begin, EndItr end);
+
   void print_help_text();
   void print_help_cli();
   void print_help_controls();
@@ -342,7 +348,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"lib-versions", cli_arg_lib_versions},
     };
 
-    static const ArgParseMap short_global_argparse_map{
+    static const ArgParseMap short_global_argmap{
       {"c", cli_arg_color},
       {"b", cli_arg_background},
       {"g", cli_arg_grayscale},
@@ -352,7 +358,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"r", cli_arg_recurse_global},
     };
 
-    static const ArgParseMap long_global_argparse_map{
+    static const ArgParseMap long_global_argmap{
       {"no-repeat", cli_arg_no_repeat},
       {"no-loop", cli_arg_no_repeat},
       {"repeat", cli_arg_repeat},
@@ -422,11 +428,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"repeat-path", cli_arg_repeat_paths_global},
     };
 
-    static const ArgParseMap short_local_argparse_map{
+    static const ArgParseMap short_local_argmap{
       {"r", cli_arg_recurse_local}
     };
 
-    static const ArgParseMap long_local_argparse_map{
+    static const ArgParseMap long_local_argmap{
       {"enable-video-stream", cli_arg_enable_video_stream_local},
       {"enable-audio-stream", cli_arg_enable_audio_stream_local},
       {"no-enable-video-stream", cli_arg_no_enable_video_stream_local},
@@ -483,15 +489,15 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
         } break;
         case tmedia::CLIArgType::OPTION: {
           if (arg.prefix == "-") {
+
             if (short_exiting_opt_map.count(arg.value)) {
               short_exiting_opt_map.at(arg.value)(ps, arg);
               return { std::move(ps.tmss), true, std::move(ps.argerrs) };
-            } else if (short_global_argparse_map.count(arg.value)) {
-              short_global_argparse_map.at(arg.value)(ps, arg);
+            } else if (short_global_argmap.count(arg.value)) {
+              short_global_argmap.at(arg.value)(ps, arg);
             } else {
-              ps.argerrs.push_back(fmt::format("[{}] Unrecognized "
-              "short option: '{}'. Use the '{} --help' command to see all "
-              "available cli options", FUNCDINFO, arg.value, argv[0]));
+              ps.argerrs.push_back(fmt::format("[{}] {}", FUNCDINFO,
+                missed_opt_err(arg, argv[0])));
             }
 
           } else if (arg.prefix == "--") {
@@ -499,24 +505,24 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
             if (long_exiting_opt_map.count(arg.value)) {
               long_exiting_opt_map.at(arg.value)(ps, arg);
               return { std::move(ps.tmss), true, std::move(ps.argerrs) };
-            } else if (long_global_argparse_map.count(arg.value)) {
-              long_global_argparse_map.at(arg.value)(ps, arg);
+            } else if (long_global_argmap.count(arg.value)) {
+              long_global_argmap.at(arg.value)(ps, arg);
             } else {
-              ps.argerrs.push_back(fmt::format("[{}] Unrecognized "
-              "long option: '{}'. Use the '{} --help' command to see all "
-              "available cli options", FUNCDINFO, arg.value, argv[0]));
+              ps.argerrs.push_back(fmt::format("[{}] {}", FUNCDINFO,
+                missed_longopt_err(arg, argv[0],
+                long_global_argmap.kbegin(), long_global_argmap.kend())));
             }
 
           } else if (arg.prefix == ":") {
 
-            if (short_local_argparse_map.count(arg.value)) {
-              short_local_argparse_map.at(arg.value)(ps, arg);
-            } else if (long_local_argparse_map.count(arg.value)) {
-              long_local_argparse_map.at(arg.value)(ps, arg);
+            if (short_local_argmap.count(arg.value)) {
+              short_local_argmap.at(arg.value)(ps, arg);
+            } else if (long_local_argmap.count(arg.value)) {
+              long_local_argmap.at(arg.value)(ps, arg);
             } else {
-              ps.argerrs.push_back(fmt::format("[{}] Unrecognized "
-              "local option: '{}'. Use the '{} --help' command to see all "
-              "available cli options", FUNCDINFO, arg.value, argv[0]));
+              ps.argerrs.push_back(fmt::format("[{}] {}", FUNCDINFO,
+                missed_longopt_err(arg, argv[0],
+                long_local_argmap.kbegin(), long_local_argmap.kend())));
             }
 
           }
@@ -1018,5 +1024,88 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     }
   }
 
+unsigned int lev_within(std::string_view a, std::string_view b, unsigned int max_dis, unsigned int curr_dis) {
+  while (a.length() > 0 || b.length() > 0) {
+    if (b.length() == 0) {
+      return curr_dis + a.length();
+    } else if (a.length() == 0) {
+      return curr_dis + b.length();
+    } else if (a[0] == b[0]) {
+      a = a.substr(1);
+      b = b.substr(1);
+    } else {
+      if (curr_dis + 1 > max_dis)
+        return max_dis + 1;
+
+      std::string_view taila = a.substr(1);
+      std::string_view tailb = b.substr(1);
+      return std::min(lev_within(taila, b, max_dis, curr_dis + 1),
+        std::min(lev_within(a, tailb, max_dis, curr_dis + 1),
+        lev_within(taila, tailb, max_dis, curr_dis + 1)));
+    }
+  }
+
+  return curr_dis;
+}
+
+unsigned int rank_opt_diff(std::string_view a, std::string_view b, unsigned int max_dis) {
+  return lev_within(a, b.substr(0, a.length()), max_dis, 0);
+}
+
+
+std::string missed_opt_err(tmedia::CLIArg opt, std::string_view invokation) {
+  return fmt::format("Unrecognized "
+    "option: '{}{}'. Use the '{} --help' command to see all "
+    "available cli options", opt.prefix, opt.value, invokation);
+}
+
+struct LevenshteinMatch {
+  std::string_view strv;
+  unsigned int distance;
+};
+
+template <typename BeginItr, typename EndItr>
+std::string missed_longopt_err(tmedia::CLIArg opt, std::string_view invokation, BeginItr begin, EndItr end) {
+  static constexpr unsigned int MAX_MATCHES = 3;
+  static constexpr int LEV_CLI_SIMILAR_ENOUGH = 2;
+
+  std::array<LevenshteinMatch, MAX_MATCHES> matches;
+  unsigned int nb_matches = 0; // in range from 0 to MAX_MATCHES inclusive
+
+  for (auto itr = begin; itr != end; itr++) {
+    const unsigned int distance = rank_opt_diff(opt.value, *itr, LEV_CLI_SIMILAR_ENOUGH);
+    if (distance > LEV_CLI_SIMILAR_ENOUGH) continue;
+
+    LevenshteinMatch match = { *itr, distance };
+    unsigned int insert_pos = 0;
+    while(insert_pos < nb_matches && matches[insert_pos].distance < distance) {
+      insert_pos++;
+    }
+
+    if (insert_pos < MAX_MATCHES) {
+      nb_matches = std::min(MAX_MATCHES, nb_matches + 1);
+      for (unsigned int i = nb_matches - 1; i > insert_pos; i--) {
+        matches[i] = matches[i - 1];
+      }
+      matches[insert_pos] = match;
+    }
+  }
+
+  if (nb_matches == 0) {
+    return missed_opt_err(opt, invokation);
+  } else {
+    std::string err = fmt::format("Unrecognized option: '{}{}'. ",
+      opt.prefix, opt.value);
+
+    err += "Similar options: ";
+    for (unsigned int i = 0; i < nb_matches; i++) {
+      err += fmt::format("'{}{}'{}", opt.prefix, matches[i].strv,
+        (i == nb_matches - 1) ? ". " : ", ");
+    }
+    err += fmt::format("Use '{} --help' to see all "
+      "cli options", invokation);
+    return err;
+  }
+}
 
 // };

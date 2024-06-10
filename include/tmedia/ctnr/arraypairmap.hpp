@@ -78,11 +78,13 @@ namespace tmedia {
 
   public:
     TMEDIA_CPP17_CONSTEXPR
-    ArrayPairMap() {}
+    ArrayPairMap() {
+      this->m_size = 0;
+    }
 
     TMEDIA_CPP17_CONSTEXPR
     ArrayPairMap(const std::initializer_list<pair_type>& kv_pairs) {
-      if (kv_pairs.size() > _Nm) 
+      if (kv_pairs.size() > _Nm)
         throw std::out_of_range("[tmedia::ArrayPairMap] kv_pairs larger than array size.");
 
       size_type i = 0;      
@@ -159,11 +161,11 @@ namespace tmedia {
 
     TMEDIA_CPP17_CONSTEXPR key_iterator
     kend() noexcept
-    { return this->m_keys.end() + this->size(); }
+    { return this->m_keys.begin() + this->size(); }
 
     TMEDIA_CPP17_CONSTEXPR const_key_iterator
     kend() const noexcept
-    { return this->m_keys.end() + this->size(); }
+    { return this->m_keys.begin() + this->size(); }
 
     TMEDIA_CPP17_CONSTEXPR reverse_key_iterator
     krbegin() noexcept
