@@ -14,6 +14,7 @@
 #include <vector>
 #include <array>
 #include <cstddef>
+#include <cctype>
 #include <map>
 #include <functional>
 #include <filesystem>
@@ -711,8 +712,27 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
 
   void cli_arg_chars(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.tmss.ascii_display_chars = arg.param;
-    (void)arg;
+    bool accepted = true;
+    if (arg.param.length() == 0) {
+      accepted = false;
+      ps.argerrs.push_back(fmt::format("[{}] Cannot set display "
+        "characters to the empty string. ", FUNCDINFO));
+    }
+
+    for (std::size_t i = 0; i < arg.param.length(); i++) {
+      const char ch = arg.param[i];
+      if (!std::isprint(ch)) {
+        accepted = false;
+        ps.argerrs.push_back(fmt::format("[{}] Cannot add non-printable ASCII "
+          "character with unsigned code '{}' to character display. "
+          "(Index {}/{})",
+          FUNCDINFO, static_cast<unsigned char>(ch), i, arg.param.length()));
+      }
+    }
+
+    if (accepted) {
+      ps.tmss.ascii_display_chars = arg.param;
+    }
   }
 
   void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg) {
