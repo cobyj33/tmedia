@@ -252,6 +252,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_fullscreen(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_fullscreen(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_grayscale(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_repeat(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_repeat(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -377,6 +378,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"mute", cli_arg_mute},
       {"muted", cli_arg_mute},
       {"fullscreen", cli_arg_fullscreen},
+      {"no-fullscreen", cli_arg_no_fullscreen},
       {"fullscreened", cli_arg_fullscreen},
 
       {"show-ctrl-info", cli_arg_show_ctrl_info},
@@ -688,6 +690,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void cli_arg_fullscreen(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.fullscreen = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_fullscreen(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.tmss.fullscreen = false;
     (void)arg;
   }
 
