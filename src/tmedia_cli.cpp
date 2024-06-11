@@ -261,6 +261,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_repeat(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_repeat_one(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_mute(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_mute(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_refresh_rate(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_shuffle(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_shuffle(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -396,6 +397,10 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
       {"mute", cli_arg_mute},
       {"muted", cli_arg_mute},
+      {"no-mute", cli_arg_no_mute},
+      {"no-muted", cli_arg_no_mute},
+      {"no-muted", cli_arg_no_mute},
+
       {"fullscreen", cli_arg_fullscreen},
       {"no-fullscreen", cli_arg_no_fullscreen},
 
@@ -753,6 +758,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void cli_arg_mute(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.muted = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_mute(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.tmss.muted = false;
     (void)arg;
   }
 
