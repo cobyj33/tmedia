@@ -56,6 +56,7 @@ void init_global_video_output_mode(VidOutMode mode);
 TMediaProgramState tmss_to_tmps(TMediaStartupState& tmss) {
   TMediaProgramState tmps;
   tmps.ascii_display_chars = tmss.ascii_display_chars;
+  tmps.show_ctrl_info = tmss.show_ctrl_info;
   tmps.fullscreen = tmss.fullscreen;
   tmps.muted = tmss.muted;
   tmps.plist = Playlist(tmss.media_files, tmss.loop_type);
@@ -212,7 +213,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           bool toggle_shuffled = false;
           bool toggle_fullscreen = false;
           bool toggle_muted = false;
-          bool toggle_show_help_design = false;
+          bool toggle_show_ctrl_info = false;
           bool quit_program_command_received = false;
           bool exit_current_player_command_received = false;
           double toggled_volume = tmps.volume;
@@ -279,7 +280,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               case 'm':
               case 'M': toggle_muted = !toggle_muted; break;
               case 'h':
-              case 'H': toggle_show_help_design = !toggle_show_help_design; break;
+              case 'H': toggle_show_ctrl_info = !toggle_show_ctrl_info; break;
               case 'l':
               case 'L': {
                 if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
@@ -338,10 +339,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
             tmps.fullscreen = !tmps.fullscreen;
           }
 
-          if (toggle_show_help_design) {
+          if (toggle_show_ctrl_info) {
             erase();
             should_render_frame = true;
-            tmps.show_help_design = !tmps.show_help_design;
+            tmps.show_ctrl_info = !tmps.show_ctrl_info;
           }
 
           if (should_refresh) {

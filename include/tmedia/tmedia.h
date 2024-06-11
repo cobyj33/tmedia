@@ -35,6 +35,7 @@ struct TMediaStartupState {
   int refresh_rate_fps = 24;
   VidOutMode vom = VidOutMode::PLAIN;
   bool fullscreen = false;
+  bool show_ctrl_info = true;
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
 };
 
@@ -61,7 +62,7 @@ struct TMediaProgramState {
   double volume = 1.0;
   bool muted = false;
   bool fullscreen = false;
-  bool show_help_design = true;
+  bool show_ctrl_info = true;
   int refresh_rate_fps = 24;
   VidOutMode vom = VidOutMode::PLAIN;
   std::string ascii_display_chars = ASCII_STANDARD_CHAR_MAP;

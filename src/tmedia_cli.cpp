@@ -113,6 +113,8 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   "  -g, --gray             Play the video in grayscale \n"
   "  -b, --background       Do not show characters, only the background \n"
   "  -f, --fullscreen       Begin the player in fullscreen mode\n"
+  "  --show-ctrl-info,\n"
+  "    --hide-ctrl-info     Begin the player showing control info (Default Yes)\n"
   "  --refresh-rate         Set the refresh rate of tmedia\n"
   "  --chars [STRING]       The displayed characters from darkest to lightest\n"
   "\n"
@@ -247,6 +249,8 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_chars(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_color(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_fullscreen(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_grayscale(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_repeat(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -294,15 +298,6 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv) {
     CLIParseState ps;
-    ps.tmss.muted = false;
-    ps.tmss.refresh_rate_fps = 24;
-    ps.tmss.loop_type = LoopType::NO_LOOP;
-    ps.tmss.vom = VidOutMode::PLAIN;
-    ps.tmss.volume = 1.0;
-    ps.tmss.fullscreen = false;
-    ps.tmss.ascii_display_chars = ASCII_STANDARD_CHAR_MAP;
-    ps.tmss.shuffled = false;
-
     if (argc == 1) {
       print_help_text();
       return { ps.tmss, true, ps.argerrs };
@@ -383,6 +378,13 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"muted", cli_arg_mute},
       {"fullscreen", cli_arg_fullscreen},
       {"fullscreened", cli_arg_fullscreen},
+
+      {"show-ctrl-info", cli_arg_show_ctrl_info},
+      {"show-control-info", cli_arg_show_ctrl_info},
+      {"no-show-ctrl-info", cli_arg_no_show_ctrl_info},
+      {"no-show-control-info", cli_arg_no_show_ctrl_info},
+      {"hide-ctrl-info", cli_arg_no_show_ctrl_info},
+      {"hide-control-info", cli_arg_no_show_ctrl_info},
 
       {"enable-video-stream", cli_arg_enable_video_stream_global},
       {"enable-audio-stream", cli_arg_enable_audio_stream_global},
@@ -671,6 +673,16 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void cli_arg_color(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.colored = true;
+    (void)arg;
+  }
+
+  void cli_arg_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.tmss.show_ctrl_info = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.tmss.show_ctrl_info = false;
     (void)arg;
   }
 

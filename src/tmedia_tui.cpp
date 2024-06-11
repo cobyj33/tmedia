@@ -65,12 +65,12 @@ void render_tui(const TMediaProgramState& tmps, const TMediaProgramSnapshot& ssh
   } else if (COLS <= 20 || LINES < 10 || tmps.fullscreen) {
     render_tui_fullscreen(tmps, sshot, tmrs);
   } else if (COLS < 60) {
-    if (tmps.show_help_design)
+    if (tmps.show_ctrl_info)
       render_tui_compact_help(tmps, sshot, tmrs);
     else
       render_tui_compact(tmps, sshot, tmrs);
   } else {
-    if (tmps.show_help_design)
+    if (tmps.show_ctrl_info)
       render_tui_large_help(tmps, sshot, tmrs);
     else
       render_tui_large(tmps, sshot, tmrs);
@@ -204,7 +204,7 @@ void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapsho
 // 00:00 / 26:54 | 0@@@--1-----2-----3-----4-----5-----6-----7-----8-----9---
 // PLAYING (SPACE)      NOT LOOPED (L)    SHUFFLE (S)   VOLUME: 50% (UP/DOWN)
 //   Color Mode: Color & Bg (c/b/g)              Force Refresh (R)
-//   Skip +-5 secs (LEFT/RIGHT)    Fullscreen (F)    Hide Help Info: (H)
+//   Skip +-5 secs (LEFT/RIGHT)    Fullscreen (F)    Hide Control Info: (H)
 
 void render_tui_large_help(const TMediaProgramState& tmps, const TMediaProgramSnapshot& sshot, TMediaRendererState& tmrs) {
   const int BOTTOM_BAR_LINE_START = LINES - 5;
@@ -239,7 +239,7 @@ void render_tui_large_help(const TMediaProgramState& tmps, const TMediaProgramSn
   std::array<std::string_view, 3> help_line_2;
   help_line_2[0] = "Skip 5 secs (LEFT/RIGHT)";
   help_line_2[1] = "Fullscreen (F)";
-  help_line_2[2] = "Hide Help Info: (H)";
+  help_line_2[2] = "Hide Control Info: (H)";
   werasebox(stdscr, line, 0, COLS, 1);
   wprint_labels(stdscr, help_line_2.data(), 3, line++, 0, COLS);
 }
@@ -346,13 +346,13 @@ void render_current_filenamex_compact(const TMediaProgramState& tmps, TMediaRend
 
   if (tmps.plist.size() > 1) {
     if (tmps.plist.can_move(PlaylistMvCmd::REWIND)) {
-      const std::string_view left_arrow = tmps.show_help_design ? "< (P) " : "< ";
+      const std::string_view left_arrow = tmps.show_ctrl_info ? "< (P) " : "< ";
       const TMLabelStyle style = TMLabelStyle(line, 0, COLS, TMAlign::LEFT, 0, 0);
       tm_mvwaddstr_label(stdscr, style, left_arrow);
     }
 
     if (tmps.plist.can_move(PlaylistMvCmd::SKIP)) {
-      const std::string_view right_arrow = tmps.show_help_design ? " (N) > " : " >";
+      const std::string_view right_arrow = tmps.show_ctrl_info ? " (N) > " : " >";
       const TMLabelStyle style = TMLabelStyle(line, 0, COLS, TMAlign::RIGHT, 0, 0);
       tm_mvwaddstr_label(stdscr, style, right_arrow);
     }
@@ -365,7 +365,7 @@ int render_nexprev_files_large(const TMediaProgramState& tmps, TMediaRendererSta
 
   if (tmps.plist.can_move(PlaylistMvCmd::REWIND)) {
     werasebox(stdscr, line, 0, COLS / 2, 1);
-    const std::string_view left_arrow = tmps.show_help_design ? "< (P) " : "< ";
+    const std::string_view left_arrow = tmps.show_ctrl_info ? "< (P) " : "< ";
     const std::string_view rewind_media_file_display_string = get_media_file_display_name(tmps.plist.peek_move(PlaylistMvCmd::REWIND).path, tmrs.metadata_cache);
     TMLabelStyle left_arrow_string_style(line, 0, COLS / 2, TMAlign::LEFT, 0, 0);
     TMLabelStyle rewind_display_style(line, 0, COLS / 2, TMAlign::LEFT, left_arrow.length(), MOVE_FILE_NAME_MIDDLE_MARGIN);
@@ -375,7 +375,7 @@ int render_nexprev_files_large(const TMediaProgramState& tmps, TMediaRendererSta
 
   if (tmps.plist.can_move(PlaylistMvCmd::SKIP)) {
     werasebox(stdscr, line, COLS / 2, COLS / 2, 1);
-    const std::string_view right_arrow = tmps.show_help_design ? " (N) > " : " >";
+    const std::string_view right_arrow = tmps.show_ctrl_info ? " (N) > " : " >";
     const std::string_view skip_display_string = get_media_file_display_name(tmps.plist.peek_move(PlaylistMvCmd::SKIP).path, tmrs.metadata_cache);
     TMLabelStyle skip_display_string_style(line, COLS / 2, COLS / 2, TMAlign::RIGHT, MOVE_FILE_NAME_MIDDLE_MARGIN, right_arrow.length());
     TMLabelStyle right_arrow_string_style(line, COLS / 2, COLS / 2, TMAlign::RIGHT, 0, 0);
