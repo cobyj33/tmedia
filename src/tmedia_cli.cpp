@@ -217,7 +217,8 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void resolve_cli_path(const fs::path& path,
                         MediaPathSearchOptions srch_opts,
-                        std::vector<PlaylistItem>& resolved_paths);
+                        std::vector<PlaylistItem>& resolved_paths,
+                        std::vector<std::string>& errs);
 
   typedef std::function<void(CLIParseState&, const tmedia::CLIArg arg)> ArgParseFunc;
   typedef tmedia::ArrayPairMap<std::string_view, ArgParseFunc, 100, std::less<>> ArgParseMap;
@@ -588,12 +589,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     for (const MediaPath& path : ps.paths) {
       MediaPathSearchOptions resolved_srch_opts = resolve_path_search_options(ps.srch_opts, path.srch_opts);
       for (unsigned int i = 0; i < resolved_srch_opts.num_reads; i++) {
-        try {
-          resolve_cli_path(path.path, resolved_srch_opts, ps.tmss.media_files);
-        } catch (const std::runtime_error& err) {
-          ps.argerrs.push_back(fmt::format("[{}] Failed to resolve CLI Path "
-          "{}: {}", FUNCDINFO, path.path.string(), err.what()));
-        }
+        resolve_cli_path(path.path, resolved_srch_opts, ps.tmss.media_files, ps.argerrs);
       }
     }
 
@@ -1114,7 +1110,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   }
 
 
-  void resolve_cli_path(const fs::path& path, MediaPathSearchOptions srch_opts, std::vector<PlaylistItem>& resolved_paths) {
+  void resolve_cli_path(const fs::path& path, MediaPathSearchOptions srch_opts, std::vector<PlaylistItem>& resolved_paths, std::vector<std::string>& errs) {
     std::stack<fs::path> to_search;
     to_search.push(path);
     std::error_code ec;
@@ -1124,8 +1120,15 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       to_search.pop();
 
       if (!fs::exists(curr, ec)) {
-        throw std::runtime_error(fmt::format("[{}] Cannot open nonexistent "
-        "path: {}", FUNCDINFO, path.c_str()));
+        if (curr == path) {
+          errs.push_back(fmt::format("[{}] Cannot open nonexistent "
+            "path: {}", FUNCDINFO, path.c_str()));
+        } else {
+          errs.push_back(fmt::format("[{}] Cannot open nonexistent "
+            "path {} derived from path {}.", FUNCDINFO, curr.c_str(),
+            path.c_str()));
+        }
+        continue;
       }
 
       if (fs::is_directory(curr, ec)) {
