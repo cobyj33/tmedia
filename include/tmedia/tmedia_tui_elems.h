@@ -10,7 +10,8 @@ extern "C" {
 }
 
 void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage);
-void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time, double duration);
+void wprint_progress_bar_numbered(WINDOW* window, int y, int x, int width, int height, double percentage);
+void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time, double duration, bool numbered);
 void wprint_labels(WINDOW* window, std::string_view* labels, std::size_t nb_labels, int y, int x, int width);
 void wprint_labels_middle(WINDOW* window, std::string_view* labels, std::size_t nb_labels, int y, int x, int width);
 

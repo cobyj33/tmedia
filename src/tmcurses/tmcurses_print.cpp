@@ -53,7 +53,7 @@ void wfill_line(WINDOW* window, int y, int x, int width, char ch) {
 void wfill_box(WINDOW* window, int y, int x, int width, int height, char ch) {
     for (int row = y; row < y + height; row++) {
       wmove(window, row, x);
-      for (int col = x; col < x + width; col++) waddch(window, ch);
+      for (int col = 0; col < width; col++) waddch(window, ch);
     }
 }
 

@@ -212,6 +212,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           bool toggle_shuffled = false;
           bool toggle_fullscreen = false;
           bool toggle_muted = false;
+          bool toggle_show_help_design = false;
           bool quit_program_command_received = false;
           bool exit_current_player_command_received = false;
           double toggled_volume = tmps.volume;
@@ -277,6 +278,8 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               case KEY_DOWN: toggled_volume -= VOLUME_CHANGE_AMOUNT; break;
               case 'm':
               case 'M': toggle_muted = !toggle_muted; break;
+              case 'h':
+              case 'H': toggle_show_help_design = !toggle_show_help_design; break;
               case 'l':
               case 'L': {
                 if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
@@ -333,6 +336,12 @@ int tmedia_main_loop(TMediaProgramState tmps) {
             erase();
             should_render_frame = true;
             tmps.fullscreen = !tmps.fullscreen;
+          }
+
+          if (toggle_show_help_design) {
+            erase();
+            should_render_frame = true;
+            tmps.show_help_design = !tmps.show_help_design;
           }
 
           if (should_refresh) {

@@ -71,12 +71,31 @@ PixelData& pixdata_bound(PixelData& buf, PixelData& src, int width, int height) 
 
 void wprint_progress_bar(WINDOW* window, int y, int x, int width, int height, double percentage) {
   const int passed_width = width * percentage;
-  const int remaining_width = width * (1.0 - percentage);
+  const int remaining_width = width - passed_width;
   wfill_box(window, y, x, passed_width, height, '@');
   wfill_box(window, y, x + passed_width, remaining_width, height, '-');
 }
 
-void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in_seconds, double duration_in_seconds) {
+void wprint_progress_bar_numbered(WINDOW* window, int y, int x, int width, int height, double percentage) {
+  const int passed_width = static_cast<double>(width) * percentage;
+
+  const double stride = static_cast<double>(width) / 10.0;
+  double next_placement = 0;
+  for (int row = y; row < y + height; row++) {
+    char numchar = '0';
+    wmove(window, row, x);
+    for (int col = 0; col < width; col++) {
+      if (static_cast<int>(next_placement) == col && numchar <= '9') {
+        waddch(window, numchar++);
+        next_placement += stride;
+      } else {
+        waddch(window, col < passed_width ? '@' : '-');
+      }
+    }
+  }
+}
+
+void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in_seconds, double duration_in_seconds, bool numbered) {
   static constexpr int PADDING_BETWEEN_ELEMENTS = 2;
 
   const std::string formatted_passed_time = format_duration(time_in_seconds);
@@ -87,8 +106,12 @@ void wprint_playback_bar(WINDOW* window, int y, int x, int width, double time_in
 
   const int progress_bar_width = width - current_time_string.length() - PADDING_BETWEEN_ELEMENTS;
 
-  if (progress_bar_width > 0)
-    wprint_progress_bar(window, y, x + current_time_string.length() + PADDING_BETWEEN_ELEMENTS, progress_bar_width, 1,time_in_seconds / duration_in_seconds);
+  if (progress_bar_width > 0) {
+    if (numbered)
+      wprint_progress_bar_numbered(window, y, x + current_time_string.length() + PADDING_BETWEEN_ELEMENTS, progress_bar_width, 1,time_in_seconds / duration_in_seconds);
+    else
+      wprint_progress_bar(window, y, x + current_time_string.length() + PADDING_BETWEEN_ELEMENTS, progress_bar_width, 1, time_in_seconds / duration_in_seconds);
+  }
 }
 
 void render_pixel_data_plain(PixelData& pix_data, PixelData& scaling_buffer, int bounds_row, int bounds_col, int bounds_width, int bounds_height, std::string_view ascii_char_map) {
@@ -141,10 +164,21 @@ void wprint_labels(WINDOW* window, std::string_view* labels, std::size_t nb_labe
   if (width <= 0)
     return;
 
-  int section_size = width / nb_labels;
+  int labels_len = 0;
   for (std::size_t i = 0; i < nb_labels; i++) {
-    TMLabelStyle label_style(y, x + section_size * static_cast<int>(i), section_size, TMAlign::CENTER, 0, 0);
+    labels_len += static_cast<int>(labels[i].length());
+  }
+
+  const int total_space = std::max(width - labels_len, 0);
+  const int space_around = total_space / (static_cast<int>(nb_labels) + 1);
+
+  x += space_around;
+  for (std::size_t i = 0; i < nb_labels && x < COLS; i++) {
+    const int label_len = static_cast<int>(labels[i].length());
+    TMLabelStyle label_style(y, x, label_len, TMAlign::CENTER, 0, 0);
     tm_mvwaddstr_label(window, label_style, labels[i]);
+    x += label_len;
+    x += space_around;
   }
 }
 
