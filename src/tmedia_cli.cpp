@@ -249,6 +249,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_chars(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_color(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_color(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_fullscreen(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -366,10 +367,16 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"shuffled", cli_arg_shuffle},
       {"refresh-rate", cli_arg_refresh_rate},
       {"chars", cli_arg_chars},
+
       {"color", cli_arg_color},
       {"colour", cli_arg_color},
       {"colored", cli_arg_color},
       {"coloured", cli_arg_color},
+      {"no-color", cli_arg_no_color},
+      {"no-colour", cli_arg_no_color},
+      {"no-colored", cli_arg_no_color},
+      {"no-coloured", cli_arg_no_color},
+
       {"gray", cli_arg_grayscale},
       {"grey", cli_arg_grayscale},
       {"greyscale", cli_arg_grayscale},
@@ -675,6 +682,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void cli_arg_color(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.colored = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_color(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.colored = false;
     (void)arg;
   }
 
