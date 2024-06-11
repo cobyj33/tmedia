@@ -80,6 +80,8 @@ Video Output:
   -g, --gray             Play the video in grayscale 
   -b, --background       Do not show characters, only the background 
   -f, --fullscreen       Begin the player in fullscreen mode
+  --show-ctrl-info       Begin the player showing control info (Default Yes)
+  --hide-ctrl-info       Begin the player hiding control info (Default Yes)
   --refresh-rate         Set the refresh rate of tmedia
   --chars [STRING]       The displayed characters from darkest to lightest
 

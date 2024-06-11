@@ -148,6 +148,13 @@ the Help and Versioning commands to work.
   be altered at any time interactively in the actual media player with
   the 'f' key.
 
+- --hide-ctrl-info, --no-show-ctrl-info
+  - By default, tmedia will start with a screen which displays a detailed
+    overview of the media player's state and key bindings to control the
+    media player. --hide-ctrl-info will hide
+    this information in favor for a simpler screen which only shows vital
+    information to understanding media playback.
+
 - --refresh-rate [UINT]     
   - Set the refresh rate of the terminal input and screen in frames per second.
   Defaults to 24 FPS. This shouldn't really ever have to be altered, but is
