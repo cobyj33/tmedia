@@ -328,12 +328,12 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     --gray and --grey.
     */
 
-    static const ArgParseMap short_exiting_opt_map{
+    static const ArgParseMap short_exit_optmap{
       {"h", cli_arg_help},
       {"v", cli_arg_version}
     };
 
-    static const ArgParseMap long_exiting_opt_map{
+    static const ArgParseMap long_exit_optmap{
       {"help", cli_arg_help},
       {"help-cli", cli_arg_help_cli},
       {"help-ctrls", cli_arg_help_controls}, // consistent --show-ctrl-info
@@ -351,7 +351,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"lib-versions", cli_arg_lib_versions},
     };
 
-    static const ArgParseMap short_global_argmap{
+    static const ArgParseMap short_global_optmap{
       {"c", cli_arg_color},
       {"b", cli_arg_background},
       {"g", cli_arg_grayscale},
@@ -361,7 +361,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"r", cli_arg_recurse_global},
     };
 
-    static const ArgParseMap long_global_argmap{
+    static const ArgParseMap long_global_optmap{
       {"no-repeat", cli_arg_no_repeat},
       {"no-loop", cli_arg_no_repeat},
       {"repeat", cli_arg_repeat},
@@ -461,7 +461,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"repeat-path", cli_arg_repeat_paths_global},
     };
 
-    static const ArgParseMap local_argmap{
+    static const ArgParseMap local_optmap{
       // There is no such thing as a "short" local argument. The notion
       // of "short" and "long" arguments are really just to remain
       // familiar with GNU argument parsing with "-" and "--". the length
@@ -526,11 +526,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
         case tmedia::CLIArgType::OPTION: {
           if (arg.prefix == "-") {
 
-            if (short_exiting_opt_map.count(arg.value)) {
-              short_exiting_opt_map.at(arg.value)(ps, arg);
+            if (short_exit_optmap.count(arg.value)) {
+              short_exit_optmap.at(arg.value)(ps, arg);
               return { std::move(ps.tmss), true, std::move(ps.argerrs) };
-            } else if (short_global_argmap.count(arg.value)) {
-              short_global_argmap.at(arg.value)(ps, arg);
+            } else if (short_global_optmap.count(arg.value)) {
+              short_global_optmap.at(arg.value)(ps, arg);
             } else {
               ps.argerrs.push_back(fmt::format("[{}] {}", FUNCDINFO,
                 missed_opt_err(arg, argv[0])));
@@ -538,25 +538,25 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
           } else if (arg.prefix == "--") {
 
-            if (long_exiting_opt_map.count(arg.value)) {
-              long_exiting_opt_map.at(arg.value)(ps, arg);
+            if (long_exit_optmap.count(arg.value)) {
+              long_exit_optmap.at(arg.value)(ps, arg);
               return { std::move(ps.tmss), true, std::move(ps.argerrs) };
-            } else if (long_global_argmap.count(arg.value)) {
-              long_global_argmap.at(arg.value)(ps, arg);
+            } else if (long_global_optmap.count(arg.value)) {
+              long_global_optmap.at(arg.value)(ps, arg);
             } else {
               ps.argerrs.push_back(fmt::format("[{}] {}", FUNCDINFO,
                 missed_longopt_err(arg, argv[0],
-                long_global_argmap.kbegin(), long_global_argmap.kend())));
+                long_global_optmap.kbegin(), long_global_optmap.kend())));
             }
 
           } else if (arg.prefix == ":") {
 
-            if (local_argmap.count(arg.value)) {
-              local_argmap.at(arg.value)(ps, arg);
+            if (local_optmap.count(arg.value)) {
+              local_optmap.at(arg.value)(ps, arg);
             } else {
               ps.argerrs.push_back(fmt::format("[{}] {}", FUNCDINFO,
                 missed_longopt_err(arg, argv[0],
-                local_argmap.kbegin(), local_argmap.kend())));
+                local_optmap.kbegin(), local_optmap.kend())));
             }
 
           }
