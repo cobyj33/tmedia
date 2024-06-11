@@ -336,7 +336,9 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     static const ArgParseMap long_exiting_opt_map{
       {"help", cli_arg_help},
       {"help-cli", cli_arg_help_cli},
+      {"help-ctrls", cli_arg_help_controls}, // consistent --show-ctrl-info
       {"help-controls", cli_arg_help_controls},
+
       {"version", cli_arg_version},
       {"ffmpeg-version", cli_arg_ffmpeg_version},
       {"curses-version", cli_arg_curses_version},
@@ -366,12 +368,16 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"loop", cli_arg_repeat},
       {"repeat-one", cli_arg_repeat_one},
       {"loop-one", cli_arg_repeat_one},
+
       {"volume", cli_arg_volume},
+
       {"shuffle", cli_arg_shuffle},
       {"shuffled", cli_arg_shuffle},
       {"no-shuffle", cli_arg_no_shuffle},
       {"no-shuffled", cli_arg_no_shuffle},
+
       {"refresh-rate", cli_arg_refresh_rate},
+
       {"chars", cli_arg_chars},
 
       {"color", cli_arg_color},
@@ -399,7 +405,6 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"muted", cli_arg_mute},
       {"no-mute", cli_arg_no_mute},
       {"no-muted", cli_arg_no_mute},
-      {"no-muted", cli_arg_no_mute},
 
       {"fullscreen", cli_arg_fullscreen},
       {"no-fullscreen", cli_arg_no_fullscreen},
@@ -412,10 +417,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"hide-control-info", cli_arg_no_show_ctrl_info},
 
       {"enable-video-stream", cli_arg_enable_video_stream_global},
-      {"enable-audio-stream", cli_arg_enable_audio_stream_global},
       {"no-enable-video-stream", cli_arg_no_enable_video_stream_global},
-      {"no-enable-audio-stream", cli_arg_no_enable_audio_stream_global},
       {"disable-video-stream", cli_arg_no_enable_video_stream_global},
+
+      {"enable-audio-stream", cli_arg_enable_audio_stream_global},
+      {"no-enable-audio-stream", cli_arg_no_enable_audio_stream_global},
       {"disable-audio-stream", cli_arg_no_enable_audio_stream_global},
 
       // path searching opts
@@ -461,10 +467,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
     static const ArgParseMap long_local_argmap{
       {"enable-video-stream", cli_arg_enable_video_stream_local},
-      {"enable-audio-stream", cli_arg_enable_audio_stream_local},
       {"no-enable-video-stream", cli_arg_no_enable_video_stream_local},
-      {"no-enable-audio-stream", cli_arg_no_enable_audio_stream_local},
       {"disable-video-stream", cli_arg_no_enable_video_stream_local},
+
+      {"enable-audio-stream", cli_arg_enable_audio_stream_local},
+      {"no-enable-audio-stream", cli_arg_no_enable_audio_stream_local},
       {"disable-audio-stream", cli_arg_no_enable_audio_stream_local},
 
       {"ignore-audio", cli_arg_ignore_audio_local},
