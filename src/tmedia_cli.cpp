@@ -461,11 +461,13 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"repeat-path", cli_arg_repeat_paths_global},
     };
 
-    static const ArgParseMap short_local_argmap{
-      {"r", cli_arg_recurse_local}
-    };
+    static const ArgParseMap local_argmap{
+      // There is no such thing as a "short" local argument. The notion
+      // of "short" and "long" arguments are really just to remain
+      // familiar with GNU argument parsing with "-" and "--". the length
+      // of the argument doesn't actually affect its classification.
+      {"r", cli_arg_recurse_local},
 
-    static const ArgParseMap long_local_argmap{
       {"enable-video-stream", cli_arg_enable_video_stream_local},
       {"no-enable-video-stream", cli_arg_no_enable_video_stream_local},
       {"disable-video-stream", cli_arg_no_enable_video_stream_local},
@@ -549,14 +551,12 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
           } else if (arg.prefix == ":") {
 
-            if (short_local_argmap.count(arg.value)) {
-              short_local_argmap.at(arg.value)(ps, arg);
-            } else if (long_local_argmap.count(arg.value)) {
-              long_local_argmap.at(arg.value)(ps, arg);
+            if (local_argmap.count(arg.value)) {
+              local_argmap.at(arg.value)(ps, arg);
             } else {
               ps.argerrs.push_back(fmt::format("[{}] {}", FUNCDINFO,
                 missed_longopt_err(arg, argv[0],
-                long_local_argmap.kbegin(), long_local_argmap.kend())));
+                local_argmap.kbegin(), local_argmap.kend())));
             }
 
           }
