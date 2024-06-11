@@ -222,7 +222,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   typedef std::function<void(CLIParseState&, const tmedia::CLIArg arg)> ArgParseFunc;
   typedef tmedia::ArrayPairMap<std::string_view, ArgParseFunc, 100, std::less<>> ArgParseMap;
 
-
+  const char* ascii_sym_cstr(char ch);
   std::string missed_opt_err(tmedia::CLIArg arg, std::string_view invokation);
   template <typename BeginItr, typename EndItr>
   std::string missed_longopt_err(tmedia::CLIArg arg, std::string_view invokation, BeginItr begin, EndItr end);
@@ -723,10 +723,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       const char ch = arg.param[i];
       if (!std::isprint(ch)) {
         accepted = false;
+        const unsigned char uch = static_cast<unsigned char>(ch);
         ps.argerrs.push_back(fmt::format("[{}] Cannot add non-printable ASCII "
-          "character with unsigned code '{}' to character display. "
+          "character with unsigned code '{}' ('{}') to character display. "
           "(Index {}/{})",
-          FUNCDINFO, static_cast<unsigned char>(ch), i, arg.param.length()));
+          FUNCDINFO, uch, ascii_sym_cstr(ch), i, arg.param.length()));
       }
     }
 
@@ -1240,6 +1241,32 @@ std::string missed_longopt_err(tmedia::CLIArg opt, std::string_view invokation, 
       "cli options", invokation);
     return err;
   }
+}
+
+/* Used mainly for reporting char codes in errors which may have control characters */
+const char* ascii_sym_cstr(char ch) {
+  // UNK for unknown, denotes characters outside of ASCII range
+  static const char* ascii_syms[256] = {"NUL","SOH","STX","ETX","EOT","ENQ",
+    "ACK","\\a","\\b","\\t","\\n","\\v","\\f","\\r","SO","SI","DLE","DC1","DC2",
+    "DC3","DC4","NAK","SYN","ETB","CAN","EM","SUB","ESC","FS","GS","RS","US",
+    " ","!","\"","#","$","%","&","'","(",")","*","+",",","-",".","/","0","1",
+    "2","3","4","5","6","7","8","9",":",";","<","=",">","?","@","A","B","C",
+    "D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U",
+    "V","W","X","Y","Z","[","\\","]","^","_","`","a","b","c","d","e","f","g",
+    "h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y",
+    "z","{","|","}","~","DEL","UNK","UNK","UNK","UNK","UNK","UNK","UNK",
+    "UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK",
+    "UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK",
+    "UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK",
+    "UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK",
+    "UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK",
+    "UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK",
+    "UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK",
+    "UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK",
+    "UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK",
+    "UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK","UNK",
+    "UNK"};
+  return ascii_syms[static_cast<std::uint8_t>(ch & 0xFF)];
 }
 
 // };
