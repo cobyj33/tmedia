@@ -90,7 +90,7 @@ Audio Output:
   -m, --mute, --muted        Mute the audio playback 
 Playlist Controls: 
   --no-repeat            Do not repeat the playlist upon end
-  --repeat, --loop       Repeat the playlist upon playlist end
+  -l, --repeat, --loop   Repeat the playlist upon playlist end
   --repeat-one           Start the playlist looping the first media
   -s, --shuffle          Shuffle the given playlist \
 

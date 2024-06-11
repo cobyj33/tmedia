@@ -231,7 +231,7 @@ and the loaded media playlist in general. (Things work how you'd expect)
 - --no-repeat
   - The default looping state of the media player. Upon reaching the end of the
     playlist, do not repeat the playlist.
-- --repeat, --loop
+- -l, --repeat, --loop
   - Upon reaching the end of the loaded playlist, repeat the playlist.
 - --repeat-one
   - Upon reaching the end of the first media file in the playlist, repeat
