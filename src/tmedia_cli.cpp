@@ -358,6 +358,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"g", cli_arg_grayscale},
       {"m", cli_arg_mute},
       {"f", cli_arg_fullscreen},
+      {"l", cli_arg_repeat},
       {"s", cli_arg_shuffle},
       {"r", cli_arg_recurse_global},
     };
