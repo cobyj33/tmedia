@@ -247,6 +247,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   // Global only options
   void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_background(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_chars(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_color(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_color(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -388,6 +389,8 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"no-grayscale", cli_arg_no_grayscale},
 
       {"background", cli_arg_background},
+      {"no-background", cli_arg_no_background},
+
       {"mute", cli_arg_mute},
       {"muted", cli_arg_mute},
       {"fullscreen", cli_arg_fullscreen},
@@ -678,6 +681,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.background = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_background(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.background = false;
     (void)arg;
   }
 
