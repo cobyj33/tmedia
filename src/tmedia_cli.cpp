@@ -263,6 +263,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_mute(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_refresh_rate(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_shuffle(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_shuffle(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_volume(CLIParseState& ps, const tmedia::CLIArg arg);
 
   // Global versions of options that are either local or global
@@ -367,6 +368,8 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"volume", cli_arg_volume},
       {"shuffle", cli_arg_shuffle},
       {"shuffled", cli_arg_shuffle},
+      {"no-shuffle", cli_arg_no_shuffle},
+      {"no-shuffled", cli_arg_no_shuffle},
       {"refresh-rate", cli_arg_refresh_rate},
       {"chars", cli_arg_chars},
 
@@ -773,6 +776,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void cli_arg_shuffle(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.shuffled = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_shuffle(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.tmss.shuffled = false;
     (void)arg;
   }
 
