@@ -398,7 +398,6 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"muted", cli_arg_mute},
       {"fullscreen", cli_arg_fullscreen},
       {"no-fullscreen", cli_arg_no_fullscreen},
-      {"fullscreened", cli_arg_fullscreen},
 
       {"show-ctrl-info", cli_arg_show_ctrl_info},
       {"show-control-info", cli_arg_show_ctrl_info},
