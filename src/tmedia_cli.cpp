@@ -606,6 +606,14 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     return res;
   }
 
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // -------------------- EXITING OPTIONS -------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+
   void print_help_text() {
     std::cout << TMEDIA_CLI_USAGE << '\n' << std::endl;
     std::cout << TMEDIA_CONTROLS_USAGE << '\n' << std::endl;
@@ -693,6 +701,20 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)ps; (void)arg;
   }
 
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // ----------------- GLOBAL ONLY OPTIONS ------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+
+
+  void cli_arg_chars(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.tmss.ascii_display_chars = arg.param;
+    (void)arg;
+  }
+
   void cli_arg_background(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.background = true;
     (void)arg;
@@ -700,11 +722,6 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void cli_arg_no_background(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.background = false;
-    (void)arg;
-  }
-
-  void cli_arg_chars(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.tmss.ascii_display_chars = arg.param;
     (void)arg;
   }
 
@@ -718,13 +735,13 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)arg;
   }
 
-  void cli_arg_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.tmss.show_ctrl_info = true;
+  void cli_arg_grayscale(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.grayscale = true;
     (void)arg;
   }
 
-  void cli_arg_no_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.tmss.show_ctrl_info = false;
+  void cli_arg_no_grayscale(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.grayscale = false;
     (void)arg;
   }
 
@@ -738,23 +755,23 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)arg;
   }
 
-  void cli_arg_grayscale(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.grayscale = true;
+  void cli_arg_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.tmss.show_ctrl_info = true;
     (void)arg;
   }
 
-  void cli_arg_no_grayscale(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.grayscale = false;
-    (void)arg;
-  }
-
-  void cli_arg_no_repeat(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.tmss.loop_type = LoopType::NO_LOOP;
+  void cli_arg_no_show_ctrl_info(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.tmss.show_ctrl_info = false;
     (void)arg;
   }
 
   void cli_arg_repeat(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.loop_type = LoopType::REPEAT;
+    (void)arg;
+  }
+
+  void cli_arg_no_repeat(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.tmss.loop_type = LoopType::NO_LOOP;
     (void)arg;
   }
 
@@ -770,6 +787,16 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void cli_arg_no_mute(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.muted = false;
+    (void)arg;
+  }
+
+  void cli_arg_shuffle(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.tmss.shuffled = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_shuffle(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.tmss.shuffled = false;
     (void)arg;
   }
 
@@ -790,16 +817,6 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     ps.tmss.refresh_rate_fps = res;
   }
 
-  void cli_arg_shuffle(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.tmss.shuffled = true;
-    (void)arg;
-  }
-
-  void cli_arg_no_shuffle(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.tmss.shuffled = false;
-    (void)arg;
-  }
-
   void cli_arg_volume(CLIParseState& ps, const tmedia::CLIArg arg) {
     double volume = 1.0;
     try {
@@ -815,6 +832,14 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       "as a percentage value: \n\t{}", FUNCDINFO, arg.param, err.what()));
     }
   }
+
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // -------------------- GLOBAL OPTIONS --------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
 
   void cli_arg_ignore_video_global(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.srch_opts.ignore_video = true;
@@ -867,6 +892,26 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)arg;
   }
 
+  void cli_arg_enable_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_enable_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = false;
+    (void)arg;
+  }
+
+  void cli_arg_enable_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_enable_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = false;
+    (void)arg;
+  }
+
   void cli_arg_repeat_paths_global(CLIParseState& ps, const tmedia::CLIArg arg) {
     try {
       int repeats = strtoi32(arg.param);
@@ -885,26 +930,13 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)arg;
   }
 
-  void cli_arg_enable_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = true;
-    (void)arg;
-  }
-
-  void cli_arg_enable_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = true;
-    (void)arg;
-  }
-  
-  void cli_arg_no_enable_video_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = false;
-    (void)arg;
-  }
-
-  void cli_arg_no_enable_audio_stream_global(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = false;
-    (void)arg;
-  }
-
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // -------------------- LOCAL OPTIONS ---------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
 
   void cli_arg_ignore_video_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
@@ -972,15 +1004,15 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)arg;
   }
 
-  void cli_arg_enable_audio_stream_local(CLIParseState& ps, const tmedia::CLIArg arg) {
-    if (ps.paths.size() > 0UL)
-      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = true;
-    (void)arg;
-  }
-
   void cli_arg_no_enable_video_stream_local(CLIParseState& ps, const tmedia::CLIArg arg) {
     if (ps.paths.size() > 0UL)
       ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_VIDEO] = false;
+    (void)arg;
+  }
+
+  void cli_arg_enable_audio_stream_local(CLIParseState& ps, const tmedia::CLIArg arg) {
+    if (ps.paths.size() > 0UL)
+      ps.paths[ps.paths.size() - 1UL].srch_opts.requested_streams[AVMEDIA_TYPE_AUDIO] = true;
     (void)arg;
   }
 
@@ -1009,6 +1041,14 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     }
     (void)arg;
   }
+
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // -------------------- MISCELLANEOUS ---------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
 
   bool resolve_inheritable_bool(std::optional<bool> ib, bool parent_bool) {
     return ib == std::nullopt ? parent_bool : (ib.value() == true);
