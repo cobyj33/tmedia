@@ -44,7 +44,7 @@ TEST_CASE("Formatting", "[functions]") {
       REQUIRE_FALSE(is_int_str("345 "));
     }
   }
-  
+
 
   SECTION("H:MM:SS") {
     SECTION("validation") {
@@ -67,7 +67,7 @@ TEST_CASE("Formatting", "[functions]") {
       REQUIRE_FALSE(is_h_mm_ss_duration("00:0.1"));
       REQUIRE_FALSE(is_h_mm_ss_duration("00:01."));
       REQUIRE_FALSE(is_h_mm_ss_duration("0.0:01"));
-      REQUIRE_FALSE(is_h_mm_ss_duration("0:0:0")); 
+      REQUIRE_FALSE(is_h_mm_ss_duration("0:0:0"));
       REQUIRE_FALSE(is_h_mm_ss_duration("1:1:1"));
 
       REQUIRE_FALSE(is_h_mm_ss_duration("10:00:61")); // seconds greater than 60
@@ -127,7 +127,7 @@ TEST_CASE("Formatting", "[functions]") {
       REQUIRE_FALSE(is_m_ss_duration(":00:10"));
       REQUIRE_FALSE(is_m_ss_duration("000:10"));
       REQUIRE_FALSE(is_m_ss_duration("00:00:10"));
-      
+
       REQUIRE_FALSE(is_m_ss_duration("-00:10"));
       REQUIRE_FALSE(is_m_ss_duration("-000:10"));
       REQUIRE_FALSE(is_m_ss_duration("-00:61"));
@@ -206,7 +206,7 @@ TEST_CASE("Formatting", "[functions]") {
     #define TRIM_TEST(str, trimchars, res) \
       REQUIRE(str_trim(str, trimchars) == res); \
       REQUIRE(strv_trim(str, trimchars) == res);
-    
+
     TRIM_TEST("    Trimmed   String       ", " ", "Trimmed   String");
     TRIM_TEST("    Trimmed   String       ", " ", "Trimmed   String");
     TRIM_TEST("Trimmed   String       ", " ", "Trimmed   String");
@@ -219,8 +219,8 @@ TEST_CASE("Formatting", "[functions]") {
   SECTION("strsplit") {
     #define STRSPLIT_TEST(str, splitchar, ...) \
       REQUIRE(are_vectors_equal(strsplit(str, splitchar), __VA_ARGS__)); \
-      REQUIRE(are_vectors_equal(strvsplit(str, splitchar), __VA_ARGS__)); 
-    
+      REQUIRE(are_vectors_equal(strvsplit(str, splitchar), __VA_ARGS__));
+
     STRSPLIT_TEST("this,is,split", ',', {"this", "is", "split"});
     STRSPLIT_TEST("this,is,split", ',', {"this", "is", "split"});
     STRSPLIT_TEST("this,,is,,,split,,,", ',', {"this", "is", "split"});

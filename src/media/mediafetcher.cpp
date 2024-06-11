@@ -106,7 +106,7 @@ double MediaFetcher::get_audio_desync_time(double currsystime) const {
   }
   // Video itself doesn't really get desynced since the video thread syncs
   // itself to the MediaClock (see video_thread.cpp)
-  return 0.0; 
+  return 0.0;
 }
 
 int MediaFetcher::jump_to_time(double target_time, double currsystime) {
@@ -121,7 +121,7 @@ int MediaFetcher::jump_to_time(double target_time, double currsystime) {
  * to resync to the current media time. This makes jumping time an extremely
  * cheap operation for the calling thread.
 */
-  
+
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     this->audio_buffer->clear(currsystime);
   }
@@ -133,15 +133,15 @@ int MediaFetcher::jump_to_time(double target_time, double currsystime) {
 void MediaFetcher::begin(double currsystime) {
   this->in_use = true;
   this->clock.init(currsystime);
-  
+
   std::thread ivt(&MediaFetcher::video_fetching_thread_func, this);
   this->video_thread.swap(ivt);
-  
+
   if (this->media_type == MediaType::VIDEO || this->media_type == MediaType::AUDIO) {
     std::thread idct(&MediaFetcher::duration_checking_thread_func, this);
     this->duration_checking_thread.swap(idct);
   }
-  
+
   if (this->has_media_stream(AVMEDIA_TYPE_AUDIO)) {
     std::thread iat(&MediaFetcher::audio_dispatch_thread_func, this);
     this->audio_thread.swap(iat);
@@ -152,7 +152,7 @@ void MediaFetcher::join(double currsystime) {
   // the user can set this as well if they want,
   // but this is to make sure that the threads WILL end regardless.
   this->dispatch_exit();
-  
+
   if (this->media_type != MediaType::IMAGE && this->is_playing())
     this->pause(currsystime);
   if (this->video_thread.joinable())

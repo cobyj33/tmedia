@@ -8,7 +8,7 @@ extern "C" {
 #include <atomic>
 
 class ma_device_w {
-  private: 
+  private:
     ma_device device;
     ma_device_config config_cache;
     std::atomic<float> volume_cache;

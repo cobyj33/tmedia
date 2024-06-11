@@ -20,15 +20,15 @@ extern "C" {
 }
 
 /**
- * 
- * 
+ *
+ *
  * @returns A reference to the PixelData instance which contains the bounded
  * src image. If the source image is already bounded within the given dimensions,
  * then a reference to the source image will be returned, and the buf PixelData
  * instance will not be modified. If the source image
  * must be bounded inside of the given dimensions, then "buf" will be altered
  * to contain the bounded image data and a reference to buf will be returned.
- * 
+ *
  * NOTE:
  * width and height can be equal to or less than 0. If width or height are
  * equal to or less than 0, then buf is modified to have a width and height
@@ -51,7 +51,7 @@ PixelData& pixdata_bound(PixelData& buf, PixelData& src, int width, int height) 
   const int new_width = src.m_width * scale_factor;
   const int new_height = src.m_height * scale_factor;
   pixdata_setnewdims(buf, new_width, new_height);
-  
+
   // Simple Nearest-Neighbor algorithm.
   // Since we render at such low resolutions anyway, I believe the performance
   // gain of nearest neighbor makes up from its slightly worse results

@@ -8,7 +8,7 @@
  * in timestamps. The MediaClock is not based on any actual system clock by
  * design, but trusts the caller to provide valid times for how time is
  * progressing on the system.
- * 
+ *
  * When using a system clock, a monotonic clock should be used to track media
  * playblack, as constant forward clock motion will best model the movement of
  * media playback.
@@ -42,22 +42,22 @@ class MediaClock {
     /**
      * @note **Do not use the init function if you are simply trying to resume the clock stream, use the resume function instead**.
      * The init function assumes that the clock is beginning once again at the specified time
-     * 
-     * @param currsystime 
+     *
+     * @param currsystime
      */
     void init(double currsystime);
-    
+
     /**
      * No-op if the clock is currently stopped
     */
     void stop(double currsystime);
 
     /**
-     * @brief 
-     * 
+     * @brief
+     *
      * No-op if the clock is currently running
-     * 
-     * @param currsystime 
+     *
+     * @param currsystime
      */
     void resume(double currsystime);
     void skip(double seconds_to_skip);

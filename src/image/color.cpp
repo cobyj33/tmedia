@@ -13,7 +13,7 @@ RGB24 RGB24::BLACK = RGB24(0, 0, 0);
 RGB24 RGB24::WHITE = RGB24(255, 255, 255);
 
 double RGB24::dis_sq(RGB24 other) const {
-  // credit to https://www.compuphase.com/cmetric.htm 
+  // credit to https://www.compuphase.com/cmetric.htm
   long rmean = ( static_cast<long>(this->r) + static_cast<long>(other.r) ) / 2L;
   long r = static_cast<long>(this->r) - static_cast<long>(other.r);
   long g = static_cast<long>(this->g) - static_cast<long>(other.g);
@@ -22,6 +22,6 @@ double RGB24::dis_sq(RGB24 other) const {
 }
 
 double RGB24::distance(RGB24 other) const {
-  // credit to https://www.compuphase.com/cmetric.htm 
+  // credit to https://www.compuphase.com/cmetric.htm
   return std::sqrt(this->dis_sq(other));
 }

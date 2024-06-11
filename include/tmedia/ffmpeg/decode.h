@@ -7,7 +7,7 @@
  * @brief Wrapper functions for AVPacket decoding
  * @version 0.5
  * @date 2023-11-19
- * 
+ *
  * @copyright Copyright (c) 2023
  */
 
@@ -35,32 +35,32 @@ struct AVStream;
 /**
  * Decode a single packet given an AVCodecContext and places the returned
  * frames into frame_buffer vector
- * 
+ *
  * frame_buffer must be cleared to size 0 before it is passed into this
  * function.
- * 
+ *
  * Note that while EAGAIN may be thrown in an ffmpeg_error from this function,
  * this only means that the next AVPacket must be inputted on the next
  * call to decode_packet.
- * 
+ *
  * If frame_pool is empty, the functionality of decode_packet is not affected,
  * but decode_packet will have to allocate new AVFrames instead of using old
  * available unreferenced frames.
- * 
+ *
  * Frames in frame_pool must be unreferenced!
- * 
+ *
  * This is a much lower-level function, and most use-cases should simply
  * use decode_next_stream_frames in order to fetch the next frame data from
  * a stream.
- * 
+ *
  * NOTE:
  * while frame_buffer is filled, there should often only be one
  * AVFrame returned if no error is thrown.
- * 
+ *
  * NOTE:
  * decode_packet may return successfully and just have no frames within
  * frame_buffer.
- * 
+ *
  * @returns 0 on success, any AVERROR value encountered on error
 */
 int decode_packet(AVCodecContext* cctx, AVPacket* pkt, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_buffer, std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>& frame_pool);
@@ -69,13 +69,13 @@ int av_jump_time(AVFormatContext* fctx, AVCodecContext* cctx, AVStream* stream, 
 
 /**
  * Decodes the next AVFrame's available in the given stream.
- * 
+ *
  * decode_next_stream_frames also uses the same pooling interface internally
  * described in the documentation comment given to decode_packet. However,
  * out_frames does not have to be empty, as upon invocation, all frames within
  * out_frames will be unreferenced and moved into frame_pool,
  * which will then be reused as needed by decode_packet.
- * 
+ *
  * out_frames does not and SHOULD NOT be cleared before passing into this
  * function. This would prevent decode_next_stream_frames from pooling old
  * AVFrame allocations and force decode_packet to allocate new AVFrames to

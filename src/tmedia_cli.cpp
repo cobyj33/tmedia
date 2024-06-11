@@ -49,7 +49,7 @@ namespace fs = std::filesystem;
 
 // Perhaps the controls usage and help text could be generated dynamically
 // later, so that the usage, help_text, and actual functionality are never
-// out of sync.  
+// out of sync.
 // as of now, I'd rather not write more code for something that's doable by
 // hand.
 
@@ -162,7 +162,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
    * (such as configuring to ignore images or videos).
    * Therefore, when the inheritable boolean is std::nullopt, we signal
    * to read the global value rather than any local value.
-   * 
+   *
   */
 
   struct MediaPathSearchOptions {
@@ -198,10 +198,10 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     fs::path path;
     MediaPathLocalSearchOptions srch_opts;
     MediaPath() = default;
-    MediaPath(std::string_view strv_path) : path(fs::path(strv_path)) {} 
-    MediaPath(const fs::path& path) : path(path) {} 
+    MediaPath(std::string_view strv_path) : path(fs::path(strv_path)) {}
+    MediaPath(const fs::path& path) : path(path) {}
     MediaPath(const MediaPath& o) = default;
-    MediaPath(MediaPath&& o) : path(std::move(o.path)), srch_opts(o.srch_opts) {} 
+    MediaPath(MediaPath&& o) : path(std::move(o.path)), srch_opts(o.srch_opts) {}
   };
 
   struct CLIParseState {
@@ -326,7 +326,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     Note that a lot of options have aliases that aren't necessarily documented
     in the --help text and the doc/cli.md file, such as "--shuffled".
     These mostly exist for a better user experience, as "--shuffled" obviously
-    means the same thing as "--shuffle" to a user. Another good example is 
+    means the same thing as "--shuffle" to a user. Another good example is
     --gray and --grey.
     */
 
@@ -434,14 +434,14 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"no-ignore-audios", cli_arg_no_ignore_audio_global},
       {"dont-ignore-audio", cli_arg_no_ignore_audio_global},
       {"dont-ignore-audios", cli_arg_no_ignore_audio_global},
-      
+
       {"ignore-video", cli_arg_ignore_video_global},
       {"ignore-videos", cli_arg_ignore_video_global},
       {"no-ignore-video", cli_arg_no_ignore_video_global},
       {"no-ignore-videos", cli_arg_no_ignore_video_global},
       {"dont-ignore-video", cli_arg_no_ignore_video_global},
       {"dont-ignore-videos", cli_arg_no_ignore_video_global},
-      
+
       {"ignore-image", cli_arg_ignore_images_global},
       {"ignore-images", cli_arg_ignore_images_global},
       {"no-ignore-image", cli_arg_no_ignore_images_global},
@@ -459,7 +459,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"probe", cli_arg_probe_global},
       {"no-probe", cli_arg_no_probe_global},
       {"dont-probe", cli_arg_no_probe_global},
-      
+
       {"repeat-paths", cli_arg_repeat_paths_global},
       {"repeat-path", cli_arg_repeat_paths_global},
     };
@@ -485,14 +485,14 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"no-ignore-audios", cli_arg_no_ignore_audio_local},
       {"dont-ignore-audio", cli_arg_no_ignore_audio_local},
       {"dont-ignore-audios", cli_arg_no_ignore_audio_local},
-      
+
       {"ignore-video", cli_arg_ignore_video_local},
       {"ignore-videos", cli_arg_ignore_video_local},
       {"no-ignore-video", cli_arg_no_ignore_video_local},
       {"no-ignore-videos", cli_arg_no_ignore_video_local},
       {"dont-ignore-video", cli_arg_no_ignore_video_local},
       {"dont-ignore-videos", cli_arg_no_ignore_video_local},
-      
+
       {"ignore-image", cli_arg_ignore_images_local},
       {"ignore-images", cli_arg_ignore_images_local},
       {"no-ignore-image", cli_arg_no_ignore_images_local},
@@ -596,7 +596,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     if (ps.tmss.media_files.size() == 0UL) {
       ps.argerrs.push_back(fmt::format("[{}] No media files found.", FUNCDINFO));
     }
-    
+
     TMediaCLIParseRes res;
     res.tmss = std::move(ps.tmss);
     res.exited = false;
@@ -820,7 +820,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void cli_arg_refresh_rate(CLIParseState& ps, const tmedia::CLIArg arg) {
     int res = 24;
-    
+
     try {
       res = strtoi32(arg.param);
       if (res <= 0) {
@@ -1091,9 +1091,9 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     std::optional<MediaType> media_type = search_opts.probe ?
                                           media_type_probe(path) :
                                           media_type_from_path(path);
-    
+
     if (!media_type.has_value()) return false;
-    
+
     if (media_type) {
       switch (*media_type) {
         case MediaType::VIDEO: return !search_opts.ignore_video &&

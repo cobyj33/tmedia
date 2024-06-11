@@ -4,26 +4,26 @@
 
 The media files in the playlist are set whenever tmedia begins playing and
 cannot be modified from within the program without exiting and re-entering the
-program. 
+program.
 
 ## Looping States
 
-There are three valid looping states in tmedia, 'NO-LOOP', 'REPEAT', and 
+There are three valid looping states in tmedia, 'NO-LOOP', 'REPEAT', and
 'REPEAT-ONE'. They do what you'd expect by their names, but for the
 sake of robustness:
 
 - NO-LOOP
-  - The default looping state of the media player. 
+  - The default looping state of the media player.
   - If the loaded playlist's last media file is finished or skipped, then
     the media player is exited.
   - If a user tries to jump back a media file from the first media file in the
-    loaded playlist, then the first media file is simply repeated 
+    loaded playlist, then the first media file is simply repeated
 
 - REPEAT
   - The REPEAT in REPEAT refers to repeating the entire playlist. Whenever all
     media files in the loaded playlist are finished, the playlist loops
     back to the beginning and restarts. Similarly, if the user jumps back a
-    media file from the first media file in the loaded playlist, then the 
+    media file from the first media file in the loaded playlist, then the
     last media file is reached.
 
 - REPEAT-ONE
@@ -31,7 +31,7 @@ sake of robustness:
     is finished, the currently playing media file will be repeated.
   - If the currently playing media is skipped (with the 'n' key), then the
     playlist is kicked out of the REPEAT-ONE looping state and put into the
-    REPEAT looping state.  
+    REPEAT looping state.
 
 > **ASIDE**:
 >

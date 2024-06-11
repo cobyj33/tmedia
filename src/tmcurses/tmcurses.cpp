@@ -37,14 +37,14 @@ static constexpr int DEFAULT_TERMINAL_COLOR_COUNT = 8;
 /**
  * Some terminals (namely Windows Terminal) dont want to return to their
  * normal color scheme on ncurses return.
- * Luckily, Windows Terminal only uses 16 colors in their internal color scheme, 
+ * Luckily, Windows Terminal only uses 16 colors in their internal color scheme,
  * so we just ignore them and offset the internal color palette by 16.
  * It is important to note that this could be larger than COLORS if COLORS < 16.
- * 
- * While this usually reduces our 256 color palette to 240 colors, the 7x7x7 
+ *
+ * While this usually reduces our 256 color palette to 240 colors, the 7x7x7
  * color_map and color_pairs_map can only hold 216 colors anyway so it isn't
  * much of a problem
- * 
+ *
  * Note that curses color pairs are not offset like colors are. curses color
  * pairs fill from 0 to COLOR_PAIRS - 1 as expected.
 */
@@ -54,7 +54,7 @@ static constexpr int COLOR_PALETTE_START = 16;
  * Its important to not mix the Color Palette's colors and the terminals standard
  * default colors not only for not messing with a terminals default 16 color palette,
  * but also because in color palettes like grayscale, we wouldn't want a stray
- * COLOR_RED or COLOR_GREEN color pair returning from get_tmcurses_color_pair 
+ * COLOR_RED or COLOR_GREEN color pair returning from get_tmcurses_color_pair
 */
 bool curses_colors_initialized = false;
 
@@ -93,7 +93,7 @@ void tmcurses_init_color() {
   if (COLORS <= COLOR_PALETTE_START) return;
 
   use_default_colors();
-  
+
   available_color_palette_colors = 0;
   available_color_palette_color_pairs = 0;
 
@@ -134,7 +134,7 @@ void tmcurses_set_color_palette_custom(const Palette& colorPalette) {
 
   available_color_palette_colors = 0;
   for (RGB24 color : colorPalette) {
-    init_color(available_color_palette_colors++ + COLOR_PALETTE_START, 
+    init_color(available_color_palette_colors++ + COLOR_PALETTE_START,
       static_cast<short>(color.r) * 1000 / 255,
       static_cast<short>(color.g) * 1000 / 255,
       static_cast<short>(color.b) * 1000 / 255);

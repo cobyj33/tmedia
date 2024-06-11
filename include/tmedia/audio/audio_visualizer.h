@@ -4,7 +4,7 @@
 class PixelData;
 
 /**
- * 
+ *
  * @param dest The PixelData instance where the visualized frames are written
  * @param width width must be greater than or equal to zero
  * @param height height must be greater than or equal to zero

@@ -105,7 +105,7 @@ void render_tui_compact(const TMediaProgramState& tmps, const TMediaProgramSnaps
   wprint_playback_bar(stdscr, LINES - 2, 0, COLS, sshot.media_time_secs, sshot.media_duration_secs, false);
   if (sshot.media_type == MediaType::VIDEO || sshot.media_type == MediaType::AUDIO) {
     const std::string_view playing_str = sshot.playing ? ">" : "||";
-    const std::string_view loop_str = loop_type_cstr_short(tmps.plist.loop_type()); 
+    const std::string_view loop_str = loop_type_cstr_short(tmps.plist.loop_type());
     const std::string volume_str = sshot.has_audio_output ? (tmps.muted ? "M" : (fmt::format("{}%", static_cast<int>(tmps.volume * 100)))) : "";
     const std::string_view shuffled_str = tmps.plist.shuffled() ? "S" : "NS";
     render_playback_info_bar(LINES - 1, playing_str, shuffled_str, loop_str, volume_str);
@@ -176,7 +176,7 @@ void render_tui_large(const TMediaProgramState& tmps, const TMediaProgramSnapsho
   if (sshot.media_type == MediaType::VIDEO || sshot.media_type == MediaType::AUDIO) {
     wprint_playback_bar(stdscr, bottom_line++, 0, COLS, sshot.media_time_secs, sshot.media_duration_secs, false);
     const std::string_view playing_str = sshot.playing ? "PLAYING" : "PAUSED";
-    const std::string loop_str = str_capslock(loop_type_cstr(tmps.plist.loop_type())); 
+    const std::string loop_str = str_capslock(loop_type_cstr(tmps.plist.loop_type()));
     const std::string volume_str = sshot.has_audio_output ? (tmps.muted ? "MUTED" : fmt::format("VOLUME: {}%", static_cast<int>(tmps.volume * 100))) : "NO SOUND";
     const std::string_view shuffled_str = tmps.plist.shuffled() ? "SHUFFLED" : "NOT SHUFFLED";
     render_playback_info_bar(bottom_line++, playing_str, shuffled_str, loop_str, volume_str);

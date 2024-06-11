@@ -35,7 +35,7 @@ TEST_CASE("palette", "[palette]") {
         Palette palette = read_palette_str(test1);
       });
       Palette palette = read_palette_str(test1);
-      REQUIRE(palette_equals(palette, test1Palette)); 
+      REQUIRE(palette_equals(palette, test1Palette));
     }
 
   }

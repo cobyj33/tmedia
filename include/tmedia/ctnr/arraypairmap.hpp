@@ -87,7 +87,7 @@ namespace tmedia {
       if (kv_pairs.size() > _Nm)
         throw std::out_of_range("[tmedia::ArrayPairMap] kv_pairs larger than array size.");
 
-      size_type i = 0;      
+      size_type i = 0;
       for (const pair_type& pair : kv_pairs) {
         this->m_keys[i] = pair.first;
         this->m_values[i] = pair.second;
@@ -149,7 +149,7 @@ namespace tmedia {
 
     // Key Iterators
 
-    
+
 
     TMEDIA_CPP17_CONSTEXPR key_iterator
     kbegin() noexcept

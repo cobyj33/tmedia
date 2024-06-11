@@ -8,7 +8,7 @@ extern "C" {
 }
 
 /**
- * Various macros to define when various FFmpeg features were added and 
+ * Various macros to define when various FFmpeg features were added and
  * deprecated. Used to help implement backward compatibility with compiling
  * with older versions of FFmpeg.
 */
@@ -16,7 +16,7 @@ extern "C" {
 /**
  * Macro to determine whether AVFrame has the "duration" field available to
  * use.
- * 
+ *
  * Source:
  * https://github.com/FFmpeg/FFmpeg/blob/658439934b255215548269116481e2d48da9ee3b/doc/APIchanges#L490
  */
@@ -25,7 +25,7 @@ extern "C" {
 /**
  * Macro to determine whether to use the newer AVChannelLayout API of libavutil
  * or the older API.
- * 
+ *
  * Source:
  * https://github.com/FFmpeg/FFmpeg/blob/658439934b255215548269116481e2d48da9ee3b/doc/APIchanges#L545
  */
@@ -35,7 +35,7 @@ extern "C" {
 /**
  * Macro to determine whether the AVCodec** parameter on av_find_best_stream
  * should be constified or not.
- * 
+ *
  * Source:
  * https://github.com/FFmpeg/FFmpeg/blob/658439934b255215548269116481e2d48da9ee3b/doc/APIchanges#L737
 */
@@ -44,7 +44,7 @@ extern "C" {
 /**
  * Determines whether av_register_all should be called before all queries
  * to libavformat are done.
- * 
+ *
  * Source:
  * https://github.com/FFmpeg/FFmpeg/blob/658439934b255215548269116481e2d48da9ee3b/doc/APIchanges#L1131
 */
@@ -54,10 +54,10 @@ extern "C" {
 /**
  * Determines whether avcodec_register_all should be called before all queries
  * to libavcodec are done.
- * 
+ *
  * Note that avcodec_register_all was depricated after
  * av_register all was!
- * 
+ *
  * Source:
  * https://github.com/FFmpeg/FFmpeg/blob/658439934b255215548269116481e2d48da9ee3b/doc/APIchanges#L1136
 */
@@ -67,7 +67,7 @@ extern "C" {
 /**
  * Determines whether AVInputFormat, AVProbeData, and AVOutputFormat should be
  * declared const in many probing functions.
- * 
+ *
  * Source:
  * https://github.com/FFmpeg/FFmpeg/blob/658439934b255215548269116481e2d48da9ee3b/doc/APIchanges#L749
 */

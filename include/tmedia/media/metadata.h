@@ -17,7 +17,7 @@ struct AVFormatContext;
  * lended itself well to using std::string_views in file and key lookup. Since
  * all use-cases of Metadata currently have extremely low entry counts, no
  * hashtable or std::map is necessary.
- * 
+ *
  * Note that if any functions take in a std::string_view as a file parameter
  * and the caller is using a std::filesystem::path object to store their path,
  * then the caller should use the return value of
@@ -68,7 +68,7 @@ void mchc_cache_file(const std::filesystem::path& file, MetadataCache& cache);
 
 /**
  * Add a key-value pair to the file specified in the metadata cache.
- * 
+ *
  * If the given key is already present on the metadata attached to the given
  * file in the metadata cache, then the previous file-key-value trio is replaced
  * with the new file-key-value trio.
@@ -82,10 +82,10 @@ bool mchc_has_file(std::string_view file, const MetadataCache& cache);
 
 /**
  * Get a metadata value for a specific cached value
- * 
+ *
  * @returns std::nullopt if the given key on the given file cannot be found.
  * A std::string_view of the metadata value if it could be found
- * 
+ *
  * Note that mchc_get should be used to query if a key for a file exists as
  * well, just by checking if the returned value is std::nullopt or not.
  */

@@ -85,7 +85,7 @@ void MAAudioOut::audio_queue_fill_thread_func() {
     for (int s = 0; s < nb_samples; s++) {
       while (!this->m_audio_queue->wait_enqueue_timed(stkbuf[s], AUDBUF_READ_TRY_WAIT_CHRONO_MS)) {}
     }
-  } 
+  }
   // state is MAAudioOutState::STOPPING
 
   /**
@@ -156,8 +156,8 @@ MAAudioOut::MAAudioOut(int nb_channels, int sample_rate, std::function<void(floa
   ma_device_config config = ma_device_config_init(ma_device_type_playback);
   config.playback.format  = ma_format_f32;
   config.playback.channels = nb_channels;
-  config.sampleRate = sample_rate;       
-  config.dataCallback = audioOutDataCallback;   
+  config.sampleRate = sample_rate;
+  config.dataCallback = audioOutDataCallback;
   config.noPreSilencedOutputBuffer = MA_TRUE;
   config.noClip = MA_TRUE;
   config.noFixedSizedCallback = MA_TRUE;
@@ -177,7 +177,7 @@ void MAAudioOut::start() {
   this->state = MAAudioOutState::PLAYING;
   std::thread initialized_audio_queue_fill_thread(&MAAudioOut::audio_queue_fill_thread_func, this);
   this->audio_queue_fill_thread.swap(initialized_audio_queue_fill_thread);
-  while (this->m_audio_queue->size_approx() != this->m_audio_queue->max_capacity()) { } 
+  while (this->m_audio_queue->size_approx() != this->m_audio_queue->max_capacity()) { }
   this->m_audio_device->start();
 }
 
@@ -186,7 +186,7 @@ void MAAudioOut::stop() {
 
   constexpr long INITIAL_STOP_WAIT_DURATION = 20;
   constexpr long SUBSEQUENT_WAIT_DURATION = 20;
-  
+
   {
     std::unique_lock<std::mutex> stop_cond_lock(this->stop_mutex);
     this->state = MAAudioOutState::STOPPING; // the only place where stopping is set

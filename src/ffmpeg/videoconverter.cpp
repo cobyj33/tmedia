@@ -55,15 +55,15 @@ VideoConverter::VideoConverter(int dst_width, int dst_height, enum AVPixelFormat
   }
 
   this->m_context = sws_getContext(
-      src_width, src_height, src_pix_fmt, 
-      dst_width, dst_height, dst_pix_fmt, 
+      src_width, src_height, src_pix_fmt,
+      dst_width, dst_height, dst_pix_fmt,
       SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
 
   if (this->m_context == nullptr) {
     throw std::runtime_error(fmt::format("[{}] Allocation of internal "
     "SwsContext of Video Converter failed", FUNCDINFO));
   }
-  
+
   this->m_dst_width = dst_width;
   this->m_dst_height = dst_height;
   this->m_dst_pix_fmt = dst_pix_fmt;
@@ -77,8 +77,8 @@ bool VideoConverter::reset_dst_size(int dst_width, int dst_height) {
     return false;
 
   SwsContext* new_context = sws_getContext(
-      this->m_src_width, this->m_src_height, this->m_src_pix_fmt, 
-      dst_width, dst_height, this->m_dst_pix_fmt, 
+      this->m_src_width, this->m_src_height, this->m_src_pix_fmt,
+      dst_width, dst_height, this->m_dst_pix_fmt,
       SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
 
   if (new_context == nullptr) {
@@ -104,7 +104,7 @@ void VideoConverter::configure_frame(AVFrame* dest) {
   dest->format = this->m_dst_pix_fmt;
   dest->width = this->m_dst_width;
   dest->height = this->m_dst_height;
-  
+
   int err = av_frame_get_buffer(dest, 0);
   if (unlikely(err)) {
     av_frame_unref(dest);

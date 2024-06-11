@@ -166,9 +166,9 @@ bool avformat_context_has_media_stream(AVFormatContext* fmt_ctx, enum AVMediaTyp
 }
 
 std::optional<MediaType> media_type_from_mime_type(std::string_view mime_type) {
-  std::string_view gen_type = str_until(mime_type, '/'); 
+  std::string_view gen_type = str_until(mime_type, '/');
 
-  if (gen_type == "image") { 
+  if (gen_type == "image") {
     return MediaType::IMAGE;
   } else if (gen_type == "audio") {
     return MediaType::AUDIO;
@@ -229,7 +229,7 @@ std::optional<MediaType> media_type_from_iformat(const AVInputFormat* iformat) {
  * can only be used to correctly identify media file formats that have one specific
  * file type. Things like mp4 and webm are more so containers and really can't be
  * guaranteed to be identifiable from a format name.
- * 
+ *
  * Also, note that the iformat->name can be a comma separated list of names for
  * different media file types. This isn't implemented here, as the media types
  * here should all just be the given name, but it would be of note if trying
@@ -258,10 +258,10 @@ MediaType media_type_from_avformat_context(AVFormatContext* fmt_ctx) {
     if (video_is_attached_pic) {
       return avformat_context_has_media_stream(fmt_ctx, AVMEDIA_TYPE_AUDIO) ? MediaType::AUDIO : MediaType::IMAGE;
     }
-    
+
     return MediaType::VIDEO;
   }
-  
+
   if (avformat_context_has_media_stream(fmt_ctx, AVMEDIA_TYPE_AUDIO)) {
     return MediaType::AUDIO;
   }

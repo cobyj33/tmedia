@@ -20,15 +20,15 @@ struct AVFrame;
  * can be mitigated by callers through reuse. If any new functions are written
  * to be used with a PixelData struct, they should also be written in this
  * same format for this reason.
- * 
+ *
  * PixelData is also a simple type so that any function
- * 
+ *
  * While encapsulating state may have been a good choice for ensuring these
  * invariants, I found it as unnecessary and trying to fix a problem that
  * doesn't exist, as well as limiting when trying to use a PixelData in a way
  * unintended by initial design. Just use the provided functions and the
  * invariants will never break.
- * 
+ *
  * Invariants of a PixelData struct:
  * PixelData::pixels.size() == PixelData::m_width * PixelData::m_height
 */
@@ -43,7 +43,7 @@ class PixelData {
  * Whenever a PixelData struct is first created, it should be initialized with
  * pixdata_setnewdims or pixdata_initgray. This is to ensure that the PixelData
  * is not filled with garbage data and is initialized to a given color.
- * 
+ *
  * If it is known that a PixelData instance will never exceed a certain size,
  * The PixelData instance will be reused often, and the maximum size is
  * reasonable for allocating all at once, it is recommended to just initialize
@@ -53,14 +53,14 @@ class PixelData {
 
 /**
  * A function to reliably change the dimensions of a given PixelData struct.
- * 
+ *
  * @param width width must be greater than or equal to zero
  * @param height height must be greater than or equal to zero
- * 
+ *
  * Note that if the current PixelData already has color information within,
  * this information will not be erased. This function only resizes the internal
  * PixelData::pixels vector and sets the width and height accordingly.
- * 
+ *
  * If the new width and height are larger than the
 */
 void pixdata_setnewdims(PixelData& dest, int width, int height);
@@ -73,15 +73,15 @@ void pixdata_setnewdims(PixelData& dest, int width, int height);
 void pixdata_initgray(PixelData& dest, int width, int height, std::uint8_t g);
 
 /**
- * 
- * 
+ *
+ *
  */
 void pixdata_copy(PixelData& dest, PixelData& src);
 
 /**
- * 
- * @param dest The destination PixelData to copy the frame data from src into 
-* @param src src cannot be null 
+ *
+ * @param dest The destination PixelData to copy the frame data from src into
+* @param src src cannot be null
 */
 void pixdata_from_avframe(PixelData& dest, AVFrame* src);
 

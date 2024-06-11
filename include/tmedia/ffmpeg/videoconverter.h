@@ -43,7 +43,7 @@ class VideoConverter {
      * source height, and source pixel format as given
      * to the VideoConverter upon construction. Otherwise, convert_video_frame
      * will fail and throw an error.
-     * 
+     *
      * After calling convert_video_frame and upon success, dest have the same
      * destination width, destination height,
      * and destination pixel format as given to the VideoConverter
@@ -64,7 +64,7 @@ class VideoConverter {
      *
      * No-op and return false if the current dst_width and dst_height equal
      * to the passed in dst_width and dst_height
-     * 
+     *
      * @returns Whether the destination frame size was reconfigured or not
     */
     bool reset_dst_size(int dst_width, int dst_height);

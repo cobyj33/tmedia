@@ -15,7 +15,7 @@ struct AVChannelLayout;
 
 /**
  * Basic RAII wrapper around FFmpeg's SwrContext
- * 
+ *
  * Used to easily convert audio AVFrame structs between different sample rates,
  * sample formats, and channel layouts
  */
@@ -54,23 +54,23 @@ class AudioResampler {
     [[gnu::always_inline]] inline int get_src_sample_rate() { return this->m_src_sample_rate; }
     [[gnu::always_inline]] inline int get_src_sample_fmt() { return this->m_src_sample_fmt; }
     [[gnu::always_inline]] inline int get_dst_sample_rate() { return this->m_dst_sample_rate; }
-    [[gnu::always_inline]] inline int get_dst_sample_fmt() { return this->m_dst_sample_fmt; } 
+    [[gnu::always_inline]] inline int get_dst_sample_fmt() { return this->m_dst_sample_fmt; }
 
     /**
      * Resample an audio frame according to the initialized AudioResampler's
      * parameters and place the result into the AVFrame pointed to by dest.
-     * 
+     *
      * dest must have been allocated by av_frame_alloc already or a function
      * which calls av_frame_alloc. dest's buffers will be unreferenced by
      * av_frame_unref() whenever resample_audio_frame is called. The source
      * AVFrame is left unaltered. The caller is responsible for freeing dest,
      * just as it was responsible for allocating dest.
-     * 
+     *
      * The src AVFrame is REQUIRED to have the same source channel layout,
      * source sample format, and source sample rate as given
      * to the AudioResampler upon construction. Otherwise, resample_audio_frame
      * will fail and throw an error.
-     * 
+     *
      * After calling resample_audio_frame and upon success, dest have the same
      * destination channel layout, destination sample format,
      * and destination sample rate as given to the AudioResampler

@@ -12,7 +12,7 @@
  * of what each grayscale value will be mapped to. For example, the string
  * "@#-_" will have "_" as representing the lightest and "@" as representing the darkest,
  * with "#" and "-" representing gray values in between.
- * 
+ *
 */
 
 extern const char* ASCII_STANDARD_CHAR_MAP;

@@ -3,10 +3,10 @@
 #include <cassert>
 /**
  * Implementation details:
- * 
+ *
  * m_head and m_tail are INDEXES into the internal AudioRingBuffer vector. Since
  * AudioRingBuffer is a circular buffer, m_head is not always less than m_tail.
- * 
+ *
  * I wrote that AudioRingBuffer exhibits "undefined behavior" in the header
  * whenever we read or peak any frame count greater than get_frames_can_read
  * or write any frame count greater than get_frames_can_write, but it'll
@@ -82,7 +82,7 @@ void AudioRingBuffer::read_into(int nb_frames, float* out) {
     this->m_head++;
     if (this->m_head >= this->m_size_samples) this->m_head = 0;
   }
-  
+
   this->m_frames_read += nb_frames;
 }
 

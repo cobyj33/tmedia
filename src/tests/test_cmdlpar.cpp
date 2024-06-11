@@ -43,7 +43,7 @@ TEST_CASE("cmdlpar", "[cmdlpar]") {
     SECTION("stringed shortopts") {
       MockCLI test1({"./tmedia", "-ab", "-c"});
       std::vector<tmedia::CLIArg> test1res = tmedia::cli_parse(test1.argc, test1.argv, "", {});
-      
+
       REQUIRE(test1res.size() == 3UL);
       REQUIRE(test1res[0].value == "a");
       REQUIRE(test1res[0].prefix == "-");
@@ -139,7 +139,7 @@ TEST_CASE("cmdlpar", "[cmdlpar]") {
   } // Should Succeed
 
   SECTION("Should Fail") {
-    
+
     SECTION("stringed arg opt not at end") {
       MockCLI mockcli({"./tmedia", "-abcde", "somearg"});
       REQUIRE_THROWS(tmedia::cli_parse(mockcli.argc, mockcli.argv, "a", {}));

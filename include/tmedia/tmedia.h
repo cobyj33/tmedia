@@ -51,7 +51,7 @@ struct TMediaCLIParseRes {
 TMediaCLIParseRes tmedia_parse_cli(int argc, char** argv);
 
 /**
- * 
+ *
  * Note that this isn't all of the state of tmedia, but just configurable
  * state by the user when invoking tmedia from the command line. However,
  * calling it "Config" state isn't really correct since these values change
@@ -105,7 +105,7 @@ struct TMediaRendererState {
    * frame to fit the rendered terminal frame space (if necessary).
    */
   PixelData scaling_buffer;
-  
+
   /**
    * A field used to detect if the entire tui should be rerendered based on
    * a change in the size of tmedia's current frame.

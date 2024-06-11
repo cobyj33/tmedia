@@ -48,7 +48,7 @@ int Playlist::index() const {
 
   assert(this->m_qi != Playlist::npos);
   assert(this->m_qi < this->m_q.size());
-  
+
   return this->m_q[this->m_qi];
 }
 
@@ -103,7 +103,7 @@ void Playlist::remove_at_entry_idx(std::size_t entry_index) {
 
   // removes the found entry
   this->m_entries.erase(this->m_entries.begin() + entry_index);
-  
+
   // remove the queue entry
   std::vector<std::size_t>::iterator erase_iter = std::find(this->m_q.begin(), this->m_q.end(), entry_index);
   if (erase_iter != this->m_q.end())
@@ -130,7 +130,7 @@ void Playlist::remove(std::size_t i) {
     throw std::runtime_error(fmt::format("[{}] Attempted to remove playlist"
     "index greater than the size of the playlist: {} from {}", FUNCDINFO, i,
     this->m_q.size()));
-  } 
+  }
 
   if (this->m_entries.size() <= 1) return this->clear(); // edge case!
 
@@ -139,7 +139,7 @@ void Playlist::remove(std::size_t i) {
 
 void Playlist::remove(const PlaylistItem& entry) {
   assert(this->m_q.size() == this->m_entries.size());
-  
+
   for (std::size_t i = 0; i < this->m_entries.size(); i++) {
     if (this->m_entries[i].path == entry.path)
       return (void)this->remove_at_entry_idx(i);
@@ -172,13 +172,13 @@ bool Playlist::has(const PlaylistItem& entry) const {
 void Playlist::move(PlaylistMvCmd move_cmd) {
   if (this->empty()) {
     throw std::runtime_error(fmt::format("[{}] can not commit move on empty "
-    "playlist {}.", FUNCDINFO, playlist_move_cmd_cstr(move_cmd))); 
+    "playlist {}.", FUNCDINFO, playlist_move_cmd_cstr(move_cmd)));
   }
 
   std::size_t next = playlist_get_move(this->m_qi, this->m_q.size(), this->m_loop_type, move_cmd);
   if (next == Playlist::npos) {
     throw std::runtime_error(fmt::format("[{}] can not commit move {}.",
-    FUNCDINFO, playlist_move_cmd_cstr(move_cmd))); 
+    FUNCDINFO, playlist_move_cmd_cstr(move_cmd)));
   }
 
   // if skipping or rewinding, kick out of repeat_one mode
@@ -190,7 +190,7 @@ void Playlist::move(PlaylistMvCmd move_cmd) {
   this->m_qi = next;
 
   // reshuffle our index queue so that the next song is not at the end and our shuffle remains fresh
-  // unfortunate edge case, if we are going to the next file, and we are shuffled, and we are at the second to last song, we need to 
+  // unfortunate edge case, if we are going to the next file, and we are shuffled, and we are at the second to last song, we need to
   if ((move_cmd == PlaylistMvCmd::NEXT || move_cmd == PlaylistMvCmd::SKIP) &&
       this->m_shuffled && this->m_qi == this->m_q.size() - 2) {
     this->shuffle(true);
@@ -200,13 +200,13 @@ void Playlist::move(PlaylistMvCmd move_cmd) {
 const PlaylistItem& Playlist::peek_move(PlaylistMvCmd move_cmd) const {
   if (this->empty()) {
     throw std::runtime_error(fmt::format("[{}] can not commit move on empty "
-    "playlist {}.", FUNCDINFO, playlist_move_cmd_cstr(move_cmd))); 
+    "playlist {}.", FUNCDINFO, playlist_move_cmd_cstr(move_cmd)));
   }
 
   std::size_t next = playlist_get_move(this->m_qi, this->m_q.size(), this->m_loop_type, move_cmd);
   if (next == Playlist::npos) {
     throw std::runtime_error(fmt::format("[{}] can not commit move {}",
-    FUNCDINFO, playlist_move_cmd_cstr(move_cmd))); 
+    FUNCDINFO, playlist_move_cmd_cstr(move_cmd)));
   }
 
   return this->m_entries[this->m_q[next]];
@@ -220,7 +220,7 @@ bool Playlist::can_move(PlaylistMvCmd move_cmd) const noexcept {
 void Playlist::shuffle(bool keep_current_file_first) {
   if (this->empty()) {
     this->m_shuffled = true;
-    return; 
+    return;
   }
 
   if (keep_current_file_first) {
@@ -269,7 +269,7 @@ std::size_t playlist_get_next(std::size_t current, std::size_t size, LoopType lo
 std::size_t playlist_get_skip(std::size_t current, std::size_t size, LoopType loop_type) {
   switch (loop_type) {
     case LoopType::NO_LOOP: return current + 1 == size ? Playlist::npos : current + 1;
-    case LoopType::REPEAT: 
+    case LoopType::REPEAT:
     case LoopType::REPEAT_ONE: return current + 1 == size ? 0 : current + 1;
   }
   return Playlist::npos;

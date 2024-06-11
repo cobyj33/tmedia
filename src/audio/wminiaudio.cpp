@@ -13,18 +13,18 @@ extern "C" {
 
 /**
  * We just completely uninitialize and reinitialize the internal ma_device on
- * start and stop because of some weird pulseaudio resync 
- * 
+ * start and stop because of some weird pulseaudio resync
+ *
  * This allows so that if we can detect that the audio callback is not being
  * fired fast enough to keep up with our actual media playback, we can just
  * restart the ma_device and restore the audio playback.
- * 
+ *
  * Pretty duct taped together
 */
 
 ma_device_w::ma_device_w(const ma_device_config *pConfig) {
   if (pConfig == nullptr) {
-    throw std::invalid_argument(fmt::format("[{}] config must not be null", 
+    throw std::invalid_argument(fmt::format("[{}] config must not be null",
     FUNCDINFO));
   }
 

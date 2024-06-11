@@ -38,7 +38,7 @@ void av_frame_move_to_pool(std::vector<std::unique_ptr<AVFrame, AVFrameDeleter>>
  * Note that it is possible for av_frame_alloc_from_pool to return a
  * nullptr if av_frame_alloc fails. Make sure to check this from calling
  * code for safety concerns.
- * 
+ *
  * DESIGN_NOTE:
  * Since av_frame_alloc_from_pool is only
  * called from decode_packet, I designed av_frame_alloc_from_pool to possibly

@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
   if (res.exited) {
     return EXIT_SUCCESS;
   }
-  
+
   if (res.errors.size() > 0) {
     std::cerr << "tmedia: Errors while parsing CLI arguments:" << std::endl;
     for (const std::string& err : res.errors) {

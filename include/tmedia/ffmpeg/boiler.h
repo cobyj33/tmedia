@@ -7,7 +7,7 @@
  * @brief Boilerplate reducing functions for various miscellaneous FFmpeg operations
  * @version 0.1
  * @date 2023-11-19
- * 
+ *
  * @copyright Copyright (c) 2023
  */
 
@@ -34,12 +34,12 @@ struct AVChannelLayout;
 
 /**
  * @brief Opens and returns an AVFormat Context
- * 
+ *
  * @note The returned AVFormatContext is guaranteed to be non-null
  * @note The returned AVFormatContext must be freed with avformat_close_input, not just avformat_free_context
  * @throws std::runtime_error if the format context could not be opened for the corresponding file name
  * @throws std::runtime_error if the stream information for the format context could not be found
- * 
+ *
  * @param path The path of the file to open from the current working directory
  * @return An AVFormatContext pointer representing the opened media file
  */
@@ -52,10 +52,10 @@ struct OpenCCTXRes {
 
 /**
  * Opens an AVCodecContext from an AVFormatContext.
- * 
+ *
  * @returns A owning unique_ptr to the AVCodecContext and a pointer to the
  * AVStream which the AVCodecContext has been configured to decode frames from.
- * 
+ *
  * The caller must not free the returned AVStream directly, as it is owned by
  * the AVFormatContext instance.
  */

@@ -42,7 +42,7 @@ using namespace std::chrono_literals;
 static constexpr int KEY_ESCAPE = 27;
 static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
 static constexpr int MIN_RENDER_COLS = 2;
-static constexpr int MIN_RENDER_LINES = 2; 
+static constexpr int MIN_RENDER_LINES = 2;
 
 
 // Modify the tmcurses color palette to align with the next video output mode
@@ -96,7 +96,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     // should_render_frame determines whether the frame should be
     // - the "frame" in should_render_frame refers to the actual PixelData frame
     // returned from the MediaFetcher, not the entire terminal screen.
-    // 
+    //
     // should_render_frame is set to true whenever some change to the screen
     // happens that affects how the frame should be rendered. This includes
     // - The frame sent by the MediaFetcher has changed, as determined
@@ -166,7 +166,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
       audio_output->set_muted(tmps.muted);
       audio_output->start();
     }
-    
+
 
     try {
       // main playing loop
@@ -218,7 +218,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           bool exit_current_player_command_received = false;
           double toggled_volume = tmps.volume;
           VidOutMode nextvom = tmps.vom;
-          
+
           while (input != ERR) { // Go through and process all the batched input
             switch (input) {
               case KEY_ESCAPE:
@@ -433,7 +433,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     }
 
     //flush getch
-    while (getch() != ERR) getch(); 
+    while (getch() != ERR) getch();
     erase();
     if (!tmps.plist.can_move(move_cmd)) break;
     tmps.plist.move(move_cmd);

@@ -16,7 +16,7 @@
 std::string vsprintf_str(const char* format, va_list args);
 
 /**
- * sprintf adopted to fill a std::string buffer. 
+ * sprintf adopted to fill a std::string buffer.
  * See C standard sprintf documentation for more details!
 */
 std::string sprintf_str(const char* format, ...);
@@ -32,18 +32,18 @@ std::string format_duration(double time_in_seconds);
 
 /**
  * Formats a duration in the HH:MM:SS duration format.
- * If there is 
+ * If there is
 */
 std::string format_time_hh_mm_ss(double time_in_seconds); // ex: 13:03:45
 
 /**
  * Strictly parses a H:MM:SS formatted string into the number of seconds
- * contained within. 
- * 
+ * contained within.
+ *
  * Throws an error if the duration is not formatted properly in H:MM:SS format.
  * This function does not expect any padding or white space in the string at
  * all.
- * 
+ *
  * is_h_mm_ss_duration should be called beforehand, especially with user input,
  * in order to see if the string is in the correct format.
 */
@@ -85,7 +85,7 @@ std::string str_trim(std::string_view src, std::string_view trimchars);
 /**
  * Note that the string_views returned will be substringed from the original
  * string_view. This means they will NOT be NULL-terminated and you should
- * NOT use them as c-strings when passing the data around. However, if 
+ * NOT use them as c-strings when passing the data around. However, if
  * strvsplit is used with other functions or methods that expect
  * std::string_view objects, it should be fine
 */

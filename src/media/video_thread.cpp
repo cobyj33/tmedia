@@ -30,24 +30,24 @@ using namespace std::chrono_literals;
 /**
  * The purpose of the video thread is to update the current MediaFetcher's
  * frame for rendering
- * 
+ *
  * This is done in different ways depending on if a video is available in the
  * current media type or not:
- * 
+ *
  * If the currently attached media is a video:
  *  The video thread will update the current frame to be the correct frame
  *  according to the MediaFetcher's current
  *  playback timestamp
- * 
+ *
  * If the currently attached media is an image:
  *  The video thread will read the cover art and exit
- * 
+ *
  * If the currently attached media is audio:
  *  If there is an attached cover art to the current audio file:
  *    The video thread will read the cover art and exit
  *  else:
  *    The video thread will update the current frame to be a snapshot of the
- *    wave of audio data currently being processed. 
+ *    wave of audio data currently being processed.
 */
 
 
@@ -117,13 +117,13 @@ void MediaFetcher::frame_video_fetching_func() {
         req_dims_bounded.width,
         req_dims_bounded.height,
         MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT);
-        
+
         if (vconv.reset_dst_size(out_dim.width, out_dim.height)) {
           vconv.configure_frame(converted_frame.get());
         }
       }
     }
-    
+
     double wait_duration = avg_fts;
     double current_time = 0.0;
 
@@ -173,12 +173,12 @@ void MediaFetcher::frame_video_fetching_func() {
 
       std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
       if (wait_duration > 0.0 && !this->should_exit()) {
-        this->exit_cond.wait_for(exit_lock, secs_to_chns(wait_duration)); 
+        this->exit_cond.wait_for(exit_lock, secs_to_chns(wait_duration));
       }
     } else { // no frame was found.
       std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
       if (!this->should_exit()) {
-        this->exit_cond.wait_for(exit_lock, DEFAULT_AVGFTS_NS); 
+        this->exit_cond.wait_for(exit_lock, DEFAULT_AVGFTS_NS);
       }
     }
 
@@ -247,7 +247,7 @@ void MediaFetcher::frame_audio_fetching_func() {
   }
 
   /**
-   * I had originally thought that maybe the audio visualizer could have it's 
+   * I had originally thought that maybe the audio visualizer could have it's
    * own MediaDecoder decoding audio to visualize, but peeking into the
    * MediaFetcher's buffer doesn't seem to cause any problems at all, and
    * greatly simplifies syncing the visualization with actual audio output
@@ -256,7 +256,7 @@ void MediaFetcher::frame_audio_fetching_func() {
 
   PixelData local_frame;
   pixdata_initgray(local_frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
-  
+
   while (!this->should_exit()) {
     if (!this->is_playing()) {
       std::unique_lock<std::mutex> resume_notify_lock(this->resume_notify_mutex);
@@ -283,7 +283,7 @@ void MediaFetcher::frame_audio_fetching_func() {
 
     std::unique_lock<std::mutex> exit_lock(this->ex_noti_mtx);
     if (!this->should_exit()) {
-      this->exit_cond.wait_for(exit_lock, DEFAULT_AVGFTS_NS); 
+      this->exit_cond.wait_for(exit_lock, DEFAULT_AVGFTS_NS);
     }
   }
 }

@@ -64,31 +64,31 @@ Positional arguments:
 
 
 Optional arguments:
-  Help and Versioning: 
-  -h, --help             shows help message and exits 
+  Help and Versioning:
+  -h, --help             shows help message and exits
   --help-cli             shows help message for cli options and exits
   --help-controls        shows help message for tmedia controls and exits
-  -v, --version          prints version information and exits 
-  --ffmpeg-version       Print the version of linked FFmpeg libraries 
+  -v, --version          prints version information and exits
+  --ffmpeg-version       Print the version of linked FFmpeg libraries
   --curses-version       Print the version of linked Curses libraries
   --fmt-version          Print the version of the fmt library
   --miniaudio-version    Print the version of the miniaudio library
   --lib-versions         Print the versions of third party libraries
 
-Video Output: 
-  -c, --color            Play the video with color 
-  -g, --gray             Play the video in grayscale 
-  -b, --background       Do not show characters, only the background 
+Video Output:
+  -c, --color            Play the video with color
+  -g, --gray             Play the video in grayscale
+  -b, --background       Do not show characters, only the background
   -f, --fullscreen       Begin the player in fullscreen mode
   --show-ctrl-info       Begin the player showing control info (Default Yes)
   --hide-ctrl-info       Begin the player hiding control info (Default Yes)
   --refresh-rate         Set the refresh rate of tmedia
   --chars [STRING]       The displayed characters from darkest to lightest
 
-Audio Output: 
-  --volume [FLOAT] || [INT%] Set initial volume [0.0, 1.0] or [0%, 100%] 
-  -m, --mute, --muted        Mute the audio playback 
-Playlist Controls: 
+Audio Output:
+  --volume [FLOAT] || [INT%] Set initial volume [0.0, 1.0] or [0%, 100%]
+  -m, --mute, --muted        Mute the audio playback
+Playlist Controls:
   --no-repeat            Do not repeat the playlist upon end
   -l, --repeat, --loop   Repeat the playlist upon playlist end
   --repeat-one           Start the playlist looping the first media
@@ -104,16 +104,16 @@ Stream Control Commands:
   :disable-audio-stream   Disable playback of audio streams for last path
   :disable-video-stream   Disable playback of video streams for last path
 
-File Searching: 
+File Searching:
   NOTE: all local (:) options override global options
 
-  -r, --recursive        Recurse child directories to find media files 
+  -r, --recursive        Recurse child directories to find media files
   --ignore-images        Ignore image files while searching directories
   --ignore-video         Ignore video files while searching directories
   --ignore-audio         Ignore audio files while searching directories
   --probe, --no-probe    (Don't) probe all files
   --repeat-paths [UINT]    Repeat all cli path arguments n times
-  :r, :recursive         Recurse child directories of the last listed path 
+  :r, :recursive         Recurse child directories of the last listed path
   :repeat-path [UINT]    Repeat the last given cli path argument n times
   :ignore-images         Ignore image files when searching last listed path
   :ignore-video          Ignore video files when searching last listed path
@@ -133,7 +133,7 @@ is the main tested system for tmedia.
 
 If there are any problems with installing or using tmedia, or any requested feature,
 please leave an issue at the [github repo](https://www.github.com/cobyj33/tmedia)
-and I'll be sure to help. 
+and I'll be sure to help.
 
 ## Acknowledgments
 

@@ -34,7 +34,7 @@ AVProbeFileRet av_probe_file(const std::filesystem::path& path) {
   res.score = av_probe_input_buffer2(avio_ctx, &avif, path.c_str(), NULL, 0, 0);
   avio_close(avio_ctx);
   res.avif = avif;
- 
+
   if (res.score < 0) {
     throw ffmpeg_error(fmt::format("[{}] av_probe_input_buffer2 failure",
     FUNCDINFO), res.score);

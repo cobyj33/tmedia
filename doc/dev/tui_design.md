@@ -10,7 +10,7 @@ Some General Ideas
 
 The arrows/(Next/Previous) signs at the top are only rendered if there is
 actually a next or previous video queued up. For example, if the current media
-is the last media and there is no looping. 
+is the last media and there is no looping.
 
 Looping, Playing, and Shuffling only apply to Video/Audio
 
@@ -18,7 +18,7 @@ Looping, Playing, and Shuffling only apply to Video/Audio
 Images strictly just go to the end or to the beginning, they don't loop at all
 
 
-LINES < 10 or COLS 0-20 
+LINES < 10 or COLS 0-20
 
 Just Fullscreen
 
@@ -79,7 +79,7 @@ M - Muted
 Breakpoint: Width 80+ COLS (80 COLS 24 LINES shown here)
 
                                      01. Palace
-< NONE                                                               02. Peso > 
+< NONE                                                               02. Peso >
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -96,7 +96,7 @@ Breakpoint: Width 80+ COLS (80 COLS 24 LINES shown here)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 00:00 / 26:54 | 0@@@---1----2-----3-----4------5------6-----7------8----9------
-PLAYING         NOT LOOPED           SHUFFLE                        VOLUME: 50% 
+PLAYING         NOT LOOPED           SHUFFLE                        VOLUME: 50%
 
 Words:
 PLAYING
@@ -133,8 +133,8 @@ VOLUME: MUTED
 
 Breakpoint: Width 140+ COLS:
 
-                                                                                                                                            
-                                                                01. Palace                                                                  
+
+                                                                01. Palace
 Previous: NONE                                                                                                               Next: 02. Peso
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -156,14 +156,14 @@ Previous: NONE                                                                  
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 00:00 / 26:54 | 0@@@-------1-----------2----------3---------4---------5---------6------------7----------8-------------9--------------------
 |PLAYING (SPACE)|         |NOT LOOPED (L)|           |NO SHUFFLE (S)|               |VOLUME: 50% (UP/DOWN)|                      |M: More|
- 
 
 
 
 
 
 
-                                                               Image4.png 
+
+                                                               Image4.png
 Previous: Image3.png                                                                                                      Next: Image5.png
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

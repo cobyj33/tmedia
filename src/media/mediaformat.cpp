@@ -22,28 +22,28 @@ const char* container_iformat_exts = "matroska,webm,mov,mp4,3gp,3g2,mj2";
 /**
  * These extensions are sorted generally in popularity order, so that more
  * popular formats are found first whenever iterating over the elements.
- * 
- * Note that this data should only be used for sorting and filtering quickly, 
+ *
+ * Note that this data should only be used for sorting and filtering quickly,
  * where accuracy is not the highest importance. In reality, the file extension
  * of a file does not dictate what file it is at all, and these extensions are
  * only conventions. Additionally, many of these file formats are media format
  * containers, which means they can be video, audio, and/or images. If the format
  * described by a file extension could possibly hold different types of
  * multimedia, then the MediaType assigned here will be the most commonly used
- * type of media stored in that format. If there is no "most common", then 
+ * type of media stored in that format. If there is no "most common", then
  * std::nullopt should be stored as a last resort.
- * 
+ *
  * Also, some formats such as .gif often behave moreso like video rather than
  * audio. However, for filtering sake, most would consider it to be an image
  * format.
- * 
+ *
  * Also also, tmedia might doesn't even support all of these file formats.
- * 
+ *
  * TL;DR; remember when getting the actual MediaType of a file, it must be
  * actually be opened and probed
 */
-const mext_mdata mm_exts[] = { 
-// most popular formats  
+const mext_mdata mm_exts[] = {
+// most popular formats
 mext_mdata{".mp3", MediaType::AUDIO}, // MP3
 mext_mdata{".wav", MediaType::AUDIO}, // WAV
 mext_mdata{".jpg", MediaType::IMAGE}, // JPG
@@ -66,7 +66,7 @@ mext_mdata{".mpeg1", MediaType::VIDEO},
 mext_mdata{".heif", MediaType::IMAGE},
 mext_mdata{".heic", MediaType::IMAGE},
 mext_mdata{".wma", MediaType::AUDIO}, // Windows Media Audio
-mext_mdata{".ogv", MediaType::VIDEO}, // 
+mext_mdata{".ogv", MediaType::VIDEO}, //
 mext_mdata{".aa", MediaType::AUDIO},
 mext_mdata{".aac", MediaType::AUDIO},
 mext_mdata{".ac3", MediaType::AUDIO},

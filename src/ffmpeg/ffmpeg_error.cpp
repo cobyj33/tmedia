@@ -1,5 +1,5 @@
-#include <tmedia/ffmpeg/ffmpeg_error.h> 
- 
+#include <tmedia/ffmpeg/ffmpeg_error.h>
+
 #include <string>
 #include <string_view>
 #include <fmt/format.h>

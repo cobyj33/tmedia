@@ -10,12 +10,12 @@ TEST_CASE("Scaling functions", "[image manipulation]") {
 
   SECTION("get scale factor double") {
     double scale_factor = get_scale_factor(width, height, width * 2, height * 2);
-    REQUIRE(scale_factor == 2); 
+    REQUIRE(scale_factor == 2);
   }
 
   SECTION("get scale factor half") {
     double scale_factor = get_scale_factor(width, height, width / 2, height / 2);
-    REQUIRE(scale_factor == 0.5); 
+    REQUIRE(scale_factor == 0.5);
   }
 
   SECTION("get scale double - same aspect ratio") {

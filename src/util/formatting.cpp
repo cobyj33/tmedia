@@ -1,5 +1,5 @@
 #include <tmedia/util/formatting.h>
- 
+
 #include <tmedia/util/unitconvert.h>
 #include <tmedia/util/defines.h>
 
@@ -118,7 +118,7 @@ int parse_duration(std::string_view duration) {
 }
 
 bool is_duration(std::string_view duration) {
-  return is_h_mm_ss_duration(duration) || is_m_ss_duration(duration);  
+  return is_h_mm_ss_duration(duration) || is_m_ss_duration(duration);
 }
 
 std::string format_time_hh_mm_ss(double time_in_seconds) {
@@ -178,7 +178,7 @@ bool is_h_mm_ss_duration(std::string_view dur) {
 
   int seconds = strtoi32(seconds_section);
   int minutes = strtoi32(minutes_section);
-  
+
   return seconds < 60 && minutes < 60;
 }
 
@@ -238,7 +238,7 @@ bool is_int_str(std::string_view str) {
       return false;
     }
   }
-  
+
   return true;
 }
 
@@ -279,7 +279,7 @@ std::vector<std::string_view> strvsplit(std::string_view s, char delim) {
     }
   }
 
-  if (s.length() > 0 && ssstart < s.length() - 1) 
+  if (s.length() > 0 && ssstart < s.length() - 1)
     result.push_back(s.substr(ssstart, s.length() - ssstart));
   return result;
 }
@@ -365,27 +365,27 @@ double strtodouble(std::string_view str) {
   double sign = str[0] == '-' ? -1.0 : 1.0;
   std::size_t i = (str[0] == '-' || str[0] == '+'); // skip initial sign
 
-  for (; i < str.length() && str[i] != '.'; i++) { 
-    if (!std::isdigit(str[i])) 
+  for (; i < str.length() && str[i] != '.'; i++) {
+    if (!std::isdigit(str[i]))
       throw std::runtime_error(fmt::format("[{}] Attempted to parse string "
       "with invalid non-digit character: {}.", FUNCDINFO, str));
     if (out >= (DBL_MAX - 9) / 10)
       throw std::runtime_error(fmt::format("[{}] double overflow: {}.",
       FUNCDINFO, str));
-    
-    out = out * 10.0 + (str[i] - '0'); 
+
+    out = out * 10.0 + (str[i] - '0');
   }
 
   i++; // consume period if we found it
   double decimalMultiplier = 0.1;
   for (; i < str.length(); i++) {
-    if (!std::isdigit(str[i])) 
+    if (!std::isdigit(str[i]))
       throw std::runtime_error(fmt::format("[{}] Attempted to parse string "
       "with invalid non-digit character: {}.", FUNCDINFO, str));
     if (str[i] == '.')
       throw std::runtime_error(fmt::format("[{}] Attempted to parse string "
         "with multiple decimal points: {}.", FUNCDINFO, str));
-    
+
     out = out + (str[i] - '0') * decimalMultiplier;
     decimalMultiplier /= 10.0;
   }

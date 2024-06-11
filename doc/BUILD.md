@@ -1,5 +1,5 @@
 This document is also written so that someone with very little knowledge of
-cmake could still build the library fairly easily. If there is any confusion, 
+cmake could still build the library fairly easily. If there is any confusion,
 questions, or criticisms, please don't hesitate to leave an issue on Github at
 https://github.com/cobyj33/tmedia/issues with any questions
 
@@ -46,7 +46,7 @@ git submodule update --init
 ```
 
 Finally, run these 4 commands in order from the tmedia project's root
-directory in order to build the tmedia binary. 
+directory in order to build the tmedia binary.
 
 ```
 mkdir build
@@ -76,7 +76,7 @@ directions under [Ubuntu/Debian Linux](#ubuntudebian-linux)
 ## Other
 
 > Currently, anything outside of Ubuntu/Debian is not tested. That being said,
-> if you have the libav libraries from FFmpeg and the curses libraries available, 
+> if you have the libav libraries from FFmpeg and the curses libraries available,
 > building tmedia should still work with all dependencies, but would require
 > more knowledge about compiling and linking C/C++ programs.
 > If you need help with this, I'll be happy to help in an issue.
@@ -122,7 +122,7 @@ cmake .. -DCMAKE_PREFIX_PATH=$HOME/compiled/ncurses/master/build
 
 ## Notes:
 
-### Compiler Optimizations 
+### Compiler Optimizations
 
 While building, it is common to want optimizations enabled for your compiler.
 To enable optimizations, add the corresponding compiler flags for optimization

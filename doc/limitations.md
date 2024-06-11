@@ -3,7 +3,7 @@
 Headers state the limitation, and often in "\>" blocks I explain why that
 limitation exists or still exists. Unless you're actually wondering why
 a certain limitation exists, these blocks are unnecessary to read. The headers
-themselves give an 
+themselves give an
 
 If people request, I'll see what I can do about removing any of these
 limitations, but the task as of right now far exceeds the reward.
@@ -12,8 +12,8 @@ limitations, but the task as of right now far exceeds the reward.
 
 > **DEV:**
 >
-> While, besides the std::filesystem::path usage, tmedia could theoretically 
-> use the network to access media files, handling networking robustly 
+> While, besides the std::filesystem::path usage, tmedia could theoretically
+> use the network to access media files, handling networking robustly
 > is something that is as foreign to me now as multimedia playback was for me
 > when I started making tmedia, so I just decided to keep it as a non-goal.
 
@@ -23,7 +23,7 @@ limitations, but the task as of right now far exceeds the reward.
 >
 > In order to implement changing the media playlist, the user should be able
 > to type paths or commands in some sort of field which will insert a media
-> file or a group of in a specific index of the playlist. However, tmedia has 
+> file or a group of in a specific index of the playlist. However, tmedia has
 > no notion of an input field or any real TUI widget as of now.
 >
 > Technically, if a media file is detected as invalid in some way when it is

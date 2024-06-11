@@ -7,11 +7,11 @@
  * Way to set the system name of the calling thread.
  * Often used so that thread usages can be observed through a system
  * process viewer program such as top or htop.
- * 
+ *
  * Note that if viewing threads through top or htop, viewing custom thread
  * names must be enabled. In htop, this is done through
  * F2 -> Display Options -> Show custom thread names.
- * 
+ *
  * In linux, thread names are limited to 15 characters, therefore
  * try to keep names concise.
  * (Source: https://www.systutorials.com/docs/linux/man/3-pthread_getname_np/)

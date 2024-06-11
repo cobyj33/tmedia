@@ -53,7 +53,7 @@ namespace tmedia {
 
     if (std::find(lopts_w_args.begin(), lopts_w_args.end(), parg.value) != lopts_w_args.end()) {
       bool defer_param = longarg[i] != '=';
-      
+
       if (defer_param) { // read next arg as param
         if (ps.argi + 1 >= ps.argc) {
           throw std::runtime_error(fmt::format("[{}] param not found for long "
@@ -73,7 +73,7 @@ namespace tmedia {
         }
       }
     } else { // this option should take no argument
-      if (longarg[i] == '=') { 
+      if (longarg[i] == '=') {
         throw std::runtime_error(fmt::format("[{}] Attempted to add param to "
         "non-param option: {}.", FUNCDINFO, longarg));
       }
@@ -118,7 +118,7 @@ namespace tmedia {
   std::vector<CLIArg> cli_parse(int argc, char** argv, std::string_view shortopts_with_args, const std::vector<std::string_view>& lopts_w_args) {
     CLIParseState ps(argc, argv);
     int since_opt_stopper = -1;
-    
+
     while (ps.argi < argc) {
       since_opt_stopper += (since_opt_stopper >= 0) || (strcmp(argv[ps.argi], "--") == 0);
 

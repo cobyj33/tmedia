@@ -5,16 +5,16 @@
 
 /**
  * @brief Get the grayscale value of 3 channels of rgb data.
- * 
+ *
  * @note This function should work for r >= 0, g >= 0, b >= 0, no matter
  * the bounds of the channels, whether that be 0-255 or 0-1000
- * 
+ *
  * @param r The r channel of the rgb value
  * @param g The g channel of the rgb value
  * @param b The b channel of the rgb value
  * @return An integer representing the color channel value of all channels in
  * the RGB grayscale representation of the inputted color
- * 
+ *
  * NOTE:
  * Equation to convert from RGB to grayscale is taken from:
  * https://goodcalculators.com/rgb-to-grayscale-conversion-calculator/
@@ -26,7 +26,7 @@
 /**
  * @brief A representation of an RGB Color with R, G, and B channels in the
  * range 0-255
- * 
+ *
  * Note that while RGB24 assumes that colors are in the range 0-255, colors
  * in different ranges can still be stored inside of a RGB24 object. The user
  * should strongly stick to using color channels in the range 0-255 inclusive though
@@ -40,7 +40,7 @@ class RGB24 {
     std::uint8_t b;
 
     static RGB24 BLACK;
-    static RGB24 WHITE; 
+    static RGB24 WHITE;
 
     RGB24() = default;
     constexpr RGB24(std::uint8_t gray) : r(gray), g(gray), b(gray) {}

@@ -26,15 +26,15 @@ AudioResampler::AudioResampler(int64_t dst_ch_layout, enum AVSampleFormat dst_sa
   int result = 0;
   #if HAS_AVCHANNEL_LAYOUT
   result = swr_alloc_set_opts2(
-  &context, dst_ch_layout, dst_sample_fmt, 
+  &context, dst_ch_layout, dst_sample_fmt,
   dst_sample_rate, src_ch_layout, src_sample_fmt,
   src_sample_rate, 0, nullptr);
   #else
-  context = swr_alloc_set_opts(nullptr, dst_ch_layout, dst_sample_fmt, 
+  context = swr_alloc_set_opts(nullptr, dst_ch_layout, dst_sample_fmt,
   dst_sample_rate, src_ch_layout, src_sample_fmt,
   src_sample_rate, 0, nullptr);
   #endif
-  
+
   if (result < 0) {
     throw ffmpeg_error(fmt::format("[{}] Allocation of internal SwrContext of "
     "AudioResampler failed. Aborting...", FUNCDINFO), result);

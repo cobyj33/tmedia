@@ -60,7 +60,7 @@ bool test_is_gimp_gpl_stream(std::istream& stream) {
 
 Palette read_gimp_gpl_palette(std::istream& stream) {
   Palette palette;
-  
+
   std::string line;
   std::getline(stream, line);
   line = str_trim(line, " \r\n");
@@ -80,7 +80,7 @@ Palette read_gimp_gpl_palette(std::istream& stream) {
     int b = 0;
     std::istringstream lineRead(line);
     lineRead >> r >> g >> b;
-    palette.insert(RGB24(r & 0xFF, g & 0xFF, b & 0xFF)); 
+    palette.insert(RGB24(r & 0xFF, g & 0xFF, b & 0xFF));
   }
 
   return palette;

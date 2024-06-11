@@ -35,11 +35,11 @@ LoopType loop_type_from_str(std::string_view loop_type);
 /**
  * Currently, the files passed in at construction are immutable, as files cannot
  * be added or removed.
- * 
+ *
  * Currently, The passed in files at construction aren't checked for if they are actual valid
  * media file paths, if they are valid paths, or even if they are paths at all. The
  * user must do this beforehand
- * 
+ *
  * The loop type is not guaranteed to stay constant in between set_loop_type commands.
  * For example, when skipping with move(PlaylistMvCmd::SKIP) while loop_type() == LoopType::REPEAT_ONE,
  * loop_type() will then be turned to REPEAT
@@ -47,12 +47,12 @@ LoopType loop_type_from_str(std::string_view loop_type);
 
 /**
  * A playlist can additionally enqueue and dequeue files for immediate playback.
- * 
- * 
+ *
+ *
  * Desired Behavior:
- * 
+ *
  * default:
- * 
+ *
  * loop->no_loop (default state):
  *   next:
  *     If there is no next file in the playlist, then the next command is invalid
@@ -62,8 +62,8 @@ LoopType loop_type_from_str(std::string_view loop_type);
  *     If there is a next file, skip to that next file
  *   rewind:
  *     If there is no previous value, then remain on the current file
- *     
- * loop->repeat: 
+ *
+ * loop->repeat:
  *   next:
  *     If there is no next file in the playlist, then the next command is invalid
  *     If there is a next file, continue onto that next file
@@ -72,21 +72,21 @@ LoopType loop_type_from_str(std::string_view loop_type);
  *     If there is a next file, skip to that next file
  *   rewind:
  *     If there is no previous value, then remain on the current file
- * 
- * loop->repeat_one: 
+ *
+ * loop->repeat_one:
  *   next:
  *     Simply repeat the current file
  *   skip:
  *     Simply repeat the current file!
  *   rewind:
  *     Simply repeat the current file!
- *  
- *   * note that the 
- * 
- * 
+ *
+ *   * note that the
+ *
+ *
  * shuffle -> on:
- *  loop->no_loop: 
- *  loop->repeat: 
+ *  loop->no_loop:
+ *  loop->repeat:
  *  loop->repeat_one:
 */
 

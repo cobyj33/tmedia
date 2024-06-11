@@ -24,7 +24,7 @@ runs on C++17
  * a function, and expand out to string literals, not macros. Additionally,
  * they should not be used with direct string concatenation (two string literals
  * next to each other).
- * 
+ *
  * "These identifiers are variables, not preprocessor macros, and may not be
  * used to initialize char arrays or be concatenated with string literals."
  * - 6.51 Function Names as Strings
@@ -33,20 +33,20 @@ runs on C++17
 
 /**
  * READ THE ABOVE COMMENT BEFORE PROCEEDING!!!
- * 
+ *
  * FUNCVINFO:
  * If available and used within a function, FUNCDINFO expands out to a string
  * literal containing the function name and it's call signature.
  * If not available, FUNCDINFO will just expand out to an empty string literal
  *  V for Verbose.
- * 
+ *
  * FUNCDINFO:
  * If available and used within a function, FUNCDINFO expands out to a string
  * literal containing the function name.
  * If not available, FUNCDINFO will just expand out to an empty string literal
  *  D for Debug. (the availability of FUNCDINFO does not depend on the current
  *  build being a debug build or not)
- * 
+ *
  * FUNCINFO:
  * If available and used within a function, FUNCINFO expands out to the current
  * function's name as a string literal. If not available, FUNCDINFO

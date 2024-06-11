@@ -2,19 +2,19 @@
 #define TMEDIA_AUDIO_RING_BUFFER_H
 
 /**
- * Constant-Sized Non-Self-Overwriting Ring Buffer for audio. 
- * 
+ * Constant-Sized Non-Self-Overwriting Ring Buffer for audio.
+ *
  * It is expected that whenever reading or peeking data into the
  * AudioRingBuffer, the amount
- * of data read is less than or equal to the amount given by 
+ * of data read is less than or equal to the amount given by
  * get_frames_can_read, or undefined behavior is exhibited.
  * Similarly, whenever writing data into the AudioRingBuffer, it is expected
  * that the amount of data written is less than
  * or equal to the amount given by get_frames_can_write, or undefined behavior
  * is exhibited.
- * 
+ *
  * The number of channels and sample rate are set at construction time.
- * 
+ *
  * AudioRingBuffer can also track the time that the first sample and last sample
  * given in the AudioRingBuffer should be at by keeping track of the sample rate
  * and the amount of frames read from the AudioRingBuffer. This time tracking
@@ -23,12 +23,12 @@
  * by calling clear(), which clears the audio buffer and sets a new time
  * to begin tracking how much data has been read or written at the configured
  * sample rate.
- * 
+ *
  * As of right now in tmedia, its only used through the BlockingAudioRingBuffer
  * wrapper.
 */
 class AudioRingBuffer {
-  private: 
+  private:
     float* rb;
     int m_size_frames;
     int m_size_samples;

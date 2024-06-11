@@ -16,7 +16,7 @@
  * monotonic clock
 */
 [[gnu::always_inline]] inline double sys_clk_sec() {
-  return static_cast<double>(std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()).time_since_epoch().count()) * NANOSECONDS_TO_SECONDS;  
+  return static_cast<double>(std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()).time_since_epoch().count()) * NANOSECONDS_TO_SECONDS;
 }
 
 [[gnu::always_inline]] constexpr inline std::chrono::nanoseconds secs_to_chns(double seconds) {
