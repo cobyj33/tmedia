@@ -255,6 +255,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_fullscreen(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_fullscreen(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_grayscale(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_grayscale(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_repeat(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_repeat(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_repeat_one(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -381,6 +382,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"grey", cli_arg_grayscale},
       {"greyscale", cli_arg_grayscale},
       {"grayscale", cli_arg_grayscale},
+      {"no-gray", cli_arg_no_grayscale},
+      {"no-grey", cli_arg_no_grayscale},
+      {"no-greyscale", cli_arg_no_grayscale},
+      {"no-grayscale", cli_arg_no_grayscale},
+
       {"background", cli_arg_background},
       {"mute", cli_arg_mute},
       {"muted", cli_arg_mute},
@@ -712,6 +718,11 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
   void cli_arg_grayscale(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.grayscale = true;
+    (void)arg;
+  }
+
+  void cli_arg_no_grayscale(CLIParseState& ps, const tmedia::CLIArg arg) {
+    ps.grayscale = false;
     (void)arg;
   }
 
