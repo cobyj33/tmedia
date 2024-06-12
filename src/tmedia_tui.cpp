@@ -229,12 +229,13 @@ void render_tui_large_help(const TMediaProgramState& tmps, const TMediaProgramSn
     render_playback_info_bar(line++, playing_str, shuffled_str, loop_str, volume_str);
   }
 
-  std::array<std::string_view, 2> help_line_1;
+  std::array<std::string_view, 3> help_line_1;
   std::string vidoutstr = fmt::format("Color Mode: {} (C/B/G)", vidoutmode_strv(tmps.vom));
   help_line_1[0] = vidoutstr;
   help_line_1[1] = "Force Refresh (R)";
+  help_line_1[2] = "Quit (Q)";
   werasebox(stdscr, line, 0, COLS, 1);
-  wprint_labels(stdscr, help_line_1.data(), 2, line++, 0, COLS);
+  wprint_labels(stdscr, help_line_1.data(), 3, line++, 0, COLS);
 
   std::array<std::string_view, 3> help_line_2;
   help_line_2[0] = "Skip 5 secs (LEFT/RIGHT)";
