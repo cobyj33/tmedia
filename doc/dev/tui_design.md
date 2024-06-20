@@ -58,8 +58,8 @@ Symbols:
 > - PLAYING
 || - Paused
 NL - Not Looped
-R - Repeat
-RO - Repeat One
+L - Loop
+LO - Loop One
 NS - Not Shuffling
 S - Shuffling
 XX% - Volume %
@@ -102,9 +102,9 @@ Words:
 PLAYING
 PAUSED
 
-NO REPEAT
-REPEAT
-REPEAT ONE
+NO LOOP
+LOOP
+LOOP ONE
 
 NO SHUFFLE
 SHUFFLE

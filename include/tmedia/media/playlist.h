@@ -42,7 +42,7 @@ LoopType loop_type_from_str(std::string_view loop_type);
  *
  * The loop type is not guaranteed to stay constant in between set_loop_type commands.
  * For example, when skipping with move(PlaylistMvCmd::SKIP) while loop_type() == LoopType::LOOP_ONE,
- * loop_type() will then be turned to REPEAT
+ * loop_type() will then be turned to LOOP
 */
 
 /**
@@ -63,7 +63,7 @@ LoopType loop_type_from_str(std::string_view loop_type);
  *   rewind:
  *     If there is no previous value, then remain on the current file
  *
- * loop->repeat:
+ * loop->loop:
  *   next:
  *     If there is no next file in the playlist, then the next command is invalid
  *     If there is a next file, continue onto that next file
@@ -73,7 +73,7 @@ LoopType loop_type_from_str(std::string_view loop_type);
  *   rewind:
  *     If there is no previous value, then remain on the current file
  *
- * loop->repeat_one:
+ * loop->loop_one:
  *   next:
  *     Simply repeat the current file
  *   skip:
@@ -86,8 +86,8 @@ LoopType loop_type_from_str(std::string_view loop_type);
  *
  * shuffle -> on:
  *  loop->no_loop:
- *  loop->repeat:
- *  loop->repeat_one:
+ *  loop->loop:
+ *  loop->loop_one:
 */
 
 struct PlaylistItem {

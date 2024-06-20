@@ -181,7 +181,7 @@ void Playlist::move(PlaylistMvCmd move_cmd) {
     FUNCDINFO, playlist_move_cmd_cstr(move_cmd)));
   }
 
-  // if skipping or rewinding, kick out of repeat_one mode
+  // if skipping or rewinding, kick out of LoopType::LOOP_ONE mode
   if ((move_cmd == PlaylistMvCmd::REWIND || move_cmd == PlaylistMvCmd::SKIP) &&
       this->m_loop_type == LoopType::LOOP_ONE) {
     this->m_loop_type = LoopType::LOOP;

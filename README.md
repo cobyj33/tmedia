@@ -43,7 +43,7 @@ Linux C++ 17 Filesystem Terminal Media Player
   - Escape or Backspace or 'q' - Quit Program
   - '0' - Restart Playback
   - '1' through '9' - Skip To n/10 of the Media's Duration
-  - 'L' - Switch looping type of playback (between no loop, repeat, and repeat one)
+  - 'L' - Switch looping type of playback (no loop, loop, and loop one)
   - 'M' - Mute/Unmute Audio
 - Video, Audio, and Image Controls
   - 'C' - Display Color (on supported terminals)
