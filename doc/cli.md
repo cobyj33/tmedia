@@ -89,13 +89,13 @@ would be assumed to be a video.
 
 ## Optional arguments
 
-Options are listed as their prefix and option name, followed by any aliases that
-they might have separated by commas.
+Options are listed as their prefix and option name, followed by any
+aliases that they might have separated by commas.
 
-Aliases take exactly the same arguments
-and have exactly the same effects as their counterparts.
+Short options are always listed before long options.
 
-
+Aliases take exactly the same arguments and
+have exactly the same effects as their counterparts.
 
 ### Help and Versioning
 
@@ -114,7 +114,7 @@ the Help and Versioning commands to work.
 - --help-controls
   - Displays help information about the in-player interactive controls
     available within tmedia and exits.
-- -v, --version
+- -V, --version
   - Prints version information in the form MAJOR.MINOR.PATH and exits.
 - --ffmpeg-version
   - Prints version information of the used ffmpeg libraries and exits.
@@ -177,7 +177,7 @@ the Help and Versioning commands to work.
   don't get interpreted by the shell before reaching tmedia.
 
 ### Audio Output
-- --volume [FLOAT] || [INT%]
+- -v, --volume FLOAT[%]
   - Set initial volume used upon startup when using the media player. Input can
     be entered as a floating point value in the inclusive range 0.0 to 1.0,
     or an integer in the inclusive range 0% to 100% where the '%' sign is

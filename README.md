@@ -68,7 +68,7 @@ Optional arguments:
   -h, --help             shows help message and exits
   --help-cli             shows help message for cli options and exits
   --help-controls        shows help message for tmedia controls and exits
-  -v, --version          prints version information and exits
+  -V, --version          prints version information and exits
   --ffmpeg-version       Print the version of linked FFmpeg libraries
   --curses-version       Print the version of linked Curses libraries
   --fmt-version          Print the version of the fmt library
@@ -86,7 +86,7 @@ Video Output:
   --chars [STRING]       The displayed characters from darkest to lightest
 
 Audio Output:
-  --volume [FLOAT] || [INT%] Set initial volume [0.0, 1.0] or [0%, 100%]
+  -v, --volume FLOAT[%]  Set initial volume ([0.0, 1.0] or [0.0%, 100.0%])
   -m, --mute, --muted        Mute the audio playback
 Playlist Controls:
   --no-loop, --no-repeat     Do not repeat the playlist upon end (Default)
