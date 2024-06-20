@@ -285,9 +285,9 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               case 'L': {
                 if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
                   switch (tmps.plist.loop_type()) {
-                    case LoopType::NO_LOOP: tmps.plist.set_loop_type(LoopType::REPEAT); break;
-                    case LoopType::REPEAT: tmps.plist.set_loop_type(LoopType::REPEAT_ONE); break;
-                    case LoopType::REPEAT_ONE: tmps.plist.set_loop_type(LoopType::NO_LOOP); break;
+                    case LoopType::NO_LOOP: tmps.plist.set_loop_type(LoopType::LOOP); break;
+                    case LoopType::LOOP: tmps.plist.set_loop_type(LoopType::LOOP_ONE); break;
+                    case LoopType::LOOP_ONE: tmps.plist.set_loop_type(LoopType::NO_LOOP); break;
                   }
                 }
               } break;

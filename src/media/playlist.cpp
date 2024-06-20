@@ -183,8 +183,8 @@ void Playlist::move(PlaylistMvCmd move_cmd) {
 
   // if skipping or rewinding, kick out of repeat_one mode
   if ((move_cmd == PlaylistMvCmd::REWIND || move_cmd == PlaylistMvCmd::SKIP) &&
-      this->m_loop_type == LoopType::REPEAT_ONE) {
-    this->m_loop_type = LoopType::REPEAT;
+      this->m_loop_type == LoopType::LOOP_ONE) {
+    this->m_loop_type = LoopType::LOOP;
   }
 
   this->m_qi = next;
@@ -260,8 +260,8 @@ std::size_t playlist_get_move(std::size_t current, std::size_t size, LoopType lo
 std::size_t playlist_get_next(std::size_t current, std::size_t size, LoopType loop_type) {
   switch (loop_type) {
     case LoopType::NO_LOOP: return current + 1 == size ? Playlist::npos : current + 1;
-    case LoopType::REPEAT: return current + 1 == size ? 0 : current + 1;
-    case LoopType::REPEAT_ONE: return current;
+    case LoopType::LOOP: return current + 1 == size ? 0 : current + 1;
+    case LoopType::LOOP_ONE: return current;
   }
   return Playlist::npos;
 }
@@ -269,8 +269,8 @@ std::size_t playlist_get_next(std::size_t current, std::size_t size, LoopType lo
 std::size_t playlist_get_skip(std::size_t current, std::size_t size, LoopType loop_type) {
   switch (loop_type) {
     case LoopType::NO_LOOP: return current + 1 == size ? Playlist::npos : current + 1;
-    case LoopType::REPEAT:
-    case LoopType::REPEAT_ONE: return current + 1 == size ? 0 : current + 1;
+    case LoopType::LOOP:
+    case LoopType::LOOP_ONE: return current + 1 == size ? 0 : current + 1;
   }
   return Playlist::npos;
 }
@@ -278,8 +278,8 @@ std::size_t playlist_get_skip(std::size_t current, std::size_t size, LoopType lo
 std::size_t playlist_get_rewind(std::size_t current, std::size_t size, LoopType loop_type) {
   switch (loop_type) {
     case LoopType::NO_LOOP: return current == 0 ? 0 : current - 1;
-    case LoopType::REPEAT:
-    case LoopType::REPEAT_ONE: return current == 0 ? size - 1 : current - 1;
+    case LoopType::LOOP:
+    case LoopType::LOOP_ONE: return current == 0 ? size - 1 : current - 1;
   }
   return Playlist::npos;
 }
@@ -287,8 +287,8 @@ std::size_t playlist_get_rewind(std::size_t current, std::size_t size, LoopType 
 const char* loop_type_cstr(LoopType loop_type) {
   switch (loop_type) {
     case LoopType::NO_LOOP: return "no-loop";
-    case LoopType::REPEAT: return "repeat";
-    case LoopType::REPEAT_ONE: return "repeat-one";
+    case LoopType::LOOP: return "repeat";
+    case LoopType::LOOP_ONE: return "repeat-one";
   }
   return "unknown";
 }
@@ -297,9 +297,9 @@ LoopType loop_type_from_str(std::string_view str) {
   if (str == "no-loop") {
     return LoopType::NO_LOOP;
   } else if (str == "repeat") {
-    return LoopType::REPEAT;
+    return LoopType::LOOP;
   } else if (str == "repeat-one") {
-    return LoopType::REPEAT_ONE;
+    return LoopType::LOOP_ONE;
   }
 
   throw std::runtime_error(fmt::format("[{}] cannot find repr of loop "

@@ -24,8 +24,8 @@ enum class PlaylistMvCmd {
 const char* playlist_move_cmd_cstr(PlaylistMvCmd move_cmd);
 
 enum class LoopType {
-  REPEAT_ONE,
-  REPEAT,
+  LOOP_ONE,
+  LOOP,
   NO_LOOP
 };
 
@@ -41,7 +41,7 @@ LoopType loop_type_from_str(std::string_view loop_type);
  * user must do this beforehand
  *
  * The loop type is not guaranteed to stay constant in between set_loop_type commands.
- * For example, when skipping with move(PlaylistMvCmd::SKIP) while loop_type() == LoopType::REPEAT_ONE,
+ * For example, when skipping with move(PlaylistMvCmd::SKIP) while loop_type() == LoopType::LOOP_ONE,
  * loop_type() will then be turned to REPEAT
 */
 

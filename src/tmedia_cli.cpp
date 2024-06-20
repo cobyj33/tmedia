@@ -784,7 +784,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   }
 
   void cli_arg_repeat(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.tmss.loop_type = LoopType::REPEAT;
+    ps.tmss.loop_type = LoopType::LOOP;
     (void)arg;
   }
 
@@ -794,7 +794,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   }
 
   void cli_arg_repeat_one(CLIParseState& ps, const tmedia::CLIArg arg) {
-    ps.tmss.loop_type = LoopType::REPEAT_ONE;
+    ps.tmss.loop_type = LoopType::LOOP_ONE;
     (void)arg;
   }
 
