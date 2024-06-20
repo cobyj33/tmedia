@@ -228,12 +228,12 @@ section of this document.
 See [playlist.md](./playlist.md) for details about looping types, shuffling,
 and the loaded media playlist in general. (Things work how you'd expect)
 
-- --no-repeat
+- --no-loop, --no-repeat
   - The default looping state of the media player. Upon reaching the end of the
     playlist, do not repeat the playlist.
-- -l, --repeat, --loop
+- -l, --loop, --repeat
   - Upon reaching the end of the loaded playlist, repeat the playlist.
-- --repeat-one
+- --loop-one, --repeat-one
   - Upon reaching the end of the first media file in the playlist, repeat
     that media file.
 - -s, --shuffle

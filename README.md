@@ -89,10 +89,10 @@ Audio Output:
   --volume [FLOAT] || [INT%] Set initial volume [0.0, 1.0] or [0%, 100%]
   -m, --mute, --muted        Mute the audio playback
 Playlist Controls:
-  --no-repeat            Do not repeat the playlist upon end
-  -l, --repeat, --loop   Repeat the playlist upon playlist end
-  --repeat-one           Start the playlist looping the first media
-  -s, --shuffle          Shuffle the given playlist \
+  --no-loop, --no-repeat     Do not repeat the playlist upon end (Default)
+  -l, --loop, --repeat       Repeat the playlist upon playlist end
+  --loop-one, --repeat-one   Start the playlist looping the first media
+  -s, --shuffle              Shuffle the given playlist
 
 Stream Control Commands:
   --enable-audio-stream  (Default) Enable playback of audio streams
