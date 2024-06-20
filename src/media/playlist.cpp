@@ -287,8 +287,8 @@ std::size_t playlist_get_rewind(std::size_t current, std::size_t size, LoopType 
 const char* loop_type_cstr(LoopType loop_type) {
   switch (loop_type) {
     case LoopType::NO_LOOP: return "no-loop";
-    case LoopType::LOOP: return "repeat";
-    case LoopType::LOOP_ONE: return "repeat-one";
+    case LoopType::LOOP: return "loop";
+    case LoopType::LOOP_ONE: return "loop-one";
   }
   return "unknown";
 }
@@ -296,9 +296,9 @@ const char* loop_type_cstr(LoopType loop_type) {
 LoopType loop_type_from_str(std::string_view str) {
   if (str == "no-loop") {
     return LoopType::NO_LOOP;
-  } else if (str == "repeat") {
+  } else if (str == "loop") {
     return LoopType::LOOP;
-  } else if (str == "repeat-one") {
+  } else if (str == "loop-one") {
     return LoopType::LOOP_ONE;
   }
 

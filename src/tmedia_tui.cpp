@@ -328,8 +328,8 @@ int render_current_filenamex(const TMediaProgramState& tmps, TMediaRendererState
 const char* loop_type_cstr_short(LoopType loop_type) {
   switch (loop_type) {
     case LoopType::NO_LOOP: return "NL";
-    case LoopType::LOOP: return "R";
-    case LoopType::LOOP_ONE: return "RO";
+    case LoopType::LOOP: return "L";
+    case LoopType::LOOP_ONE: return "LO";
   }
   return "UNK";
 }
