@@ -314,7 +314,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     std::vector<tmedia::CLIArg> parsed_cli;
 
     try {
-      parsed_cli = tmedia::cli_parse(argc, argv, "",
+      parsed_cli = tmedia::cli_parse(argc, argv, "v",
       {"volume", "chars", "refresh-rate", "repeat-path", "repeat-paths"});
     } catch (const std::runtime_error& err) {
       ps.argerrs.push_back(fmt::format("[{}] Failed to parse CLI Arguments: {}", FUNCDINFO, err.what()));
@@ -332,7 +332,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
 
     static const ArgParseMap short_exit_optmap{
       {"h", cli_arg_help},
-      {"v", cli_arg_version}
+      {"V", cli_arg_version}
     };
 
     static const ArgParseMap long_exit_optmap{
@@ -357,6 +357,7 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"c", cli_arg_color},
       {"b", cli_arg_background},
       {"g", cli_arg_grayscale},
+      {"v", cli_arg_volume},
       {"m", cli_arg_mute},
       {"f", cli_arg_fullscreen},
       {"l", cli_arg_loop},
