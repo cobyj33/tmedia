@@ -259,9 +259,9 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
   void cli_arg_no_fullscreen(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_grayscale(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_grayscale(CLIParseState& ps, const tmedia::CLIArg arg);
-  void cli_arg_no_repeat(CLIParseState& ps, const tmedia::CLIArg arg);
-  void cli_arg_repeat(CLIParseState& ps, const tmedia::CLIArg arg);
-  void cli_arg_repeat_one(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_no_loop(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_loop(CLIParseState& ps, const tmedia::CLIArg arg);
+  void cli_arg_loop_one(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_mute(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_no_mute(CLIParseState& ps, const tmedia::CLIArg arg);
   void cli_arg_refresh_rate(CLIParseState& ps, const tmedia::CLIArg arg);
@@ -359,18 +359,18 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
       {"g", cli_arg_grayscale},
       {"m", cli_arg_mute},
       {"f", cli_arg_fullscreen},
-      {"l", cli_arg_repeat},
+      {"l", cli_arg_loop},
       {"s", cli_arg_shuffle},
       {"r", cli_arg_recurse_global},
     };
 
     static const ArgParseMap long_global_optmap{
-      {"no-repeat", cli_arg_no_repeat},
-      {"no-loop", cli_arg_no_repeat},
-      {"repeat", cli_arg_repeat},
-      {"loop", cli_arg_repeat},
-      {"repeat-one", cli_arg_repeat_one},
-      {"loop-one", cli_arg_repeat_one},
+      {"no-loop", cli_arg_no_loop},
+      {"no-repeat", cli_arg_no_loop},
+      {"loop", cli_arg_loop},
+      {"repeat", cli_arg_loop},
+      {"loop-one", cli_arg_loop_one},
+      {"repeat-one", cli_arg_loop_one},
 
       {"volume", cli_arg_volume},
 
@@ -783,17 +783,17 @@ const char* TMEDIA_CLI_ARGS_DESC = ""
     (void)arg;
   }
 
-  void cli_arg_repeat(CLIParseState& ps, const tmedia::CLIArg arg) {
+  void cli_arg_loop(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.loop_type = LoopType::LOOP;
     (void)arg;
   }
 
-  void cli_arg_no_repeat(CLIParseState& ps, const tmedia::CLIArg arg) {
+  void cli_arg_no_loop(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.loop_type = LoopType::NO_LOOP;
     (void)arg;
   }
 
-  void cli_arg_repeat_one(CLIParseState& ps, const tmedia::CLIArg arg) {
+  void cli_arg_loop_one(CLIParseState& ps, const tmedia::CLIArg arg) {
     ps.tmss.loop_type = LoopType::LOOP_ONE;
     (void)arg;
   }
