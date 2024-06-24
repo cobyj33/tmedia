@@ -6,6 +6,9 @@
 #include <tmedia/tmedia.h>
 
 #include <cstdlib>
+#include <cstdio>
+#include <cerrno>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <csignal>
@@ -40,8 +43,15 @@ void on_terminate() {
 
 int main(int argc, char** argv) {
   if (!isatty(STDIN_FILENO)) {
-    std::cerr << "[tmedia]: stdin must be a tty. Exiting..." << std::endl;
-    return EXIT_FAILURE;
+    if (!std::freopen("/dev/tty", "r", stdin)) {
+      errno = 0;
+      if (!std::freopen("/dev/stderr", "r", stdin)) {
+        std::cerr << "[tmedia] Failed to redirect stdin to '/dev/tty' or "
+          << "'/dev/stderr' "
+          << "('" << std::strerror(errno) << "'). Exiting..." << std::endl;
+        return EXIT_FAILURE;
+      }
+    }
   }
 
   setlocale(LC_ALL, "");
