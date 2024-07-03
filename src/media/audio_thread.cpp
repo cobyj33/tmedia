@@ -129,10 +129,22 @@ void MediaFetcher::audio_dispatch_thread_func() {
       for (std::size_t i = 0; i < next_raw_audio_frames.size(); i++) {
         runs_w_fail = 0;
         audio_resampler.resample_audio_frame(resampled_frame.get(), next_raw_audio_frames[i].get());
-        while (!this->audio_buffer->try_write_into(resampled_frame->nb_samples, (float*)(resampled_frame->data[0]), AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
-          // ensure that the audio thread does not become stuck in an infinite
-          // loop trying to write frames into the audio buffer.
-          if (this->should_exit()) break;
+
+        // do note that resampled_frame->nb_samples is actually the
+        // number of samples per channel, which is actually what tmedia
+        // (and most people) define an audio frame as...
+
+        static constexpr int MAX_FRAMES_WRITTEN_AT_ONCE = 512;
+        int frames_written = 0;
+
+        while (!this->should_exit() && frames_written < resampled_frame->nb_samples) {
+          const int frames_to_write = std::min(resampled_frame->nb_samples - frames_written, MAX_FRAMES_WRITTEN_AT_ONCE);
+          const int sample_offset = frames_written * cctx_get_nb_channels(cctx);
+          float* fltdata_start = (float*)(resampled_frame->data[0]) + sample_offset;
+          while (!this->should_exit() && !this->audio_buffer->try_write_into(frames_to_write, fltdata_start, AUDIO_BUFFER_TRY_WRITE_WAIT_MS)) {
+                // spin
+          }
+          frames_written += frames_to_write;
         }
       }
 
