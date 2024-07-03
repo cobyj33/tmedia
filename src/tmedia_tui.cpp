@@ -357,23 +357,24 @@ void render_current_filenamex_compact(const TMediaProgramState& tmps, TMediaRend
 int render_nexprev_files_large(const TMediaProgramState& tmps, TMediaRendererState& tmrs, int line) {
   if (tmps.plist.size() == 1) return line;
   static constexpr int MOVE_FILE_NAME_MIDDLE_MARGIN = 5;
+  const int MIDDLE_COL = COLS / 2;
 
   if (tmps.plist.can_move(PlaylistMvCmd::REWIND)) {
-    werasebox(stdscr, line, 0, COLS / 2, 1);
+    werasebox(stdscr, line, 0, MIDDLE_COL, 1);
     const std::string_view left_arrow = tmps.show_ctrl_info ? "< (P) " : "< ";
     const std::string_view rewind_media_file_display_string = get_media_file_display_name(tmps.plist.peek_move(PlaylistMvCmd::REWIND).path, tmrs.metadata_cache);
-    TMLabelStyle left_arrow_string_style(line, 0, COLS / 2, TMAlign::LEFT, 0, 0);
-    TMLabelStyle rewind_display_style(line, 0, COLS / 2, TMAlign::LEFT, left_arrow.length(), MOVE_FILE_NAME_MIDDLE_MARGIN);
+    const TMLabelStyle left_arrow_string_style(line, 0, MIDDLE_COL, TMAlign::LEFT, 0, 0);
+    const TMLabelStyle rewind_display_style(line, 0, MIDDLE_COL, TMAlign::LEFT, left_arrow.length(), MOVE_FILE_NAME_MIDDLE_MARGIN);
     tm_mvwaddstr_label(stdscr, rewind_display_style, rewind_media_file_display_string);
     tm_mvwaddstr_label(stdscr, left_arrow_string_style, left_arrow);
   }
 
   if (tmps.plist.can_move(PlaylistMvCmd::SKIP)) {
-    werasebox(stdscr, line, COLS / 2, COLS / 2, 1);
-    const std::string_view right_arrow = tmps.show_ctrl_info ? " (N) > " : " >";
+    werasebox(stdscr, line, MIDDLE_COL, MIDDLE_COL, 1);
+    const std::string_view right_arrow = tmps.show_ctrl_info ? " (N) > " : " > ";
     const std::string_view skip_display_string = get_media_file_display_name(tmps.plist.peek_move(PlaylistMvCmd::SKIP).path, tmrs.metadata_cache);
-    TMLabelStyle skip_display_string_style(line, COLS / 2, COLS / 2, TMAlign::RIGHT, MOVE_FILE_NAME_MIDDLE_MARGIN, right_arrow.length());
-    TMLabelStyle right_arrow_string_style(line, COLS / 2, COLS / 2, TMAlign::RIGHT, 0, 0);
+    const TMLabelStyle skip_display_string_style(line, MIDDLE_COL, COLS - MIDDLE_COL, TMAlign::RIGHT, MOVE_FILE_NAME_MIDDLE_MARGIN, right_arrow.length());
+    const TMLabelStyle right_arrow_string_style(line, MIDDLE_COL, COLS - MIDDLE_COL, TMAlign::RIGHT, 0, 0);
     tm_mvwaddstr_label(stdscr, skip_display_string_style, skip_display_string);
     tm_mvwaddstr_label(stdscr, right_arrow_string_style, right_arrow);
   }

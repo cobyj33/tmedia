@@ -23,17 +23,17 @@ void tm_mvwaddstr_label(WINDOW* window, TMLabelStyle label_style, std::string_vi
   const int requested_text_area_col_end = label_style.col + label_style.width - label_style.margin_right; // not inclusive
   if (requested_text_area_col_end <= requested_text_area_col_start) return; // invalid or negative request
 
-  const int text_area_col_start = std::max(requested_text_area_col_start, 0); // bound to left edge
-  const int text_area_col_end = std::min(requested_text_area_col_end, COLS - 1); // bound to right edge
+  const int text_area_col_start = std::max(requested_text_area_col_start, 0); // bound to left edge, inclusive
+  const int text_area_col_end = std::min(requested_text_area_col_end, COLS); // bound to right edge, exclusive
 
   const int text_area_width = text_area_col_end - text_area_col_start;
   const int text_area_col_center = (text_area_col_start + text_area_col_end) / 2;
   std::string_view bounded_str = str.substr(0, text_area_width);
 
   switch (label_style.align) {
-    case TMAlign::LEFT: mvwaddnstr(window, label_style.row, text_area_col_start, bounded_str.data(), bounded_str.size()); break;
-    case TMAlign::CENTER: mvwaddnstr(window, label_style.row, text_area_col_center - (bounded_str.length() / 2), bounded_str.data(), bounded_str.size()); break;
-    case TMAlign::RIGHT: mvwaddnstr(window, label_style.row, text_area_col_end - bounded_str.length(), bounded_str.data(), bounded_str.size()); break;
+    case TMAlign::LEFT: mvwaddnstr(window, label_style.row, text_area_col_start, bounded_str.data(), bounded_str.length()); break;
+    case TMAlign::CENTER: mvwaddnstr(window, label_style.row, text_area_col_center - (bounded_str.length() / 2), bounded_str.data(), bounded_str.length()); break;
+    case TMAlign::RIGHT: mvwaddnstr(window, label_style.row, text_area_col_end - bounded_str.length(), bounded_str.data(), bounded_str.length()); break;
   }
 }
 
