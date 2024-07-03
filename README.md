@@ -56,6 +56,7 @@ Linux C++ 17 Filesystem Terminal Media Player
 ## CLI Arguments
 
 ```txt
+-------------------------------CLI ARGUMENTS------------------------------
 Positional arguments:
   paths                  The the paths to files or directories to be
                          played. Multiple files will be played one
@@ -87,12 +88,7 @@ Video Output:
 
 Audio Output:
   -v, --volume FLOAT[%]  Set initial volume ([0.0, 1.0] or [0.0%, 100.0%])
-  -m, --mute, --muted        Mute the audio playback
-Playlist Controls:
-  --no-loop, --no-repeat     Do not repeat the playlist upon end (Default)
-  -l, --loop, --repeat       Repeat the playlist upon playlist end
-  --loop-one, --repeat-one   Start the playlist looping the first media
-  -s, --shuffle              Shuffle the given playlist
+  -m, --mute, --muted    Mute the audio playback
 
 Stream Control Commands:
   --enable-audio-stream  (Default) Enable playback of audio streams
@@ -103,6 +99,12 @@ Stream Control Commands:
   :enable-video-stream    Enable playback of video streams for last path
   :disable-audio-stream   Disable playback of audio streams for last path
   :disable-video-stream   Disable playback of video streams for last path
+
+Playlist Controls:
+  --no-loop, --no-repeat     Do not repeat the playlist upon end (Default)
+  -l, --loop, --repeat       Repeat the playlist upon playlist end
+  --loop-one, --repeat-one   Start the playlist looping the first media
+  -s, --shuffle              Shuffle the given playlist
 
 File Searching:
   NOTE: all local (:) options override global options
@@ -119,6 +121,7 @@ File Searching:
   :ignore-video          Ignore video files when searching last listed path
   :ignore-audio          Ignore audio files when searching last listed path
   :probe, :no-probe      (Don't) probe last file/directory
+---------------------------------------------------------------------------
 ```
 
 All of these controls can also be seen when calling tmedia with no args or
