@@ -6,6 +6,7 @@
 #include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/audio/audio_visualizer.h>
 #include <tmedia/util/thread.h>
+#include <tmedia/util/constants.h>
 #include <tmedia/image/scale.h>
 #include <tmedia/util/wtime.h>
 #include <tmedia/ffmpeg/videoconverter.h>
@@ -124,7 +125,6 @@ void MediaFetcher::frame_video_fetching_func() {
       }
     }
 
-    double wait_duration = avg_fts;
     double current_time = 0.0;
 
     // caching the current jump time means that we can perform the time jump
@@ -157,12 +157,12 @@ void MediaFetcher::frame_video_fetching_func() {
       this->msg_video_jump_curr_time -= msg_video_jump_curr_time_cache;
     }
 
-      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
+    decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), dec_frames, frame_pool);
 
     if (dec_frames.size() > 0) {
       const double frame_pts_time_sec = (double)dec_frames[0]->pts * av_q2d(avstr->time_base);
       const double extra_delay = (double)(dec_frames[0]->repeat_pict) / (2 * avg_fts);
-      wait_duration = frame_pts_time_sec - current_time + extra_delay;
+      const double wait_duration = frame_pts_time_sec - current_time + extra_delay;
 
       if (wait_duration > 0.0 || saved_frame_is_empty) {
         vconv.convert_video_frame(converted_frame.get(), dec_frames.back().get());

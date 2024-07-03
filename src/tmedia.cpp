@@ -8,6 +8,7 @@
 #include <tmedia/util/wtime.h>
 #include <tmedia/util/wtime.h>
 #include <tmedia/util/defines.h>
+#include <tmedia/util/constants.h>
 #include <tmedia/util/thread.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/tmedia_tui_elems.h>
@@ -41,8 +42,6 @@ using namespace std::chrono_literals;
 
 static constexpr int KEY_ESCAPE = 27;
 static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
-static constexpr int MIN_RENDER_COLS = 2;
-static constexpr int MIN_RENDER_LINES = 2;
 
 // A struct representing any command sent in by the user over the terminal.
 // Note that all representations of requests should preferrably be in trivial
@@ -261,6 +260,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
         // MAX_INPUT_READS_PER_ITER variables from being used in other parts
         // of the main loop
         {
+          // Do note that I set the maximum limit to quite a high number, so
+          // unless someone accidentally pastes something like a book into
+          // the terminal, the case where input is deferred until the next
+          // frame is extremely rare.
           static constexpr unsigned int MAX_INPUT_READS_PER_ITER = 32768;
           int input = getch();
           unsigned nb_input_reads = 1;

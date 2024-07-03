@@ -5,6 +5,7 @@
 #include <tmedia/util/formatting.h>
 #include <tmedia/media/metadata.h>
 #include <tmedia/util/defines.h>
+#include <tmedia/util/constants.h>
 
 #include <array>
 #include <stdexcept>
@@ -15,13 +16,6 @@ extern "C" {
   #include <curses.h>
 }
 
-/**
- * MIN_RENDER_COLS and MIN_RENDER_LINES are the minimum columns and lines
- * necessary for any tui elements to be rendered.
-*/
-
-static constexpr int MIN_RENDER_COLS = 5;
-static constexpr int MIN_RENDER_LINES = 2;
 static constexpr std::size_t METADATA_CACHE_MAX_SIZE = 30;
 
 const char* loop_type_cstr_short(LoopType loop_type);

@@ -39,37 +39,6 @@ extern "C" {
    *
 */
 
-// Pixel Aspect Ratio - account for tall rectangular shape of terminal
-//characters
-static constexpr int PAR_WIDTH = 2;
-static constexpr int PAR_HEIGHT = 5;
-
-static constexpr int MAX_FRAME_ASPECT_RATIO_WIDTH = 16 * PAR_HEIGHT;
-static constexpr int MAX_FRAME_ASPECT_RATIO_HEIGHT = 9 * PAR_WIDTH;
-static constexpr double MAX_FRAME_ASPECT_RATIO = static_cast<double>(MAX_FRAME_ASPECT_RATIO_WIDTH) / static_cast<double>(MAX_FRAME_ASPECT_RATIO_HEIGHT);
-
-/**
- * A width of 640 at a 4:3 aspect ratio ends up around 480p. Additionally,
- * I find that past a width of 640 characters,
- * the terminal starts to stutter terribly on most terminal emulators, and CPU
- * usage becomes extremely high, so we
- * just bound the image to this amount.
- *
- * This number can just be configured to any maximum amount wanted during
- * compilation. Currently, this value is not changeable at runtime, but there
- * are considerations for allowing that behavior.
- */
-static constexpr int MAX_FRAME_WIDTH = 640;
-static constexpr int MAX_FRAME_HEIGHT = static_cast<int>(static_cast<double>(MAX_FRAME_WIDTH) / MAX_FRAME_ASPECT_RATIO);
-
-static_assert(MAX_FRAME_WIDTH > 0);
-static_assert(MAX_FRAME_HEIGHT > 0);
-static_assert(PAR_WIDTH > 0);
-static_assert(PAR_HEIGHT > 0);
-static_assert(MAX_FRAME_ASPECT_RATIO_WIDTH > 0);
-static_assert(MAX_FRAME_ASPECT_RATIO_HEIGHT > 0);
-static_assert(MAX_FRAME_ASPECT_RATIO > 0.0);
-
 /**
  * The MediaFetcher is the main class to coordinate media playback in tmedia.
  *

@@ -12,7 +12,8 @@ ffmpeg_error::ffmpeg_error(std::string_view message, int averror) : std::runtime
   this->averror = averror;
   this->errstr[0] = '\0'; // ensure no buffer overflow
   if (averror == AVERROR(ENOMEM)) {
-    static_cast<std::runtime_error&>(*this) = std::runtime_error(std::string(message)); // directly forward error message
+    // directly forward error message on no memory. (We're probably screwed anyway)
+    static_cast<std::runtime_error&>(*this) = std::runtime_error(std::string(message)); 
   } else {
     int res = av_strerror(averror, this->errstr, FFMPEG_ERROR_STRING_SIZE);
     if (res == 0) {

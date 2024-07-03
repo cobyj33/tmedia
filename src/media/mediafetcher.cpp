@@ -4,6 +4,7 @@
 #include <tmedia/ffmpeg/decode.h>
 #include <tmedia/ffmpeg/boiler.h>
 #include <tmedia/util/wtime.h>
+#include <tmedia/util/constants.h>
 #include <tmedia/util/formatting.h>
 #include <tmedia/ffmpeg/audioresampler.h>
 #include <tmedia/util/defines.h>

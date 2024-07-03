@@ -123,7 +123,7 @@ void MediaFetcher::audio_dispatch_thread_func() {
         this->msg_audio_jump_curr_time -= msg_audio_jump_curr_time_cache;
       }
 
-        decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames, frame_pool);
+      decode_next_stream_frames(fctx.get(), cctx, avstr->index, packet.get(), next_raw_audio_frames, frame_pool);
 
       runs_w_fail += static_cast<unsigned int>(next_raw_audio_frames.size() == 0);
       for (std::size_t i = 0; i < next_raw_audio_frames.size(); i++) {
