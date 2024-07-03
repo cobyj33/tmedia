@@ -44,6 +44,33 @@ static constexpr double VOLUME_CHANGE_AMOUNT = 0.01;
 static constexpr int MIN_RENDER_COLS = 2;
 static constexpr int MIN_RENDER_LINES = 2;
 
+// A struct representing any command sent in by the user over the terminal.
+// Note that all representations of requests should preferrably be in trivial
+// data types, such as booleans, ints, and enums.
+//
+// CmdRequests should be initialized and reinitialized
+// through cmdreqs_from_tmps, as some fields like toggled_volume and nextvom
+// depend on whether they are different from the current tmedia state on whether
+// their commands are run
+struct CmdRequests {
+  // Special flag used to communicate that all input from stdin has been
+  // read and command processing can now begin.
+  bool finished_processing = false;
+
+  bool toggle_playback = false;
+  bool should_refresh = false;
+  bool toggle_shuffled = false;
+  bool toggle_fullscreen = false;
+  bool toggle_muted = false;
+  bool toggle_show_ctrl_info = false;
+  bool quit_program_command_received = false;
+  bool exit_current_player_command_received = false;
+
+  double toggled_volume = 1.0;
+  VidOutMode nextvom = VidOutMode::PLAIN;
+};
+
+struct CmdRequests cmdreqs_from_tmps(const TMediaProgramState& tmps);
 
 // Modify the tmcurses color palette to align with the next video output mode
 // and set the value at *current to the value of next*
@@ -88,6 +115,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
   PixelData frame;
   pixdata_initgray(frame, MAX_FRAME_WIDTH, MAX_FRAME_HEIGHT, 0);
 
+  // Whether the entire tmedia program should be quit or not. This differs
+  // from MediaFetcher::dispatch_exit and MediaFetcher::should_exit, which both
+  // control whether a specific media instance inside of tmedia should be
+  // exited, not the entire program.
   bool should_quit = false;
 
   // This outer-most loop corresponds to the playback of a single item out
@@ -112,6 +143,17 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     // ! should_render_frame should only be set to false at the end
     // ! of each input loop.
     bool should_render_frame = false;
+
+
+    // Serves as a way to batch incoming commands from stdin.
+    // This allows us to give an upper bound for how much input can be
+    // processed at a given time and defer the actual action on that input
+    // until a later frame when we have finished processing all input. This
+    // also protects tmedia from freezing up if an extremely large amount of
+    // input is put through stdin all at the same time.
+    // cmdreqs and its fields should only be accessed inside the main loop
+    // from the input processing loop and the command processing block.
+    CmdRequests cmdreqs = cmdreqs_from_tmps(tmps);
 
     // initialize the pixeldata to all black and the maximum size that
     // could possibly be returned by a MediaFetcher instance
@@ -171,13 +213,21 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     try {
       // main playing loop
       while (!fetcher->should_exit() && !INTERRUPT_RECEIVED) {
-        double curr_systime, req_jumptime, curr_medtime;
+        // all initialized within the first critical section from the
+        // MediaFetcher.
+        double curr_systime = 0.0;
+        double curr_medtime = 0.0;
+        double req_jumptime = 0.0;
 
         // req_jump and req_jumptime are different, because when jumping to the
         // current time to fix desyncing of audio playback to the media clock,
         // we may jump to the current media time. Therefore, we can't use the
         // current media time (curr_medtime) as a sort of sentinel value
-        // for denoting if we're trying to jump toward a timestamp
+        // for denoting if we're trying to jump toward a timestamp.
+        //
+        // Also, note that req_jumptine and req_jump are not a part of the
+        // CmdRequests struct for this same reason: a time jump does not
+        // have to be requested by the user to be run.
         bool req_jump = false;
 
 
@@ -206,146 +256,167 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           req_jump = fetcher->get_audio_desync_time(curr_systime) > MAX_AUDIO_DESYNC_SECS;
         }
 
-        int input = getch();
-        if (input != ERR) { // only process input if there is any input
-          bool toggle_playback = false;
-          bool should_refresh = false;
-          bool toggle_shuffled = false;
-          bool toggle_fullscreen = false;
-          bool toggle_muted = false;
-          bool toggle_show_ctrl_info = false;
-          bool quit_program_command_received = false;
-          bool exit_current_player_command_received = false;
-          double toggled_volume = tmps.volume;
-          VidOutMode nextvom = tmps.vom;
+        // beginning of unnamed input processing block
+        // this block mainly serves to protect the input, nb_input_reads, and
+        // MAX_INPUT_READS_PER_ITER variables from being used in other parts
+        // of the main loop
+        {
+          static constexpr unsigned int MAX_INPUT_READS_PER_ITER = 32768;
+          int input = getch();
+          unsigned nb_input_reads = 1;
+          // only process input if there is any input
+          if (input != ERR) {
+            // Often, commands when applied quickly in sucession reverse
+            // themselves, such as Pausing/Playing and Muting/Unmuting.
+            // Processing input by setting flags on whether a command should be
+            // run first instead of initially running the command allows us
+            // to save on operations like jittering between pausing and playing
+            // when the final state of the media player would be the same as
+            // the initial state.
 
-          while (input != ERR) { // Go through and process all the batched input
-            switch (input) {
-              case KEY_ESCAPE:
-              case KEY_BACKSPACE:
-              case 127:
-              case '\b':
-              case 'q':
-              case 'Q': quit_program_command_received = true; break;
-              case KEY_RESIZE: {
-                should_render_frame = true;
-                erase();
-              } break;
-              case 'r':
-              case 'R': should_refresh = !should_refresh; break;
-              case 'c':
-              case 'C': {
-                switch (nextvom) {
-                  case VidOutMode::COLOR: nextvom = VidOutMode::PLAIN; break;
-                  case VidOutMode::GRAY: nextvom = VidOutMode::COLOR; break;
-                  case VidOutMode::COLOR_BG: nextvom = VidOutMode::PLAIN; break;
-                  case VidOutMode::GRAY_BG: nextvom = VidOutMode::COLOR_BG; break;
-                  case VidOutMode::PLAIN: nextvom = VidOutMode::COLOR; break;
-                }
-              } break;
-              case 'g':
-              case 'G': {
-                switch (nextvom) {
-                  case VidOutMode::COLOR: nextvom = VidOutMode::GRAY; break;
-                  case VidOutMode::GRAY: nextvom = VidOutMode::PLAIN; break;
-                  case VidOutMode::COLOR_BG: nextvom = VidOutMode::GRAY_BG; break;
-                  case VidOutMode::GRAY_BG: nextvom = VidOutMode::PLAIN; break;
-                  case VidOutMode::PLAIN: nextvom = VidOutMode::GRAY; break;
-                }
-              } break;
-              case 'b':
-              case 'B': {
-                switch (nextvom) {
-                  case VidOutMode::COLOR: nextvom = VidOutMode::COLOR_BG; break;
-                  case VidOutMode::GRAY: nextvom = VidOutMode::GRAY_BG; break;
-                  case VidOutMode::COLOR_BG: nextvom = VidOutMode::COLOR; break;
-                  case VidOutMode::GRAY_BG: nextvom = VidOutMode::GRAY; break;
-                  case VidOutMode::PLAIN: break; //no-op
-                }
-              } break;
-              case 'n':
-              case 'N': {
-                move_cmd = PlaylistMvCmd::SKIP;
-                exit_current_player_command_received = true;
-              } break;
-              case 'p':
-              case 'P': {
-                move_cmd = PlaylistMvCmd::REWIND;
-                exit_current_player_command_received = true;
-              } break;
-              case 'f':
-              case 'F': toggle_fullscreen = !toggle_fullscreen; break;
-              case KEY_UP: toggled_volume += VOLUME_CHANGE_AMOUNT; break;
-              case KEY_DOWN: toggled_volume -= VOLUME_CHANGE_AMOUNT; break;
-              case 'm':
-              case 'M': toggle_muted = !toggle_muted; break;
-              case 'h':
-              case 'H': toggle_show_ctrl_info = !toggle_show_ctrl_info; break;
-              case 'l':
-              case 'L': {
-                if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
-                  switch (tmps.plist.loop_type()) {
-                    case LoopType::NO_LOOP: tmps.plist.set_loop_type(LoopType::LOOP); break;
-                    case LoopType::LOOP: tmps.plist.set_loop_type(LoopType::LOOP_ONE); break;
-                    case LoopType::LOOP_ONE: tmps.plist.set_loop_type(LoopType::NO_LOOP); break;
+            // Go through and process all the batched input
+            // ! Note that is it IMPERATIVE that this loop does not directly
+            // ! modify any visible state of the outside media player. This loop
+            // ! should instead mark any requests made by the user through stdin
+            // ! to change some part of tmedia's state. The actual changing
+            // ! of tmedia's state is handled in the command processing block.
+            while (input != ERR && nb_input_reads++ < MAX_INPUT_READS_PER_ITER) {
+              switch (input) {
+                case KEY_ESCAPE:
+                case KEY_BACKSPACE:
+                case 127:
+                case '\b':
+                case 'q':
+                case 'Q': cmdreqs.quit_program_command_received = true; break;
+                case KEY_RESIZE: {
+                  should_render_frame = true;
+                  erase();
+                } break;
+                case 'r':
+                case 'R': cmdreqs.should_refresh = !cmdreqs.should_refresh; break;
+                case 'c':
+                case 'C': {
+                  switch (cmdreqs.nextvom) {
+                    case VidOutMode::COLOR: cmdreqs.nextvom = VidOutMode::PLAIN; break;
+                    case VidOutMode::GRAY: cmdreqs.nextvom = VidOutMode::COLOR; break;
+                    case VidOutMode::COLOR_BG: cmdreqs.nextvom = VidOutMode::PLAIN; break;
+                    case VidOutMode::GRAY_BG: cmdreqs.nextvom = VidOutMode::COLOR_BG; break;
+                    case VidOutMode::PLAIN: cmdreqs.nextvom = VidOutMode::COLOR; break;
                   }
-                }
-              } break;
-              case 's':
-              case 'S': toggle_shuffled = !toggle_shuffled; break;
-              case ' ': toggle_playback = !toggle_playback; break;
-              case KEY_LEFT: {
-                req_jump = true;
-                req_jumptime -= 5.0;
-              } break;
-              case KEY_RIGHT: {
-                req_jump = true;
-                req_jumptime += 5.0;
-              } break;
-              case '0':
-              case '1':
-              case '2':
-              case '3':
-              case '4':
-              case '5':
-              case '6':
-              case '7':
-              case '8':
-              case '9': {
-                req_jump = true;
-                req_jumptime = fetcher->duration * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
-              } break;
-            }
-            input = getch();
-          } // Ending of "while (input != ERR)"
+                } break;
+                case 'g':
+                case 'G': {
+                  switch (cmdreqs.nextvom) {
+                    case VidOutMode::COLOR: cmdreqs.nextvom = VidOutMode::GRAY; break;
+                    case VidOutMode::GRAY: cmdreqs.nextvom = VidOutMode::PLAIN; break;
+                    case VidOutMode::COLOR_BG: cmdreqs.nextvom = VidOutMode::GRAY_BG; break;
+                    case VidOutMode::GRAY_BG: cmdreqs.nextvom = VidOutMode::PLAIN; break;
+                    case VidOutMode::PLAIN: cmdreqs.nextvom = VidOutMode::GRAY; break;
+                  }
+                } break;
+                case 'b':
+                case 'B': {
+                  switch (cmdreqs.nextvom) {
+                    case VidOutMode::COLOR: cmdreqs.nextvom = VidOutMode::COLOR_BG; break;
+                    case VidOutMode::GRAY: cmdreqs.nextvom = VidOutMode::GRAY_BG; break;
+                    case VidOutMode::COLOR_BG: cmdreqs.nextvom = VidOutMode::COLOR; break;
+                    case VidOutMode::GRAY_BG: cmdreqs.nextvom = VidOutMode::GRAY; break;
+                    case VidOutMode::PLAIN: break; //no-op
+                  }
+                } break;
+                case 'n':
+                case 'N': {
+                  move_cmd = PlaylistMvCmd::SKIP;
+                  cmdreqs.exit_current_player_command_received = true;
+                } break;
+                case 'p':
+                case 'P': {
+                  move_cmd = PlaylistMvCmd::REWIND;
+                  cmdreqs.exit_current_player_command_received = true;
+                } break;
+                case 'f':
+                case 'F': cmdreqs.toggle_fullscreen = !cmdreqs.toggle_fullscreen; break;
+                case KEY_UP: cmdreqs.toggled_volume += VOLUME_CHANGE_AMOUNT; break;
+                case KEY_DOWN: cmdreqs.toggled_volume -= VOLUME_CHANGE_AMOUNT; break;
+                case 'm':
+                case 'M': cmdreqs.toggle_muted = !cmdreqs.toggle_muted; break;
+                case 'h':
+                case 'H': cmdreqs.toggle_show_ctrl_info = !cmdreqs.toggle_show_ctrl_info; break;
+                case 'l':
+                case 'L': {
+                  if (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO) {
+                    switch (tmps.plist.loop_type()) {
+                      case LoopType::NO_LOOP: tmps.plist.set_loop_type(LoopType::LOOP); break;
+                      case LoopType::LOOP: tmps.plist.set_loop_type(LoopType::LOOP_ONE); break;
+                      case LoopType::LOOP_ONE: tmps.plist.set_loop_type(LoopType::NO_LOOP); break;
+                    }
+                  }
+                } break;
+                case 's':
+                case 'S': cmdreqs.toggle_shuffled = !cmdreqs.toggle_shuffled; break;
+                case ' ': cmdreqs.toggle_playback = !cmdreqs.toggle_playback; break;
+                case KEY_LEFT: {
+                  // do note that the help text of the UI right now currently
+                  // reports that LEFT/RIGHT moves by 5 seconds.
+                  req_jump = true;
+                  req_jumptime -= 5.0;
+                } break;
+                case KEY_RIGHT: {
+                  req_jump = true;
+                  req_jumptime += 5.0;
+                } break;
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9': {
+                  req_jump = true;
+                  req_jumptime = fetcher->duration * (static_cast<double>(input - static_cast<int>('0')) / 10.0);
+                } break;
+              }
+              input = getch();
+            } // Ending of "while (input != ERR)"
 
-          if (exit_current_player_command_received) {
+            // do remember that the above loop has only finished reading
+            // if getch had returned ERR, which is not always true.
+            cmdreqs.finished_processing = input == ERR;
+          } // end of input processing block ( if (input != ERR) )
+        } // end of unnamed input processing block
+
+        // command processing block
+        if (cmdreqs.finished_processing) {
+          if (cmdreqs.exit_current_player_command_received) {
             fetcher->dispatch_exit();
           }
 
-          if (quit_program_command_received) {
+          if (cmdreqs.quit_program_command_received) {
             fetcher->dispatch_exit();
             should_quit = true;
           }
 
-          if (nextvom != tmps.vom) {
+          if (cmdreqs.nextvom != tmps.vom) {
             should_render_frame = true;
-            set_global_vom(&tmps.vom, nextvom);
+            set_global_vom(&tmps.vom, cmdreqs.nextvom);
           }
 
-          if (toggle_fullscreen) {
+          if (cmdreqs.toggle_fullscreen) {
             erase();
             should_render_frame = true;
             tmps.fullscreen = !tmps.fullscreen;
           }
 
-          if (toggle_show_ctrl_info) {
+          if (cmdreqs.toggle_show_ctrl_info) {
             erase();
             should_render_frame = true;
             tmps.show_ctrl_info = !tmps.show_ctrl_info;
           }
 
-          if (should_refresh) {
+          if (cmdreqs.should_refresh) {
             erase();
             should_render_frame = true;
             if (audio_output && audio_output->playing()) {
@@ -354,7 +425,7 @@ int tmedia_main_loop(TMediaProgramState tmps) {
             }
           }
 
-          if (toggle_shuffled) {
+          if (cmdreqs.toggle_shuffled) {
             if (!tmps.plist.shuffled()) {
                 tmps.plist.shuffle(true);
               } else {
@@ -363,18 +434,18 @@ int tmedia_main_loop(TMediaProgramState tmps) {
           }
 
           if (audio_output) {
-            if (toggled_volume != tmps.volume) {
-              tmps.volume = std::clamp<double>(toggled_volume, 0.0, 1.0);
+            if (cmdreqs.toggled_volume != tmps.volume) {
+              tmps.volume = std::clamp<double>(cmdreqs.toggled_volume, 0.0, 1.0);
               audio_output->set_volume(tmps.volume);
             }
 
-            if (toggle_muted) {
+            if (cmdreqs.toggle_muted) {
               tmps.muted = !tmps.muted;
               audio_output->set_muted(tmps.muted);
             }
           }
 
-          if (toggle_playback && (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO)) {
+          if (cmdreqs.toggle_playback && (fetcher->media_type == MediaType::VIDEO || fetcher->media_type == MediaType::AUDIO)) {
             std::lock_guard<std::mutex> alter_lock(fetcher->alter_mutex);
             if (fetcher->is_playing()) {
               if (audio_output) audio_output->stop();
@@ -384,7 +455,10 @@ int tmedia_main_loop(TMediaProgramState tmps) {
               fetcher->resume(curr_systime);
             }
           }
-        } // end of input processing block ( if (input != ERR) )
+
+          // reset cmdreqs
+          cmdreqs = cmdreqs_from_tmps(tmps);
+        } // end of command processing
 
         // we can jump time even if no input is given, in the case that audio
         // has become desynced and a jump was requested to resync all streams.
@@ -433,7 +507,15 @@ int tmedia_main_loop(TMediaProgramState tmps) {
     }
 
     //flush getch
-    while (getch() != ERR) getch();
+    // If we flush up to MAX_FINAL_FLUSH_PER_ITER characters and there are
+    // still characters ready to be read, just move on to the next
+    // loop iteration.
+    static constexpr unsigned int MAX_FINAL_FLUSH_PER_ITER = 65536;
+    unsigned int final_flush_chars = 0;
+    while (getch() != ERR && final_flush_chars++ < MAX_FINAL_FLUSH_PER_ITER) {
+      getch();
+    }
+
     erase();
     if (!tmps.plist.can_move(move_cmd)) break;
     tmps.plist.move(move_cmd);
@@ -455,4 +537,11 @@ void init_global_video_output_mode(VidOutMode mode) {
 void set_global_vom(VidOutMode* current, VidOutMode next) {
   init_global_video_output_mode(next);
   *current = next;
+}
+
+struct CmdRequests cmdreqs_from_tmps(const TMediaProgramState& tmps) {
+  CmdRequests requests;
+  requests.toggled_volume = tmps.volume;
+  requests.nextvom = tmps.vom;
+  return requests;
 }
