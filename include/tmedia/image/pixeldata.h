@@ -70,6 +70,12 @@ void pixdata_setnewdims(PixelData& dest, int width, int height);
  * @param height height must be greater than or equal to zero
  * @param g The grayscale value to initialize all pixels in the PixelData to
 */
+
+/**
+ * @param width width must be greater than or equal to zero
+ * @param height height must be greater than or equal to zero
+ * @param g The grayscale value to initialize all pixels in the PixelData to
+*/
 void pixdata_initgray(PixelData& dest, int width, int height, std::uint8_t g);
 
 /**
