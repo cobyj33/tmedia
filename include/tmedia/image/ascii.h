@@ -19,7 +19,9 @@ extern const char* ASCII_STANDARD_CHAR_MAP;
 
 [[gnu::always_inline]] inline constexpr char get_char_from_value(std::string_view characters, std::uint8_t value) {
   assert(characters.length() > 0);
-  return characters[ (std::size_t)value * (characters.length() - 1) / 255UL ];
+  // same rationale as expressed in tmcurses.cpp:get_closest_tmcurses_color
+  // for dividing by (std::uint8_t::max + 1) and multiplying by array length
+  return characters[ (std::size_t)value * characters.length() / (255UL + 1UL) ];
 }
 
 [[gnu::always_inline]] inline constexpr char get_char_from_rgb(std::string_view characters, RGB24 color) {
